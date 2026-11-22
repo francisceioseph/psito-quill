@@ -1,0 +1,22 @@
+{
+  "@@locale": "pt",
+  "appTitle": "Psito Quill",
+  "commandBold": "Negrito",
+  "commandSave": "Salvar",
+  "commandDarkPaper": "Tema escuro",
+  "documentArea": "Documento",
+  "statusStarting": "Ligando o motor…",
+  "statusEngineFailed": "O motor não ligou: {detail}",
+  "@statusEngineFailed": {"placeholders": {"detail": {"type": "String"}}},
+  "statusOpening": "Abrindo…",
+  "statusNoDocument": "Nenhum documento",
+  "statusSaved": "Salvo em {path}",
+  "@statusSaved": {"placeholders": {"path": {"type": "String"}}},
+  "statusError": "Erro: {detail}",
+  "@statusError": {"placeholders": {"detail": {"type": "String"}}},
+  "statusPlugin": "Plugin: {text}",
+  "@statusPlugin": {"placeholders": {"text": {"type": "String"}}},
+  "statusModified": "modificado",
+  "statusMemory": "{mb} MB",
+  "@statusMemory": {"placeholders": {"mb": {"type": "int"}}}
+}

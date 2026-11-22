@@ -1,0 +1,7 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - lib/src/quill_kit_bindings.g.dart
+    - build/**
+    - linux/**

@@ -1,0 +1,42 @@
+# Bindings gerados: `dart run ffigen` (precisa do libclang-18-dev).
+# - quill_kit_api.h: a API C do plugin (o que o Dart chama).
+# - LibreOfficeKitEnums.h: só os enums (tipos de callback, de tecla, de
+#   mouse), para o Dart não escrever esses números à mão. As funções do LOK
+#   não entram: o Dart nunca chama o LOK direto (só a thread do kit chama).
+name: QuillKitBindings
+description: Bindings do psito_quill_kit e dos enums do LibreOfficeKit.
+output: lib/src/quill_kit_bindings.g.dart
+llvm-path:
+  - /usr/lib/llvm-18
+headers:
+  entry-points:
+    - linux/include/psito_quill_kit/quill_kit_api.h
+    - /usr/include/LibreOfficeKit/LibreOfficeKitEnums.h
+compiler-opts:
+  - -DLOK_USE_UNSTABLE_API
+functions:
+  include:
+    - pqk_.*
+enums:
+  include:
+    - PqkEvent
+    - LibreOfficeKitCallbackType
+    - LibreOfficeKitKeyEventType
+    - LibreOfficeKitMouseEventType
+    - LibreOfficeKitTileMode
+  as-int:
+    include:
+      - .*
+macros:
+  exclude:
+    - .*
+structs:
+  exclude:
+    - .*
+typedefs:
+  include:
+    - pqk_event_fn
+preamble: |
+  // ignore_for_file: type=lint
+  // Gerado pelo ffigen a partir de quill_kit_api.h e LibreOfficeKitEnums.h.
+  // Não editar à mão: rode `dart run ffigen` em packages/psito_quill_kit.

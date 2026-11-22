@@ -1,0 +1,17 @@
+{
+  "@@locale": "en",
+  "appTitle": "Psito Quill",
+  "commandBold": "Bold",
+  "commandSave": "Save",
+  "commandDarkPaper": "Dark theme",
+  "documentArea": "Document",
+  "statusStarting": "Starting the engine…",
+  "statusEngineFailed": "The engine did not start: {detail}",
+  "statusOpening": "Opening…",
+  "statusNoDocument": "No document",
+  "statusSaved": "Saved to {path}",
+  "statusError": "Error: {detail}",
+  "statusPlugin": "Plugin: {text}",
+  "statusModified": "modified",
+  "statusMemory": "{mb} MB"
+}

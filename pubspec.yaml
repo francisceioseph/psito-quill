@@ -1,0 +1,30 @@
+name: psito_quill
+description: "Psito Quill: editor de texto para livros longos."
+publish_to: 'none'
+version: 0.0.1
+
+environment:
+  sdk: ^3.13.3
+  flutter: '>=3.47.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+  psito_quill_kit:
+    path: packages/psito_quill_kit
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true
+  assets:
+    - plugins/ola/
