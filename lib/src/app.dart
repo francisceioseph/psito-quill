@@ -5,62 +5,94 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../l10n/gen/app_localizations.dart';
 import 'document/document_controller.dart';
+import 'document/workspace.dart';
+import 'files/app_window.dart';
+import 'settings/settings.dart';
 import 'ui/pages/editor_page.dart';
 import 'ui/tokens/themes/themes.dart';
 import 'ui/tokens/tokens.dart';
 
 class QuillApp extends StatefulWidget {
-  const QuillApp({super.key, required this.doc, this.scrollController, this.initialTheme = claro, this.showMemory = true});
+  const QuillApp({
+    super.key,
+    required this.workspace,
+    required this.settings,
+    this.window,
+    this.scrollController,
+    this.showMemory = true,
+    this.locale,
+  });
 
-  final DocumentController doc;
+  final Workspace workspace;
+  final Settings settings;
+  final AppWindow? window;
   final ScrollController? scrollController;
-  final QuillTokens initialTheme;
   final bool showMemory;
+
+  /// null: o do sistema.
+  final Locale? locale;
 
   @override
   State<QuillApp> createState() => QuillAppState();
 }
 
 class QuillAppState extends State<QuillApp> {
-  late QuillTokens theme = widget.initialTheme;
   late final AppLifecycleListener _lifecycle;
+
+  DocumentController get doc => widget.workspace.doc;
+
+  QuillTokens get theme =>
+      builtInThemes.firstWhere((t) => t.id == widget.settings.theme, orElse: () => builtInThemes.first);
 
   @override
   void initState() {
     super.initState();
-    widget.doc.addListener(_syncPaper);
-    // Fechar a janela: fecha o documento no motor antes (tira a trava .~lock).
-    _lifecycle = AppLifecycleListener(onExitRequested: () async {
-      await widget.doc.close();
-      return AppExitResponse.exit;
-    });
+    doc.addListener(_syncPaper);
+    widget.settings.addListener(_onSettings);
+    // Fechar a janela: pergunta se há alterações e fecha o documento no motor
+    // (tira a trava .~lock).
+    _lifecycle = AppLifecycleListener(
+      onExitRequested: () async =>
+          await widget.workspace.requestExit() ? AppExitResponse.exit : AppExitResponse.cancel,
+    );
   }
 
   @override
   void dispose() {
     _lifecycle.dispose();
-    widget.doc.removeListener(_syncPaper);
+    widget.settings.removeListener(_onSettings);
+    doc.removeListener(_syncPaper);
     super.dispose();
   }
 
   DocStatus? _paperFor;
+  String? _paperScheme;
 
   /// O papel segue o tema: a cada documento aberto, o esquema certo.
   void _syncPaper() {
-    if (widget.doc.docStatus == DocStatus.open && _paperFor != DocStatus.open) {
-      widget.doc.setPaperScheme(theme.paperScheme);
+    if (doc.docStatus == DocStatus.open && _paperFor != DocStatus.open) {
+      _paperScheme = theme.paperScheme;
+      doc.setPaperScheme(theme.paperScheme);
     }
-    _paperFor = widget.doc.docStatus;
+    _paperFor = doc.docStatus;
   }
 
-  void setTheme(QuillTokens t) {
-    setState(() => theme = t);
-    if (widget.doc.docStatus == DocStatus.open) widget.doc.setPaperScheme(t.paperScheme);
+  void _onSettings() {
+    setState(() {});
+    final scheme = theme.paperScheme;
+    if (doc.isOpen && scheme != _paperScheme) {
+      _paperScheme = scheme;
+      doc.setPaperScheme(scheme);
+    }
   }
+
+  /// Troca o tema (e o papel). O bench usa.
+  void setTheme(QuillTokens t) => widget.settings.theme = t.id;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
         debugShowCheckedModeBanner: false,
+        locale: widget.locale,
         onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
         theme: theme.toThemeData(),
         localizationsDelegates: const [
@@ -72,10 +104,11 @@ class QuillAppState extends State<QuillApp> {
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: EditorPage(
-            doc: widget.doc,
+            workspace: widget.workspace,
+            settings: widget.settings,
+            window: widget.window,
             scrollController: widget.scrollController,
             showMemory: widget.showMemory,
-            onToggleDark: () => setTheme(theme.brightness == Brightness.dark ? claro : escuro),
           ),
         ),
       );

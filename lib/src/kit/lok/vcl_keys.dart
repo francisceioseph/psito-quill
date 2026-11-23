@@ -89,3 +89,44 @@ final List<LogicalKeyboardKey> _functionKeys = [
   LogicalKeyboardKey.f5, LogicalKeyboardKey.f6, LogicalKeyboardKey.f7, LogicalKeyboardKey.f8,
   LogicalKeyboardKey.f9, LogicalKeyboardKey.f10, LogicalKeyboardKey.f11, LogicalKeyboardKey.f12,
 ];
+
+/// Para onde vai uma tecla que não é atalho do Quill.
+enum KeyRoute {
+  /// Direto ao motor (setas, Enter, Backspace, F-teclas), com os modificadores.
+  engine,
+
+  /// Texto: vai pelo IME do sistema (que faz `´` + `a` virar `á`).
+  textInput,
+
+  /// Engolida: Ctrl+letra que não é atalho do Quill não chega ao motor, para
+  /// os atalhos serem só os do jogo escolhido.
+  swallow,
+}
+
+KeyRoute routeKey(KeyEvent event, {required bool control, required bool alt}) {
+  final key = event.logicalKey;
+  if (_special.containsKey(key) || _functionKeys.contains(key)) return KeyRoute.engine;
+  if (control) return KeyRoute.swallow;
+  // O AltGr do ABNT2 conta como Alt, mas traz caractere (AltGr+Q = "/").
+  final ch = event.character;
+  if (ch != null && ch.isNotEmpty) {
+    final rune = ch.runes.first;
+    if (rune >= 0x20 && rune != 0x7f) return KeyRoute.textInput;
+  }
+  if (alt) return KeyRoute.swallow;
+  return KeyRoute.textInput; // teclas mortas e o resto: o IME decide
+}
+
+/// Teclas que só andam pelo documento (valem no modo só leitura).
+bool isNavigationKey(LogicalKeyboardKey key) => _navigation.contains(key);
+
+final Set<LogicalKeyboardKey> _navigation = {
+      LogicalKeyboardKey.arrowDown,
+      LogicalKeyboardKey.arrowUp,
+      LogicalKeyboardKey.arrowLeft,
+      LogicalKeyboardKey.arrowRight,
+      LogicalKeyboardKey.home,
+      LogicalKeyboardKey.end,
+      LogicalKeyboardKey.pageUp,
+      LogicalKeyboardKey.pageDown,
+    };

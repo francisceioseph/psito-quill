@@ -35,6 +35,7 @@ enum EngineEvent : int32_t {
   kEvSaveFailed = 10006, // payload: motivo
   kEvClosed = 10007,
   kEvCommandValues = 10008,  // payload: "comando\n" + JSON
+  kEvTextSelection = 10009,  // payload: "mime\n" + texto selecionado
   kEvLuaLog = 10100,     // payload: texto do psito.log
   kEvLuaDone = 10101,    // payload: {"ok":bool,"error":"..."}
 };
@@ -67,6 +68,14 @@ class LokEngine {
   void saveAs(const std::string& path, const std::string& format,
               const std::string& options);
   void commandValues(const std::string& command);
+  // Entrada composta (IME): type é LOK_EXT_TEXTINPUT (pré-edição) ou
+  // LOK_EXT_TEXTINPUT_END (confirma).
+  void extTextInput(int type, const std::string& text);
+  // A seleção como texto, no mime pedido; responde com kEvTextSelection.
+  void textSelection(const std::string& mime);
+  void paste(const std::string& mime, const std::string& data);
+  // Devolve ao sistema a memória que o LibreOffice guarda em caches.
+  void trimMemory(int target);
   // Redesenha todos os ladrilhos (troca de esquema de cor, por exemplo).
   void repaintAll();
 

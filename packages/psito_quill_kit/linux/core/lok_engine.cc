@@ -204,6 +204,46 @@ void LokEngine::commandValues(const std::string& command) {
   });
 }
 
+void LokEngine::extTextInput(int type, const std::string& text) {
+  if (type == LOK_EXT_TEXTINPUT_END) {  // mede como uma tecla
+    std::lock_guard<std::mutex> lock(latencyMutex_);
+    if (!keyPending_) {
+      keyPending_ = true;
+      keyInvalidated_ = false;
+      keyTime_ = Clock::now();
+    }
+  }
+  queue_.post([this, type, text] {
+    if (doc_ && doc_->pClass->postWindowExtTextInputEvent)
+      doc_->pClass->postWindowExtTextInputEvent(doc_, 0, type, text.c_str());
+  });
+}
+
+void LokEngine::textSelection(const std::string& mime) {
+  queue_.post([this, mime] {
+    if (!doc_) return;
+    char* used = nullptr;
+    char* text = doc_->pClass->getTextSelection(doc_, mime.c_str(), &used);
+    std::string usedMime = used ? used : mime;
+    std::string out = text ? text : "";
+    free(used);
+    free(text);
+    sink_->onEvent(kEvTextSelection, usedMime + "\n" + out);
+  });
+}
+
+void LokEngine::paste(const std::string& mime, const std::string& data) {
+  queue_.post([this, mime, data] {
+    if (doc_) doc_->pClass->paste(doc_, mime.c_str(), data.data(), data.size());
+  });
+}
+
+void LokEngine::trimMemory(int target) {
+  queue_.post([this, target] {
+    if (kit_ && kit_->pClass->trimMemory) kit_->pClass->trimMemory(kit_, target);
+  });
+}
+
 void LokEngine::repaintAll() {
   queue_.post([this] {
     cache_.invalidateAll();

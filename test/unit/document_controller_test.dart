@@ -2,6 +2,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:psito_quill/src/document/document_controller.dart';
+import 'package:psito_quill/src/document/text_clipboard.dart';
 import 'package:psito_quill/src/kit/fake/fake_quill_kit.dart';
 import 'package:psito_quill/src/kit/quill_kit.dart';
 import 'package:psito_quill/src/plugins/plugin_host.dart';
@@ -103,7 +104,105 @@ void main() {
     expect(kit.luaRuns.single, 'ola/plugin.lua');
     expect(doc.message, isA<PluginMessage>().having((m) => m.text, 'texto', 'olá'));
   });
+
+  group('Fase 1', () {
+    late MemoryTextClipboard clip;
+    setUp(() {
+      clip = MemoryTextClipboard();
+      doc.dispose();
+      kit = FakeQuillKit();
+      doc = DocumentController(kit, clipboard: clip)..start();
+      doc.open('/a.odt');
+    });
+
+    test('o IME: pré-edição e texto confirmado', () {
+      doc.composeText('´');
+      expect(kit.preedit, '´');
+      doc.insertText('é');
+      expect((kit.preedit, kit.text), ('', 'é'));
+    });
+
+    test('desfazer e refazer seguem o motor', () {
+      expect(doc.canUndo, isFalse);
+      doc.insertText('olá');
+      expect(doc.canUndo, isTrue);
+      doc.undo();
+      expect((kit.text, doc.canRedo), ('', true));
+      doc.redo();
+      expect(kit.text, 'olá');
+    });
+
+    test('copiar põe o texto na área do sistema; colar o mesmo usa o do motor', () async {
+      kit
+        ..selectedText = 'trecho'
+        ..emit(const SelectionChanged([Rect.fromLTWH(0, 0, 10, 10)]));
+      doc.copy();
+      expect(clip.text, 'trecho');
+      expect(kit.unoCommands, ['.uno:Copy']);
+      await doc.paste();
+      expect(kit.unoCommands.last, '.uno:Paste');
+      clip.text = 'de outro app';
+      await doc.paste();
+      expect(kit.pasted, ['de outro app']);
+    });
+
+    test('recortar pede o texto antes de cortar', () {
+      kit.text = 'um trecho';
+      kit
+        ..selectedText = 'trecho'
+        ..emit(const SelectionChanged([Rect.fromLTWH(0, 0, 10, 10)]));
+      doc.cut();
+      expect(clip.text, 'trecho');
+      expect(kit.text, 'um ');
+    });
+
+    test('só leitura: não edita, mas copia', () {
+      doc.open('/b.odt', lockOwner: 'maria');
+      doc.insertText('x');
+      doc.uno('.uno:Bold');
+      doc.undo();
+      expect(kit.text, '');
+      expect(kit.unoCommands, isEmpty);
+      expect(doc.save(), isFalse, reason: 'só leitura vira Salvar como');
+      kit.emit(const SelectionChanged([Rect.fromLTWH(0, 0, 10, 10)]));
+      kit.selectedText = 'lido';
+      doc.copy();
+      expect(clip.text, 'lido');
+    });
+
+    test('zoom em passos de 5 %, entre 50 % e 300 %', () {
+      doc.setZoom(1.234);
+      expect(doc.zoom, 1.25);
+      doc.setZoom(10);
+      expect(doc.zoom, maxZoom);
+      doc.setZoom(0);
+      expect(doc.zoom, minZoom);
+    });
+
+    test('página, palavras, estilo e fontes vêm do motor', () {
+      kit.emitState('.uno:StatePageNumber', 'Página 2 de 3');
+      expect(doc.page, (2, 3));
+      doc.insertText('duas palavras');
+      expect(doc.wordCount?.words, 2);
+      expect(doc.paragraphStyle, 'Estilo de parágrafo padrão');
+      expect(doc.fonts, contains('Noto Serif'));
+    });
+
+    test('salvar como passa a ser o arquivo novo', () {
+      doc.saveAs('/c.docx');
+      expect(kit.saved.single, ('/c.docx', 'docx'));
+      expect(doc.path, '/c.docx');
+    });
+
+    test('arquivo que não abre: mensagem com o caminho', () {
+      kit.openFails = true;
+      doc.open('/ruim.docx');
+      expect(doc.docStatus, DocStatus.failed);
+      expect((doc.message as OpenFailedMessage).path, '/ruim.docx');
+    });
+  });
 }
+
 
 class _Bundle extends Fake implements AssetBundle {
   _Bundle(this.source);

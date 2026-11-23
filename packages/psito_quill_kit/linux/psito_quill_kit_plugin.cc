@@ -65,6 +65,7 @@ static void pqk_tile_texture_init(PqkTileTexture* self) {}
 namespace {
 
 FlTextureRegistrar* g_registrar = nullptr;
+FlView* g_view = nullptr;
 
 class Kit : public pqk::EngineSink {
  public:
@@ -178,6 +179,32 @@ void pqk_command_values(const char* command) {
   if (g_kit) g_kit->engine().commandValues(str(command));
 }
 
+void pqk_ext_text_input(int32_t type, const char* text) {
+  if (g_kit) g_kit->engine().extTextInput(type, str(text));
+}
+void pqk_text_selection(const char* mime) {
+  if (g_kit) g_kit->engine().textSelection(str(mime));
+}
+void pqk_paste(const char* mime, const char* data) {
+  if (g_kit) g_kit->engine().paste(str(mime), str(data));
+}
+void pqk_trim_memory(int32_t target) {
+  if (g_kit) g_kit->engine().trimMemory(target);
+}
+
+void pqk_set_window_title(const char* title) {
+  if (!g_view) return;
+  // O GTK só pode ser tocado na thread principal: a chamada vai pelo laço.
+  g_idle_add_full(G_PRIORITY_DEFAULT_IDLE,
+                  [](gpointer data) -> gboolean {
+                    char* t = static_cast<char*>(data);
+                    GtkWidget* top = gtk_widget_get_toplevel(GTK_WIDGET(g_view));
+                    if (GTK_IS_WINDOW(top)) gtk_window_set_title(GTK_WINDOW(top), t);
+                    return G_SOURCE_REMOVE;
+                  },
+                  g_strdup(str(title).c_str()), g_free);
+}
+
 void pqk_lua_run(const char* source, const char* chunk_name, int64_t memory_limit,
                  int64_t instruction_limit) {
   if (!g_kit) return;
@@ -237,4 +264,5 @@ void pqk_free_string(char* s) { free(s); }
 void psito_quill_kit_plugin_register_with_registrar(FlPluginRegistrar* registrar) {
   g_registrar = fl_plugin_registrar_get_texture_registrar(registrar);
   g_object_ref(g_registrar);
+  g_view = fl_plugin_registrar_get_view(registrar);
 }

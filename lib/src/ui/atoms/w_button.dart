@@ -1,13 +1,22 @@
-// Átomos de botão: WButton (ação) e WToggle (liga/desliga).
+// Átomos de botão: WButton (ação), WToggle (liga/desliga) e WTextButton
+// (só texto: abas da faixa, itens do painel Arquivo). Todos sobre a mesma
+// superfície, WControlSurface, que o WDropdown também usa.
 //
-// Os dois leem só os tokens. O desenho muda com o ComponentStyle do tema
+// Leem só os tokens. O desenho muda com o ComponentStyle do tema
 // (Strategy): moderno com raio e realce suave, ou bisel 3D do tema 97.
 import 'package:flutter/material.dart';
 
 import '../tokens/tokens.dart';
 
 class WButton extends StatelessWidget {
-  const WButton({super.key, required this.icon, required this.label, this.onPressed, this.showLabel = false});
+  const WButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    this.onPressed,
+    this.showLabel = false,
+    this.tooltip,
+  });
 
   final IconData icon;
 
@@ -16,61 +25,107 @@ class WButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool showLabel;
 
+  /// A dica, se for diferente do rótulo ("Salvar (Ctrl+B)").
+  final String? tooltip;
+
   @override
-  Widget build(BuildContext context) => _ControlSurface(
+  Widget build(BuildContext context) => WControlSurface(
         icon: icon,
-        label: label,
-        showLabel: showLabel,
+        text: showLabel ? label : null,
+        tooltip: tooltip ?? label,
         onPressed: onPressed,
         selected: false,
-        semantics: (child) => Semantics(button: true, enabled: onPressed != null, label: label, child: child),
+        semantics: (child) => Semantics(container: true, button: true, enabled: onPressed != null, label: label, child: child),
+      );
+}
+
+/// Um botão só de texto. [selected] marca a aba atual.
+class WTextButton extends StatelessWidget {
+  const WTextButton({super.key, required this.label, this.onPressed, this.selected = false, this.icon, this.autofocus = false});
+
+  final String label;
+  final bool autofocus;
+  final VoidCallback? onPressed;
+  final bool selected;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) => WControlSurface(
+        icon: icon,
+        text: label,
+        tooltip: null,
+        autofocus: autofocus,
+        onPressed: onPressed,
+        selected: selected,
+        semantics: (child) =>
+            Semantics(container: true, button: true, selected: selected, enabled: onPressed != null, label: label, child: child),
       );
 }
 
 class WToggle extends StatelessWidget {
-  const WToggle({super.key, required this.icon, required this.label, required this.value, this.onPressed});
+  const WToggle({super.key, required this.icon, required this.label, required this.value, this.onPressed, this.tooltip});
 
   final IconData icon;
   final String label;
+  final String? tooltip;
 
   /// Ligado? O valor vem do estado do motor, não do clique.
   final bool value;
   final VoidCallback? onPressed;
 
   @override
-  Widget build(BuildContext context) => _ControlSurface(
+  Widget build(BuildContext context) => WControlSurface(
         icon: icon,
-        label: label,
-        showLabel: false,
+        tooltip: tooltip ?? label,
         onPressed: onPressed,
         selected: value,
         semantics: (child) =>
-            Semantics(button: true, toggled: value, enabled: onPressed != null, label: label, child: child),
+            Semantics(container: true, button: true, toggled: value, enabled: onPressed != null, label: label, child: child),
       );
 }
 
-class _ControlSurface extends StatefulWidget {
-  const _ControlSurface({
-    required this.icon,
-    required this.label,
-    required this.showLabel,
+/// A superfície comum dos controles: ícone e/ou texto, realce de mouse e de
+/// foco, Enter/Espaço pelo teclado, e o desenho moderno ou bisel.
+///
+/// Clicar não tira o foco do documento (como na faixa do Word): só o Tab
+/// foca um controle.
+class WControlSurface extends StatefulWidget {
+  const WControlSurface({
+    super.key,
+    this.icon,
+    this.text,
+    this.trailingIcon,
+    this.width,
+    this.outlined = false,
+    this.autofocus = false,
+    required this.tooltip,
     required this.onPressed,
     required this.selected,
     required this.semantics,
   });
 
-  final IconData icon;
-  final String label;
-  final bool showLabel;
+  final IconData? icon;
+  final String? text;
+
+  /// Uma seta, nos campos de lista.
+  final IconData? trailingIcon;
+
+  /// Largura fixa (campos de lista); null: a do conteúdo.
+  final double? width;
+
+  /// Com contorno, como um campo (no estilo moderno).
+  final bool outlined;
+  final bool autofocus;
+  final String? tooltip;
   final VoidCallback? onPressed;
   final bool selected;
   final Widget Function(Widget) semantics;
 
   @override
-  State<_ControlSurface> createState() => _ControlSurfaceState();
+  State<WControlSurface> createState() => _ControlSurfaceState();
 }
 
-class _ControlSurfaceState extends State<_ControlSurface> {
+class _ControlSurfaceState extends State<WControlSurface> {
   bool _hover = false, _pressed = false, _focused = false;
 
   @override
@@ -84,11 +139,20 @@ class _ControlSurfaceState extends State<_ControlSurface> {
             ? c.accent
             : c.onFrame;
 
-    final content = Row(mainAxisSize: MainAxisSize.min, children: [
-      Icon(widget.icon, size: 20, color: fg),
-      if (widget.showLabel) ...[
-        SizedBox(width: t.space.sm),
-        Text(widget.label, style: TextStyle(color: fg, fontSize: t.font.ui, fontFamily: t.font.family)),
+    final text = widget.text;
+    final label = text == null
+        ? null
+        : Text(text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: fg, fontSize: t.font.ui, fontFamily: t.font.family));
+    final content = Row(mainAxisSize: widget.width == null ? MainAxisSize.min : MainAxisSize.max, children: [
+      if (widget.icon case final icon?) Icon(icon, size: 20, color: fg),
+      if (widget.icon != null && label != null) SizedBox(width: t.space.sm),
+      if (label != null) widget.width == null ? Flexible(child: label) : Expanded(child: label),
+      if (widget.trailingIcon case final trailing?) ...[
+        SizedBox(width: t.space.xs),
+        Icon(trailing, size: 18, color: fg),
       ],
     ]);
 
@@ -102,7 +166,11 @@ class _ControlSurfaceState extends State<_ControlSurface> {
                       ? c.frameRaised
                       : null,
           borderRadius: BorderRadius.circular(t.radius.control),
-          border: _focused ? Border.all(color: c.focusRing, width: 2) : null,
+          border: _focused
+              ? Border.all(color: c.focusRing, width: 2)
+              : widget.outlined
+                  ? Border.all(color: c.border)
+                  : null,
         ),
       // Bisel: claro em cima e à esquerda; afundado (invertido) se ligado ou
       // apertado.
@@ -118,12 +186,9 @@ class _ControlSurfaceState extends State<_ControlSurface> {
         }(),
     };
 
-    return widget.semantics(
-      Tooltip(
-        message: widget.label,
-        waitDuration: const Duration(milliseconds: 600),
-        child: FocusableActionDetector(
+    final surface = FocusableActionDetector(
           enabled: enabled,
+          autofocus: widget.autofocus,
           mouseCursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
           onShowHoverHighlight: (v) => setState(() => _hover = v),
           onShowFocusHighlight: (v) => setState(() => _focused = v),
@@ -144,15 +209,19 @@ class _ControlSurfaceState extends State<_ControlSurface> {
                 : null,
             child: AnimatedContainer(
               duration: t.motion.fast,
+              width: widget.width,
               constraints: BoxConstraints(minHeight: t.density.control, minWidth: t.density.control),
               padding: EdgeInsets.symmetric(horizontal: t.space.md),
               alignment: Alignment.center,
               decoration: decoration,
-              child: content,
+              // O nome para o leitor de tela vem do Semantics de fora.
+              child: ExcludeSemantics(child: content),
             ),
           ),
-        ),
-      ),
+        );
+    final tip = widget.tooltip;
+    return widget.semantics(
+      tip == null ? surface : Tooltip(message: tip, waitDuration: const Duration(milliseconds: 600), child: surface),
     );
   }
 }

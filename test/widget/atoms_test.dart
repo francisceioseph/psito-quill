@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:psito_quill/src/ui/atoms/w_button.dart';
+import 'package:psito_quill/src/ui/atoms/w_dropdown.dart';
 import 'package:psito_quill/src/ui/atoms/w_label.dart';
 import 'package:psito_quill/src/ui/tokens/themes/themes.dart';
 import 'package:psito_quill/src/ui/tokens/tokens.dart';
@@ -65,5 +66,54 @@ void main() {
     await tester.pumpWidget(themed(
         Center(child: WToggle(icon: Icons.format_bold, label: 'N', value: true, onPressed: () {})), bevel));
     expect(borderOf().top.color, bevel.colors.bevelDark);
+  });
+
+  testWidgets('WDropdown mostra o valor atual, abre e escolhe; o menu fecha', (tester) async {
+    double? chosen;
+    var closed = 0;
+    await tester.pumpWidget(themed(
+      Center(
+        child: WDropdown<double>(
+          label: 'Tamanho',
+          text: '12',
+          items: const [WDropdownItem(10, '10'), WDropdownItem(14, '14')],
+          onSelected: (v) => chosen = v,
+          onClosed: () => closed++,
+        ),
+      ),
+      claro,
+    ));
+    expect(find.text('12'), findsOneWidget);
+    await tester.tap(find.text('12'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('14'));
+    await tester.pumpAndSettle();
+    expect(chosen, 14);
+    expect(closed, 1);
+    expect(find.text('10'), findsNothing);
+  });
+
+  testWidgets('WDropdown desligado não abre', (tester) async {
+    await tester.pumpWidget(themed(
+      const Center(child: WDropdown<int>(label: 'Fonte', text: 'Serif', items: [WDropdownItem(1, 'Um')], onSelected: null)),
+      claro,
+    ));
+    await tester.tap(find.text('Serif'));
+    await tester.pumpAndSettle();
+    expect(find.text('Um'), findsNothing);
+  });
+
+  testWidgets('WTextButton: a aba atual é "selecionada" para o leitor de tela', (tester) async {
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(themed(
+      Row(children: [
+        WTextButton(label: 'Arquivo', onPressed: () {}),
+        WTextButton(label: 'Início', selected: true, onPressed: () {}),
+      ]),
+      claro,
+    ));
+    expect(tester.getSemantics(find.bySemanticsLabel('Início')), isSemantics(label: 'Início', isButton: true, isSelected: true));
+    expect(tester.getSemantics(find.bySemanticsLabel('Arquivo')), isSemantics(isSelected: false));
+    handle.dispose();
   });
 }

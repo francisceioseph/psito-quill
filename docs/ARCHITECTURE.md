@@ -7,12 +7,15 @@ O plano completo está no `PLANO.md`. Este documento descreve o que existe no c�
 ```
 Flutter (Dart)
   pages       EditorPage
-  templates   EditorTemplate
-  organisms   DocumentView (a página), Toolbar, StatusBar
-  atoms       WButton, WToggle, WLabel           ← só leem QuillTokens
+  templates   EditorTemplate (faixa, aviso, corpo, status)
+  organisms   DocumentView (a página), Ribbon, FilePanel, StatusBar, diálogo "salvar?"
+  molecules   CommandButton, RibbonGroup, InfoBanner
+  atoms       WButton, WToggle, WTextButton, WDropdown, WLabel, WSeparator  ← só leem QuillTokens
   ─────────────────────────────────────────────
-  estado      DocumentController, CommandRegistry, PluginHost
-  kit         QuillKit (porta) ← LokQuillKit (FFI) | FakeQuillKit (testes)
+  fluxos      Workspace (novo, abrir, salvar, recentes, sair)
+  estado      DocumentController, CommandRegistry, Settings, RecentFiles, PluginHost
+  portas      QuillKit ← LokQuillKit (FFI) | FakeQuillKit (testes)
+              FileDialogs, TextClipboard, AppWindow, e o LockInspector (a trava)
                       │
           dart:ffi + NativeCallable.listener
                       │
@@ -38,8 +41,11 @@ packages/psito_quill_kit (C++)
 
 ## O caminho de uma tecla
 
-1. O `DocumentView` recebe a tecla. Se for atalho do `CommandRegistry` (como `Ctrl+N`), roda o comando. Se não, `vclKeyFor` traduz para o VCL e o `DocumentController.postKey` manda ao kit.
-2. O `pqk_post_key` põe a tecla na fila do kit, e a thread do kit a entrega ao LOK.
+1. O `DocumentView` recebe a tecla. Se for atalho do `CommandRegistry` (como `Ctrl+N`), roda o comando. Se não, o `routeKey` decide:
+   - setas, Enter, Backspace: o `vclKeyFor` traduz para o VCL, e o `DocumentController.postKey` manda ao kit;
+   - texto: a tecla segue para o IME do sistema, que devolve o texto (já composto, como o `á`) pelo `TextInputClient`. O `DocumentController.insertText` manda como `LOK_EXT_TEXTINPUT` + `END`;
+   - Ctrl+letra que não é atalho: engolida.
+2. O `pqk_post_key` (ou o `pqk_ext_text_input`) põe a tecla na fila do kit, e a thread do kit a entrega ao LOK.
 3. O LibreOffice manda o `LOK_CALLBACK_INVALIDATE_TILES` com o retângulo que mudou.
 4. A fila marca sujas só as vagas tocadas e redesenha as visíveis, 4 por passada.
 5. Para cada vaga redesenhada, o kit chama `mark_texture_frame_available`, e o Flutter mostra os pixels novos no próximo quadro. Nada passa pelo Dart.
@@ -50,13 +56,14 @@ Enquanto o ladrilho novo não chega, o velho continua na tela, sem quadro em bra
 
 | Padrão | Onde | Por quê |
 |---|---|---|
-| Ports & Adapters | `QuillKit` com o `LokQuillKit` e o `FakeQuillKit` | A UI e quase todos os testes rodam sem o LibreOffice, e o motor pode ir para outro processo sem mudar a UI |
+| Ports & Adapters | `QuillKit` com o `LokQuillKit` e o `FakeQuillKit`; `FileDialogs`, `TextClipboard`, `AppWindow` | A UI e quase todos os testes rodam sem o LibreOffice nem o GTK, e o motor pode ir para outro processo sem mudar a UI |
+| Facade | `Workspace` | Os fluxos de arquivo (trava, recentes, "salvar?", salvar como) num lugar só; os comandos e a UI só chamam ele |
 | Active Object | `TaskQueue` + `LokEngine` | O LOK não é thread-safe, e a UI nunca espera o motor |
 | Command | `CommandRegistry` (`Command`: id, rótulo, ícone, atalhos por jogo, `isActive`, `canRun`) | Uma fonte só para a barra, os atalhos e, depois, os menus 97, a paleta e os plugins |
 | Observer | Callbacks do LOK → `Stream<KitEvent>` tipado → `DocumentController` (`ChangeNotifier`) | O estado dos botões (negrito ligado) vem do motor, não é adivinhado |
 | Flyweight + LRU | `TileCache`: vagas fixas, cada uma uma textura | A memória dos ladrilhos é fixa, seja qual for o documento |
 | Strategy | `ComponentStyle` (moderno ou bisel) nos átomos | O mesmo átomo vira moderno ou Clássico 97 |
-| Atomic design + tokens | `lib/src/ui/` (atoms → pages) e `QuillTokens` | Nenhuma cor literal fora de `tokens/themes/` (o `tokens_test` confere) |
+| Atomic design + tokens | `lib/src/ui/` (atoms → molecules → organisms → templates → pages) e `QuillTokens` | Nenhuma cor literal fora de `tokens/themes/` (o `tokens_test` confere) |
 | Memento | (Fase 3) instantâneos de capítulo | |
 | Repository | (Fase 3) `BookRepository` | |
 
@@ -66,14 +73,16 @@ Enquanto o ladrilho novo não chega, o velho continua na tela, sem quadro em bra
 lib/
   main.dart                  liga o perfil, o kit e o app (ou o --bench)
   l10n/                      app_pt.arb (modelo), app_en.arb → gen/
-  src/app.dart               MaterialApp, tema atual, fechar documento ao sair
+  src/app.dart               MaterialApp, tema das preferências, "salvar?" ao sair
   src/kit/                   quill_kit.dart (a porta), lok/ (adaptador), fake/
-  src/document/              document_controller.dart
-  src/commands/              command_registry.dart, commands_document.dart
+  src/document/              document_controller.dart, workspace.dart, text_clipboard.dart
+  src/files/                 lo_lock.dart (a trava), recent_files.dart, file_dialogs.dart, app_window.dart
+  src/settings/              settings.dart (tema, atalhos), config_dir.dart
+  src/commands/              command_registry.dart, commands_document.dart (todos os comandos)
   src/plugins/               plugin_host.dart
   src/bench/                 bench_runner.dart (medições da Fase 0)
   src/ui/tokens/             tokens.dart, themes/ (claro, escuro)
-  src/ui/{atoms,organisms,templates,pages}/
+  src/ui/{atoms,molecules,organisms,templates,pages}/
 packages/psito_quill_kit/
   ffigen.yaml                bindings → lib/src/quill_kit_bindings.g.dart
   linux/include/             psito_quill_kit_plugin.h, quill_kit_api.h
@@ -84,6 +93,7 @@ packages/psito_quill_kit/
 plugins/ola/                 o primeiro plugin Lua
 integration_test/            com o LibreOffice real
 test/{unit,widget}/          com o kit falso
+test/support/harness.dart    o kit falso montado com o Workspace, janelas e área de transferência falsas
 test/fixtures/               capitulo-30p.docx
 tool/                        native-test.sh, bench.sh, make_fixture.py
 ```
@@ -92,10 +102,10 @@ tool/                        native-test.sh, bench.sh, make_fixture.py
 
 | Nível | Ferramenta | Comando | O quê |
 |---|---|---|---|
-| Unidade | `flutter test` | `./test.sh` | Leitura dos callbacks, teclas → VCL, comandos, perfil do LO, controlador com o kit falso, tokens, contraste e cores literais |
+| Unidade | `flutter test` | `./test.sh` | Leitura dos callbacks e dos estados, teclas → VCL e a rota delas, comandos (sem atalho repetido), perfil do LO, a trava, recentes, preferências, controlador e `Workspace` com o kit falso, tokens, contraste e cores literais |
 | Nativo | GoogleTest | `tool/native-test.sh` (também no `./test.sh`) | Fila do kit, cache LRU, caixa de areia do Lua |
-| Widget | `flutter test` | `./test.sh` | Átomos em cada tema e estilo, a página, a tela do editor, rótulos de acessibilidade |
-| Integração | `integration_test` | `./test.sh --integracao` | O LibreOffice real: abrir, digitar, negrito, salvar e conferir o DOCX, reabrir, Lua |
-| Ponta a ponta | `tool/bench.sh` | `tool/bench.sh` | Memória, latência, rolagem, papel escuro: as metas da seção 8 do plano |
+| Widget | `flutter test` | `./test.sh` | Átomos em cada tema e estilo, a página (IME, rotas das teclas, só leitura, zoom), a faixa, o painel Arquivo, o "salvar?", rótulos de acessibilidade |
+| Integração | `integration_test` | `./test.sh --integracao` | O LibreOffice real: abrir, status, digitar (também pelo IME), desfazer, negrito, copiar e colar, salvar DOCX e ODT e conferir o XML, a trava, Lua |
+| Ponta a ponta | `tool/bench.sh`, `tool/fechar-test.sh` | `tool/bench.sh`; o `fechar-test` roda no `./test.sh --integracao` | Memória, latência, rolagem, papel escuro: as metas da seção 8 do plano. Fechar a janela: código 0 e a trava apagada |
 
 **O host tem pouca RAM.** O `./test.sh` roda 2 processos de teste (`TEST_JOBS`), num escopo do systemd com 2 GB de limite (`TEST_MEM`) e sem swap, como no Psito OS. Se passar do limite, só os testes morrem.

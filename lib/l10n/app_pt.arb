@@ -7,16 +7,195 @@
   "documentArea": "Documento",
   "statusStarting": "Ligando o motor…",
   "statusEngineFailed": "O motor não ligou: {detail}",
-  "@statusEngineFailed": {"placeholders": {"detail": {"type": "String"}}},
+  "@statusEngineFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
   "statusOpening": "Abrindo…",
   "statusNoDocument": "Nenhum documento",
   "statusSaved": "Salvo em {path}",
-  "@statusSaved": {"placeholders": {"path": {"type": "String"}}},
+  "@statusSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
   "statusError": "Erro: {detail}",
-  "@statusError": {"placeholders": {"detail": {"type": "String"}}},
+  "@statusError": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
   "statusPlugin": "Plugin: {text}",
-  "@statusPlugin": {"placeholders": {"text": {"type": "String"}}},
+  "@statusPlugin": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "statusModified": "modificado",
   "statusMemory": "{mb} MB",
-  "@statusMemory": {"placeholders": {"mb": {"type": "int"}}}
+  "@statusMemory": {
+    "placeholders": {
+      "mb": {
+        "type": "int"
+      }
+    }
+  },
+  "commandNew": "Novo",
+  "commandOpen": "Abrir…",
+  "commandSaveAs": "Salvar como…",
+  "commandUndo": "Desfazer",
+  "commandRedo": "Refazer",
+  "commandCut": "Recortar",
+  "commandCopy": "Copiar",
+  "commandPaste": "Colar",
+  "commandSelectAll": "Selecionar tudo",
+  "commandItalic": "Itálico",
+  "commandUnderline": "Sublinhado",
+  "commandStrikeout": "Tachado",
+  "commandAlignLeft": "Alinhar à esquerda",
+  "commandAlignCenter": "Centralizar",
+  "commandAlignRight": "Alinhar à direita",
+  "commandJustify": "Justificar",
+  "commandBullets": "Marcadores",
+  "commandNumbering": "Numeração",
+  "commandZoomIn": "Aumentar o zoom",
+  "commandZoomOut": "Diminuir o zoom",
+  "commandZoomReset": "Zoom em 100%",
+  "styleDefault": "Padrão",
+  "styleBody": "Corpo de texto",
+  "styleTitle": "Título do livro",
+  "styleSubtitle": "Subtítulo",
+  "styleHeading": "Título {level}",
+  "@styleHeading": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "styleQuote": "Citação",
+  "ribbonFile": "Arquivo",
+  "ribbonHome": "Início",
+  "groupClipboard": "Área de transferência",
+  "groupStyles": "Estilos",
+  "groupFont": "Fonte",
+  "groupParagraph": "Parágrafo",
+  "fieldStyle": "Estilo de parágrafo",
+  "fieldFont": "Fonte",
+  "fieldFontSize": "Tamanho da fonte",
+  "fileBack": "Voltar ao documento",
+  "recentTitle": "Recentes",
+  "recentEmpty": "Nenhum arquivo recente.",
+  "preferencesTitle": "Preferências",
+  "prefTheme": "Tema",
+  "prefShortcuts": "Atalhos de teclado",
+  "schemeWordPt": "Word em português (Ctrl+N negrito, Ctrl+B salvar)",
+  "schemeWordEn": "Word em inglês (Ctrl+B negrito, Ctrl+S salvar)",
+  "themeClaro": "Claro",
+  "themeEscuro": "Escuro",
+  "readOnlyBanner": "Só leitura: {owner} está com este arquivo aberto. Para editar, salve uma cópia.",
+  "@readOnlyBanner": {
+    "placeholders": {
+      "owner": {
+        "type": "String"
+      }
+    }
+  },
+  "readOnlySaveCopy": "Salvar uma cópia…",
+  "unsavedTitle": "Salvar as alterações?",
+  "unsavedBody": "“{name}” tem alterações que ainda não foram salvas.",
+  "@unsavedBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "unsavedSave": "Salvar",
+  "unsavedDiscard": "Não salvar",
+  "unsavedCancel": "Cancelar",
+  "untitled": "Documento sem título",
+  "windowTitle": "{name} — Psito Quill",
+  "@windowTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "windowTitleModified": "• {name} — Psito Quill",
+  "@windowTitleModified": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "windowTitleReadOnly": "{name} (só leitura) — Psito Quill",
+  "@windowTitleReadOnly": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fileTypeDocuments": "Documentos (ODT, DOCX)",
+  "formatOdt": "Documento ODF (.odt)",
+  "formatDocx": "Documento do Word (.docx)",
+  "statusPage": "Página {page} de {pages}",
+  "@statusPage": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "pages": {
+        "type": "int"
+      }
+    }
+  },
+  "statusWords": "{count, plural, =1{1 palavra} other{{count} palavras}}",
+  "@statusWords": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statusWordsSelected": "{count, plural, =1{1 palavra selecionada} other{{count} palavras selecionadas}}",
+  "@statusWordsSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statusZoom": "{percent} %",
+  "@statusZoom": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "statusReadOnly": "só leitura",
+  "statusOpenFailed": "Não foi possível abrir {name}: {detail}",
+  "@statusOpenFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "detail": {
+        "type": "String"
+      }
+    }
+  }
 }

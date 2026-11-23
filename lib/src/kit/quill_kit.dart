@@ -117,7 +117,19 @@ class PluginFinished extends KitEvent {
   final String error;
 }
 
-/// O resto, cru: o que a Fase 0 ainda não usa.
+/// A seleção como texto simples (resposta de [QuillKit.requestTextSelection]).
+class TextSelectionContent extends KitEvent {
+  const TextSelectionContent(this.text);
+  final String text;
+}
+
+/// Resposta de [QuillKit.requestCommandValues]: o JSON do motor.
+class CommandValues extends KitEvent {
+  const CommandValues(this.command, this.json);
+  final String command, json;
+}
+
+/// O resto, cru: o que o app ainda não usa.
 class OtherKitEvent extends KitEvent {
   const OtherKitEvent(this.type, this.payload);
   final int type;
@@ -158,7 +170,26 @@ abstract interface class QuillKit {
   void postKey(KeyEventType type, {int charCode = 0, int keyCode = 0});
   void postMouse(MouseEventType type, int x, int y, {int count = 1, int buttons = 1, int modifier = 0});
   void uno(String command, [String argsJson = '']);
+  /// Salva em [path]. O documento passa a ser aquele arquivo (os próximos
+  /// salvamentos vão para lá), mesmo num formato diferente.
   void saveAs(String path, String format);
+
+  /// Entrada composta (IME). Sem [commit], é a pré-edição, que a próxima
+  /// chamada substitui. Com [commit], o texto entra no documento.
+  void extTextInput(String text, {required bool commit});
+
+  /// Pede os valores possíveis de um comando (as fontes de
+  /// `.uno:CharFontName`, por exemplo); a resposta é um [CommandValues].
+  void requestCommandValues(String command);
+
+  /// Pede a seleção como texto; a resposta é um [TextSelectionContent].
+  void requestTextSelection();
+
+  /// Cola texto simples no cursor.
+  void pasteText(String text);
+
+  /// Devolve ao sistema a memória de caches do motor (ao ficar ocioso).
+  void trimMemory();
 
   /// Roda um plugin Lua na caixa de areia.
   void runLua(String source, String name, {int memoryLimit = 16 << 20, int instructionLimit = 10000000});

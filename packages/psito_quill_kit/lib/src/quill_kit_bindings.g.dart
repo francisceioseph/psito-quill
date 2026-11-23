@@ -54,6 +54,17 @@ class QuillKitBindings {
   late final _pqk_debug_tiles_luma = _pqk_debug_tiles_lumaPtr
       .asFunction<double Function()>();
 
+  void pqk_ext_text_input(int type, ffi.Pointer<ffi.Char> text) {
+    return _pqk_ext_text_input(type, text);
+  }
+
+  late final _pqk_ext_text_inputPtr =
+      _lookup<
+        ffi.NativeFunction<ffi.Void Function(ffi.Int32, ffi.Pointer<ffi.Char>)>
+      >('pqk_ext_text_input');
+  late final _pqk_ext_text_input = _pqk_ext_text_inputPtr
+      .asFunction<void Function(int, ffi.Pointer<ffi.Char>)>();
+
   void pqk_free_string(ffi.Pointer<ffi.Char> s) {
     return _pqk_free_string(s);
   }
@@ -157,6 +168,21 @@ class QuillKitBindings {
       );
   late final _pqk_open = _pqk_openPtr
       .asFunction<void Function(ffi.Pointer<ffi.Char>)>();
+
+  void pqk_paste(ffi.Pointer<ffi.Char> mime, ffi.Pointer<ffi.Char> data) {
+    return _pqk_paste(mime, data);
+  }
+
+  late final _pqk_pastePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>)
+        >
+      >('pqk_paste');
+  late final _pqk_paste = _pqk_pastePtr
+      .asFunction<
+        void Function(ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>)
+      >();
 
   void pqk_post_key(int type, int char_code, int key_code) {
     return _pqk_post_key(type, char_code, key_code);
@@ -269,6 +295,17 @@ class QuillKitBindings {
   late final _pqk_set_viewport = _pqk_set_viewportPtr
       .asFunction<void Function(int, int, int, int, int)>();
 
+  void pqk_set_window_title(ffi.Pointer<ffi.Char> title) {
+    return _pqk_set_window_title(title);
+  }
+
+  late final _pqk_set_window_titlePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Char>)>>(
+        'pqk_set_window_title',
+      );
+  late final _pqk_set_window_title = _pqk_set_window_titlePtr
+      .asFunction<void Function(ffi.Pointer<ffi.Char>)>();
+
   void pqk_shutdown() {
     return _pqk_shutdown();
   }
@@ -276,6 +313,17 @@ class QuillKitBindings {
   late final _pqk_shutdownPtr =
       _lookup<ffi.NativeFunction<ffi.Void Function()>>('pqk_shutdown');
   late final _pqk_shutdown = _pqk_shutdownPtr.asFunction<void Function()>();
+
+  void pqk_text_selection(ffi.Pointer<ffi.Char> mime) {
+    return _pqk_text_selection(mime);
+  }
+
+  late final _pqk_text_selectionPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Char>)>>(
+        'pqk_text_selection',
+      );
+  late final _pqk_text_selection = _pqk_text_selectionPtr
+      .asFunction<void Function(ffi.Pointer<ffi.Char>)>();
 
   int pqk_tile_size() {
     return _pqk_tile_size();
@@ -303,6 +351,17 @@ class QuillKitBindings {
       );
   late final _pqk_tile_texture_id = _pqk_tile_texture_idPtr
       .asFunction<int Function(int)>();
+
+  void pqk_trim_memory(int target) {
+    return _pqk_trim_memory(target);
+  }
+
+  late final _pqk_trim_memoryPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int32)>>(
+        'pqk_trim_memory',
+      );
+  late final _pqk_trim_memory = _pqk_trim_memoryPtr
+      .asFunction<void Function(int)>();
 
   void pqk_uno(ffi.Pointer<ffi.Char> command, ffi.Pointer<ffi.Char> args_json) {
     return _pqk_uno(command, args_json);
@@ -1095,6 +1154,17 @@ sealed class LibreOfficeKitCallbackType {
   static const LOK_CALLBACK_CORE_LOG = 70;
 }
 
+sealed class LibreOfficeKitExtTextInputType {
+  /// cf. SalEvent::ExtTextInput
+  static const LOK_EXT_TEXTINPUT = 0;
+
+  /// cf. SalEvent::ExtTextInputPos
+  static const LOK_EXT_TEXTINPUT_POS = 1;
+
+  /// cf. SalEvent::EndExtTextInput
+  static const LOK_EXT_TEXTINPUT_END = 2;
+}
+
 sealed class LibreOfficeKitKeyEventType {
   /// A key on the keyboard is pressed.
   static const LOK_KEYEVENT_KEYINPUT = 0;
@@ -1129,6 +1199,7 @@ sealed class PqkEvent {
   static const PQK_EVENT_SAVE_FAILED = 10006;
   static const PQK_EVENT_CLOSED = 10007;
   static const PQK_EVENT_COMMAND_VALUES = 10008;
+  static const PQK_EVENT_TEXT_SELECTION = 10009;
   static const PQK_EVENT_LUA_LOG = 10100;
   static const PQK_EVENT_LUA_DONE = 10101;
 }

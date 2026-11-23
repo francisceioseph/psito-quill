@@ -6,6 +6,8 @@
 // escuro nenhum (ver docs/FASE0-RESULTADOS.md).
 import 'dart:io';
 
+import '../../settings/config_dir.dart';
+
 /// Um esquema de cor do documento, em 0xRRGGBB.
 class PaperScheme {
   const PaperScheme({required this.name, required this.paper, required this.ink, required this.backdrop});
@@ -19,11 +21,7 @@ class LoProfile {
   LoProfile(this.directory);
 
   /// `$XDG_CONFIG_HOME/psito-quill/lo-profile`, ou `~/.config/...`.
-  factory LoProfile.standard() {
-    final env = Platform.environment;
-    final base = env['XDG_CONFIG_HOME'] ?? '${env['HOME']}/.config';
-    return LoProfile(Directory('$base/psito-quill/lo-profile'));
-  }
+  factory LoProfile.standard() => LoProfile(Directory('${quillConfigDir().path}/lo-profile'));
 
   final Directory directory;
 

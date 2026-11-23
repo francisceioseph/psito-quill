@@ -41,4 +41,39 @@ void main() {
   test('modificador sozinho não vai para o motor', () {
     expect(_map(_down(LogicalKeyboardKey.shiftLeft, PhysicalKeyboardKey.shiftLeft), shift: true), isNull);
   });
+
+  group('para onde vai a tecla', () {
+    KeyRoute route(KeyEvent e, {bool control = false, bool alt = false}) => routeKey(e, control: control, alt: alt);
+
+    test('setas, Enter, Backspace e F-teclas vão ao motor, com ou sem Ctrl', () {
+      expect(route(_down(LogicalKeyboardKey.arrowLeft, PhysicalKeyboardKey.arrowLeft)), KeyRoute.engine);
+      expect(route(_down(LogicalKeyboardKey.arrowLeft, PhysicalKeyboardKey.arrowLeft), control: true), KeyRoute.engine);
+      expect(route(_down(LogicalKeyboardKey.enter, PhysicalKeyboardKey.enter), control: true), KeyRoute.engine);
+      expect(route(_down(LogicalKeyboardKey.f5, PhysicalKeyboardKey.f5)), KeyRoute.engine);
+    });
+
+    test('letra vai pelo IME', () {
+      expect(route(_down(LogicalKeyboardKey.keyA, PhysicalKeyboardKey.keyA, character: 'a')), KeyRoute.textInput);
+    });
+
+    test('tecla morta (o ´ do ABNT2) vai pelo IME, que compõe', () {
+      expect(route(_down(LogicalKeyboardKey.bracketLeft, PhysicalKeyboardKey.bracketLeft) /* sem caractere */), KeyRoute.textInput);
+    });
+
+    test('Ctrl+letra que não é atalho é engolida', () {
+      expect(route(_down(LogicalKeyboardKey.keyL, PhysicalKeyboardKey.keyL, character: 'l'), control: true),
+          KeyRoute.swallow);
+    });
+
+    test('AltGr+Q do ABNT2 dá "/" e vai como texto; Alt+letra sem caractere é engolida', () {
+      expect(route(_down(LogicalKeyboardKey.slash, PhysicalKeyboardKey.keyQ, character: '/'), alt: true),
+          KeyRoute.textInput);
+      expect(route(_down(LogicalKeyboardKey.keyF, PhysicalKeyboardKey.keyF), alt: true), KeyRoute.swallow);
+    });
+
+    test('só as de andar valem no modo só leitura', () {
+      expect(isNavigationKey(LogicalKeyboardKey.pageDown), isTrue);
+      expect(isNavigationKey(LogicalKeyboardKey.backspace), isFalse);
+    });
+  });
 }

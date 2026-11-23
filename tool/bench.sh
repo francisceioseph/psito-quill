@@ -1,7 +1,7 @@
 #!/bin/bash
 # Ponta a ponta da Fase 0: mede o motor sozinho (lok_probe) e o app inteiro
 # (psito-quill --bench), e amostra o USS, PSS e RSS do app (smaps_rollup) enquanto roda.
-# Saída em build/fase0/: probe.json, bench.json, memoria.txt e os ladrilhos PPM.
+# Saída em build/medicoes/: probe.json, bench.json, memoria.txt e os ladrilhos PPM.
 # Uso: tool/bench.sh [documento.docx]
 # Abre uma janela por ~40 s (precisa de sessão gráfica). Não mexe no mouse nem
 # no teclado.
@@ -9,7 +9,7 @@ set -e
 cd "$(dirname "$0")/.."
 
 DOC="$(realpath "${1:-test/fixtures/capitulo-30p.docx}")"
-OUT="$PWD/build/fase0"
+OUT="$PWD/build/medicoes"
 mkdir -p "$OUT"
 # Trabalha numa cópia: o LibreOffice deixa uma trava (.~lock) ao lado do
 # arquivo, e um arquivo travado por outro perfil abre só para leitura.

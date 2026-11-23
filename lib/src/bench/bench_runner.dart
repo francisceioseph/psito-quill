@@ -89,6 +89,11 @@ class BenchRunner {
     _out['primeiro_ladrilho_ms'] = sw.elapsedMilliseconds;
     await _idle();
     _out['rss_30p_mb'] = _mb(_rss);
+    // O que o trimMemory do LibreOffice devolve (o IdleTrimmer faz isso no
+    // app, com o documento parado).
+    doc.kit.trimMemory();
+    await _idle();
+    _out['rss_30p_depois_do_trim_mb'] = _mb(_rss);
 
     // Rolar até o fim e voltar, medindo os quadros.
     await _until(() => scroll.hasClients && scroll.position.maxScrollExtent > 0);
@@ -172,6 +177,9 @@ class BenchRunner {
     await _until(() => doc.message is PluginMessage, timeout: const Duration(seconds: 5));
     _out['lua'] = (doc.message as PluginMessage).text;
     _out['rss_final_mb'] = _mb(_rss);
+    doc.kit.trimMemory();
+    await _idle();
+    _out['rss_final_depois_do_trim_mb'] = _mb(_rss);
   }
 
   static Map<String, Object> _frameStats(List<FrameTiming> frames, {double? px, int? ms}) {

@@ -37,7 +37,8 @@ enum PqkEvent {
   PQK_EVENT_SAVED = 10005,
   PQK_EVENT_SAVE_FAILED = 10006,
   PQK_EVENT_CLOSED = 10007,
-  PQK_EVENT_COMMAND_VALUES = 10008,
+  PQK_EVENT_COMMAND_VALUES = 10008, // payload: "comando\n" + JSON
+  PQK_EVENT_TEXT_SELECTION = 10009, // payload: "mime\n" + texto
   PQK_EVENT_LUA_LOG = 10100,
   PQK_EVENT_LUA_DONE = 10101,      // payload: {"ok":true} ou {"ok":false,"error":"..."}
 };
@@ -68,6 +69,19 @@ PQK_EXPORT void pqk_post_mouse(int32_t type, int32_t x, int32_t y, int32_t count
 PQK_EXPORT void pqk_uno(const char* command, const char* args_json);
 PQK_EXPORT void pqk_save_as(const char* path, const char* format, const char* options);
 PQK_EXPORT void pqk_command_values(const char* command);
+
+// Entrada composta (IME). type: LOK_EXT_TEXTINPUT (pré-edição, ainda pode
+// mudar) ou LOK_EXT_TEXTINPUT_END (confirma o texto).
+PQK_EXPORT void pqk_ext_text_input(int32_t type, const char* text);
+// A seleção como texto no mime pedido; responde com PQK_EVENT_TEXT_SELECTION.
+PQK_EXPORT void pqk_text_selection(const char* mime);
+// Cola dados (UTF-8) no cursor.
+PQK_EXPORT void pqk_paste(const char* mime, const char* data);
+// Devolve ao sistema a memória dos caches do LibreOffice (ao ficar ocioso).
+PQK_EXPORT void pqk_trim_memory(int32_t target);
+
+// Título da janela do app (o Flutter no Linux não tem API para isso).
+PQK_EXPORT void pqk_set_window_title(const char* title);
 
 // Plugins Lua: roda o código numa caixa de areia própria, na thread de
 // plugins. psito.log vira PQK_EVENT_LUA_LOG; o fim, PQK_EVENT_LUA_DONE.

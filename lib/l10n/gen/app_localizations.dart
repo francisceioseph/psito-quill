@@ -181,6 +181,402 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'{mb} MB'**
   String statusMemory(int mb);
+
+  /// No description provided for @commandNew.
+  ///
+  /// In pt, this message translates to:
+  /// **'Novo'**
+  String get commandNew;
+
+  /// No description provided for @commandOpen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir…'**
+  String get commandOpen;
+
+  /// No description provided for @commandSaveAs.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvar como…'**
+  String get commandSaveAs;
+
+  /// No description provided for @commandUndo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desfazer'**
+  String get commandUndo;
+
+  /// No description provided for @commandRedo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Refazer'**
+  String get commandRedo;
+
+  /// No description provided for @commandCut.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recortar'**
+  String get commandCut;
+
+  /// No description provided for @commandCopy.
+  ///
+  /// In pt, this message translates to:
+  /// **'Copiar'**
+  String get commandCopy;
+
+  /// No description provided for @commandPaste.
+  ///
+  /// In pt, this message translates to:
+  /// **'Colar'**
+  String get commandPaste;
+
+  /// No description provided for @commandSelectAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Selecionar tudo'**
+  String get commandSelectAll;
+
+  /// No description provided for @commandItalic.
+  ///
+  /// In pt, this message translates to:
+  /// **'Itálico'**
+  String get commandItalic;
+
+  /// No description provided for @commandUnderline.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sublinhado'**
+  String get commandUnderline;
+
+  /// No description provided for @commandStrikeout.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tachado'**
+  String get commandStrikeout;
+
+  /// No description provided for @commandAlignLeft.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alinhar à esquerda'**
+  String get commandAlignLeft;
+
+  /// No description provided for @commandAlignCenter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Centralizar'**
+  String get commandAlignCenter;
+
+  /// No description provided for @commandAlignRight.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alinhar à direita'**
+  String get commandAlignRight;
+
+  /// No description provided for @commandJustify.
+  ///
+  /// In pt, this message translates to:
+  /// **'Justificar'**
+  String get commandJustify;
+
+  /// No description provided for @commandBullets.
+  ///
+  /// In pt, this message translates to:
+  /// **'Marcadores'**
+  String get commandBullets;
+
+  /// No description provided for @commandNumbering.
+  ///
+  /// In pt, this message translates to:
+  /// **'Numeração'**
+  String get commandNumbering;
+
+  /// No description provided for @commandZoomIn.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aumentar o zoom'**
+  String get commandZoomIn;
+
+  /// No description provided for @commandZoomOut.
+  ///
+  /// In pt, this message translates to:
+  /// **'Diminuir o zoom'**
+  String get commandZoomOut;
+
+  /// No description provided for @commandZoomReset.
+  ///
+  /// In pt, this message translates to:
+  /// **'Zoom em 100%'**
+  String get commandZoomReset;
+
+  /// No description provided for @styleDefault.
+  ///
+  /// In pt, this message translates to:
+  /// **'Padrão'**
+  String get styleDefault;
+
+  /// No description provided for @styleBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Corpo de texto'**
+  String get styleBody;
+
+  /// No description provided for @styleTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Título do livro'**
+  String get styleTitle;
+
+  /// No description provided for @styleSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Subtítulo'**
+  String get styleSubtitle;
+
+  /// No description provided for @styleHeading.
+  ///
+  /// In pt, this message translates to:
+  /// **'Título {level}'**
+  String styleHeading(int level);
+
+  /// No description provided for @styleQuote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Citação'**
+  String get styleQuote;
+
+  /// No description provided for @ribbonFile.
+  ///
+  /// In pt, this message translates to:
+  /// **'Arquivo'**
+  String get ribbonFile;
+
+  /// No description provided for @ribbonHome.
+  ///
+  /// In pt, this message translates to:
+  /// **'Início'**
+  String get ribbonHome;
+
+  /// No description provided for @groupClipboard.
+  ///
+  /// In pt, this message translates to:
+  /// **'Área de transferência'**
+  String get groupClipboard;
+
+  /// No description provided for @groupStyles.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estilos'**
+  String get groupStyles;
+
+  /// No description provided for @groupFont.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fonte'**
+  String get groupFont;
+
+  /// No description provided for @groupParagraph.
+  ///
+  /// In pt, this message translates to:
+  /// **'Parágrafo'**
+  String get groupParagraph;
+
+  /// No description provided for @fieldStyle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estilo de parágrafo'**
+  String get fieldStyle;
+
+  /// No description provided for @fieldFont.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fonte'**
+  String get fieldFont;
+
+  /// No description provided for @fieldFontSize.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tamanho da fonte'**
+  String get fieldFontSize;
+
+  /// No description provided for @fileBack.
+  ///
+  /// In pt, this message translates to:
+  /// **'Voltar ao documento'**
+  String get fileBack;
+
+  /// No description provided for @recentTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recentes'**
+  String get recentTitle;
+
+  /// No description provided for @recentEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum arquivo recente.'**
+  String get recentEmpty;
+
+  /// No description provided for @preferencesTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Preferências'**
+  String get preferencesTitle;
+
+  /// No description provided for @prefTheme.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tema'**
+  String get prefTheme;
+
+  /// No description provided for @prefShortcuts.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atalhos de teclado'**
+  String get prefShortcuts;
+
+  /// No description provided for @schemeWordPt.
+  ///
+  /// In pt, this message translates to:
+  /// **'Word em português (Ctrl+N negrito, Ctrl+B salvar)'**
+  String get schemeWordPt;
+
+  /// No description provided for @schemeWordEn.
+  ///
+  /// In pt, this message translates to:
+  /// **'Word em inglês (Ctrl+B negrito, Ctrl+S salvar)'**
+  String get schemeWordEn;
+
+  /// No description provided for @themeClaro.
+  ///
+  /// In pt, this message translates to:
+  /// **'Claro'**
+  String get themeClaro;
+
+  /// No description provided for @themeEscuro.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escuro'**
+  String get themeEscuro;
+
+  /// No description provided for @readOnlyBanner.
+  ///
+  /// In pt, this message translates to:
+  /// **'Só leitura: {owner} está com este arquivo aberto. Para editar, salve uma cópia.'**
+  String readOnlyBanner(String owner);
+
+  /// No description provided for @readOnlySaveCopy.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvar uma cópia…'**
+  String get readOnlySaveCopy;
+
+  /// No description provided for @unsavedTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvar as alterações?'**
+  String get unsavedTitle;
+
+  /// No description provided for @unsavedBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'“{name}” tem alterações que ainda não foram salvas.'**
+  String unsavedBody(String name);
+
+  /// No description provided for @unsavedSave.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvar'**
+  String get unsavedSave;
+
+  /// No description provided for @unsavedDiscard.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não salvar'**
+  String get unsavedDiscard;
+
+  /// No description provided for @unsavedCancel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cancelar'**
+  String get unsavedCancel;
+
+  /// No description provided for @untitled.
+  ///
+  /// In pt, this message translates to:
+  /// **'Documento sem título'**
+  String get untitled;
+
+  /// No description provided for @windowTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} — Psito Quill'**
+  String windowTitle(String name);
+
+  /// No description provided for @windowTitleModified.
+  ///
+  /// In pt, this message translates to:
+  /// **'• {name} — Psito Quill'**
+  String windowTitleModified(String name);
+
+  /// No description provided for @windowTitleReadOnly.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} (só leitura) — Psito Quill'**
+  String windowTitleReadOnly(String name);
+
+  /// No description provided for @fileTypeDocuments.
+  ///
+  /// In pt, this message translates to:
+  /// **'Documentos (ODT, DOCX)'**
+  String get fileTypeDocuments;
+
+  /// No description provided for @formatOdt.
+  ///
+  /// In pt, this message translates to:
+  /// **'Documento ODF (.odt)'**
+  String get formatOdt;
+
+  /// No description provided for @formatDocx.
+  ///
+  /// In pt, this message translates to:
+  /// **'Documento do Word (.docx)'**
+  String get formatDocx;
+
+  /// No description provided for @statusPage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Página {page} de {pages}'**
+  String statusPage(int page, int pages);
+
+  /// No description provided for @statusWords.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{1 palavra} other{{count} palavras}}'**
+  String statusWords(int count);
+
+  /// No description provided for @statusWordsSelected.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{1 palavra selecionada} other{{count} palavras selecionadas}}'**
+  String statusWordsSelected(int count);
+
+  /// No description provided for @statusZoom.
+  ///
+  /// In pt, this message translates to:
+  /// **'{percent} %'**
+  String statusZoom(int percent);
+
+  /// No description provided for @statusReadOnly.
+  ///
+  /// In pt, this message translates to:
+  /// **'só leitura'**
+  String get statusReadOnly;
+
+  /// No description provided for @statusOpenFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível abrir {name}: {detail}'**
+  String statusOpenFailed(String name, String detail);
 }
 
 class _AppLocalizationsDelegate

@@ -19,7 +19,7 @@ O Debian 13 (LibreOffice 25.2) ainda não foi testado. A seção 11 do plano ped
 ## Como medir de novo
 
 ```bash
-tool/bench.sh            # o motor sozinho e o app inteiro; saída em build/fase0/
+tool/bench.sh            # o motor sozinho e o app inteiro; saída em build/medicoes/ (na Fase 0 era build/fase0/)
 ./test.sh --integracao   # a pirâmide de testes, com o LibreOffice real
 ```
 

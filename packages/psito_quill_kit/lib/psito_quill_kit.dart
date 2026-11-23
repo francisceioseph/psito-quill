@@ -16,6 +16,7 @@ export 'src/quill_kit_bindings.g.dart'
     show
         PqkEvent,
         LibreOfficeKitCallbackType,
+        LibreOfficeKitExtTextInputType,
         LibreOfficeKitKeyEventType,
         LibreOfficeKitMouseEventType;
 
@@ -113,6 +114,22 @@ class NativeQuillKit {
         _b.pqk_lua_run(source.toNativeUtf8(allocator: arena).cast(),
             chunkName.toNativeUtf8(allocator: arena).cast(), memoryLimit, instructionLimit);
       });
+
+  /// Entrada composta: [type] é um [LibreOfficeKitExtTextInputType].
+  void extTextInput(int type, String text) => using((arena) {
+        _b.pqk_ext_text_input(type, text.toNativeUtf8(allocator: arena).cast());
+      });
+
+  /// Responde com [PqkEvent.PQK_EVENT_TEXT_SELECTION].
+  void textSelection(String mime) => _withString(mime, _b.pqk_text_selection);
+
+  void paste(String mime, String data) => using((arena) {
+        _b.pqk_paste(mime.toNativeUtf8(allocator: arena).cast(), data.toNativeUtf8(allocator: arena).cast());
+      });
+
+  void trimMemory(int target) => _b.pqk_trim_memory(target);
+
+  void setWindowTitle(String title) => _withString(title, _b.pqk_set_window_title);
 
   int get residentBytes => _b.pqk_resident_bytes();
 

@@ -353,17 +353,19 @@ end)
 
 ## 8. Memória e desempenho
 
-**As metas valem depois de medir na fase 0, com o `smem`/RSS e o `heaptrack`.**
+**Revistas depois da Fase 1** (D-025). As metas iniciais (250 MB vazio, 320 MB com o capítulo, 350 MB com o livro) foram escritas antes de medir. Só o Flutter e o Writer vazio já somam uns 335 MB. As de memória subiram para o que é razoável; as de rapidez ficaram como estavam.
 
-| Situação | Meta inicial |
-|---|---|
-| App aberto, documento vazio | ≤ 250 MB |
-| Capítulo de 30 páginas aberto | ≤ 320 MB |
-| Livro de 60 capítulos, um aberto | ≤ 350 MB (não cresce com o livro) |
-| Sessão de 4 horas digitando | crescimento ≤ 30 MB |
-| Tecla → ladrilho na tela | ≤ 16 ms no p95 |
-| Rolar | 60 fps sem quadros perdidos no capítulo de 30 páginas |
-| Abrir capítulo | ≤ 400 ms |
+| Situação | Meta | Fase 1 |
+|---|---|---|
+| App aberto, documento vazio | ≤ 340 MB | 335 MB ✅ |
+| Capítulo de 30 páginas aberto | ≤ 380 MB | 364 MB ✅ |
+| Livro de 60 capítulos, um aberto | ≤ 400 MB (não cresce com o livro) | (Fase 3) |
+| Sessão de 4 horas digitando | crescimento ≤ 30 MB | (teste de resistência) |
+| Tecla → ladrilho pronto | ≤ 16 ms no p95 | 11,4 ms ✅ |
+| Rolar | 60 fps sem quadros perdidos no capítulo de 30 páginas | 59,5 fps, 0 perdidos ✅ |
+| Abrir capítulo | ≤ 400 ms | 515 ms ❌ |
+
+A memória é o RSS do app inteiro, na mediana de pelo menos 3 execuções do `tool/bench.sh` (varia uns 20 MB de uma para outra).
 
 O LibreOffice sozinho já ocupa umas centenas de MB. A meta é ficar **bem abaixo do OnlyOffice** e, principalmente, **não crescer** em sessões longas. A lentidão do OnlyOffice em sessões longas é a queixa original.
 
@@ -452,7 +454,7 @@ Cada fase termina com `FASEn-RESULTADOS.md`, os números de testes por nível e 
 ## 12. Perguntas abertas para o Francisco
 
 1. **O formato do livro:** a pasta `.psitobook` com um ODT por capítulo está boa, ou você prefere um arquivo único?
-2. **O Windows** entra junto com o Linux desde a fase 1, ou só depois da fase 6?
+2. **O Windows** entra junto com o Linux desde a fase 1, ou só depois da fase 6? **Respondido:** depois da fase 6.
 3. **O nome:** decidido, é Psito Quill (a pena de escrever, irmã do Plume). App `org.psito.quill`, repositório `psito-quill`.
 4. **Os livros atuais:** em que formato estão hoje *Dustland* e *Silicon Gods* (DOCX, ODT, Google Docs)? A fase 3 precisa de um importador que divida pelos títulos de capítulo.
 5. **O repositório** no GitHub (`francisceioseph/psito-quill`), público como o Player?

@@ -1,13 +1,23 @@
 // O adaptador da porta QuillKit para o LibreOfficeKit (pelo plugin nativo).
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui' show Rect;
+import 'dart:ui' show Rect, Size;
 
 import 'package:psito_quill_kit/psito_quill_kit.dart';
 
 import '../quill_kit.dart';
 import 'lo_profile.dart';
 import 'lok_payloads.dart';
+
+/// Quantas vagas de ladrilho cobrem uma tela de [physical] pixels: as
+/// colunas da tela (com uma a mais, pelo corte) e as linhas, com uma fileira
+/// de margem acima e abaixo. A memória dos ladrilhos é fixa: 256 KB por vaga.
+int tileSlotsFor(Size physical, {int tileSize = 256, int min = 48, int max = 256}) {
+  if (physical.isEmpty) return 128;
+  final cols = (physical.width / tileSize).ceil() + 1;
+  final rows = (physical.height / tileSize).ceil() + 3;
+  return (cols * rows).clamp(min, max);
+}
 
 class LokQuillKit implements QuillKit {
   LokQuillKit({
@@ -20,7 +30,7 @@ class LokQuillKit implements QuillKit {
   final LoProfile profile;
   final String installPath;
 
-  /// 128 vagas × 256 KB = 32 MB de ladrilhos, fixos.
+  /// Vagas × 256 KB de ladrilhos, fixos (veja [tileSlotsFor]).
   final int tileSlots;
   final NativeQuillKit _native;
   final _events = StreamController<KitEvent>.broadcast();
@@ -90,7 +100,29 @@ class LokQuillKit implements QuillKit {
   void uno(String command, [String argsJson = '']) => _native.uno(command, argsJson);
 
   @override
-  void saveAs(String path, String format) => _native.saveAs(path, format);
+  void saveAs(String path, String format) => _native.saveAs(path, format, 'TakeOwnership');
+
+  @override
+  void extTextInput(String text, {required bool commit}) {
+    _native.extTextInput(LibreOfficeKitExtTextInputType.LOK_EXT_TEXTINPUT, text);
+    if (commit) _native.extTextInput(LibreOfficeKitExtTextInputType.LOK_EXT_TEXTINPUT_END, '');
+  }
+
+  @override
+  void requestCommandValues(String command) => _native.commandValues(command);
+
+  @override
+  void requestTextSelection() => _native.textSelection(plainText);
+
+  @override
+  void pasteText(String text) => _native.paste(plainText, text);
+
+  // Acima de 1000, o LibreOffice limpa os caches da VCL e chama o
+  // malloc_trim. Acima de 2000 ele também despeja o estado (depuração): não.
+  @override
+  void trimMemory() => _native.trimMemory(2000);
+
+  static const plainText = 'text/plain;charset=utf-8';
 
   @override
   void runLua(String source, String name, {int memoryLimit = 16 << 20, int instructionLimit = 10000000}) =>
@@ -130,6 +162,12 @@ class LokQuillKit implements QuillKit {
         return DocumentSaved(payload);
       case PqkEvent.PQK_EVENT_SAVE_FAILED:
         return SaveFailed(payload);
+      case PqkEvent.PQK_EVENT_COMMAND_VALUES:
+        final nl = payload.indexOf('\n');
+        return nl < 0 ? OtherKitEvent(type, payload) : CommandValues(payload.substring(0, nl), payload.substring(nl + 1));
+      case PqkEvent.PQK_EVENT_TEXT_SELECTION:
+        final nl = payload.indexOf('\n');
+        return TextSelectionContent(nl < 0 ? '' : payload.substring(nl + 1));
       case PqkEvent.PQK_EVENT_LUA_LOG:
         return PluginLog(payload);
       case PqkEvent.PQK_EVENT_LUA_DONE:

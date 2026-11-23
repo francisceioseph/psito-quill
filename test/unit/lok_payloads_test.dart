@@ -65,4 +65,41 @@ void main() {
       expect(LokQuillKit.translate(9999, 'x'), isA<OtherKitEvent>());
     });
   });
+
+  group('estados da barra de status', () {
+    test('página: os dois primeiros números, em qualquer idioma', () {
+      expect(parsePageStatus('Página 3 de 30'), (3, 30));
+      expect(parsePageStatus('Page 12 of 1.204'), (12, 1204));
+      expect(parsePageStatus('Página 3 de 30 (Página 5)'), (3, 30));
+      expect(parsePageStatus(null), isNull);
+      expect(parsePageStatus('Página'), isNull);
+    });
+
+    test('palavras: milhar com ponto, e a seleção com dois-pontos', () {
+      expect(parseWordCount('21.069 palavras, 117.537 caracteres'), (words: 21069, characters: 117537, selection: false));
+      expect(parseWordCount('Selecionado: 1 palavra, 4 caracteres'), (words: 1, characters: 4, selection: true));
+      expect(parseWordCount('1,234 words, 5,678 characters'), (words: 1234, characters: 5678, selection: false));
+    });
+
+    test('fontes: do JSON do getCommandValues, em ordem, sem vazias', () {
+      const json = '{"commandName":".uno:CharFontName","commandValues":{"":{"Noto Serif":["12"],"aqua":["10"],"":[]}}}';
+      expect(parseFontList(json), ['aqua', 'Noto Serif']);
+      expect(parseFontList('{"commandValues":{"Liberation Sans":[]}}'), ['Liberation Sans']);
+      expect(parseFontList('não é json'), isEmpty);
+    });
+  });
+
+  test('a seleção como texto e os valores de um comando viram eventos', () {
+    expect((LokQuillKit.translate(PqkEvent.PQK_EVENT_TEXT_SELECTION, 'text/plain\nolá\nmundo') as TextSelectionContent).text,
+        'olá\nmundo');
+    final v = LokQuillKit.translate(PqkEvent.PQK_EVENT_COMMAND_VALUES, '.uno:CharFontName\n{}') as CommandValues;
+    expect((v.command, v.json), ('.uno:CharFontName', '{}'));
+  });
+
+  test('vagas de ladrilho: cobrem a tela, com margem, dentro dos limites', () {
+    expect(tileSlotsFor(const Size(1920, 1080)), 9 * 8);
+    expect(tileSlotsFor(const Size(800, 600)), 48, reason: 'mínimo');
+    expect(tileSlotsFor(const Size(7680, 4320)), 256, reason: 'máximo');
+    expect(tileSlotsFor(Size.zero), 128, reason: 'sem saber a tela');
+  });
 }

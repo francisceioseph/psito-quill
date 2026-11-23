@@ -36,6 +36,7 @@ run "nativo (GoogleTest)" env TEST_MEM="$MEM" TEST_JOBS="$JOBS" tool/native-test
 if [ "$1" = "--integracao" ]; then
     # Uma janela abre e fecha: precisa de uma sessão gráfica.
     run "integração (LibreOffice real)" "${LIMIT[@]}" flutter test --no-pub -d linux integration_test/
+    run "ponta a ponta (fechar a janela)" "${LIMIT[@]}" tool/fechar-test.sh
 fi
 
 exit $STATUS
