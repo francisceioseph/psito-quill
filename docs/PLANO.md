@@ -411,7 +411,7 @@ Cada fase termina com `FASEn-RESULTADOS.md`, os números de testes por nível e 
 - A faixa Início, a barra de status, os temas Claro e Escuro, abrir e salvar ODT e DOCX, e os recentes.
 - Atomic design desde o primeiro widget.
 
-**Fase 2: formatação de verdade**
+**Fase 2: formatação de verdade** (feita: `docs/FASE2-RESULTADOS.md`)
 - Estilos (galeria, gerenciar, criar a partir da seleção), o inspetor Formatar, listas, página, imagens e tabelas simples.
 - Localizar e substituir, ortografia (o LibreOffice já tem, pelo hunspell), "Revelar formatação", a paleta de comandos e o tema Clássico 97 com o menu completo.
 

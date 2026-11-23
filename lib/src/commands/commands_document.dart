@@ -1,5 +1,6 @@
-// Os comandos do editor (Fase 1): arquivo, editar, caractere, parágrafo,
-// estilos de título e zoom.
+// Os comandos do documento: arquivo, editar, caractere, parágrafo, estilos
+// de título, zoom (Fase 1); listas, entrelinhas, tabelas, imagens, página e
+// ortografia (Fase 2). Os que abrem uma tela ficam em commands_view.dart.
 //
 // Os atalhos seguem o Word (PLANO 5.4): o jogo em português (Ctrl+N negrito,
 // Ctrl+B salvar) e o em inglês (Ctrl+B negrito, Ctrl+S salvar).
@@ -43,6 +44,42 @@ abstract final class CommandIds {
   static const heading2 = 'estilo.titulo2';
   static const heading3 = 'estilo.titulo3';
   static const bodyText = 'estilo.corpo';
+
+  static const superscript = 'formatar.sobrescrito';
+  static const subscript = 'formatar.subscrito';
+  static const clearFormatting = 'formatar.limpar';
+
+  static const indentMore = 'paragrafo.aumentarRecuo';
+  static const indentLess = 'paragrafo.diminuirRecuo';
+  static const lineSpacing1 = 'paragrafo.entrelinhas1';
+  static const lineSpacing15 = 'paragrafo.entrelinhas15';
+  static const lineSpacing2 = 'paragrafo.entrelinhas2';
+  static const spaceMore = 'paragrafo.maisEspaco';
+  static const spaceLess = 'paragrafo.menosEspaco';
+
+  static const pageBreak = 'inserir.quebraPagina';
+
+  static const rowAbove = 'tabela.linhaAcima';
+  static const rowBelow = 'tabela.linhaAbaixo';
+  static const columnLeft = 'tabela.colunaEsquerda';
+  static const columnRight = 'tabela.colunaDireita';
+  static const deleteRow = 'tabela.excluirLinha';
+  static const deleteColumn = 'tabela.excluirColuna';
+  static const deleteTable = 'tabela.excluir';
+  static const mergeCells = 'tabela.mesclar';
+
+  static const wrapOff = 'imagem.acimaAbaixo';
+  static const wrapIdeal = 'imagem.emVolta';
+  static const wrapThrough = 'imagem.atras';
+  static const imageLeft = 'imagem.esquerda';
+  static const imageCenter = 'imagem.centro';
+  static const imageRight = 'imagem.direita';
+
+  static const portrait = 'pagina.retrato';
+  static const landscape = 'pagina.paisagem';
+
+  static const spellOnline = 'revisao.ortografia';
+  static const formattingMarks = 'exibir.marcas';
 
   static const zoomIn = 'exibir.zoomMais';
   static const zoomOut = 'exibir.zoomMenos';
@@ -89,6 +126,17 @@ void registerEditorCommands(
         canRun: editable,
         shortcuts: keys,
       );
+
+  Command action(String id, String label, IconData icon, String uno, {bool Function()? when}) => Command(
+        id: id,
+        label: label,
+        icon: icon,
+        run: () => doc.uno(uno),
+        canRun: () => editable() && (when?.call() ?? true),
+      );
+
+  bool inTable() => doc.inTable;
+  bool onImage() => doc.graphic != null;
 
   Command style(String id, String label, String style, IconData icon, LogicalKeyboardKey digit) => Command(
         id: id,
@@ -211,6 +259,98 @@ void registerEditorCommands(
     style(CommandIds.heading2, l10n.styleHeading(2), 'Heading 2', Icons.title, LogicalKeyboardKey.digit2),
     style(CommandIds.heading3, l10n.styleHeading(3), 'Heading 3', Icons.title, LogicalKeyboardKey.digit3),
     style(CommandIds.bodyText, l10n.styleBody, 'Text body', Icons.notes, LogicalKeyboardKey.digit0),
+
+    // Caractere e parágrafo (Fase 2)
+    toggle(CommandIds.superscript, l10n.commandSuperscript, Icons.superscript, '.uno:SuperScript', const {}),
+    toggle(CommandIds.subscript, l10n.commandSubscript, Icons.subscript, '.uno:SubScript', const {}),
+    Command(
+      id: CommandIds.clearFormatting,
+      label: l10n.commandClearFormatting,
+      icon: Icons.format_clear,
+      run: () => doc.uno('.uno:ResetAttributes'),
+      canRun: editable,
+      shortcuts: _both(_ctrl(LogicalKeyboardKey.space)),
+    ),
+    action(CommandIds.indentMore, l10n.commandIndentMore, Icons.format_indent_increase, '.uno:IncrementIndent'),
+    action(CommandIds.indentLess, l10n.commandIndentLess, Icons.format_indent_decrease, '.uno:DecrementIndent'),
+    toggle(CommandIds.lineSpacing1, l10n.commandLineSpacing1, Icons.density_small, '.uno:SpacePara1', const {}),
+    toggle(CommandIds.lineSpacing15, l10n.commandLineSpacing15, Icons.density_medium, '.uno:SpacePara15', const {}),
+    toggle(CommandIds.lineSpacing2, l10n.commandLineSpacing2, Icons.density_large, '.uno:SpacePara2', const {}),
+    Command(
+      id: CommandIds.spaceMore,
+      label: l10n.commandSpaceMore,
+      icon: Icons.expand,
+      run: () => doc.changeParagraphSpacing(increase: true),
+      canRun: editable,
+    ),
+    Command(
+      id: CommandIds.spaceLess,
+      label: l10n.commandSpaceLess,
+      icon: Icons.compress,
+      run: () => doc.changeParagraphSpacing(increase: false),
+      canRun: editable,
+    ),
+    action(CommandIds.pageBreak, l10n.commandPageBreak, Icons.insert_page_break_outlined, '.uno:InsertPagebreak'),
+
+    // Tabela (só com o cursor numa tabela)
+    action(CommandIds.rowAbove, l10n.commandRowAbove, Icons.table_rows_outlined, '.uno:InsertRowsBefore', when: inTable),
+    action(CommandIds.rowBelow, l10n.commandRowBelow, Icons.table_rows_outlined, '.uno:InsertRowsAfter', when: inTable),
+    action(CommandIds.columnLeft, l10n.commandColumnLeft, Icons.view_column_outlined, '.uno:InsertColumnsBefore',
+        when: inTable),
+    action(CommandIds.columnRight, l10n.commandColumnRight, Icons.view_column_outlined, '.uno:InsertColumnsAfter',
+        when: inTable),
+    action(CommandIds.deleteRow, l10n.commandDeleteRow, Icons.playlist_remove, '.uno:DeleteRows', when: inTable),
+    action(CommandIds.deleteColumn, l10n.commandDeleteColumn, Icons.remove_road, '.uno:DeleteColumns', when: inTable),
+    action(CommandIds.deleteTable, l10n.commandDeleteTable, Icons.grid_off, '.uno:DeleteTable', when: inTable),
+    action(CommandIds.mergeCells, l10n.commandMergeCells, Icons.call_merge, '.uno:MergeCells', when: inTable),
+
+    // Imagem (só com uma imagem selecionada)
+    action(CommandIds.wrapOff, l10n.commandWrapOff, Icons.vertical_align_center, '.uno:WrapOff', when: onImage),
+    action(CommandIds.wrapIdeal, l10n.commandWrapIdeal, Icons.wrap_text, '.uno:WrapIdeal', when: onImage),
+    action(CommandIds.wrapThrough, l10n.commandWrapThrough, Icons.flip_to_back, '.uno:WrapThrough', when: onImage),
+    action(CommandIds.imageLeft, l10n.commandImageLeft, Icons.align_horizontal_left, '.uno:ObjectAlignLeft',
+        when: onImage),
+    action(CommandIds.imageCenter, l10n.commandImageCenter, Icons.align_horizontal_center, '.uno:AlignCenter',
+        when: onImage),
+    action(CommandIds.imageRight, l10n.commandImageRight, Icons.align_horizontal_right, '.uno:ObjectAlignRight',
+        when: onImage),
+
+    // Página
+    Command(
+      id: CommandIds.portrait,
+      label: l10n.commandPortrait,
+      icon: Icons.crop_portrait,
+      run: () => doc.setLandscape(false),
+      isActive: () => !doc.landscape,
+      canRun: editable,
+    ),
+    Command(
+      id: CommandIds.landscape,
+      label: l10n.commandLandscape,
+      icon: Icons.crop_landscape,
+      run: () => doc.setLandscape(true),
+      isActive: () => doc.landscape,
+      canRun: editable,
+    ),
+
+    // Revisão e exibição
+    Command(
+      id: CommandIds.spellOnline,
+      label: l10n.commandSpellOnline,
+      icon: Icons.spellcheck,
+      run: doc.toggleSpellOnline,
+      isActive: () => doc.isOn('.uno:SpellOnline'),
+      canRun: open,
+    ),
+    Command(
+      id: CommandIds.formattingMarks,
+      label: l10n.commandFormattingMarks,
+      icon: Icons.format_textdirection_l_to_r,
+      run: () => doc.kit.uno('.uno:ControlCodes'),
+      isActive: () => doc.isOn('.uno:ControlCodes'),
+      canRun: open,
+      shortcuts: _both(_ctrl(LogicalKeyboardKey.digit8, shift: true)),
+    ),
 
     // Zoom
     Command(

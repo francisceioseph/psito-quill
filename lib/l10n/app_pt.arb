@@ -197,5 +197,240 @@
         "type": "String"
       }
     }
-  }
+  },
+  "commandFind": "Localizar",
+  "commandReplace": "Substituir",
+  "commandPalette": "Paleta de comandos",
+  "commandInspector": "Painel Formatar",
+  "commandRevealFormatting": "Revelar formatação",
+  "commandFormattingMarks": "Marcas de formatação",
+  "commandSpellOnline": "Ortografia automática",
+  "commandInsertImage": "Imagem…",
+  "commandInsertTable": "Tabela…",
+  "commandPageBreak": "Quebra de página",
+  "commandIndentMore": "Aumentar recuo",
+  "commandIndentLess": "Diminuir recuo",
+  "commandLineSpacing1": "Entrelinhas simples",
+  "commandLineSpacing15": "Entrelinhas 1,5",
+  "commandLineSpacing2": "Entrelinhas duplo",
+  "commandSpaceMore": "Mais espaço entre parágrafos",
+  "commandSpaceLess": "Menos espaço entre parágrafos",
+  "commandSuperscript": "Sobrescrito",
+  "commandSubscript": "Subscrito",
+  "commandClearFormatting": "Limpar formatação direta",
+  "commandNewStyle": "Novo estilo a partir da seleção…",
+  "commandUpdateStyle": "Atualizar estilo pela seleção",
+  "commandManageStyles": "Gerenciar estilos…",
+  "commandRowAbove": "Inserir linha acima",
+  "commandRowBelow": "Inserir linha abaixo",
+  "commandColumnLeft": "Inserir coluna à esquerda",
+  "commandColumnRight": "Inserir coluna à direita",
+  "commandDeleteRow": "Excluir linha",
+  "commandDeleteColumn": "Excluir coluna",
+  "commandDeleteTable": "Excluir tabela",
+  "commandMergeCells": "Mesclar células",
+  "commandPortrait": "Retrato",
+  "commandLandscape": "Paisagem",
+  "commandWrapOff": "Acima e abaixo do texto",
+  "commandWrapIdeal": "Texto em volta",
+  "commandWrapThrough": "Atrás do texto",
+  "commandImageLeft": "Imagem à esquerda",
+  "commandImageCenter": "Imagem no centro",
+  "commandImageRight": "Imagem à direita",
+  "commandAbout": "Sobre o Psito Quill",
+  "ribbonInsert": "Inserir",
+  "ribbonLayout": "Layout",
+  "ribbonReview": "Revisão",
+  "ribbonView": "Exibir",
+  "ribbonTable": "Tabela",
+  "ribbonImage": "Imagem",
+  "groupPages": "Páginas",
+  "groupTables": "Tabelas",
+  "groupIllustrations": "Ilustrações",
+  "groupPageSetup": "Configurar página",
+  "groupProofing": "Revisão de texto",
+  "groupShow": "Mostrar",
+  "groupZoom": "Zoom",
+  "groupRowsColumns": "Linhas e colunas",
+  "groupMerge": "Mesclar",
+  "groupArrange": "Disposição",
+  "groupEditing": "Edição",
+  "groupSpacing": "Espaçamento",
+  "fieldPageSize": "Tamanho",
+  "fieldMargins": "Margens",
+  "pageSizeA4": "A4",
+  "pageSizeA5": "A5",
+  "pageSizeLetter": "Carta",
+  "pageSizeBook6x9": "Livro 6 × 9 pol.",
+  "pageSizeBook55x85": "Livro 5,5 × 8,5 pol.",
+  "marginsNormal": "Normal (2,5 cm)",
+  "marginsNarrow": "Estreita (1,27 cm)",
+  "marginsAbnt": "ABNT (3 e 2 cm)",
+  "marginsWide": "Larga (5 cm dos lados)",
+  "findField": "Localizar",
+  "replaceField": "Substituir por",
+  "findNext": "Próxima",
+  "findPrevious": "Anterior",
+  "findAll": "Todas",
+  "replaceOne": "Substituir",
+  "replaceAll": "Substituir todas",
+  "findMatchCase": "Diferenciar maiúsculas",
+  "findWholeWord": "Palavra inteira",
+  "findRegex": "Expressão regular",
+  "findClose": "Fechar a busca",
+  "findNotFound": "Nada encontrado",
+  "paletteHint": "Digite um comando",
+  "paletteEmpty": "Nenhum comando com esse nome",
+  "inspectorTitle": "Formatar",
+  "sectionCharacter": "Caractere",
+  "sectionParagraph": "Parágrafo",
+  "sectionPage": "Página",
+  "sectionImage": "Imagem",
+  "sectionTable": "Tabela",
+  "sectionReveal": "Revelar formatação",
+  "sectionStyles": "Estilos",
+  "fieldFontColor": "Cor da fonte",
+  "fieldHighlight": "Realce",
+  "colorAutomatic": "Automática",
+  "highlightNone": "Sem realce",
+  "fieldIndentLeft": "Recuo à esquerda",
+  "fieldIndentRight": "Recuo à direita",
+  "fieldIndentFirst": "Primeira linha",
+  "fieldSpacing": "Espaço antes e depois",
+  "fieldLineSpacing": "Entrelinhas",
+  "fieldOrientation": "Orientação",
+  "colorBlack": "Preto",
+  "colorGray": "Cinza",
+  "colorRed": "Vermelho",
+  "colorOrange": "Laranja",
+  "colorYellow": "Amarelo",
+  "colorGreen": "Verde",
+  "colorBlue": "Azul",
+  "colorPurple": "Roxo",
+  "revealParagraphStyle": "Estilo de parágrafo",
+  "revealFont": "Fonte",
+  "revealEffects": "Efeitos",
+  "revealAlignment": "Alinhamento",
+  "revealIndents": "Recuos",
+  "revealSpacing": "Espaço antes e depois",
+  "revealLineSpacing": "Entrelinhas",
+  "revealLanguage": "Idioma",
+  "revealPageStyle": "Estilo de página",
+  "revealColor": "Cor",
+  "revealNone": "nenhum",
+  "revealOther": "outro",
+  "stylesTitle": "Estilos",
+  "stylesParagraph": "Parágrafo",
+  "stylesCharacter": "Caractere",
+  "stylesMine": "Meus estilos",
+  "stylesBuiltIn": "Estilos de fábrica",
+  "stylesApply": "Aplicar",
+  "stylesNewTitle": "Novo estilo a partir da seleção",
+  "stylesName": "Nome do estilo",
+  "stylesCreate": "Criar",
+  "stylesNameTaken": "Já existe um estilo com esse nome",
+  "dialogCancel": "Cancelar",
+  "dialogClose": "Fechar",
+  "stylePreformatted": "Texto pré-formatado",
+  "styleFootnote": "Nota de rodapé",
+  "styleEndnote": "Nota de fim",
+  "styleCaption": "Legenda",
+  "styleSignature": "Assinatura",
+  "styleFirstLineIndent": "Primeira linha recuada",
+  "styleHangingIndent": "Recuo deslocado",
+  "styleBodyIndent": "Corpo de texto recuado",
+  "styleHeader": "Cabeçalho",
+  "styleFooter": "Rodapé",
+  "styleTableContents": "Conteúdo da tabela",
+  "styleTableHeading": "Título da tabela",
+  "styleList": "Lista",
+  "styleListContents": "Conteúdo da lista",
+  "styleMarginalia": "Nota na margem",
+  "styleAppendix": "Apêndice",
+  "styleHeadingBase": "Título (base)",
+  "styleEmphasis": "Ênfase",
+  "styleStrongEmphasis": "Ênfase forte",
+  "styleCitation": "Citação",
+  "contextIgnore": "Ignorar",
+  "contextIgnoreAll": "Ignorar sempre",
+  "contextNoSuggestions": "Sem sugestões",
+  "themeClassico": "Clássico 97",
+  "menuFile": "Arquivo",
+  "menuEdit": "Editar",
+  "menuView": "Exibir",
+  "menuInsert": "Inserir",
+  "menuFormat": "Formatar",
+  "menuStyles": "Estilos",
+  "menuTools": "Ferramentas",
+  "menuTable": "Tabela",
+  "menuHelp": "Ajuda",
+  "menuRecent": "Recentes",
+  "menuTheme": "Tema",
+  "toolbarStandard": "Padrão",
+  "toolbarFormatting": "Formatação",
+  "aboutText": "Um editor de texto para livros longos, sobre o LibreOffice {version}.",
+  "findCount": "{count, plural, =0{nenhuma ocorrência} =1{1 ocorrência} other{{count} ocorrências}}",
+  "@findCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "findReplaced": "{count, plural, =0{nada trocado} =1{1 trocada} other{{count} trocadas}}",
+  "@findReplaced": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tableSize": "Tabela de {columns} × {rows}",
+  "@tableSize": {
+    "placeholders": {
+      "columns": {
+        "type": "int"
+      },
+      "rows": {
+        "type": "int"
+      }
+    }
+  },
+  "measureCm": "{value} cm",
+  "@measureCm": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "imageSizeCm": "{width} × {height} cm",
+  "@imageSizeCm": {
+    "placeholders": {
+      "width": {
+        "type": "String"
+      },
+      "height": {
+        "type": "String"
+      }
+    }
+  },
+  "percentValue": "{value} %",
+  "@percentValue": {
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "@aboutText": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "unitCm": "cm",
+  "fileTypeImages": "Imagens",
+  "commandFilePanel": "Recentes e preferências…"
 }

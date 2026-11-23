@@ -174,6 +174,51 @@ class QuillTokens extends ThemeExtension<QuillTokens> {
       scrollbarTheme: ScrollbarThemeData(
         thumbColor: WidgetStatePropertyAll(colors.onFrameMuted.withValues(alpha: 0.5)),
       ),
+      // Os menus (de contexto, do tema 97) e os diálogos seguem o tema.
+      popupMenuTheme: PopupMenuThemeData(
+        color: colors.frameRaised,
+        surfaceTintColor: colors.frameRaised,
+        textStyle: TextStyle(color: colors.onFrame, fontSize: font.ui, fontFamily: font.family),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radius.control),
+          side: BorderSide(color: colors.border),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: colors.frame,
+        surfaceTintColor: colors.frame,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radius.panel),
+          side: component == ComponentStyle.bevel ? BorderSide(color: colors.bevelDark, width: 2) : BorderSide.none,
+        ),
+      ),
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStatePropertyAll(colors.frameRaised),
+          surfaceTintColor: WidgetStatePropertyAll(colors.frameRaised),
+          side: WidgetStatePropertyAll(BorderSide(color: colors.border)),
+          shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius.control))),
+        ),
+      ),
+      menuBarTheme: MenuBarThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStatePropertyAll(colors.frame),
+          surfaceTintColor: WidgetStatePropertyAll(colors.frame),
+          elevation: const WidgetStatePropertyAll(0),
+          shape: const WidgetStatePropertyAll(RoundedRectangleBorder()),
+        ),
+      ),
+      menuButtonTheme: MenuButtonThemeData(
+        style: ButtonStyle(
+          foregroundColor: WidgetStatePropertyAll(colors.onFrame),
+          overlayColor: WidgetStatePropertyAll(colors.accentSoft),
+          textStyle: WidgetStatePropertyAll(TextStyle(fontSize: font.ui, fontFamily: font.family)),
+        ),
+      ),
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: colors.onFrame,
+        selectionColor: colors.selection,
+      ),
       extensions: [this],
     );
   }

@@ -18,7 +18,8 @@ export 'src/quill_kit_bindings.g.dart'
         LibreOfficeKitCallbackType,
         LibreOfficeKitExtTextInputType,
         LibreOfficeKitKeyEventType,
-        LibreOfficeKitMouseEventType;
+        LibreOfficeKitMouseEventType,
+        LibreOfficeKitSetGraphicSelectionType;
 
 /// Um evento do kit: os do LOK (tipo < 10000) e os do plugin ([PqkEvent]).
 typedef _EventFn = Void Function(Int32 type, Pointer<Char> payload);
@@ -126,6 +127,8 @@ class NativeQuillKit {
   void paste(String mime, String data) => using((arena) {
         _b.pqk_paste(mime.toNativeUtf8(allocator: arena).cast(), data.toNativeUtf8(allocator: arena).cast());
       });
+
+  void setGraphicSelection(int type, int x, int y) => _b.pqk_set_graphic_selection(type, x, y);
 
   void trimMemory(int target) => _b.pqk_trim_memory(target);
 

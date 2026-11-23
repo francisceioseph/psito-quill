@@ -36,3 +36,8 @@ target_link_libraries(lok_probe PRIVATE pqk_core)
 enable_testing()
 include(GoogleTest)
 gtest_discover_tests(pqk_tests)
+
+# Conversa com o motor por um roteiro (para descobrir o que a versão
+# instalada responde). Veja o cabeçalho de tools/lok_script.cc.
+add_executable(lok_script ${KIT}/tools/lok_script.cc)
+target_link_libraries(lok_script PRIVATE pqk_core)

@@ -98,11 +98,15 @@ class WControlSurface extends StatefulWidget {
     this.width,
     this.outlined = false,
     this.autofocus = false,
+    this.child,
     required this.tooltip,
     required this.onPressed,
     required this.selected,
     required this.semantics,
   });
+
+  /// Um conteúdo próprio no lugar do ícone e do texto (a amostra de cor).
+  final Widget? child;
 
   final IconData? icon;
   final String? text;
@@ -215,7 +219,7 @@ class _ControlSurfaceState extends State<WControlSurface> {
               alignment: Alignment.center,
               decoration: decoration,
               // O nome para o leitor de tela vem do Semantics de fora.
-              child: ExcludeSemantics(child: content),
+              child: ExcludeSemantics(child: widget.child ?? content),
             ),
           ),
         );

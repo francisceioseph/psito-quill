@@ -127,6 +127,19 @@ void main() {
     expect(kit.text, 'é');
   });
 
+  testWidgets('pré-edição cancelada (´ e depois Esc): o ´ sai do motor', (tester) async {
+    await pump(tester);
+    tester.testTextInput.updateEditingValue(
+        const TextEditingValue(text: '´', composing: TextRange(start: 0, end: 1)));
+    await tester.pump();
+    expect(kit.preedit, '´');
+    // O IME cancela: o valor volta vazio, sem composição.
+    tester.testTextInput.updateEditingValue(TextEditingValue.empty);
+    await tester.pump();
+    expect(kit.preedit, '', reason: 'antes, o controlador ignorava o texto vazio e o ´ ficava');
+    expect(kit.text, '');
+  });
+
   testWidgets('Ctrl+letra que não é atalho do Quill não chega ao motor', (tester) async {
     await pump(tester);
     await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);

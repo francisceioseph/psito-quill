@@ -109,6 +109,14 @@ class LokQuillKit implements QuillKit {
   }
 
   @override
+  void setGraphicSelection(GraphicDrag type, int x, int y) => _native.setGraphicSelection(
+      type == GraphicDrag.start
+          ? LibreOfficeKitSetGraphicSelectionType.LOK_SETGRAPHICSELECTION_START
+          : LibreOfficeKitSetGraphicSelectionType.LOK_SETGRAPHICSELECTION_END,
+      x,
+      y);
+
+  @override
   void requestCommandValues(String command) => _native.commandValues(command);
 
   @override
@@ -182,6 +190,16 @@ class LokQuillKit implements QuillKit {
       case LibreOfficeKitCallbackType.LOK_CALLBACK_STATE_CHANGED:
         final s = parseCommandState(payload);
         return s == null ? OtherKitEvent(type, payload) : CommandStateChanged(s.$1, s.$2);
+      case LibreOfficeKitCallbackType.LOK_CALLBACK_SEARCH_RESULT_SELECTION:
+        return parseSearchResult(payload);
+      case LibreOfficeKitCallbackType.LOK_CALLBACK_SEARCH_NOT_FOUND:
+        return SearchNotFound(payload);
+      case LibreOfficeKitCallbackType.LOK_CALLBACK_CONTEXT_MENU:
+        return ContextMenuReady(parseContextMenu(payload));
+      case LibreOfficeKitCallbackType.LOK_CALLBACK_GRAPHIC_SELECTION:
+        return GraphicSelected(parseGraphicSelection(payload));
+      case LibreOfficeKitCallbackType.LOK_CALLBACK_TABLE_SELECTED:
+        return TableSelected(parseTableSelected(payload));
       case LibreOfficeKitCallbackType.LOK_CALLBACK_DOCUMENT_SIZE_CHANGED:
         final size = parseDocumentSize(payload);
         return size == null ? null : DocumentSizeChanged(size);

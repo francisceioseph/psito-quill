@@ -1,18 +1,22 @@
 // Integração com o LibreOffice de verdade, em passos: abrir o DOCX de 30
 // páginas, digitar (também pelo IME), desfazer, negrito, copiar e colar,
 // salvar em DOCX e em ODT, reabrir, a trava do LibreOffice, o clique triplo e
-// o Lua.
+// o Lua. Da Fase 2: localizar e substituir, a ortografia pelo clique direito,
+// estilo novo, recuo, tabela, imagem, página, e o ODT que sai disso.
 //
 // Roda com `./test.sh --integracao` (abre uma janela; precisa de sessão
 // gráfica). O perfil do LibreOffice, os documentos, a área de transferência e
 // as preferências são temporários: não toca nos do usuário.
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:psito_quill/src/app.dart';
 import 'package:psito_quill/src/document/document_controller.dart';
+import 'package:psito_quill/src/document/search.dart';
 import 'package:psito_quill/src/document/text_clipboard.dart';
 import 'package:psito_quill/src/document/workspace.dart';
 import 'package:psito_quill/src/files/lo_lock.dart';
@@ -52,10 +56,10 @@ void main() {
     final events = <KitEvent>[];
     final sub = kit.events.listen(events.add);
 
-    Future<void> until(bool Function() test, String what, {int seconds = 60}) async {
+    Future<void> until(bool Function() test, String what, {int seconds = 60, String Function()? detail}) async {
       final end = DateTime.now().add(Duration(seconds: seconds));
       while (!test()) {
-        if (DateTime.now().isAfter(end)) fail('esperou demais: $what');
+        if (DateTime.now().isAfter(end)) fail('esperou demais: $what ${detail?.call() ?? ''}');
         await tester.pump(const Duration(milliseconds: 20));
       }
     }
@@ -211,6 +215,104 @@ void main() {
     expect(laco.ok, isFalse);
     expect(laco.error, contains('interrompido'));
 
+    // ------------------------------------------------------------ Fase 2 --
+    workspace.onUnsaved = () async => UnsavedChoice.discard;
+    await workspace.newDocument();
+    await until(() => doc.docStatus == DocStatus.open && doc.path == null && doc.tiles.isNotEmpty, 'o documento novo');
+    doc.insertText('Um texto com erru de grafia. Outro texto aqui.');
+    await until(() => doc.wordCount?.words == 9, 'o texto novo');
+
+    // 14. Ortografia: com a lista do LOK_ALLOWLIST_LANGUAGES, o motor liga o
+    // corretor (o pt-BR aparece nas línguas). O clique direito traz o menu do
+    // motor, e a página o mostra. As sugestões não vêm sob o integration_test,
+    // embora venham no lok_script com as mesmas chamadas (D-033).
+    final langs = events.length;
+    kit.requestCommandValues('.uno:LanguageStatus');
+    await until(
+      () => events.skip(langs).whereType<CommandValues>().any((c) => c.command == '.uno:LanguageStatus'),
+      'as línguas do corretor',
+    );
+    expect(
+      events.skip(langs).whereType<CommandValues>().firstWhere((c) => c.command == '.uno:LanguageStatus').json,
+      contains('pt-BR'),
+    );
+    final found = events.length;
+    doc.find(const SearchQuery('erru'));
+    await until(() => events.skip(found).whereType<SearchResult>().isNotEmpty, 'achar erru');
+    final mark = events.length;
+    doc.requestContextMenu(doc.selection.first.center);
+    await until(() => events.skip(mark).whereType<ContextMenuReady>().isNotEmpty, 'o menu de contexto');
+    await until(() => find.text('Copiar').evaluate().isNotEmpty, 'o menu na tela');
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await settle();
+    expect(find.text('Copiar'), findsNothing);
+
+    // 15. Localizar: todas, maiúsculas, nada; substituir todas conta.
+    doc.findAll(const SearchQuery('texto'));
+    await until(() => doc.search.count != null, 'achar todas');
+    expect(doc.search.count, 2);
+    doc.find(const SearchQuery('Texto', matchCase: true));
+    await until(() => doc.search.notFound, 'não achar com maiúsculas');
+    doc.replaceAll(const SearchQuery(r't\w+o', regex: true), 'livro');
+    await until(() => doc.search.replaced != null, 'substituir todas');
+    expect(doc.search.replaced, 3, reason: 'texto, "tro" de Outro, texto');
+    clipboard.text = null;
+    doc.selectAll();
+    await until(() => doc.hasSelection, 'selecionar tudo');
+    doc.copy();
+    await until(() => clipboard.text != null, 'copiar o texto trocado');
+    expect(clipboard.text, 'Um livro com erru de grafia. Oulivro livro aqui.');
+
+    // 16. Estilo novo a partir do parágrafo, e recuo pelo painel.
+    doc.postKey(0, VclKey.end);
+    doc.newStyleFromSelection('Cena');
+    await until(() => doc.paragraphStyles.contains('Cena') && doc.paragraphStyleId == 'Cena', 'o estilo Cena');
+    expect(doc.customParagraphStyles, ['Cena']);
+    doc.setIndents(left: 1.0);
+    await until(() => (doc.paragraphIndents['left'] ?? 0) > 0.9, 'o recuo à esquerda');
+    expect(doc.paragraphIndents['left'], closeTo(1.0, 0.02));
+
+    // 17. Tabela: inserir liga o contexto; uma linha a mais.
+    doc.postKey(13, VclKey.enter);
+    doc.insertTable(2, 3);
+    await until(() => doc.inTable, 'entrar na tabela');
+    doc.insertText('célula');
+    doc.uno('.uno:InsertRowsAfter');
+    await settle();
+
+    // 18. Imagem: inserir seleciona; arrastar a alça diminui.
+    for (var i = 0; i < 4; i++) {
+      doc.postKey(0, VclKey.down);
+    }
+    final png = File('${tmp.path}/ponto.png')..writeAsBytesSync(base64Decode(_png));
+    doc.insertImage(png.path);
+    await until(() => doc.graphic != null, 'a imagem selecionada');
+    final before = doc.graphic!;
+    doc.dragGraphic(before.bottomRight, before.bottomRight - Offset(before.width / 2, before.height / 2));
+    await until(() => doc.graphic != null && doc.graphic!.width < before.width - 10, 'a imagem diminuir');
+
+    // 19. Página: A5 deitada.
+    final width = doc.documentSize.width;
+    doc.setPageSize(pageSizes.firstWhere((s) => s.id == 'a5'));
+    await until(() => doc.documentSize.width < width - 1000, 'a página A5');
+    final a5 = doc.documentSize.width;
+    doc.setLandscape(true);
+    await until(() => doc.landscape && doc.documentSize.width > a5 + 3000, 'a página deitada');
+
+    // 20. O ODT guarda tudo.
+    final fase2 = '${tmp.path}/fase2.odt';
+    dialogs.saveAnswer = fase2;
+    expect(await workspace.saveAs(), isTrue);
+    final styles = unzip(fase2, 'styles.xml'), content = unzip(fase2, 'content.xml');
+    expect(styles, contains('style:name="Cena"'));
+    expect(content, contains('<table:table '));
+    expect(content, contains('<draw:frame '));
+    // O motor arredonda: 21000 vira "21.001cm".
+    expect(styles, matches(RegExp(r'fo:page-width="21(\.00\d)?cm"')));
+    expect(styles, matches(RegExp(r'fo:page-height="14\.80\dcm"')));
+    expect(styles, contains('style:print-orientation="landscape"'));
+    expect(content, contains('Um livro com erru de grafia'));
+
     // Fecha sem salvar (descarta), para não deixar trava.
     workspace.onUnsaved = () async => UnsavedChoice.discard;
     expect(await workspace.requestExit(), isTrue);
@@ -221,3 +323,6 @@ void main() {
     // e o processo de teste termina logo em seguida.
   });
 }
+
+/// Uma imagem PNG de 8×8 px, cinza.
+const _png = 'iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAAAAADhZOFXAAAADklEQVR4nGNogAIGyhgAgIQgAQ2AJGEAAAAASUVORK5CYII=';

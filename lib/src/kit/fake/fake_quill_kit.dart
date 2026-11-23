@@ -3,8 +3,11 @@
 // Guarda o que recebeu (teclas, comandos, salvamentos) para os testes
 // conferirem, e simula o essencial com um texto de uma linha só: digitar,
 // pré-edição do IME, desfazer, seleção, copiar e colar, negrito, o estado
-// "modificado", ladrilhos da área visível e salvar.
+// "modificado", ladrilhos da área visível e salvar. Da Fase 2: localizar e
+// substituir no texto, o menu de contexto com sugestões de ortografia,
+// estilos, imagens e tabelas (só os eventos).
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ui' show Rect, Size;
 
 import '../quill_kit.dart';
@@ -150,6 +153,10 @@ class FakeQuillKit implements QuillKit {
   void extTextInput(String text, {required bool commit}) {
     if (commit) {
       preedit = '';
+      if (text.isEmpty) {
+        _emitCursor(); // a pré-edição some, e o texto fica como estava
+        return;
+      }
       _edit(this.text + text);
     } else {
       preedit = text;
@@ -162,6 +169,15 @@ class FakeQuillKit implements QuillKit {
 
   @override
   void requestCommandValues(String command) {
+    if (command == '.uno:StyleApply') {
+      _emit(CommandValues(
+          command,
+          jsonEncode({
+            'commandName': command,
+            'commandValues': {'ParagraphStyles': paragraphStyles, 'CharacterStyles': characterStyles},
+          })));
+      return;
+    }
     if (command != '.uno:CharFontName') return;
     final entries = fonts.map((f) => '"$f": ["12"]').join(',');
     _emit(CommandValues(command, '{"commandName":"$command","commandValues":{"":{$entries}}}'));
@@ -201,8 +217,87 @@ class FakeQuillKit implements QuillKit {
       _emit(CursorMoved(Rect.fromLTWH(1440 + (text.length + preedit.length) * 120.0, 1440, 20, 280)));
 
   @override
-  void postMouse(MouseEventType type, int x, int y, {int count = 1, int buttons = 1, int modifier = 0}) =>
-      mice.add((type, x, y, count));
+  void postMouse(MouseEventType type, int x, int y, {int count = 1, int buttons = 1, int modifier = 0}) {
+    mice.add((type, x, y, count));
+    if (type == MouseEventType.up && buttons == 4) _contextMenu();
+  }
+
+  // ------------------------------------------------------- Fase 2 --
+
+  /// Os estilos que o falso diz ter.
+  List<String> paragraphStyles = ['Standard', 'Text body', 'Heading 1', 'Heading 2', 'Quotations'];
+  List<String> characterStyles = ['Emphasis', 'Strong Emphasis'];
+
+  /// As palavras erradas e as sugestões: o clique direito oferece as da
+  /// primeira que estiver no texto.
+  Map<String, List<String>> misspelled = {};
+  final graphicDrags = <(GraphicDrag, int, int)>[];
+
+  /// A imagem selecionada (twips), ou null.
+  Rect? graphic;
+  bool inTable = false;
+
+  Rect _charRect(int index, int length) => Rect.fromLTWH(1440 + index * 120.0, 1440, length * 120.0, 280);
+
+  void _contextMenu() {
+    final items = <EngineMenuItem>[];
+    for (final MapEntry(key: word, value: suggestions) in misspelled.entries) {
+      if (!text.contains(word)) continue;
+      items
+        ..addAll([
+          for (final s in suggestions)
+            EngineMenuItem(text: s, command: '.uno:SpellCheckApplySuggestion?ApplyRule:string=Spelling_$s'),
+        ])
+        ..add(const EngineMenuItem.separator())
+        ..add(const EngineMenuItem(text: 'Ignorar', command: '.uno:SpellCheckIgnore?Type:string=Spelling'));
+      break;
+    }
+    items.addAll(const [
+      EngineMenuItem(text: 'Cortar', command: '.uno:Cut', enabled: false),
+      EngineMenuItem(text: 'Copiar', command: '.uno:Copy', enabled: false),
+      EngineMenuItem(text: 'Colar', command: '.uno:Paste'),
+    ]);
+    _emit(ContextMenuReady(items));
+  }
+
+  void _search(Map<String, dynamic> args) {
+    String str(String k) => '${(args['SearchItem.$k'] as Map?)?['value'] ?? ''}';
+    final what = str('SearchString');
+    final command = int.tryParse(str('Command')) ?? 0;
+    final regex = str('AlgorithmType2') == '2';
+    final matchCase = str('TransliterateFlags') == '0';
+    final pattern = RegExp(regex ? what : RegExp.escape(what), caseSensitive: matchCase);
+    final matches = pattern.allMatches(text).toList();
+    if (matches.isEmpty) {
+      _emit(SearchNotFound(what));
+      return;
+    }
+    switch (command) {
+      case 1:
+        _emit(SearchResult([for (final m in matches) [_charRect(m.start, m.end - m.start)]], all: true));
+      case 2 || 3:
+        final replace = str('ReplaceString');
+        _edit(command == 3 ? text.replaceAll(pattern, replace) : text.replaceFirst(pattern, replace));
+      default:
+        final m = matches.first;
+        final r = _charRect(m.start, m.end - m.start);
+        _emit(SelectionChanged([r]));
+        _emit(SearchResult([
+          [r]
+        ]));
+    }
+  }
+
+  @override
+  void setGraphicSelection(GraphicDrag type, int x, int y) {
+    graphicDrags.add((type, x, y));
+    final g = graphic;
+    if (type == GraphicDrag.end && g != null) {
+      // Como o motor: a alça de baixo à direita muda o tamanho.
+      graphic = Rect.fromLTRB(g.left, g.top, x.toDouble(), y.toDouble());
+      _emit(GraphicSelected(graphic));
+    }
+  }
 
   @override
   void uno(String command, [String argsJson = '']) {
@@ -226,6 +321,33 @@ class FakeQuillKit implements QuillKit {
         }
       case '.uno:Paste':
         _edit(text + selectedText);
+      case '.uno:ExecuteSearch':
+        _search(jsonDecode(argsJson) as Map<String, dynamic>);
+      case '.uno:InsertGraphic':
+        graphic = const Rect.fromLTWH(1440, 2000, 2880, 2880);
+        _emit(GraphicSelected(graphic));
+        _state('.uno:Size', '5080 x 5080');
+        _edit(text);
+      case '.uno:InsertTable':
+        inTable = true;
+        _emit(const TableSelected(true));
+        _state('.uno:StateTableCell', 'Tabela1:A1');
+        _edit(text);
+      case '.uno:StyleApply':
+        final style = '${((jsonDecode(argsJson) as Map)['Style'] as Map?)?['value'] ?? ''}';
+        _state('.uno:StyleApply', style);
+      case '.uno:StyleNewByExample':
+        final name = '${((jsonDecode(argsJson) as Map)['Param'] as Map?)?['value'] ?? ''}';
+        paragraphStyles = [...paragraphStyles, name];
+        _state('.uno:StyleApply', name);
+      case final c when c.startsWith('.uno:SpellCheckApplySuggestion'):
+        final word = c.substring(c.indexOf('Spelling_') + 'Spelling_'.length);
+        for (final wrong in misspelled.keys) {
+          if (text.contains(wrong)) {
+            _edit(text.replaceFirst(wrong, word));
+            break;
+          }
+        }
     }
   }
 

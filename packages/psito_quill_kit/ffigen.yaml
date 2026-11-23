@@ -25,6 +25,7 @@ enums:
     - LibreOfficeKitMouseEventType
     - LibreOfficeKitTileMode
     - LibreOfficeKitExtTextInputType
+    - LibreOfficeKitSetGraphicSelectionType
   as-int:
     include:
       - .*

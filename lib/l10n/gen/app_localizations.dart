@@ -577,6 +577,1086 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Não foi possível abrir {name}: {detail}'**
   String statusOpenFailed(String name, String detail);
+
+  /// No description provided for @commandFind.
+  ///
+  /// In pt, this message translates to:
+  /// **'Localizar'**
+  String get commandFind;
+
+  /// No description provided for @commandReplace.
+  ///
+  /// In pt, this message translates to:
+  /// **'Substituir'**
+  String get commandReplace;
+
+  /// No description provided for @commandPalette.
+  ///
+  /// In pt, this message translates to:
+  /// **'Paleta de comandos'**
+  String get commandPalette;
+
+  /// No description provided for @commandInspector.
+  ///
+  /// In pt, this message translates to:
+  /// **'Painel Formatar'**
+  String get commandInspector;
+
+  /// No description provided for @commandRevealFormatting.
+  ///
+  /// In pt, this message translates to:
+  /// **'Revelar formatação'**
+  String get commandRevealFormatting;
+
+  /// No description provided for @commandFormattingMarks.
+  ///
+  /// In pt, this message translates to:
+  /// **'Marcas de formatação'**
+  String get commandFormattingMarks;
+
+  /// No description provided for @commandSpellOnline.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ortografia automática'**
+  String get commandSpellOnline;
+
+  /// No description provided for @commandInsertImage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Imagem…'**
+  String get commandInsertImage;
+
+  /// No description provided for @commandInsertTable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tabela…'**
+  String get commandInsertTable;
+
+  /// No description provided for @commandPageBreak.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quebra de página'**
+  String get commandPageBreak;
+
+  /// No description provided for @commandIndentMore.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aumentar recuo'**
+  String get commandIndentMore;
+
+  /// No description provided for @commandIndentLess.
+  ///
+  /// In pt, this message translates to:
+  /// **'Diminuir recuo'**
+  String get commandIndentLess;
+
+  /// No description provided for @commandLineSpacing1.
+  ///
+  /// In pt, this message translates to:
+  /// **'Entrelinhas simples'**
+  String get commandLineSpacing1;
+
+  /// No description provided for @commandLineSpacing15.
+  ///
+  /// In pt, this message translates to:
+  /// **'Entrelinhas 1,5'**
+  String get commandLineSpacing15;
+
+  /// No description provided for @commandLineSpacing2.
+  ///
+  /// In pt, this message translates to:
+  /// **'Entrelinhas duplo'**
+  String get commandLineSpacing2;
+
+  /// No description provided for @commandSpaceMore.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mais espaço entre parágrafos'**
+  String get commandSpaceMore;
+
+  /// No description provided for @commandSpaceLess.
+  ///
+  /// In pt, this message translates to:
+  /// **'Menos espaço entre parágrafos'**
+  String get commandSpaceLess;
+
+  /// No description provided for @commandSuperscript.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sobrescrito'**
+  String get commandSuperscript;
+
+  /// No description provided for @commandSubscript.
+  ///
+  /// In pt, this message translates to:
+  /// **'Subscrito'**
+  String get commandSubscript;
+
+  /// No description provided for @commandClearFormatting.
+  ///
+  /// In pt, this message translates to:
+  /// **'Limpar formatação direta'**
+  String get commandClearFormatting;
+
+  /// No description provided for @commandNewStyle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Novo estilo a partir da seleção…'**
+  String get commandNewStyle;
+
+  /// No description provided for @commandUpdateStyle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atualizar estilo pela seleção'**
+  String get commandUpdateStyle;
+
+  /// No description provided for @commandManageStyles.
+  ///
+  /// In pt, this message translates to:
+  /// **'Gerenciar estilos…'**
+  String get commandManageStyles;
+
+  /// No description provided for @commandRowAbove.
+  ///
+  /// In pt, this message translates to:
+  /// **'Inserir linha acima'**
+  String get commandRowAbove;
+
+  /// No description provided for @commandRowBelow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Inserir linha abaixo'**
+  String get commandRowBelow;
+
+  /// No description provided for @commandColumnLeft.
+  ///
+  /// In pt, this message translates to:
+  /// **'Inserir coluna à esquerda'**
+  String get commandColumnLeft;
+
+  /// No description provided for @commandColumnRight.
+  ///
+  /// In pt, this message translates to:
+  /// **'Inserir coluna à direita'**
+  String get commandColumnRight;
+
+  /// No description provided for @commandDeleteRow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir linha'**
+  String get commandDeleteRow;
+
+  /// No description provided for @commandDeleteColumn.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir coluna'**
+  String get commandDeleteColumn;
+
+  /// No description provided for @commandDeleteTable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir tabela'**
+  String get commandDeleteTable;
+
+  /// No description provided for @commandMergeCells.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mesclar células'**
+  String get commandMergeCells;
+
+  /// No description provided for @commandPortrait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Retrato'**
+  String get commandPortrait;
+
+  /// No description provided for @commandLandscape.
+  ///
+  /// In pt, this message translates to:
+  /// **'Paisagem'**
+  String get commandLandscape;
+
+  /// No description provided for @commandWrapOff.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acima e abaixo do texto'**
+  String get commandWrapOff;
+
+  /// No description provided for @commandWrapIdeal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Texto em volta'**
+  String get commandWrapIdeal;
+
+  /// No description provided for @commandWrapThrough.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atrás do texto'**
+  String get commandWrapThrough;
+
+  /// No description provided for @commandImageLeft.
+  ///
+  /// In pt, this message translates to:
+  /// **'Imagem à esquerda'**
+  String get commandImageLeft;
+
+  /// No description provided for @commandImageCenter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Imagem no centro'**
+  String get commandImageCenter;
+
+  /// No description provided for @commandImageRight.
+  ///
+  /// In pt, this message translates to:
+  /// **'Imagem à direita'**
+  String get commandImageRight;
+
+  /// No description provided for @commandAbout.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sobre o Psito Quill'**
+  String get commandAbout;
+
+  /// No description provided for @ribbonInsert.
+  ///
+  /// In pt, this message translates to:
+  /// **'Inserir'**
+  String get ribbonInsert;
+
+  /// No description provided for @ribbonLayout.
+  ///
+  /// In pt, this message translates to:
+  /// **'Layout'**
+  String get ribbonLayout;
+
+  /// No description provided for @ribbonReview.
+  ///
+  /// In pt, this message translates to:
+  /// **'Revisão'**
+  String get ribbonReview;
+
+  /// No description provided for @ribbonView.
+  ///
+  /// In pt, this message translates to:
+  /// **'Exibir'**
+  String get ribbonView;
+
+  /// No description provided for @ribbonTable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tabela'**
+  String get ribbonTable;
+
+  /// No description provided for @ribbonImage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Imagem'**
+  String get ribbonImage;
+
+  /// No description provided for @groupPages.
+  ///
+  /// In pt, this message translates to:
+  /// **'Páginas'**
+  String get groupPages;
+
+  /// No description provided for @groupTables.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tabelas'**
+  String get groupTables;
+
+  /// No description provided for @groupIllustrations.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ilustrações'**
+  String get groupIllustrations;
+
+  /// No description provided for @groupPageSetup.
+  ///
+  /// In pt, this message translates to:
+  /// **'Configurar página'**
+  String get groupPageSetup;
+
+  /// No description provided for @groupProofing.
+  ///
+  /// In pt, this message translates to:
+  /// **'Revisão de texto'**
+  String get groupProofing;
+
+  /// No description provided for @groupShow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar'**
+  String get groupShow;
+
+  /// No description provided for @groupZoom.
+  ///
+  /// In pt, this message translates to:
+  /// **'Zoom'**
+  String get groupZoom;
+
+  /// No description provided for @groupRowsColumns.
+  ///
+  /// In pt, this message translates to:
+  /// **'Linhas e colunas'**
+  String get groupRowsColumns;
+
+  /// No description provided for @groupMerge.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mesclar'**
+  String get groupMerge;
+
+  /// No description provided for @groupArrange.
+  ///
+  /// In pt, this message translates to:
+  /// **'Disposição'**
+  String get groupArrange;
+
+  /// No description provided for @groupEditing.
+  ///
+  /// In pt, this message translates to:
+  /// **'Edição'**
+  String get groupEditing;
+
+  /// No description provided for @groupSpacing.
+  ///
+  /// In pt, this message translates to:
+  /// **'Espaçamento'**
+  String get groupSpacing;
+
+  /// No description provided for @fieldPageSize.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tamanho'**
+  String get fieldPageSize;
+
+  /// No description provided for @fieldMargins.
+  ///
+  /// In pt, this message translates to:
+  /// **'Margens'**
+  String get fieldMargins;
+
+  /// No description provided for @pageSizeA4.
+  ///
+  /// In pt, this message translates to:
+  /// **'A4'**
+  String get pageSizeA4;
+
+  /// No description provided for @pageSizeA5.
+  ///
+  /// In pt, this message translates to:
+  /// **'A5'**
+  String get pageSizeA5;
+
+  /// No description provided for @pageSizeLetter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Carta'**
+  String get pageSizeLetter;
+
+  /// No description provided for @pageSizeBook6x9.
+  ///
+  /// In pt, this message translates to:
+  /// **'Livro 6 × 9 pol.'**
+  String get pageSizeBook6x9;
+
+  /// No description provided for @pageSizeBook55x85.
+  ///
+  /// In pt, this message translates to:
+  /// **'Livro 5,5 × 8,5 pol.'**
+  String get pageSizeBook55x85;
+
+  /// No description provided for @marginsNormal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Normal (2,5 cm)'**
+  String get marginsNormal;
+
+  /// No description provided for @marginsNarrow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estreita (1,27 cm)'**
+  String get marginsNarrow;
+
+  /// No description provided for @marginsAbnt.
+  ///
+  /// In pt, this message translates to:
+  /// **'ABNT (3 e 2 cm)'**
+  String get marginsAbnt;
+
+  /// No description provided for @marginsWide.
+  ///
+  /// In pt, this message translates to:
+  /// **'Larga (5 cm dos lados)'**
+  String get marginsWide;
+
+  /// No description provided for @findField.
+  ///
+  /// In pt, this message translates to:
+  /// **'Localizar'**
+  String get findField;
+
+  /// No description provided for @replaceField.
+  ///
+  /// In pt, this message translates to:
+  /// **'Substituir por'**
+  String get replaceField;
+
+  /// No description provided for @findNext.
+  ///
+  /// In pt, this message translates to:
+  /// **'Próxima'**
+  String get findNext;
+
+  /// No description provided for @findPrevious.
+  ///
+  /// In pt, this message translates to:
+  /// **'Anterior'**
+  String get findPrevious;
+
+  /// No description provided for @findAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todas'**
+  String get findAll;
+
+  /// No description provided for @replaceOne.
+  ///
+  /// In pt, this message translates to:
+  /// **'Substituir'**
+  String get replaceOne;
+
+  /// No description provided for @replaceAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Substituir todas'**
+  String get replaceAll;
+
+  /// No description provided for @findMatchCase.
+  ///
+  /// In pt, this message translates to:
+  /// **'Diferenciar maiúsculas'**
+  String get findMatchCase;
+
+  /// No description provided for @findWholeWord.
+  ///
+  /// In pt, this message translates to:
+  /// **'Palavra inteira'**
+  String get findWholeWord;
+
+  /// No description provided for @findRegex.
+  ///
+  /// In pt, this message translates to:
+  /// **'Expressão regular'**
+  String get findRegex;
+
+  /// No description provided for @findClose.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fechar a busca'**
+  String get findClose;
+
+  /// No description provided for @findNotFound.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nada encontrado'**
+  String get findNotFound;
+
+  /// No description provided for @paletteHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Digite um comando'**
+  String get paletteHint;
+
+  /// No description provided for @paletteEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum comando com esse nome'**
+  String get paletteEmpty;
+
+  /// No description provided for @inspectorTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Formatar'**
+  String get inspectorTitle;
+
+  /// No description provided for @sectionCharacter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Caractere'**
+  String get sectionCharacter;
+
+  /// No description provided for @sectionParagraph.
+  ///
+  /// In pt, this message translates to:
+  /// **'Parágrafo'**
+  String get sectionParagraph;
+
+  /// No description provided for @sectionPage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Página'**
+  String get sectionPage;
+
+  /// No description provided for @sectionImage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Imagem'**
+  String get sectionImage;
+
+  /// No description provided for @sectionTable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tabela'**
+  String get sectionTable;
+
+  /// No description provided for @sectionReveal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Revelar formatação'**
+  String get sectionReveal;
+
+  /// No description provided for @sectionStyles.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estilos'**
+  String get sectionStyles;
+
+  /// No description provided for @fieldFontColor.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cor da fonte'**
+  String get fieldFontColor;
+
+  /// No description provided for @fieldHighlight.
+  ///
+  /// In pt, this message translates to:
+  /// **'Realce'**
+  String get fieldHighlight;
+
+  /// No description provided for @colorAutomatic.
+  ///
+  /// In pt, this message translates to:
+  /// **'Automática'**
+  String get colorAutomatic;
+
+  /// No description provided for @highlightNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem realce'**
+  String get highlightNone;
+
+  /// No description provided for @fieldIndentLeft.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recuo à esquerda'**
+  String get fieldIndentLeft;
+
+  /// No description provided for @fieldIndentRight.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recuo à direita'**
+  String get fieldIndentRight;
+
+  /// No description provided for @fieldIndentFirst.
+  ///
+  /// In pt, this message translates to:
+  /// **'Primeira linha'**
+  String get fieldIndentFirst;
+
+  /// No description provided for @fieldSpacing.
+  ///
+  /// In pt, this message translates to:
+  /// **'Espaço antes e depois'**
+  String get fieldSpacing;
+
+  /// No description provided for @fieldLineSpacing.
+  ///
+  /// In pt, this message translates to:
+  /// **'Entrelinhas'**
+  String get fieldLineSpacing;
+
+  /// No description provided for @fieldOrientation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Orientação'**
+  String get fieldOrientation;
+
+  /// No description provided for @colorBlack.
+  ///
+  /// In pt, this message translates to:
+  /// **'Preto'**
+  String get colorBlack;
+
+  /// No description provided for @colorGray.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cinza'**
+  String get colorGray;
+
+  /// No description provided for @colorRed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Vermelho'**
+  String get colorRed;
+
+  /// No description provided for @colorOrange.
+  ///
+  /// In pt, this message translates to:
+  /// **'Laranja'**
+  String get colorOrange;
+
+  /// No description provided for @colorYellow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Amarelo'**
+  String get colorYellow;
+
+  /// No description provided for @colorGreen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Verde'**
+  String get colorGreen;
+
+  /// No description provided for @colorBlue.
+  ///
+  /// In pt, this message translates to:
+  /// **'Azul'**
+  String get colorBlue;
+
+  /// No description provided for @colorPurple.
+  ///
+  /// In pt, this message translates to:
+  /// **'Roxo'**
+  String get colorPurple;
+
+  /// No description provided for @revealParagraphStyle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estilo de parágrafo'**
+  String get revealParagraphStyle;
+
+  /// No description provided for @revealFont.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fonte'**
+  String get revealFont;
+
+  /// No description provided for @revealEffects.
+  ///
+  /// In pt, this message translates to:
+  /// **'Efeitos'**
+  String get revealEffects;
+
+  /// No description provided for @revealAlignment.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alinhamento'**
+  String get revealAlignment;
+
+  /// No description provided for @revealIndents.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recuos'**
+  String get revealIndents;
+
+  /// No description provided for @revealSpacing.
+  ///
+  /// In pt, this message translates to:
+  /// **'Espaço antes e depois'**
+  String get revealSpacing;
+
+  /// No description provided for @revealLineSpacing.
+  ///
+  /// In pt, this message translates to:
+  /// **'Entrelinhas'**
+  String get revealLineSpacing;
+
+  /// No description provided for @revealLanguage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Idioma'**
+  String get revealLanguage;
+
+  /// No description provided for @revealPageStyle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estilo de página'**
+  String get revealPageStyle;
+
+  /// No description provided for @revealColor.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cor'**
+  String get revealColor;
+
+  /// No description provided for @revealNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'nenhum'**
+  String get revealNone;
+
+  /// No description provided for @revealOther.
+  ///
+  /// In pt, this message translates to:
+  /// **'outro'**
+  String get revealOther;
+
+  /// No description provided for @stylesTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estilos'**
+  String get stylesTitle;
+
+  /// No description provided for @stylesParagraph.
+  ///
+  /// In pt, this message translates to:
+  /// **'Parágrafo'**
+  String get stylesParagraph;
+
+  /// No description provided for @stylesCharacter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Caractere'**
+  String get stylesCharacter;
+
+  /// No description provided for @stylesMine.
+  ///
+  /// In pt, this message translates to:
+  /// **'Meus estilos'**
+  String get stylesMine;
+
+  /// No description provided for @stylesBuiltIn.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estilos de fábrica'**
+  String get stylesBuiltIn;
+
+  /// No description provided for @stylesApply.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aplicar'**
+  String get stylesApply;
+
+  /// No description provided for @stylesNewTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Novo estilo a partir da seleção'**
+  String get stylesNewTitle;
+
+  /// No description provided for @stylesName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome do estilo'**
+  String get stylesName;
+
+  /// No description provided for @stylesCreate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Criar'**
+  String get stylesCreate;
+
+  /// No description provided for @stylesNameTaken.
+  ///
+  /// In pt, this message translates to:
+  /// **'Já existe um estilo com esse nome'**
+  String get stylesNameTaken;
+
+  /// No description provided for @dialogCancel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cancelar'**
+  String get dialogCancel;
+
+  /// No description provided for @dialogClose.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fechar'**
+  String get dialogClose;
+
+  /// No description provided for @stylePreformatted.
+  ///
+  /// In pt, this message translates to:
+  /// **'Texto pré-formatado'**
+  String get stylePreformatted;
+
+  /// No description provided for @styleFootnote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nota de rodapé'**
+  String get styleFootnote;
+
+  /// No description provided for @styleEndnote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nota de fim'**
+  String get styleEndnote;
+
+  /// No description provided for @styleCaption.
+  ///
+  /// In pt, this message translates to:
+  /// **'Legenda'**
+  String get styleCaption;
+
+  /// No description provided for @styleSignature.
+  ///
+  /// In pt, this message translates to:
+  /// **'Assinatura'**
+  String get styleSignature;
+
+  /// No description provided for @styleFirstLineIndent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Primeira linha recuada'**
+  String get styleFirstLineIndent;
+
+  /// No description provided for @styleHangingIndent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recuo deslocado'**
+  String get styleHangingIndent;
+
+  /// No description provided for @styleBodyIndent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Corpo de texto recuado'**
+  String get styleBodyIndent;
+
+  /// No description provided for @styleHeader.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cabeçalho'**
+  String get styleHeader;
+
+  /// No description provided for @styleFooter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Rodapé'**
+  String get styleFooter;
+
+  /// No description provided for @styleTableContents.
+  ///
+  /// In pt, this message translates to:
+  /// **'Conteúdo da tabela'**
+  String get styleTableContents;
+
+  /// No description provided for @styleTableHeading.
+  ///
+  /// In pt, this message translates to:
+  /// **'Título da tabela'**
+  String get styleTableHeading;
+
+  /// No description provided for @styleList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Lista'**
+  String get styleList;
+
+  /// No description provided for @styleListContents.
+  ///
+  /// In pt, this message translates to:
+  /// **'Conteúdo da lista'**
+  String get styleListContents;
+
+  /// No description provided for @styleMarginalia.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nota na margem'**
+  String get styleMarginalia;
+
+  /// No description provided for @styleAppendix.
+  ///
+  /// In pt, this message translates to:
+  /// **'Apêndice'**
+  String get styleAppendix;
+
+  /// No description provided for @styleHeadingBase.
+  ///
+  /// In pt, this message translates to:
+  /// **'Título (base)'**
+  String get styleHeadingBase;
+
+  /// No description provided for @styleEmphasis.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ênfase'**
+  String get styleEmphasis;
+
+  /// No description provided for @styleStrongEmphasis.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ênfase forte'**
+  String get styleStrongEmphasis;
+
+  /// No description provided for @styleCitation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Citação'**
+  String get styleCitation;
+
+  /// No description provided for @contextIgnore.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ignorar'**
+  String get contextIgnore;
+
+  /// No description provided for @contextIgnoreAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ignorar sempre'**
+  String get contextIgnoreAll;
+
+  /// No description provided for @contextNoSuggestions.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem sugestões'**
+  String get contextNoSuggestions;
+
+  /// No description provided for @themeClassico.
+  ///
+  /// In pt, this message translates to:
+  /// **'Clássico 97'**
+  String get themeClassico;
+
+  /// No description provided for @menuFile.
+  ///
+  /// In pt, this message translates to:
+  /// **'Arquivo'**
+  String get menuFile;
+
+  /// No description provided for @menuEdit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar'**
+  String get menuEdit;
+
+  /// No description provided for @menuView.
+  ///
+  /// In pt, this message translates to:
+  /// **'Exibir'**
+  String get menuView;
+
+  /// No description provided for @menuInsert.
+  ///
+  /// In pt, this message translates to:
+  /// **'Inserir'**
+  String get menuInsert;
+
+  /// No description provided for @menuFormat.
+  ///
+  /// In pt, this message translates to:
+  /// **'Formatar'**
+  String get menuFormat;
+
+  /// No description provided for @menuStyles.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estilos'**
+  String get menuStyles;
+
+  /// No description provided for @menuTools.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ferramentas'**
+  String get menuTools;
+
+  /// No description provided for @menuTable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tabela'**
+  String get menuTable;
+
+  /// No description provided for @menuHelp.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ajuda'**
+  String get menuHelp;
+
+  /// No description provided for @menuRecent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recentes'**
+  String get menuRecent;
+
+  /// No description provided for @menuTheme.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tema'**
+  String get menuTheme;
+
+  /// No description provided for @toolbarStandard.
+  ///
+  /// In pt, this message translates to:
+  /// **'Padrão'**
+  String get toolbarStandard;
+
+  /// No description provided for @toolbarFormatting.
+  ///
+  /// In pt, this message translates to:
+  /// **'Formatação'**
+  String get toolbarFormatting;
+
+  /// No description provided for @aboutText.
+  ///
+  /// In pt, this message translates to:
+  /// **'Um editor de texto para livros longos, sobre o LibreOffice {version}.'**
+  String aboutText(String version);
+
+  /// No description provided for @findCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =0{nenhuma ocorrência} =1{1 ocorrência} other{{count} ocorrências}}'**
+  String findCount(int count);
+
+  /// No description provided for @findReplaced.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =0{nada trocado} =1{1 trocada} other{{count} trocadas}}'**
+  String findReplaced(int count);
+
+  /// No description provided for @tableSize.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tabela de {columns} × {rows}'**
+  String tableSize(int columns, int rows);
+
+  /// No description provided for @measureCm.
+  ///
+  /// In pt, this message translates to:
+  /// **'{value} cm'**
+  String measureCm(String value);
+
+  /// No description provided for @imageSizeCm.
+  ///
+  /// In pt, this message translates to:
+  /// **'{width} × {height} cm'**
+  String imageSizeCm(String width, String height);
+
+  /// No description provided for @percentValue.
+  ///
+  /// In pt, this message translates to:
+  /// **'{value} %'**
+  String percentValue(int value);
+
+  /// No description provided for @unitCm.
+  ///
+  /// In pt, this message translates to:
+  /// **'cm'**
+  String get unitCm;
+
+  /// No description provided for @fileTypeImages.
+  ///
+  /// In pt, this message translates to:
+  /// **'Imagens'**
+  String get fileTypeImages;
+
+  /// No description provided for @commandFilePanel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recentes e preferências…'**
+  String get commandFilePanel;
 }
 
 class _AppLocalizationsDelegate

@@ -2,21 +2,37 @@ import 'package:flutter/material.dart';
 
 import '../tokens/tokens.dart';
 
-/// A moldura do editor: a faixa em cima, um aviso opcional, o corpo e a
-/// barra de status. As laterais (fichário, inspetor) entram nas fases 2 e 3.
+/// A moldura do editor: em cima, a faixa (ou os menus e as barras do tema
+/// 97); um aviso e a barra de localizar, opcionais; a página com o painel
+/// Formatar à direita; a barra de status. O fichário, à esquerda, entra na
+/// Fase 3.
 class EditorTemplate extends StatelessWidget {
-  const EditorTemplate({super.key, required this.ribbon, required this.body, required this.statusBar, this.banner});
+  const EditorTemplate({
+    super.key,
+    required this.top,
+    required this.body,
+    required this.statusBar,
+    this.banner,
+    this.findBar,
+    this.sidePanel,
+  });
 
-  final Widget ribbon, body, statusBar;
-  final Widget? banner;
+  final Widget top, body, statusBar;
+  final Widget? banner, findBar, sidePanel;
 
   @override
   Widget build(BuildContext context) => ColoredBox(
         color: QuillTokens.of(context).colors.frame,
         child: Column(children: [
-          ribbon,
+          top,
           ?banner,
-          Expanded(child: body),
+          ?findBar,
+          Expanded(
+            child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Expanded(child: body),
+              ?sidePanel,
+            ]),
+          ),
           statusBar,
         ]),
       );

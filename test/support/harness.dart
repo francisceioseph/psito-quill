@@ -14,8 +14,15 @@ import 'package:psito_quill/src/settings/settings.dart';
 
 class FakeFileDialogs implements FileDialogs {
   /// O que as janelas respondem (null: cancelou).
-  String? openAnswer, saveAnswer;
+  String? openAnswer, saveAnswer, imageAnswer;
   final opens = <String>[];
+  final images = <String>[];
+
+  @override
+  Future<String?> pickImage({required String label}) async {
+    images.add(label);
+    return imageAnswer;
+  }
   final saves = <String>[];
 
   @override

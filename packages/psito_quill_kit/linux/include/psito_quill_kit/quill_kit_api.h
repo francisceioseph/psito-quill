@@ -69,6 +69,9 @@ PQK_EXPORT void pqk_post_mouse(int32_t type, int32_t x, int32_t y, int32_t count
 PQK_EXPORT void pqk_uno(const char* command, const char* args_json);
 PQK_EXPORT void pqk_save_as(const char* path, const char* format, const char* options);
 PQK_EXPORT void pqk_command_values(const char* command);
+// Arrasta a alça (ou o corpo) da imagem selecionada. type:
+// LOK_SETGRAPHICSELECTION_START no ponto de partida, _END no de chegada.
+PQK_EXPORT void pqk_set_graphic_selection(int32_t type, int32_t x, int32_t y);
 
 // Entrada composta (IME). type: LOK_EXT_TEXTINPUT (pré-edição, ainda pode
 // mudar) ou LOK_EXT_TEXTINPUT_END (confirma o texto).

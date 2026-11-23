@@ -73,9 +73,16 @@ LokEngine::LokEngine(EngineSink* sink, int tileSlots)
 
 LokEngine::~LokEngine() { shutdown(); }
 
+// As línguas da ortografia: as do Quill e as vizinhas. O dicionário de cada
+// uma vem do sistema (hunspell-pt-br, hunspell-en-us...).
+const char* const kSpellLanguages = "pt_BR pt_PT en_US en_GB es_ES fr_FR de_DE it_IT";
+
 void LokEngine::init(const std::string& installPath, const std::string& profileUrl) {
   queue_.post([this, installPath, profileUrl] {
     if (kit_) return;
+    // Sem esta lista, o LOK desliga a ortografia ("No language allowlisted").
+    // Quem rodar com a variável já definida escolhe as línguas.
+    setenv("LOK_ALLOWLIST_LANGUAGES", kSpellLanguages, 0);
     kit_ = lok_init_2(installPath.c_str(),
                       profileUrl.empty() ? nullptr : profileUrl.c_str());
     if (!kit_) {
@@ -164,6 +171,12 @@ void LokEngine::postKey(int type, int charCode, int keyCode) {
 void LokEngine::postMouse(int type, int x, int y, int count, int buttons, int modifier) {
   queue_.post([=, this] {
     if (doc_) doc_->pClass->postMouseEvent(doc_, type, x, y, count, buttons, modifier);
+  });
+}
+
+void LokEngine::setGraphicSelection(int type, int x, int y) {
+  queue_.post([=, this] {
+    if (doc_) doc_->pClass->setGraphicSelection(doc_, type, x, y);
   });
 }
 

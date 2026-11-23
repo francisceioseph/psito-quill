@@ -185,6 +185,9 @@ void pqk_ext_text_input(int32_t type, const char* text) {
 void pqk_text_selection(const char* mime) {
   if (g_kit) g_kit->engine().textSelection(str(mime));
 }
+void pqk_set_graphic_selection(int32_t type, int32_t x, int32_t y) {
+  if (g_kit) g_kit->engine().setGraphicSelection(type, x, y);
+}
 void pqk_paste(const char* mime, const char* data) {
   if (g_kit) g_kit->engine().paste(str(mime), str(data));
 }

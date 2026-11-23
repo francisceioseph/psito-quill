@@ -93,7 +93,7 @@ class FilePanel extends StatelessWidget {
                     WLabel(l10n.prefTheme, tone: WLabelTone.muted),
                     SizedBox(height: t.space.sm),
                     Wrap(spacing: t.space.sm, children: [
-                      for (final (id, label) in [('claro', l10n.themeClaro), ('escuro', l10n.themeEscuro)])
+                      for (final (id, label) in [('claro', l10n.themeClaro), ('escuro', l10n.themeEscuro), ('classico97', l10n.themeClassico)])
                         WTextButton(
                           label: label,
                           selected: settings.theme == id,

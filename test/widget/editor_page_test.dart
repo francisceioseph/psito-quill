@@ -23,6 +23,7 @@ void main() {
     String? lockOwner,
     Locale locale = const Locale('pt', 'BR'),
     FakeQuillKit? fake,
+    bool inspector = false,
   }) async {
     await tester.binding.setSurfaceSize(const Size(1400, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -30,6 +31,9 @@ void main() {
     addTearDown(tester.platformDispatcher.clearLocalesTestValue);
     h = current = Harness(kit: fake);
     kit = h.kit;
+    // O painel Formatar repete os botões da faixa: os testes da faixa o
+    // fecham, para cada ícone aparecer uma vez.
+    h.settings.inspector = inspector;
     await tester.pumpWidget(QuillApp(workspace: h.workspace, settings: h.settings, window: h.window, showMemory: false));
     if (h.doc.kitStatus == KitStatus.ready) h.doc.open(path, lockOwner: lockOwner);
     await tester.pump();
@@ -128,12 +132,10 @@ void main() {
     expect(kit.pasted, ['de fora']);
   });
 
-  testWidgets('a lista de estilos aplica pelo nome do LibreOffice', (tester) async {
+  testWidgets('a galeria de estilos aplica pelo nome do LibreOffice', (tester) async {
     await pumpApp(tester);
-    await tester.tap(find.byWidgetPredicate((w) => w is WDropdown && w.label == 'Estilo de parágrafo'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Título 2').last);
-    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(WTextButton, 'Título 2'));
+    await tester.pump();
     expect(kit.unoCommands.last, '.uno:StyleApply');
     expect(kit.unoArgs.last, contains('"Heading 2"'));
   });
@@ -273,7 +275,7 @@ void main() {
     final handle = tester.ensureSemantics();
     await pumpApp(tester);
     for (final name in ['Negrito', 'Itálico', 'Desfazer', 'Colar', 'Centralizar', 'Fonte', 'Tamanho da fonte',
-        'Estilo de parágrafo', 'Tema escuro', 'Documento', 'Arquivo', 'Aumentar o zoom']) {
+        'Título 1', 'Localizar', 'Inserir', 'Tema escuro', 'Documento', 'Arquivo', 'Aumentar o zoom']) {
       expect(find.bySemanticsLabel(RegExp('^$name')), findsWidgets, reason: name);
     }
     handle.dispose();

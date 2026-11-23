@@ -23,10 +23,18 @@ Editor de texto para livros longos (*Dustland*, *Silicon Gods*), em Flutter, par
   - Tem teto de memória pelo alocador e limite de instruções pelo hook. Depois do limite, o hook roda a cada instrução, para um `pcall` não engolir a interrupção.
   - Sem `io`, `os`, `package`, `debug`, `dofile`, `loadfile`, `collectgarbage` e `string.dump`. O `load` aceita só texto.
 - **Os bindings do ffigen** ficam em `packages/psito_quill_kit/lib/src/quill_kit_bindings.g.dart`. Depois de mudar o `quill_kit_api.h`, rode `dart run ffigen --config ffigen.yaml` em `packages/psito_quill_kit`.
-- **As medições** são o `tool/bench.sh`, que roda o `lok_probe` (motor sozinho) e o `psito-quill --bench` (app inteiro), com saída em `build/medicoes/`. Os resultados estão em `docs/FASE0-RESULTADOS.md` e `docs/FASE1-RESULTADOS.md`. A memória varia uns 20 MB entre execuções: rode mais de uma vez e use a mediana.
+- **Antes de usar um comando `.uno:` novo, pergunte ao motor** com o `lok_script` (`linux/tools/lok_script.cc`, D-029): na 24.2, muitos respondem `success: false` e funcionam, e outros não fazem nada (`StyleDelete`, `ULSpacing` com valores). Confira pelo estado, não pelo `success`.
+- **A ortografia precisa da `LOK_ALLOWLIST_LANGUAGES`** (o `LokEngine::init` define). As sugestões vêm no menu de contexto do motor (callback 23), que o Quill desenha (D-033).
+- **As medições** são o `tool/bench.sh`, que roda o `lok_probe` (motor sozinho) e o `psito-quill --bench` (app inteiro), com saída em `build/medicoes/`. Os resultados estão em `docs/FASE0-RESULTADOS.md`, `docs/FASE1-RESULTADOS.md` e `docs/FASE2-RESULTADOS.md`. A memória varia uns 20 MB entre execuções: rode mais de uma vez e use a mediana.
+- **A `EditorPage` memoiza a faixa e o painel Formatar** pela `stateRevision` do controlador (D-037). Algo novo que eles leiam e não venha do motor entra na chave, ou o widget fica velho.
 
 ## Regras
 
+- **Memória como um programador chato dos anos 2000** (RAM está cara e escassa). Toda coisa nova:
+  - não refaz a interface sem necessidade (nada de `notifyListeners` por ladrilho, cursor ou tique de relógio; memoize o que é pesado, como no D-037);
+  - não guarda cache, widget ou lista "por via das dúvidas", e não traz dependência pesada;
+  - é medida com o `tool/bench.sh` antes e depois (mediana de 3). Crescer mais de ~5 MB pede um motivo e uma decisão no `DECISOES.md`. Para achar a causa, use o `tool/mapas.py` (a memória anônima por tipo de mapeamento, não só o RSS) e compare com a build anterior no mesmo dia, numa cópia do commit anterior (`git worktree`): os números absolutos mudam uns 20 MB de um dia para outro (D-038).
+- **Privacidade total:** sem rede, sem telemetria, sem arquivo de log. Tudo fica no computador. O perfil do LibreOffice desliga os relatórios de falha, a coleta de uso e os logs. Uma IA, se vier, roda local e começa desligada.
 - **Padrões conhecidos**, dizendo qual e por quê (a tabela está no `docs/ARCHITECTURE.md`). Toda decisão nova vai no `docs/DECISOES.md`.
 - **Atomic design com tokens** (`lib/src/ui/`). Os widgets leem só o `QuillTokens.of(context)`. Nenhuma cor literal fora de `lib/src/ui/tokens/themes/`, e o `tokens_test` confere.
 - **Nenhum texto que quem usa lê fica no código:** vai para `lib/l10n/app_pt.arb` (o modelo) e `app_en.arb`.

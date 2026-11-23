@@ -16,6 +16,7 @@ class Settings extends ChangeNotifier {
 
   String _theme = 'claro';
   ShortcutScheme _shortcuts = ShortcutScheme.wordPt;
+  bool _inspector = true;
 
   /// O id do tema (os de `builtInThemes`).
   String get theme => _theme;
@@ -23,6 +24,10 @@ class Settings extends ChangeNotifier {
 
   ShortcutScheme get shortcuts => _shortcuts;
   set shortcuts(ShortcutScheme v) => _set(() => _shortcuts = v);
+
+  /// O painel Formatar aberto (F10).
+  bool get inspector => _inspector;
+  set inspector(bool v) => _set(() => _inspector = v);
 
   void _set(void Function() change) {
     change();
@@ -37,6 +42,7 @@ class Settings extends ChangeNotifier {
       final json = jsonDecode(f.readAsStringSync()) as Map<String, dynamic>;
       _theme = json['tema'] as String? ?? _theme;
       _shortcuts = ShortcutScheme.values.asNameMap()[json['atalhos']] ?? _shortcuts;
+      _inspector = json['painelFormatar'] as bool? ?? _inspector;
     } on Object {
       // Sem arquivo ou estragado: os padrões.
     }
@@ -47,7 +53,11 @@ class Settings extends ChangeNotifier {
     if (f == null) return;
     try {
       f.parent.createSync(recursive: true);
-      f.writeAsStringSync(const JsonEncoder.withIndent('  ').convert({'tema': _theme, 'atalhos': _shortcuts.name}));
+      f.writeAsStringSync(const JsonEncoder.withIndent('  ').convert({
+            'tema': _theme,
+            'atalhos': _shortcuts.name,
+            'painelFormatar': _inspector,
+          }));
     } on FileSystemException {
       // Sem onde gravar: vale só para esta sessão.
     }

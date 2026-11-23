@@ -45,7 +45,9 @@ List<Rect> parseSelection(String payload) => payload
     final json = jsonDecode(text) as Map<String, dynamic>;
     final name = json['commandName'];
     if (name is! String) return null;
-    return (name, '${json['state'] ?? ''}');
+    final state = json['state'];
+    // Os estados compostos (recuos, espaçamento) seguem como JSON.
+    return (name, state is Map || state is List ? jsonEncode(state) : '${state ?? ''}');
   }
   final eq = text.indexOf('=');
   if (eq <= 0) return null;
@@ -110,4 +112,106 @@ List<String> parseFontList(String json) {
   } on FormatException {
     return const [];
   }
+}
+
+// ------------------------------------------------------- Fase 2 --
+
+/// LOK_CALLBACK_SEARCH_RESULT_SELECTION: {"searchResultSelection": [
+/// {"part": "0", "rectangles": "x, y, w, h; ..."}], "highlightAll": "true"}.
+SearchResult? parseSearchResult(String payload) {
+  try {
+    final json = jsonDecode(payload) as Map<String, dynamic>;
+    final list = json['searchResultSelection'];
+    if (list is! List) return null;
+    return SearchResult(
+      [for (final m in list) parseSelection('${(m as Map)['rectangles'] ?? ''}')],
+      all: '${json['highlightAll']}' == 'true',
+    );
+  } on FormatException {
+    return null;
+  }
+}
+
+/// LOK_CALLBACK_CONTEXT_MENU: {"menu": [{"text", "type", "command",
+/// "enabled", "menu"}]}. O tipo "separator" vira separador.
+List<EngineMenuItem> parseContextMenu(String payload) {
+  List<EngineMenuItem> items(Object? list) => [
+        if (list is List)
+          for (final i in list.whereType<Map>())
+            if (i['type'] == 'separator')
+              const EngineMenuItem.separator()
+            else
+              EngineMenuItem(
+                text: '${i['text'] ?? ''}'.replaceAll('~', ''),
+                command: '${i['command'] ?? ''}',
+                enabled: '${i['enabled']}' != 'false',
+                children: items(i['menu']),
+              ),
+      ];
+  try {
+    return items((jsonDecode(payload) as Map<String, dynamic>)['menu']);
+  } on FormatException {
+    return const [];
+  }
+}
+
+/// LOK_CALLBACK_GRAPHIC_SELECTION: "x, y, w, h, ângulo[, {json}]" ou "EMPTY".
+Rect? parseGraphicSelection(String payload) => parseLokRect(payload);
+
+/// LOK_CALLBACK_TABLE_SELECTED: "{ }" fora da tabela; dentro, as colunas e
+/// as linhas.
+bool parseTableSelected(String payload) {
+  try {
+    final json = jsonDecode(payload);
+    return json is Map && json.isNotEmpty;
+  } on FormatException {
+    return false;
+  }
+}
+
+/// `getCommandValues(".uno:StyleApply")`: os estilos por família, com os
+/// nomes de programa do LibreOffice ("Heading 1", "Text body").
+({List<String> paragraph, List<String> character}) parseStyleLists(String json) {
+  try {
+    final values = (jsonDecode(json) as Map<String, dynamic>)['commandValues'];
+    List<String> list(String family) =>
+        values is Map && values[family] is List ? [for (final s in values[family] as List) '$s'] : const [];
+    return (paragraph: list('ParagraphStyles'), character: list('CharacterStyles'));
+  } on FormatException {
+    return (paragraph: const [], character: const []);
+  }
+}
+
+/// Um número do motor, com vírgula ou ponto ("0,5" ou "0.5").
+double? parseLokNumber(Object? v) => v == null ? null : double.tryParse('$v'.trim().replaceAll(',', '.'));
+
+/// Os estados com medidas (`.uno:LeftRightParaMargin`, `.uno:ULSpacing`):
+/// {"left": "0,5", "right": "0,0", "firstline": "0,0", "unit": "inch"}.
+/// Devolve as medidas em centímetros.
+Map<String, double> parseMeasures(String? payload) {
+  if (payload == null || !payload.trim().startsWith('{')) return const {};
+  try {
+    final json = jsonDecode(payload) as Map<String, dynamic>;
+    final factor = switch ('${json['unit'] ?? 'inch'}') {
+      'inch' => 2.54,
+      'cm' => 1.0,
+      'mm' => 0.1,
+      'pt' => 2.54 / 72,
+      _ => 2.54,
+    };
+    return {
+      for (final e in json.entries)
+        if (e.key != 'unit')
+          if (parseLokNumber(e.value) case final v?) e.key: v * factor,
+    };
+  } on FormatException {
+    return const {};
+  }
+}
+
+/// `.uno:Size` de uma imagem: "9029 x 9029" (centésimos de milímetro).
+Size? parseObjectSize(String? payload) {
+  if (payload == null) return null;
+  final n = _ints.allMatches(payload).map((m) => int.parse(m.group(0)!)).toList();
+  return n.length < 2 ? null : Size(n[0].toDouble(), n[1].toDouble());
 }

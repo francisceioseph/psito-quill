@@ -25,6 +25,9 @@ abstract interface class FileDialogs {
   /// O caminho escolhido, ou null se cancelou.
   Future<String?> pickOpen({required String label});
 
+  /// Uma imagem para inserir, ou null.
+  Future<String?> pickImage({required String label});
+
   /// O caminho escolhido (já com a extensão do formato), ou null.
   Future<String?> pickSave({required String suggestedName, String? initialDirectory, required Map<DocFormat, String> labels});
 }
@@ -37,6 +40,15 @@ class SystemFileDialogs implements FileDialogs {
     final file = await openFile(acceptedTypeGroups: [
       XTypeGroup(label: label, extensions: [for (final f in DocFormat.values) f.extension]),
     ]);
+    return file?.path;
+  }
+
+  /// As imagens que o LibreOffice insere.
+  static const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp', 'tif', 'tiff'];
+
+  @override
+  Future<String?> pickImage({required String label}) async {
+    final file = await openFile(acceptedTypeGroups: [XTypeGroup(label: label, extensions: imageExtensions)]);
     return file?.path;
   }
 

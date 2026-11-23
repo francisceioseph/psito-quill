@@ -248,3 +248,93 @@ A série de cliques aceita até 500 ms entre um e outro (o GTK usa 400 ms) e 6 p
 - **A rolagem não acompanhava a escala.** Agora o ponto do documento sob a âncora fica no lugar. A âncora é o ponteiro, no Ctrl+roda, ou o centro da tela, nos botões e atalhos (`PageGeometry.scrollFor`).
 - **Os ladrilhos sumiam até os novos chegarem.** Os da escala anterior ficam por baixo, esticados (`DocumentController.staleTiles`), como o plano pedia na seção 4. Eles saem quando a vaga é reusada.
 - **Não havia rolagem horizontal.** Com zoom alto, a página fica mais larga que a janela. Agora a vista rola nas duas direções, e a área pedida ao motor acompanha.
+
+## D-029 · O `lok_script`, uma sonda do motor por roteiro
+
+A Fase 2 dependia de dezenas de comandos `.uno:` cujos argumentos e estados a 24.2 não documenta direito. Cada um foi medido antes de virar código, com o `lok_script` (`packages/psito_quill_kit/linux/tools/`). Ele lê um roteiro de passos (`open`, `uno`, `values`, `type`, `key`, `click`, `gsel`, `sel`, `save`, `wait`) e imprime os callbacks e os estados, com um filtro opcional.
+
+**Por quê:** subir o app inteiro para cada pergunta custa um minuto e não mostra os callbacks crus. O `lok_probe` (Fase 0) mede, e o `lok_script` pergunta.
+
+**O que ele mostrou na 24.2:**
+- Muitos comandos respondem `success: false` e funcionam: `StyleNewByExample`, `InsertTable`, os da página, `Color`. O Quill não confia no `success` e confere pelo estado.
+- O `.uno:StyleDelete` não faz nada.
+- Recuos: `.uno:LeftRightParaMargin` com `LRSpace.LeftMargin`, `RightMargin` e `FirstLineIndent` (1/100 mm). Entrelinha: `.uno:LineSpacing` com `LineSpacing.Mode=0` e `LineSpacing.Height` (%).
+- O `.uno:ULSpacing` com valores não funciona. Só o `ParaspaceIncrease` e o `ParaspaceDecrease`, por isso o espaço entre parágrafos anda em degraus (D-032).
+- Página: `.uno:AttributePageSize` (largura e altura em 1/100 mm), `.uno:AttributePage` com `Landscape`, `.uno:PageLRMargin` e `.uno:PageULMargin`.
+- Imagem: o callback 6 dá o retângulo e as alças. Um `setGraphicSelection` que começa numa alça redimensiona (mantendo a proporção). Um que começa dentro da imagem a move.
+- Tabela: o callback 44 dá `{ }` fora e um JSON dentro.
+
+## D-030 · Estilos: o estado vem traduzido, a lista vem com os nomes de programa
+
+O estado do `.uno:StyleApply` traz o nome da interface em português ("Título 1", "Estilo de parágrafo Padrão"). O `getCommandValues(.uno:StyleApply)` dá os nomes de programa (126 de parágrafo e 27 de caractere). O Quill guarda o nome de programa e mapeia o estado de volta pela tabela gerada `lo_styles.dart` (`styleIdFromState`). Um estilo criado pelo usuário tem o mesmo nome nos dois.
+
+- **A galeria** (na faixa Início) mostra os estilos de livro (`bookStyles`) e os do usuário, não os 126.
+- **Criar a partir da seleção** é o `StyleNewByExample`; **atualizar**, o `StyleUpdateByExample`.
+- **Apagar estilo fica de fora:** o `StyleDelete` não funciona na 24.2. A prévia do estilo desenhada pelo motor também fica para depois.
+
+## D-031 · Localizar e substituir: a contagem vem antes
+
+O `.uno:ExecuteSearch` (0 próxima, 1 todas, 2 substituir, 3 substituir todas; `AlgorithmType2=2` é expressão regular, `TransliterateFlags=256` ignora maiúsculas) responde pelo callback 15 com os retângulos, ou pelo 12 quando não acha. O "substituir todas" não diz quantas trocou. O Quill pede "achar todas" antes, guarda a contagem e depois manda o "substituir todas". A barra diz "3 substituídas".
+
+A barra fica em cima da página, sem janela por cima do texto. Os atalhos são os do Word: Ctrl+L e Ctrl+U em português, Ctrl+F e Ctrl+H em inglês.
+
+## D-032 · O espaço entre parágrafos anda em degraus
+
+Como o `.uno:ULSpacing` com valores não funciona na 24.2 (D-029), o painel Formatar oferece "mais espaço" e "menos espaço" (os degraus do LibreOffice), e mostra os valores lidos do estado. Recuos e entrelinha aceitam números. Os estados do `ULSpacing` e do `LeftRightParaMargin` vêm em JSON, em polegadas com vírgula decimal. O `parseMeasures` converte para cm.
+
+## D-033 · Ortografia: a lista de idiomas e um mistério no teste de integração
+
+- **Sem a variável `LOK_ALLOWLIST_LANGUAGES`, o LOK desliga os idiomas** ("No language allowlisted"). O `LokEngine::init` a define (sem sobrescrever) com pt-BR, pt-PT, en-US, en-GB, es, fr, de e it.
+- **As sugestões vêm pelo menu de contexto do motor.** O clique direito vai como mouse com o botão 4. O callback 23 traz o menu em JSON, com `.uno:SpellCheckApplySuggestion`, `SpellCheckIgnore` e `SpellCheckIgnoreAll`. O Quill desenha esse menu com os próprios widgets (`engine_context_menu.dart`), e cada item roda o comando do motor.
+- **Depois de um "substituir todas", as marcas de ortografia somem** até a próxima tecla. É do motor.
+- **O mistério:** no `lok_script`, o clique direito numa palavra errada traz as sugestões. Dentro do `integration_test` (o processo do Flutter), com a mesma sequência de chamadas, o mesmo perfil, a mesma variável, o mesmo `setlocale`, o pt-BR na lista do `LanguageStatus` e o `SpellOnline` ligado, o menu vem sem sugestões. Foram descartados: o plugin `svp`, ligar e desligar o `SpellOnline`, esperar sem bombear eventos e o tamanho da vista. O teste de integração prova o resto do caminho (o idioma ligado, o menu chega à tela e o Esc fecha). **Falta conferir à mão no app de verdade.**
+
+## D-034 · O tema Clássico 97
+
+O terceiro tema embutido, com a barra de menus completa e as barras Padrão e Formatação no lugar da faixa. A fonte é a Liberation Sans (vem com o LibreOffice e tem as métricas da Arial), e os controles têm bisel (o `WControlSurface` escolhe o desenho pela estratégia do tema). Os menus saem de `editorMenus` (`lib/src/commands/menus.dart`), só com ids do `CommandRegistry`, e a paleta (Ctrl+K) usa os mesmos menus para mostrar de onde vem cada comando. O papel do motor tem o esquema próprio `PsitoQuillClassico`, registrado no perfil como os outros (D-007).
+
+## D-035 · O painel Formatar, o menu de contexto e as alças da imagem
+
+- **O painel Formatar** fica à direita e muda com a seleção: imagem, tabela, caractere, parágrafo e página. F10 mostra e esconde, e a escolha fica nas preferências (`painelFormatar`, ligado por padrão). "Revelar formatação" (Shift+F1, como no Word) põe em cima o que vale no cursor, lido dos estados do motor, como no WordPerfect.
+- **As abas de contexto** (Tabela, Imagem) aparecem na faixa só quando o cursor está numa tabela ou há uma imagem selecionada, como no Word.
+- **As alças da imagem são do Flutter**, como o cursor e a seleção. Arrastar mostra uma prévia e, ao soltar, manda o `setGraphicSelection` de início e fim. O motor redesenha uma vez só.
+- **Menu de contexto:** o do motor (D-033), desenhado pelo Quill.
+- **Não conferido:** o Ctrl+Shift+8 (marcas de formatação) no teclado ABNT2, e se o Ctrl+Espaço (limpar formatação) briga com a troca de idioma do sistema.
+
+## D-036 · Deitar a página troca a largura e a altura
+
+Na 24.2, o `.uno:AttributePage` com `Landscape` só muda a marca (`print-orientation`), e a página continua em pé. Trocar só o tamanho também não basta, porque a marca fica "retrato". O Quill faz como o painel lateral do LibreOffice: manda o tamanho trocado e depois a marca. O teste de integração pegou isso, conferindo o XML salvo.
+
+O motor não diz o tamanho da página: o `getCommandValues` do `AttributePageSize` vem vazio. O `DocumentController.pageSizeMm100` tira do tamanho do documento. No LOK, o Writer põe 284 twips em volta e entre as páginas (medido com o `lok_script`), e o número de páginas vem do `StatePageNumber`. Vale para documentos com um tamanho de página só. Os twips arredondam: 14800 (1/100 mm) volta como 14801 e fica nisso, e o ODT grava "14.801cm".
+
+## D-037 · A faixa e o painel só se refazem quando os estados mudam
+
+A primeira medição da Fase 2 rolou a 54 fps, com 5 quadros acima de 16 ms. Sem o painel Formatar, voltava a 58,7. Cada evento do motor (até um ladrilho novo ao rolar) chamava o `notifyListeners`, e a página refazia a faixa e o painel inteiros.
+
+Agora o `DocumentController.stateRevision` sobe a cada mudança, menos as que são só da vista: ladrilho, cursor e seleção. A `EditorPage` memoiza a faixa (ou os menus 97) e o painel pela chave: a revisão, o jogo de atalhos, o tema aplicado (o dos tokens, não o das preferências, que muda um quadro antes), a aba, o painel Arquivo, o "Revelar" e a barra de localizar. Com a chave igual, devolve o mesmo widget, e o Flutter não o refaz. A barra de status e a página continuam se refazendo a cada evento (são leves).
+
+**O ganho** (mediana de 3): rolar a 59,7 fps com 0 quadros lentos; tecla → ladrilho p95 de 13,6 para 9,3 ms; abrir de 479 para 356 ms. Um teste de unidade confere que o cursor não sobe a revisão.
+
+## D-038 · Para onde foram os 46 MB da Fase 2
+
+Medido com o `tool/mapas.py` (o `smaps` do app amostrado a cada 0,5 s e somado por tipo de mapeamento), comparando com a build da Fase 1 no mesmo dia e na mesma máquina, numa cópia do commit `1413dbb` (`git worktree`). Os números absolutos mudam de um dia para outro: a Fase 1 deu 383 MB de RSS com o capítulo nesse dia, não os 364 da medição antiga. **Só vale comparar duas builds medidas lado a lado.**
+
+O RSS engana. As páginas de código das bibliotecas (o `libmergedlo.so`, por exemplo) contam no RSS, mas são do arquivo, e o kernel as devolve quando falta memória. Quase nada mudou nelas. O que cresceu foi a **memória anônima** (heap, malloc), com o capítulo aberto: de 186 MB para 232 MB (+46 MB, ±1 MB entre execuções). A divisão:
+
+| Causa | MB | Como foi medido |
+|---|---|---|
+| O dicionário pt-BR do Hunspell | ~35 | Sem ortografia: 197 MB. O Hunspell sozinho, carregando o `pt_BR.dic` (4,4 MB em disco), pega 36 MB; o en-US, 7 MB |
+| O serviço de idiomas, sem dicionário | ~3 | Com a lista de idiomas vazia em vez de um idioma falso |
+| O painel Formatar | ~3,5 | Com o painel escondido |
+| O resto (código novo, o heap do Dart) | ~4 | |
+
+**Descartados, medidos:**
+- `MALLOC_ARENA_MAX=2`: dentro do ruído.
+- Só o pt-BR na lista (sem o en-US): dentro do ruído. O LibreOffice só carrega o dicionário do idioma que aparece no texto.
+- O tcmalloc (`LD_PRELOAD`): economiza 7,6 MB no Hunspell sozinho, mas o app inteiro fica com 5 MB a mais.
+
+**O que sobra para decidir:** a ortografia em português custa uns 35 MB, e é o preço do Hunspell. Não há ajuste que o reduza. O painel Formatar entra no redesenho mostrando uma seção de cada vez.
+
+## D-039 · A ortografia começa ligada
+
+Resposta do Francisco (23/11/2026) ao D-038: a ortografia fica ligada por padrão, e os ~35 MB do dicionário pt-BR do Hunspell são o preço aceito. As metas de memória do PLANO (seção 8) não mudam. A economia tem de vir de outro lugar: o painel Formatar com uma seção de cada vez no redesenho, e cada coisa nova medida antes e depois (CLAUDE.md).

@@ -276,6 +276,17 @@ class QuillKitBindings {
         )
       >();
 
+  void pqk_set_graphic_selection(int type, int x, int y) {
+    return _pqk_set_graphic_selection(type, x, y);
+  }
+
+  late final _pqk_set_graphic_selectionPtr =
+      _lookup<
+        ffi.NativeFunction<ffi.Void Function(ffi.Int32, ffi.Int32, ffi.Int32)>
+      >('pqk_set_graphic_selection');
+  late final _pqk_set_graphic_selection = _pqk_set_graphic_selectionPtr
+      .asFunction<void Function(int, int, int)>();
+
   void pqk_set_viewport(int scale_milli, int x, int y, int w, int h) {
     return _pqk_set_viewport(scale_milli, x, y, w, h);
   }
@@ -1182,6 +1193,26 @@ sealed class LibreOfficeKitMouseEventType {
 
   /// The mouse has moved while a button is pressed.
   static const LOK_MOUSEEVENT_MOUSEMOVE = 2;
+}
+
+sealed class LibreOfficeKitSetGraphicSelectionType {
+  /// A move or a resize action starts. It is assumed that there is a valid
+  /// graphic selection (see LOK_CALLBACK_GRAPHIC_SELECTION) and the supplied
+  /// coordinates are the ones the user tapped on.
+  ///
+  /// The type of the action is move by default, unless the coordinates are
+  /// the position of a handle (see below), in which case it's a resize.
+  ///
+  /// There are 8 handles for a graphic selection:
+  /// - top-left, top-center, top-right
+  /// - middle-left, middle-right
+  /// - bottom-left, bottom-center, bottom-right
+  static const LOK_SETGRAPHICSELECTION_START = 0;
+
+  /// A move or resize action stops. It is assumed that this is always used
+  /// only after a LOK_SETTEXTSELECTION_START. The supplied coordinates are
+  /// the ones where the user released the screen.
+  static const LOK_SETGRAPHICSELECTION_END = 1;
 }
 
 sealed class LibreOfficeKitTileMode {

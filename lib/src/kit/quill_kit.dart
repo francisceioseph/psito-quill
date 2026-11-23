@@ -28,6 +28,9 @@ enum KeyEventType { input, up }
 
 enum MouseEventType { down, up, move }
 
+/// Arrastar a alça de uma imagem: o ponto de partida e o de chegada.
+enum GraphicDrag { start, end }
+
 // ------------------------------------------------------------ eventos --
 
 sealed class KitEvent {
@@ -129,6 +132,54 @@ class CommandValues extends KitEvent {
   final String command, json;
 }
 
+/// Resultado de uma busca: os retângulos de cada ocorrência (twips). Na
+/// busca de uma só, a ocorrência fica selecionada; na de todas, [all].
+class SearchResult extends KitEvent {
+  const SearchResult(this.matches, {this.all = false});
+  final List<List<Rect>> matches;
+  final bool all;
+  int get count => matches.length;
+}
+
+class SearchNotFound extends KitEvent {
+  const SearchNotFound(this.text);
+  final String text;
+}
+
+/// Um item do menu de contexto do motor (clique direito).
+class EngineMenuItem {
+  const EngineMenuItem({this.text = '', this.command = '', this.enabled = true, this.children = const []});
+  const EngineMenuItem.separator() : this();
+
+  /// O rótulo do LibreOffice, sem o "~" do atalho.
+  final String text;
+
+  /// ".uno:SpellCheckApplySuggestion?ApplyRule:string=Spelling_erro".
+  final String command;
+  final bool enabled;
+  final List<EngineMenuItem> children;
+
+  bool get isSeparator => text.isEmpty && command.isEmpty;
+}
+
+/// O motor respondeu ao clique direito com o menu dele.
+class ContextMenuReady extends KitEvent {
+  const ContextMenuReady(this.items);
+  final List<EngineMenuItem> items;
+}
+
+/// Uma imagem (ou outro objeto) selecionada, em twips; null quando nenhuma.
+class GraphicSelected extends KitEvent {
+  const GraphicSelected(this.rect);
+  final Rect? rect;
+}
+
+/// O cursor entrou (ou saiu) de uma tabela.
+class TableSelected extends KitEvent {
+  const TableSelected(this.inTable);
+  final bool inTable;
+}
+
 /// O resto, cru: o que o app ainda não usa.
 class OtherKitEvent extends KitEvent {
   const OtherKitEvent(this.type, this.payload);
@@ -177,6 +228,11 @@ abstract interface class QuillKit {
   /// Entrada composta (IME). Sem [commit], é a pré-edição, que a próxima
   /// chamada substitui. Com [commit], o texto entra no documento.
   void extTextInput(String text, {required bool commit});
+
+  /// Arrasta a imagem selecionada (pela alça, para redimensionar; pelo
+  /// meio, para mover), em twips: [GraphicDrag.start] onde começa e
+  /// [GraphicDrag.end] onde termina.
+  void setGraphicSelection(GraphicDrag type, int x, int y);
 
   /// Pede os valores possíveis de um comando (as fontes de
   /// `.uno:CharFontName`, por exemplo); a resposta é um [CommandValues].

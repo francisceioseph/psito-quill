@@ -14,7 +14,8 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/gestures.dart' show GestureBinding, PointerScrollEvent, PointerSignalEvent;
+import 'package:flutter/gestures.dart'
+    show GestureBinding, PointerScrollEvent, PointerSignalEvent, kPrimaryMouseButton, kSecondaryMouseButton;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -24,6 +25,34 @@ import '../../kit/lok/vcl_keys.dart';
 import '../../kit/quill_kit.dart';
 import '../tokens/tokens.dart';
 import 'click_counter.dart';
+import 'engine_context_menu.dart';
+
+/// As 8 alças de uma imagem selecionada, em twips: os cantos e os meios dos
+/// lados, como o LibreOffice as numera (1 a 8, da esquerda para a direita e
+/// de cima para baixo).
+List<Offset> graphicHandles(Rect r) => [
+      r.topLeft,
+      r.topCenter,
+      r.topRight,
+      r.centerLeft,
+      r.centerRight,
+      r.bottomLeft,
+      r.bottomCenter,
+      r.bottomRight,
+    ];
+
+/// Para onde a imagem iria ao arrastar a alça [handle] (ou o corpo, com
+/// null) por [delta] (twips). Só para a prévia: o motor decide o resultado
+/// (ele mantém a proporção nos cantos).
+Rect graphicDragPreview(Rect r, int? handle, Offset delta) {
+  if (handle == null) return r.shift(delta);
+  var (l, t, rt, b) = (r.left, r.top, r.right, r.bottom);
+  if ({0, 3, 5}.contains(handle)) l += delta.dx;
+  if ({2, 4, 7}.contains(handle)) rt += delta.dx;
+  if ({0, 1, 2}.contains(handle)) t += delta.dy;
+  if ({5, 6, 7}.contains(handle)) b += delta.dy;
+  return Rect.fromLTRB(math.min(l, rt), math.min(t, b), math.max(l, rt), math.max(t, b));
+}
 
 /// Lado do ladrilho em twips para a escala (igual ao nativo, tile_cache.cc).
 double tileTwips(int scaleMilli, int tileSize) => tileSize * twipsPerPixel * 1000 / scaleMilli;
@@ -117,6 +146,15 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
   TextInputConnection? _input;
   bool _composing = false;
   final GlobalKey _boxKey = GlobalKey();
+  final GlobalKey _contentKey = GlobalKey();
+
+  /// O clique direito em curso (o botão solto não vai ao motor).
+  bool _secondary = false;
+  bool _menuShowing = false;
+
+  /// Arrastando a imagem: de onde (twips), por qual alça (null: o corpo) e
+  /// até onde.
+  ({Offset from, int? handle, Offset to})? _graphicDrag;
 
   @override
   void initState() {
@@ -171,6 +209,9 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
       // Documento novo: a tela inteira precisa de ladrilhos.
       if (status == DocStatus.open) WidgetsBinding.instance.addPostFrameCallback((_) => _pushViewport());
       _syncInput();
+    }
+    if (widget.doc.contextMenu != null && !_menuShowing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showContextMenu());
     }
     if (widget.doc.cursor != _lastCursor) {
       _lastCursor = widget.doc.cursor;
@@ -248,7 +289,7 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
     if (value.text.isNotEmpty) {
       widget.doc.insertText(value.text);
     } else if (_composing) {
-      widget.doc.insertText(''); // pré-edição cancelada
+      widget.doc.cancelComposition();
     }
     _composing = false;
     _input?.setEditingState(TextEditingValue.empty);
@@ -363,9 +404,77 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
     }
   }
 
+  Future<void> _showContextMenu() async {
+    final menu = widget.doc.contextMenu;
+    final g = _geometry;
+    final box = _contentKey.currentContext?.findRenderObject() as RenderBox?;
+    if (menu == null || g == null || box == null || _menuShowing || !mounted) return;
+    _menuShowing = true;
+    widget.doc.clearContextMenu();
+    final local = g.toLocal(Rect.fromLTWH(menu.twips.dx, menu.twips.dy, 0, 0)).topLeft;
+    await showEngineContextMenu(
+      context,
+      position: box.localToGlobal(local),
+      doc: widget.doc,
+      commands: widget.commands,
+      engine: menu.items,
+    );
+    _menuShowing = false;
+    if (mounted) _focus.requestFocus();
+  }
+
+  /// A alça da imagem sob [local] (pixels), ou null; -1 se é o corpo.
+  int? _graphicHit(PageGeometry g, Offset local) {
+    final r = widget.doc.graphic;
+    if (r == null) return null;
+    final handles = graphicHandles(r);
+    for (var i = 0; i < handles.length; i++) {
+      final p = g.toLocal(Rect.fromLTWH(handles[i].dx, handles[i].dy, 0, 0)).topLeft;
+      if ((p - local).distance <= 8) return i;
+    }
+    return g.toLocal(r).contains(local) ? -1 : null;
+  }
+
+  /// Arrastar a imagem é do Quill (com a prévia); só o resultado vai ao
+  /// motor, pelo setGraphicSelection.
+  bool _graphicPointer(PointerEvent e, MouseEventType type, PageGeometry g) {
+    final drag = _graphicDrag;
+    switch (type) {
+      case MouseEventType.down:
+        if (!widget.doc.canEdit || e.buttons != kPrimaryMouseButton) return false;
+        final hit = _graphicHit(g, e.localPosition);
+        if (hit == null) return false;
+        final from = hit >= 0 ? graphicHandles(widget.doc.graphic!)[hit] : g.toTwips(e.localPosition);
+        setState(() => _graphicDrag = (from: from, handle: hit >= 0 ? hit : null, to: from));
+        _focus.requestFocus();
+        return true;
+      case MouseEventType.move:
+        if (drag == null) return false;
+        setState(() => _graphicDrag = (from: drag.from, handle: drag.handle, to: g.toTwips(e.localPosition)));
+        return true;
+      case MouseEventType.up:
+        if (drag == null) return false;
+        setState(() => _graphicDrag = null);
+        if ((drag.to - drag.from).distance * g.pxPerTwip > 3) widget.doc.dragGraphic(drag.from, drag.to);
+        return true;
+    }
+  }
+
   void _pointer(PointerEvent e, MouseEventType type) {
     final g = _geometry;
     if (g == null || widget.doc.docStatus != DocStatus.open) return;
+    // Clique direito: o motor põe o cursor ali e responde com o menu dele.
+    if (type == MouseEventType.down && e.buttons & kSecondaryMouseButton != 0) {
+      _secondary = true;
+      _focus.requestFocus();
+      widget.doc.requestContextMenu(g.toTwips(e.localPosition));
+      return;
+    }
+    if (_secondary) {
+      if (type == MouseEventType.up) _secondary = false;
+      return;
+    }
+    if (_graphicPointer(e, type, g)) return;
     if (type == MouseEventType.down) {
       _focus.requestFocus();
       _clicks = lokClickCount(
@@ -417,11 +526,18 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
                   ? Texture(textureId: tile.textureId, filterQuality: FilterQuality.none)
                   : ColoredBox(color: t.colors.paper),
             ),
+          // As outras ocorrências da busca (a atual vem como seleção).
+          for (final r in doc.searchHighlights)
+            Positioned.fromRect(
+              rect: g.toLocal(r),
+              child: IgnorePointer(child: ColoredBox(color: t.colors.accentSoft.withValues(alpha: 0.5))),
+            ),
           for (final r in doc.selection)
             Positioned.fromRect(
               rect: g.toLocal(r),
               child: ColoredBox(color: t.colors.selection),
             ),
+          if (doc.graphic case final r?) ..._graphicFrame(t, g, r),
           if (doc.cursorVisible && doc.cursor != Rect.zero && _caretOn && _focus.hasFocus)
             Positioned.fromRect(
               rect: () {
@@ -466,6 +582,7 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
                         child: MouseRegion(
                           cursor: SystemMouseCursors.text,
                           child: SizedBox(
+                            key: _contentKey,
                             width: g.contentWidth,
                             height: g.contentHeight,
                             child: Stack(clipBehavior: Clip.hardEdge, children: children),
@@ -481,5 +598,30 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
         );
       },
     );
+  }
+
+  /// A moldura e as alças da imagem selecionada; ao arrastar, a prévia.
+  List<Widget> _graphicFrame(QuillTokens t, PageGeometry g, Rect twips) {
+    final drag = _graphicDrag;
+    final r = drag == null ? twips : graphicDragPreview(twips, drag.handle, drag.to - drag.from);
+    final local = g.toLocal(r);
+    const h = 8.0;
+    return [
+      Positioned.fromRect(
+        rect: local,
+        child: IgnorePointer(
+          child: DecoratedBox(decoration: BoxDecoration(border: Border.all(color: t.colors.accent, width: 1.5))),
+        ),
+      ),
+      for (final p in graphicHandles(r))
+        Positioned.fromRect(
+          rect: Rect.fromCenter(center: g.toLocal(Rect.fromLTWH(p.dx, p.dy, 0, 0)).topLeft, width: h, height: h),
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(color: t.colors.paper, border: Border.all(color: t.colors.accent, width: 1.5)),
+            ),
+          ),
+        ),
+    ];
   }
 }

@@ -65,6 +65,9 @@ class LokEngine {
   void postKey(int type, int charCode, int keyCode);
   void postMouse(int type, int x, int y, int count, int buttons, int modifier);
   void uno(const std::string& command, const std::string& argsJson);
+  // Arrasta a alça de uma imagem selecionada: type é LOK_SETGRAPHICSELECTION_START
+  // (no ponto da alça) ou _END (no ponto de chegada), em twips.
+  void setGraphicSelection(int type, int x, int y);
   void saveAs(const std::string& path, const std::string& format,
               const std::string& options);
   void commandValues(const std::string& command);
