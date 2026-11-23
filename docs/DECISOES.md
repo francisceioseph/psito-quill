@@ -338,3 +338,13 @@ O RSS engana. As páginas de código das bibliotecas (o `libmergedlo.so`, por ex
 ## D-039 · A ortografia começa ligada
 
 Resposta do Francisco (23/11/2026) ao D-038: a ortografia fica ligada por padrão, e os ~35 MB do dicionário pt-BR do Hunspell são o preço aceito. As metas de memória do PLANO (seção 8) não mudam. A economia tem de vir de outro lugar: o painel Formatar com uma seção de cada vez no redesenho, e cada coisa nova medida antes e depois (CLAUDE.md).
+
+## D-040 · A Fase 2B: a interface nova em Material 3, em etapas
+
+O Francisco aprovou (23/11/2026) os desenhos do canvas "Psito Quill — nova interface" e o plano em 9 etapas (PLANO, seção 10). Escolhas dele:
+- **Material 3 com densidade de desktop** (como o Google Docs) e os ícones Material Symbols Rounded. O Yaru e o fluent_ui foram descartados: um parece o app de configurações do GNOME, o outro é estranho no Linux e pesado.
+- **A barra de título continua a do GTK.** A pesquisa Ctrl+K vai para a ponta da fileira de abas. Uma barra desenhada pelo Quill traria risco no X11 (sombra, redimensionar, arrastar) por pouco ganho.
+- **A fonte da interface é a do sistema**, sem a Roboto embutida: nada a mais no pacote nem na memória.
+- **A IA local fica para a Fase 5**, como plugin com permissões.
+
+Cada etapa tem um orçamento de ~5 MB de memória anônima, medido lado a lado com a build anterior (D-038).

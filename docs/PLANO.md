@@ -214,9 +214,15 @@ test/ integration_test/ docs/
 └───────────────────────────────────────────────────────────────────────────┘
 ```
 
+**Revisto na Fase 2B** (os desenhos estão no canvas "Psito Quill — nova interface", no Claude Design):
+- **Material 3 com densidade de desktop**, como o Google Docs: controles de 32 px (44 px na densidade confortável), cores tonais a partir da semente #415F91, ícones Material Symbols Rounded.
+- **A barra de título é a do GTK.** A pesquisa de comandos (Ctrl+K) fica na ponta direita da fileira de abas.
+- **A fonte da interface é a do sistema** (Ubuntu/Cantarell): nada embutido, nada a mais na memória.
+- **À esquerda,** um trilho com Estrutura, Localizar e Estilos; o Fichário entra nele na Fase 3. **À direita,** o painel Formatar, uma seção de cada vez.
+
 - **As laterais recolhem** (`F9`, `F10`), e a faixa também (`Ctrl+F1`) vira só as abas.
 - **A faixa tem poucos botões grandes**, como no OnlyOffice. O resto fica no inspetor e na paleta.
-- **Estilos rápidos** com prévia real: o motor desenha "Título 1" com o estilo do livro.
+- **Estilos rápidos** com prévia real: cada cartão é desenhado com as propriedades do estilo do livro, e passar o mouse mostra no texto, se o motor deixar (Fase 2B, Etapa 3).
 
 ### 5.2 Menus (os mesmos comandos nos dois temas)
 
@@ -252,12 +258,12 @@ A faixa e o menu 97 saem do mesmo `CommandRegistry`. Nenhum comando existe num l
 **Os temas que vêm com o app:**
 - **Claro:** neutro quente, papel branco, destaque na cor escolhida.
 - **Escuro:** moldura grafite e papel escuro, se o motor deixar (seção 4).
-- **Sépia:** para sessões longas à noite.
+- **Sépia:** para sessões longas à noite, e o papel do modo zen (Fase 2B).
 - **Clássico 97:**
   - cinza `#C0C0C0`, bisel 3D, barra de título em degradê azul, fonte de UI bitmap-like (a fase 2 escolhe uma fonte livre parecida);
   - barra de menus no topo, barras de ferramentas Padrão e Formatação, sem faixa;
   - régua clássica e barra de status com os campos afundados.
-- **Alto contraste.**
+- **Alto contraste,** escuro e claro, com contraste de 7:1 (Fase 2B).
 
 **Um tema é um arquivo JSON** com tokens + um `ComponentStyle` (moderno ou bisel).
 - Dá para criar temas sem recompilar: em `~/.config/psito-quill/themes/`.
@@ -367,6 +373,8 @@ end)
 
 A memória é o RSS do app inteiro, na mediana de pelo menos 3 execuções do `tool/bench.sh` (varia uns 20 MB de uma para outra).
 
+**Depois da Fase 2** (D-038, D-039): o RSS muda uns 20 MB de um dia para outro, então cada fase e cada etapa se comparam **lado a lado** com a build anterior, pelo `tool/mapas.py`, olhando a memória anônima. **O orçamento é de ~5 MB de memória anônima por etapa;** passar disso pede um motivo e uma decisão. A ortografia em português custa uns 35 MB (o Hunspell) e foi aceita.
+
 O LibreOffice sozinho já ocupa umas centenas de MB. A meta é ficar **bem abaixo do OnlyOffice** e, principalmente, **não crescer** em sessões longas. A lentidão do OnlyOffice em sessões longas é a queixa original.
 
 **Táticas:**
@@ -415,6 +423,91 @@ Cada fase termina com `FASEn-RESULTADOS.md`, os números de testes por nível e 
 - Estilos (galeria, gerenciar, criar a partir da seleção), o inspetor Formatar, listas, página, imagens e tabelas simples.
 - Localizar e substituir, ortografia (o LibreOffice já tem, pelo hunspell), "Revelar formatação", a paleta de comandos e o tema Clássico 97 com o menu completo.
 
+**Fase 2B: a nova interface** (o plano aprovado em 23/11/2026; os desenhos estão no Claude Design)
+
+Etapas que fecham sozinhas, nesta ordem. Cada uma termina com:
+- `./test.sh --integracao` verde e `flutter analyze` limpo;
+- a memória lado a lado com a build anterior (`tool/mapas.py`, ≤ ~5 MB de memória anônima);
+- a decisão no `DECISOES.md`;
+- uma lista do que o Francisco deve olhar à mão.
+
+Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-029). Se a sonda falhar, vale a alternativa escrita aqui.
+
+- **Etapa 0, privacidade e linha de base:**
+  - o perfil do LO desliga os relatórios de falha, a coleta de uso, a verificação de atualizações e os logs (`LoProfile.ensureSettings`);
+  - `SAL_LOG=-WARN-INFO` no `LokEngine::init`;
+  - a preferência "Guardar os arquivos recentes";
+  - um teste confere o perfil e que nada em `lib/` abre rede;
+  - a linha de base da Fase 2 fica gravada.
+- **Etapa 1, a fundação Material 3:**
+  - os tokens a partir da semente, com os papéis do M3 (surface e os 5 surfaceContainer, secondaryContainer, outline, outlineVariant) e o `ColorScheme` do M3;
+  - a densidade compacta ou confortável;
+  - os ícones `material_symbols_icons` (Rounded, com tree-shaking; medir o `libapp.so`);
+  - os átomos no visual novo, e os novos `WSegmented`, `WSwitch`, `WSlider` e `WChip`;
+  - o bisel do Clássico 97 continua pelo `ComponentStyle`.
+- **Etapa 2, a casca:**
+  - a fileira de abas (Arquivo, Início, Inserir, Layout, Estilos, Revisão, Exibir, as abas de contexto na cor terciária, Recolher, e a pesquisa Ctrl+K na ponta);
+  - a faixa num cartão, com a galeria embutida;
+  - o trilho e o painel Estrutura;
+  - o painel Formatar por seções (Texto, Parágrafo, Página, e Imagem ou Tabela), **só a visível construída**;
+  - a barra de status nova, com o controle deslizante de zoom;
+  - a aba Imagem com o tamanho em cm, o cadeado da proporção, Legenda e Original.
+- **Etapa 3, as prévias de fontes e estilos:**
+  - **A lista de fontes desenhadas com a própria fonte:** `ListView.builder`, com busca, "Neste documento", Recentes e Todas, e os filtros serifa, sem serifa e mono. Os filtros vêm de uma função nativa, `pqk_font_info`, que pergunta ao fontconfig.
+  - **As propriedades dos estilos:** uma cópia temporária do documento, lida num isolate (`StyleCatalog`). Sonda: a cópia não pode mexer no documento. Se a sonda falhar, os cartões ficam com um desenho genérico.
+  - **A galeria aberta,** com busca e as ações.
+  - **A prévia ao vivo no texto:** aplicar e desfazer, se a sonda provar que é rápido e que não suja o desfazer. Se não provar, a prévia fica só nos cartões e na lista.
+  - **"Revelar formatação"** marca o que vem do estilo e o que é direto, e "Tirar o que é direto" (`.uno:ResetAttributes`).
+- **Etapa 4, a régua:**
+  - **Os dados:** o `LOK_CALLBACK_RULER_UPDATE` (35). Se não vier, os estados de recuo e de margem.
+  - **O desenho:** um `CustomPainter` só, que se repinta só quando muda. Mostra os milímetros, o zero na margem, as margens em cinza, os quatro recuos e as tabulações, mais o seletor do tipo de tabulação.
+  - **A régua vertical,** com as margens de cima e de baixo.
+  - **Ao arrastar,** a linha tracejada aparece na página.
+  - **Teclado:** Tab chega a cada marca; as setas movem 1 mm e Shift+setas 1 cm.
+  - **Exibir › Régua** liga e desliga, e a unidade fica nas preferências.
+- **Etapa 5, várias páginas e a Estrutura:**
+  - **Várias páginas:** `.uno:ViewLayout`, já testado (3 colunas dão 3 páginas de largura).
+    - Uma, Várias ou Livro (pares) na barra de status; no modo Várias, as colunas saem do zoom.
+    - O zoom mínimo cai para 20 %, e clicar numa página leva até ela.
+    - O `PageGeometry` e o `DocumentView` são conferidos para mais de uma página por linha.
+  - **A Estrutura:**
+    - os títulos saem da mesma cópia temporária, refeita depois de salvar ou numa pausa de 2 s;
+    - o salto a um título é escolhido pela sonda;
+    - o item atual acompanha o cursor.
+- **Etapa 6, o modo zen:**
+  - tela cheia de verdade (`pqk_set_fullscreen` na porta `AppWindow`), que sai com Esc ou F11;
+  - só o texto, com o papel Sépia (o esquema `PsitoQuillSepia`);
+  - máquina de escrever: a linha no meio, só com a rolagem do Flutter;
+  - foco no parágrafo, pelo retângulo dos callbacks de acessibilidade (sonda; a alternativa é uma faixa de linhas ao redor do cursor);
+  - a barrinha de opções que some depois de 2 s;
+  - as palavras e o tempo da sessão, atualizados uma vez por minuto.
+- **Etapa 7, ocupado sem janelas:**
+  - os callbacks `STATUS_INDICATOR` (9, 10, 11) viram o evento `Progress`;
+  - abrir e salvar travam a tela com um `BusyScope`: os cliques e as teclas param, o cursor vira relógio e um véu leve fica por cima;
+  - o progresso aparece no rodapé, como região viva para o leitor de tela;
+  - sem "Cancelar", porque o LOK não cancela;
+  - o trabalho de fundo não trava nada;
+  - saem os avisos que piscam.
+- **Etapa 8, acessibilidade:**
+  - **Temas e tamanhos:**
+    - Alto contraste, escuro e claro (7:1), e Sépia;
+    - o tamanho do texto da interface (segue o sistema; um teste a 200 %);
+    - a densidade confortável.
+  - **O cursor e o foco:**
+    - a espessura do cursor e o piscar;
+    - o foco sempre visível;
+    - reduzir movimento.
+  - **A cor da marca de ortografia** vem pelo esquema de cores, se a sonda achar a entrada.
+  - **O documento no leitor de tela:**
+    - `setAccessibilityState` e os callbacks `A11Y` (62, 63) viram um nó `Semantics` com o parágrafo e o cursor;
+    - liga só com a preferência ou com o leitor de tela ativo;
+    - o Orca, à mão.
+  - **O zoom ao abrir.**
+  - **A tela de Preferências:** Geral, Aparência, Acessibilidade, Privacidade, Atalhos.
+- **Fecho:** o `FASE2B-RESULTADOS.md`, com os números lado a lado com a Fase 2. Atualizar `ARCHITECTURE.md`, `README.md` e `CLAUDE.md`.
+
+**Fica para a Fase 5:** a IA local (llama.cpp em outro processo, desligada por padrão, como plugin com permissões). Na Fase 2B, só o lugar dela no trilho.
+
 **Fase 3: o modo Livro**
 - O `.psitobook`, o fichário, as cenas, as notas, as metas, a cortiça, a busca no livro e os instantâneos.
 
@@ -424,9 +517,10 @@ Cada fase termina com `FASEn-RESULTADOS.md`, os números de testes por nível e 
 
 **Fase 5: plugins**
 - A API `psito.*` v1, o gerenciador de plugins com permissões, os 4 plugins de exemplo, e temas vindos de plugins.
+- O assistente de IA local como plugin: desligado por padrão, num processo à parte, sem rede, e o texto só muda quando quem escreve aceita.
 
 **Fase 6: acabamento**
-- Os modos Foco, Máquina de escrever e Tela cheia, o Sépia e o Alto contraste, e as animações com mola no tema moderno.
+- As animações com mola no tema moderno. (Foco, Máquina de escrever, Tela cheia, Sépia e Alto contraste entraram na Fase 2B.)
 - O pacote `.deb` e o APT, como no Player.
 - A medição de memória final (seção 8) e um site.
 
