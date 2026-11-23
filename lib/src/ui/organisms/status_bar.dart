@@ -16,6 +16,7 @@ class StatusField {
     this.flex = false,
     this.icon,
     this.onTap,
+    this.menu,
     this.tooltip,
     this.priority = 1,
   });
@@ -32,6 +33,10 @@ class StatusField {
   /// Ação ao clicar (ex: ir para a página, abrir painel de estilos).
   final VoidCallback? onTap;
 
+  /// Um menu que abre no clique (o idioma, as palavras). Construído só ao
+  /// abrir.
+  final List<Widget> Function(BuildContext context)? menu;
+
   /// Dica de ferramenta para o leitor de tela e mouse.
   final String? tooltip;
 
@@ -42,16 +47,50 @@ class StatusField {
   final int priority;
 }
 
+/// Uma linha só de leitura num menu da barra de status ("Caracteres 1.204").
+class StatusInfoRow extends StatelessWidget {
+  const StatusInfoRow(this.label, this.value, {super.key});
+  final String label, value;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = QuillTokens.of(context);
+    return MergeSemantics(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 220),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: t.space.lg, vertical: t.space.sm),
+          child: Row(
+            children: [
+              Expanded(child: WLabel(label, tone: WLabelTone.muted)),
+              SizedBox(width: t.space.xl),
+              WLabel(value),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Um campo clicável da barra de status: o mouse, o Tab e Enter ou Espaço.
+/// Com [menu], abre o menu no lugar.
 class _StatusButton extends StatefulWidget {
   const _StatusButton({
     required this.child,
+    required this.label,
     this.onTap,
+    this.menu,
     this.tooltip,
     this.bevel = false,
   });
 
   final Widget child;
+
+  /// O que o leitor de tela lê (o texto do campo).
+  final String label;
   final VoidCallback? onTap;
+  final List<Widget> Function(BuildContext context)? menu;
   final String? tooltip;
   final bool bevel;
 
@@ -60,18 +99,49 @@ class _StatusButton extends StatefulWidget {
 }
 
 class _StatusButtonState extends State<_StatusButton> {
-  bool _hover = false;
+  bool _hover = false, _focus = false;
+
+  /// O menu existe só enquanto está aberto.
+  bool _open = false;
+  final _menu = MenuController();
+  final _focusNode = FocusNode(debugLabel: 'status');
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _activate() {
+    if (widget.menu == null) {
+      widget.onTap?.call();
+      return;
+    }
+    if (_menu.isOpen) {
+      _menu.close();
+      return;
+    }
+    // O foco fica no campo: o Esc fecha um menu só de leitura (as
+    // estatísticas), que não tem item para receber o foco.
+    _focusNode.requestFocus();
+    setState(() => _open = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _open) _menu.open();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final t = QuillTokens.of(context);
-    final clickable = widget.onTap != null;
+    final clickable = widget.onTap != null || widget.menu != null;
+    final lit = clickable && (_hover || _focus || _open);
 
     Widget content = widget.child;
     if (widget.bevel) {
       content = Container(
         padding: EdgeInsets.symmetric(horizontal: t.space.sm, vertical: t.space.xs),
         decoration: BoxDecoration(
+          color: _focus ? t.colors.surfaceHigh : null,
           border: Border(
             top: BorderSide(color: t.colors.bevelDark),
             left: BorderSide(color: t.colors.bevelDark),
@@ -83,39 +153,53 @@ class _StatusButtonState extends State<_StatusButton> {
       );
     } else {
       content = Container(
-        padding: EdgeInsets.symmetric(horizontal: t.space.sm, vertical: 2),
+        height: t.density.statusBar - t.space.xs,
+        alignment: Alignment.center,
+        padding: EdgeInsets.symmetric(horizontal: t.space.sm),
         decoration: BoxDecoration(
-          color: _hover && clickable ? t.colors.surfaceHigh : null,
+          color: lit ? t.colors.surfaceHigh : null,
           borderRadius: BorderRadius.circular(t.radius.control / 2),
+          border: _focus ? Border.all(color: t.colors.accent, width: 2) : null,
         ),
         child: content,
       );
     }
 
     if (clickable) {
-      content = MouseRegion(
-        cursor: SystemMouseCursors.click,
-        onEnter: (_) => setState(() => _hover = true),
-        onExit: (_) => setState(() => _hover = false),
-        child: GestureDetector(
-          onTap: widget.onTap,
-          behavior: HitTestBehavior.opaque,
-          child: content,
-        ),
+      content = FocusableActionDetector(
+        focusNode: _focusNode,
+        mouseCursor: SystemMouseCursors.click,
+        onShowHoverHighlight: (v) => setState(() => _hover = v),
+        onShowFocusHighlight: (v) => setState(() => _focus = v),
+        actions: {
+          ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: (_) => _activate()),
+          if (_open) DismissIntent: CallbackAction<DismissIntent>(onInvoke: (_) => _menu.close()),
+        },
+        child: GestureDetector(onTap: _activate, behavior: HitTestBehavior.opaque, child: content),
       );
     }
 
     if (widget.tooltip != null) {
-      content = Tooltip(
-        message: widget.tooltip!,
-        child: content,
-      );
+      content = Tooltip(message: widget.tooltip!, child: content);
     }
 
-    return Semantics(
+    content = Semantics(
       button: clickable,
-      enabled: clickable,
-      label: widget.tooltip,
+      label: widget.label,
+      hint: widget.tooltip,
+      excludeSemantics: true,
+      child: content,
+    );
+
+    if (widget.menu == null) return content;
+    return MenuAnchor(
+      controller: _menu,
+      childFocusNode: _focusNode,
+      alignmentOffset: Offset(0, t.space.xs),
+      onClose: () {
+        if (mounted) setState(() => _open = false);
+      },
+      menuChildren: _open ? widget.menu!(context) : const [],
       child: content,
     );
   }
@@ -177,7 +261,9 @@ class StatusBar extends StatelessWidget {
                         Flexible(
                           child: _StatusButton(
                             bevel: bevel,
+                            label: f.text,
                             onTap: f.onTap,
+                            menu: f.menu,
                             tooltip: f.tooltip,
                             child: _text(t, f),
                           ),
@@ -188,9 +274,9 @@ class StatusBar extends StatelessWidget {
                         SizedBox(width: width >= 1050 ? t.space.lg : t.space.sm),
                         Flexible(
                           flex: 3,
-                          child: _StatusButton(
-                            bevel: bevel,
-                            child: Semantics(liveRegion: true, child: _text(t, message)),
+                          child: Semantics(
+                            liveRegion: true,
+                            child: _StatusButton(bevel: bevel, label: message.text, child: _text(t, message)),
                           ),
                         ),
                       ],
@@ -237,6 +323,8 @@ class ZoomControl extends StatefulWidget {
     required this.percentLabel,
     required this.zoomIn,
     required this.zoomOut,
+    this.menu,
+    this.menuTooltip,
   });
 
   /// 1 = 100 %.
@@ -247,6 +335,10 @@ class ZoomControl extends StatefulWidget {
 
   /// Os botões − e + (os comandos, com a dica e o atalho).
   final Widget zoomIn, zoomOut;
+
+  /// O menu da porcentagem: 100 %, ajustar à largura, à página, outros.
+  final List<Widget> Function(BuildContext context)? menu;
+  final String? menuTooltip;
 
   @override
   State<ZoomControl> createState() => _ZoomControlState();
@@ -287,11 +379,14 @@ class _ZoomControlState extends State<ZoomControl> {
             ),
           ),
         widget.zoomIn,
-        SizedBox(
-          width: 48,
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: ExcludeSemantics(child: WLabel(widget.percentLabel(percent), small: true)),
+        _StatusButton(
+          label: widget.percentLabel(percent),
+          tooltip: widget.menuTooltip,
+          menu: widget.menu,
+          bevel: t.component == ComponentStyle.bevel,
+          child: SizedBox(
+            width: 44,
+            child: Align(alignment: Alignment.centerRight, child: WLabel(widget.percentLabel(percent), small: true)),
           ),
         ),
         SizedBox(width: t.space.xs),

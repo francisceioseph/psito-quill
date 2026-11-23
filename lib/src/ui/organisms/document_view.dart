@@ -108,6 +108,19 @@ class PageGeometry {
   Offset scrollFor(Offset twips, Offset anchor) => origin + twips * pxPerTwip - anchor;
 }
 
+/// O zoom que faz a fileira de páginas caber na largura da vista ([whole]:
+/// a página inteira, também na altura). [rowTwips] é a largura do documento
+/// (a fileira, com o espaço em volta) e [pageHeightTwips] a altura de uma
+/// página com o espaço de cima. O zoom é arredondado para baixo, em passos
+/// de 5 %, como o do controlador.
+double fitZoom(Size view, {required double rowTwips, required double pageHeightTwips, required bool whole, double padding = 24}) {
+  if (rowTwips <= 0 || view.isEmpty) return 1;
+  final w = (view.width - 2 * padding) * twipsPerPixel / rowTwips;
+  final h = pageHeightTwips <= 0 ? w : (view.height - padding) * twipsPerPixel / pageHeightTwips;
+  final z = whole ? math.min(w, h) : w;
+  return (z * 20).floorToDouble() / 20;
+}
+
 /// Onde a página está na tela, para as réguas (D-046): a borda esquerda e
 /// a de cima do documento, em pixels da área da página (já com a rolagem),
 /// e a escala. As réguas só se repintam com isto; nada se reconstrói.

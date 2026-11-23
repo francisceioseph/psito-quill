@@ -32,6 +32,14 @@ class _NoView implements EditorViewActions {
   @override
   void toggleZen() {}
   @override
+  void zoomToFit({required bool page}) {}
+  @override
+  void toggleStatusBar() {}
+  @override
+  bool statusBarShown = true;
+  @override
+  String pageLayout = 'uma';
+  @override
   void toggleRuler() {}
   @override
   void toggleOutline() {}
@@ -232,6 +240,16 @@ void main() {
     await tester.pumpAndSettle();
     expect(kit.unoCommands.last, '.uno:ParaSplit');
     expect(kit.unoArgs.last, contains('"value":false'), reason: 'manter juntas é não dividir');
+
+    // O Esc fecha com o foco no documento, e não vai ao motor.
+    await tester.tapAt(tester.getCenter(find.byType(DocumentView)), buttons: kSecondaryButton);
+    await tester.pumpAndSettle();
+    expect(find.text('Selecionar tudo'), findsOneWidget);
+    final keys = kit.keys.length;
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.text('Selecionar tudo'), findsNothing);
+    expect(kit.keys.length, keys);
   });
 
   testWidgets('Inserir › Tabela: a grade insere, e a aba Tabela aparece', (tester) async {

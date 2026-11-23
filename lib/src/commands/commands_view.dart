@@ -29,6 +29,12 @@ abstract final class ViewCommandIds {
   static const collapseRibbon = 'exibir.recolherFaixa';
   static const ruler = 'exibir.regua';
   static const zen = 'exibir.zen';
+  static const fitWidth = 'exibir.ajustarLargura';
+  static const fitPage = 'exibir.ajustarPagina';
+  static const statusBar = 'exibir.barraStatus';
+  static const layoutSingle = 'exibir.umaPagina';
+  static const layoutMulti = 'exibir.variasPaginas';
+  static const layoutBook = 'exibir.livro';
 }
 
 /// O que a página do editor sabe abrir.
@@ -65,6 +71,18 @@ abstract interface class EditorViewActions {
   /// O modo zen (F11).
   void toggleZen();
   bool get zenOpen;
+
+  /// O zoom que faz caber a largura da fileira de páginas ([page]: a página
+  /// inteira) na área do documento.
+  void zoomToFit({required bool page});
+
+  /// Exibir › Barra de status.
+  void toggleStatusBar();
+  bool get statusBarShown;
+
+  /// A disposição das páginas: "uma", "varias" ou "livro" (D-047).
+  String get pageLayout;
+  set pageLayout(String value);
 }
 
 void registerViewCommands(
@@ -210,6 +228,40 @@ void registerViewCommands(
       canRun: open,
       shortcuts: both(const SingleActivator(LogicalKeyboardKey.f11)),
     ),
+    Command(
+      id: ViewCommandIds.fitWidth,
+      label: l10n.commandFitWidth,
+      icon: Symbols.fit_page_width_rounded,
+      run: () => view.zoomToFit(page: false),
+      canRun: open,
+    ),
+    Command(
+      id: ViewCommandIds.fitPage,
+      label: l10n.commandFitPage,
+      icon: Symbols.fit_screen_rounded,
+      run: () => view.zoomToFit(page: true),
+      canRun: open,
+    ),
+    Command(
+      id: ViewCommandIds.statusBar,
+      label: l10n.commandStatusBar,
+      icon: Symbols.bottom_navigation_rounded,
+      run: view.toggleStatusBar,
+      isActive: () => view.statusBarShown,
+    ),
+    for (final (id, value, label, icon) in [
+      (ViewCommandIds.layoutSingle, 'uma', l10n.layoutSingle, Symbols.description_rounded),
+      (ViewCommandIds.layoutMulti, 'varias', l10n.layoutMulti, Symbols.view_module_rounded),
+      (ViewCommandIds.layoutBook, 'livro', l10n.layoutBook, Symbols.menu_book_rounded),
+    ])
+      Command(
+        id: id,
+        label: label,
+        icon: icon,
+        run: () => view.pageLayout = value,
+        isActive: () => view.pageLayout == value,
+        canRun: open,
+      ),
     Command(
       id: ViewCommandIds.about,
       label: l10n.commandAbout,

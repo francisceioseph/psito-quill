@@ -17,6 +17,7 @@ import '../../settings/settings.dart';
 import '../atoms/w_button.dart';
 import '../atoms/w_label.dart';
 import '../molecules/command_button.dart';
+import '../molecules/command_menu.dart';
 import '../molecules/info_banner.dart';
 import '../organisms/classic_bars.dart';
 import '../organisms/command_palette.dart';
@@ -30,6 +31,7 @@ import '../../document/outline.dart';
 import '../atoms/w_segmented.dart';
 import '../organisms/outline_panel.dart';
 import '../organisms/ruler.dart';
+import '../organisms/start_screen.dart';
 import '../organisms/ribbon.dart';
 import '../organisms/styles_dialog.dart';
 import '../organisms/styles_panel.dart';
@@ -207,7 +209,15 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
   void manageStyles() => unawaited(showStylesDialog(context, doc, commands: _commands).then((_) => _backToDocument()));
 
   @override
-  void openFilePanel() => setState(() => _fileOpen = true);
+  void openFilePanel() => _openFile(null);
+
+  /// A seção dos bastidores ao abrir (null: a escolha do painel).
+  FileSection? _fileSection;
+
+  void _openFile(FileSection? section) => setState(() {
+        _fileSection = section;
+        _fileOpen = true;
+      });
 
   @override
   bool get outlineOpen => _left == _LeftPanel.outline;
@@ -258,6 +268,29 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
 
   @override
   void toggleRuler() => widget.settings.ruler = !widget.settings.ruler;
+
+  @override
+  void toggleStatusBar() => widget.settings.statusBar = !widget.settings.statusBar;
+
+  @override
+  bool get statusBarShown => widget.settings.statusBar;
+
+  @override
+  String get pageLayout => widget.settings.pageLayout;
+
+  @override
+  set pageLayout(String value) => widget.settings.pageLayout = value;
+
+  @override
+  void zoomToFit({required bool page}) {
+    final v = _viewport.value;
+    if (v == null || doc.documentSize.isEmpty) return;
+    final h = switch (doc.pageSizeMm100) {
+      (_, final h) => h * 1440 / 2540 + pageGapTwips,
+      null => 0.0,
+    };
+    doc.setZoom(fitZoom(v.viewSize, rowTwips: doc.documentSize.width, pageHeightTwips: h, whole: page));
+  }
 
   /// Onde a página está na tela, para as réguas (D-046).
   final _viewport = ValueNotifier<DocViewport?>(null);
@@ -411,6 +444,8 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
             widget.settings.ribbonCollapsed,
             widget.settings.recentFonts,
             widget.settings.pageLayout,
+            widget.settings.ruler, // as caixas da aba Exibir
+            widget.settings.statusBar,
           );
           // A barra de status e a Estrutura leem também a página e as palavras.
           final statusKey = (key, doc.statusRevision);
@@ -447,7 +482,10 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
                       doc: doc,
                       fileOpen: _fileOpen,
                       tab: _tab,
-                      onFile: () => setState(() => _fileOpen = !_fileOpen),
+                      onFile: () => setState(() {
+                        _fileSection = null;
+                        _fileOpen = !_fileOpen;
+                      }),
                       onTab: (tab) {
                         setState(() {
                           _tab = tab;
@@ -589,7 +627,10 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
                     recents: widget.workspace.recents,
                     settings: widget.settings,
                     onClose: _backToDocument,
+                    section: _fileSection,
                   )
+                : doc.tabs.isEmpty && doc.docStatus != DocStatus.opening
+                ? StartScreen(workspace: widget.workspace)
                 : !doc.isOpen || doc.documentSize.isEmpty
                 ? Center(child: WLabel(_statusText(l10n), tone: WLabelTone.muted))
                 : _withRulers(
@@ -602,7 +643,9 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
                       viewport: _viewport,
                     ),
                   ),
-            statusBar: _memoized(
+            statusBar: !widget.settings.statusBar
+                ? null
+                : _memoized(
               'status',
               statusKey,
               () => StatusBar(
@@ -619,16 +662,26 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
                     if (doc.wordCount case final w?)
                       StatusField(
                         w.selection ? l10n.statusWordsSelected(w.words) : l10n.statusWords(w.words),
+                        tooltip: l10n.statusWordsTip,
+                        menu: _wordsMenu,
                         priority: 1,
                       ),
-                    if (doc.commandStates['.uno:LanguageStatus'] case final lang?)
+                    if (doc.language case final lang?)
                       StatusField(
-                        lang.split(';').first,
+                        lang.tag == '-' ? l10n.languageNone : lang.name,
                         icon: Symbols.spellcheck_rounded,
+                        tooltip: l10n.statusLanguageTip,
+                        menu: doc.canEdit ? _languageMenu : null,
                         priority: 2,
                       ),
                     if (doc.readOnly) StatusField(l10n.statusReadOnly, tone: WLabelTone.normal, priority: 2),
-                    if (doc.modified) StatusField(l10n.statusModified, priority: 2),
+                    if (doc.modified)
+                      StatusField(
+                        l10n.statusModified,
+                        tooltip: commands.tooltipOf(CommandIds.save),
+                        onTap: () => commands.run(CommandIds.save),
+                        priority: 2,
+                      ),
                     if (doc.paragraphStyleId case final s?)
                       StatusField(
                         styleLabel(l10n, s),
@@ -664,6 +717,8 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
                       onZoom: doc.setZoom,
                       zoomOut: CommandButton(commands: commands, id: CommandIds.zoomOut),
                       zoomIn: CommandButton(commands: commands, id: CommandIds.zoomIn),
+                      menu: _zoomMenu,
+                      menuTooltip: l10n.statusZoomTip,
                     ),
                 ],
               ),
@@ -672,6 +727,52 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
         },
       ),
     );
+  }
+
+  // ------------------------------------- os menus da barra de status --
+
+  /// As estatísticas: páginas, palavras, caracteres.
+  List<Widget> _wordsMenu(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final w = doc.wordCount;
+    return [
+      if (doc.page case (_, final pages)) StatusInfoRow(l10n.statusInfoPages, '$pages'),
+      if (w != null) ...[
+        StatusInfoRow(w.selection ? l10n.statusInfoSelected : l10n.statusInfoWords, '${w.words}'),
+        StatusInfoRow(l10n.statusInfoCharacters, '${w.characters}'),
+      ],
+      const Divider(),
+      plainMenuItem(context, l10n.statusMoreInfo, icon: Symbols.info_rounded, onPressed: () => _openFile(FileSection.info)),
+    ];
+  }
+
+  /// O idioma da seleção (ou do parágrafo): os que têm ortografia
+  /// instalada, sem verificação, o do estilo, e a ortografia ao digitar.
+  List<Widget> _languageMenu(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final current = doc.language?.tag;
+    return [
+      StatusInfoRow(doc.hasSelection ? l10n.languageForSelection : l10n.languageForParagraph, ''),
+      for (final l in doc.languages)
+        plainMenuItem(context, l.name, checked: l.tag == current, onPressed: () => doc.setLanguage(l.name)),
+      plainMenuItem(context, l10n.languageNone,
+          icon: Symbols.block_rounded, checked: current == '-', onPressed: () => doc.setLanguage(null)),
+      plainMenuItem(context, l10n.languageReset, icon: Symbols.restart_alt_rounded, onPressed: () => doc.setLanguage(null, reset: true)),
+      const Divider(),
+      ...commandMenuItems(context, _commands!, [CommandIds.spellOnline]),
+    ];
+  }
+
+  /// O zoom: as medidas comuns e os ajustes.
+  List<Widget> _zoomMenu(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final now = (doc.zoom * 100).round();
+    return [
+      for (final p in const [50, 75, 100, 125, 150, 200])
+        plainMenuItem(context, l10n.zoomPercent(p), checked: p == now, onPressed: () => doc.setZoom(p / 100)),
+      const Divider(),
+      ...commandMenuItems(context, _commands!, [ViewCommandIds.fitWidth, ViewCommandIds.fitPage]),
+    ];
   }
 
   /// A fileira das abas em cima da faixa, só com duas abas ou mais (D-054).

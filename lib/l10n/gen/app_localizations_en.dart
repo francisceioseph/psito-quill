@@ -1229,4 +1229,127 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get findHitsList => 'Matches in the document';
+
+  @override
+  String get commandFitWidth => 'Fit width';
+
+  @override
+  String get commandFitPage => 'Fit page';
+
+  @override
+  String get statusZoomTip => 'Zoom';
+
+  @override
+  String get statusLanguageTip => 'Language and spelling';
+
+  @override
+  String get statusWordsTip => 'Document statistics';
+
+  @override
+  String get statusInfoPages => 'Pages';
+
+  @override
+  String get statusInfoWords => 'Words';
+
+  @override
+  String get statusInfoCharacters => 'Characters';
+
+  @override
+  String get statusInfoSelected => 'Selected words';
+
+  @override
+  String get languageForSelection => 'Language of the selection';
+
+  @override
+  String get languageForParagraph => 'Language of the paragraph';
+
+  @override
+  String get languageNone => 'No spell checking';
+
+  @override
+  String get languageReset => 'Back to the style\'s language';
+
+  @override
+  String get recentHeading => 'Recent files';
+
+  @override
+  String get recentName => 'Name';
+
+  @override
+  String get recentFolder => 'Folder';
+
+  @override
+  String get recentModified => 'Modified';
+
+  @override
+  String get recentMissing => 'Not found';
+
+  @override
+  String get fileInfo => 'Info';
+
+  @override
+  String get infoFolder => 'Folder';
+
+  @override
+  String get infoSize => 'Size';
+
+  @override
+  String get infoModified => 'Modified';
+
+  @override
+  String get infoNotSaved => 'Not saved yet';
+
+  @override
+  String get infoOpenFolder => 'Open the file\'s folder';
+
+  @override
+  String sizeBytes(int n) {
+    return '$n bytes';
+  }
+
+  @override
+  String sizeKb(int n) {
+    return '$n KB';
+  }
+
+  @override
+  String sizeMb(String n) {
+    return '$n MB';
+  }
+
+  @override
+  String get decimalSeparator => '.';
+
+  @override
+  String get prefStart => 'When Quill opens without a file';
+
+  @override
+  String get prefStartScreen => 'Start screen';
+
+  @override
+  String get prefStartBlank => 'Blank document';
+
+  @override
+  String get startTitle => 'Start';
+
+  @override
+  String get startBlank => 'Blank document';
+
+  @override
+  String get startOpen => 'Open a file…';
+
+  @override
+  String get statusMoreInfo => 'More info…';
+
+  @override
+  String get commandStatusBar => 'Status bar';
+
+  @override
+  String get groupPageLayout => 'Pages';
+
+  @override
+  String get groupWindow => 'Window';
+
+  @override
+  String get groupModes => 'Modes';
 }

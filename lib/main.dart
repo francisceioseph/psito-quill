@@ -62,7 +62,8 @@ void main(List<String> args) {
       sub.cancel();
       // A trava só pode ser julgada com o motor ligado (ele segura o perfil).
       if (path == null) {
-        doc.open('');
+        // A tela inicial (D-064) é o editor sem documento.
+        if (!settings.startScreen) doc.open('');
       } else {
         workspace.openPath(path);
       }

@@ -11,7 +11,7 @@ O plano está no `docs/PLANO.md` (seção 10). Cada etapa tem um documento aqui:
 | 4. A régua | [etapa-4-regua.md](etapa-4-regua.md) | feita (sem criar tabulações) |
 | 5. Várias páginas e a Estrutura | [etapa-5-paginas.md](etapa-5-paginas.md) | feita |
 | 6. O modo zen | [etapa-6-zen.md](etapa-6-zen.md) | feita |
-| 7. A interface que respira | [etapa-7-espaco.md](etapa-7-espaco.md) | em andamento: escala, faixa adaptável, menus ricos, abas de documentos, menu de contexto, trilhos e painéis feitos; faltam a barra de status, os bastidores e a aba Exibir |
+| 7. A interface que respira | [etapa-7-espaco.md](etapa-7-espaco.md) | feita |
 | 8. Ocupado sem janelas | etapa-8-ocupado.md | |
 | 9. Acessibilidade | etapa-9-acessibilidade.md | |
 
@@ -30,5 +30,5 @@ O `tool/ab.py` monta o commit anterior numa `git worktree` temporária, faz a bu
 - Etapas 0 a 5 feitas, com `./test.sh --integracao` verde. Medidas: 0, 1 e 2 dentro do orçamento; a 3+4 mostrou o heap crescendo ~14 MB com a régua (números medidos a cada quadro), corrigido com o cache `RulerLabels` e com a régua horizontal sem repintar na rolagem vertical. Depois da correção, as Etapas 3–5 juntas contra a Fase 2: anônima +2,9 MB com o capítulo e +1,7 MB depois de digitar (antes da correção, +18,5). O RSS sobe ~10 MB, quase todo de arquivo (fontes +2,5 e libmergedlo +3,2, que o kernel devolve). Rolar 59,6 fps; tecla → ladrilho p95 9,4 ms.
 - Etapa 6 (zen): feita (D-048), com os testes de widget. A medida saiu junto com o começo da Etapa 7 (ver o `etapa-6-zen.md`).
 - Etapa 7 (nova, D-049): o Francisco testou o app e achou os comandos densos, mal distribuídos e difíceis de clicar, sem aproveitar as telas grandes, e os menus pobres. Ela vem antes de "ocupado" e "acessibilidade", que viraram 8 e 9.
-- Etapas 8 e 9 e o fecho: não começadas.
-- Nada foi commitado depois do `ac8a2d6`.
+- Etapa 7: feita (D-049 a D-065), com `./test.sh --integracao` verde. O Esc no menu de contexto foi corrigido pela integração (o foco fica no menu enquanto ele está aberto).
+- Etapas 8 e 9 e o fecho: em andamento.

@@ -50,6 +50,23 @@ List<Widget> commandMenuItems(BuildContext context, CommandRegistry commands, Li
   return items;
 }
 
+/// Um item de menu que não é um comando do registro (um idioma, um zoom),
+/// com o mesmo desenho: o ícone, o texto e a marca de escolhido.
+Widget plainMenuItem(BuildContext context, String label, {IconData? icon, bool checked = false, VoidCallback? onPressed}) {
+  final t = QuillTokens.of(context);
+  final c = t.colors;
+  final fg = onPressed != null ? c.onFrame : c.onFrame.withValues(alpha: 0.38);
+  return MenuItemButton(
+    leadingIcon: icon == null ? SizedBox(width: t.density.icon - 2) : Icon(icon, size: t.density.icon - 2, color: fg),
+    trailingIcon: checked ? Icon(Symbols.check_rounded, size: t.density.icon - 4, color: c.accent) : null,
+    onPressed: onPressed,
+    child: Semantics(
+      checked: checked ? true : null,
+      child: Text(label, style: TextStyle(color: fg, fontSize: t.font.ui, fontFamily: t.font.family)),
+    ),
+  );
+}
+
 /// Um botão que abre um menu de comandos: grande (um grupo recolhido da
 /// faixa, com o nome do grupo) ou pequeno (o "mais" de um grupo).
 class CommandMenuButton extends StatelessWidget {

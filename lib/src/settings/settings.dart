@@ -27,6 +27,8 @@ class Settings extends ChangeNotifier {
   bool _zenTypewriter = true;
   String _zenPaper = 'sepia';
   String _rulerUnit = 'cm';
+  bool _startScreen = true;
+  bool _statusBar = true;
 
   /// O id do tema (os de `builtInThemes`).
   String get theme => _theme;
@@ -81,6 +83,15 @@ class Settings extends ChangeNotifier {
   String get rulerUnit => _rulerUnit;
   set rulerUnit(String v) => _set(() => _rulerUnit = v);
 
+  /// Sem arquivo para abrir, o Quill abre na tela inicial (os recentes);
+  /// desligado, num documento em branco (D-064).
+  bool get startScreen => _startScreen;
+  set startScreen(bool v) => _set(() => _startScreen = v);
+
+  /// Exibir › Barra de status.
+  bool get statusBar => _statusBar;
+  set statusBar(bool v) => _set(() => _statusBar = v);
+
   void _set(void Function() change) {
     change();
     _save();
@@ -103,6 +114,8 @@ class Settings extends ChangeNotifier {
       _zenTypewriter = json['zenMaquina'] as bool? ?? _zenTypewriter;
       _zenPaper = json['zenPapel'] as String? ?? _zenPaper;
       _rulerUnit = json['unidadeRegua'] as String? ?? _rulerUnit;
+      _startScreen = json['telaInicial'] as bool? ?? _startScreen;
+      _statusBar = json['barraStatus'] as bool? ?? _statusBar;
       _recentFonts = (json['fontesRecentes'] as List?)?.whereType<String>().take(5).toList() ?? _recentFonts;
     } on Object {
       // Sem arquivo ou estragado: os padrões.
@@ -127,6 +140,8 @@ class Settings extends ChangeNotifier {
             'zenMaquina': _zenTypewriter,
             'zenPapel': _zenPaper,
             'unidadeRegua': _rulerUnit,
+            'telaInicial': _startScreen,
+            'barraStatus': _statusBar,
           }));
     } on FileSystemException {
       // Sem onde gravar: vale só para esta sessão.

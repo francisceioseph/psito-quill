@@ -2305,6 +2305,240 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Ocorrências no documento'**
   String get findHitsList;
+
+  /// No description provided for @commandFitWidth.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ajustar à largura'**
+  String get commandFitWidth;
+
+  /// No description provided for @commandFitPage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ajustar à página'**
+  String get commandFitPage;
+
+  /// No description provided for @statusZoomTip.
+  ///
+  /// In pt, this message translates to:
+  /// **'Zoom'**
+  String get statusZoomTip;
+
+  /// No description provided for @statusLanguageTip.
+  ///
+  /// In pt, this message translates to:
+  /// **'Idioma e ortografia'**
+  String get statusLanguageTip;
+
+  /// No description provided for @statusWordsTip.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estatísticas do documento'**
+  String get statusWordsTip;
+
+  /// No description provided for @statusInfoPages.
+  ///
+  /// In pt, this message translates to:
+  /// **'Páginas'**
+  String get statusInfoPages;
+
+  /// No description provided for @statusInfoWords.
+  ///
+  /// In pt, this message translates to:
+  /// **'Palavras'**
+  String get statusInfoWords;
+
+  /// No description provided for @statusInfoCharacters.
+  ///
+  /// In pt, this message translates to:
+  /// **'Caracteres'**
+  String get statusInfoCharacters;
+
+  /// No description provided for @statusInfoSelected.
+  ///
+  /// In pt, this message translates to:
+  /// **'Palavras selecionadas'**
+  String get statusInfoSelected;
+
+  /// No description provided for @languageForSelection.
+  ///
+  /// In pt, this message translates to:
+  /// **'Idioma da seleção'**
+  String get languageForSelection;
+
+  /// No description provided for @languageForParagraph.
+  ///
+  /// In pt, this message translates to:
+  /// **'Idioma do parágrafo'**
+  String get languageForParagraph;
+
+  /// No description provided for @languageNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem verificação de ortografia'**
+  String get languageNone;
+
+  /// No description provided for @languageReset.
+  ///
+  /// In pt, this message translates to:
+  /// **'Voltar ao idioma do estilo'**
+  String get languageReset;
+
+  /// No description provided for @recentHeading.
+  ///
+  /// In pt, this message translates to:
+  /// **'Arquivos recentes'**
+  String get recentHeading;
+
+  /// No description provided for @recentName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome'**
+  String get recentName;
+
+  /// No description provided for @recentFolder.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pasta'**
+  String get recentFolder;
+
+  /// No description provided for @recentModified.
+  ///
+  /// In pt, this message translates to:
+  /// **'Modificado'**
+  String get recentModified;
+
+  /// No description provided for @recentMissing.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não encontrado'**
+  String get recentMissing;
+
+  /// No description provided for @fileInfo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Informações'**
+  String get fileInfo;
+
+  /// No description provided for @infoFolder.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pasta'**
+  String get infoFolder;
+
+  /// No description provided for @infoSize.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tamanho'**
+  String get infoSize;
+
+  /// No description provided for @infoModified.
+  ///
+  /// In pt, this message translates to:
+  /// **'Modificado em'**
+  String get infoModified;
+
+  /// No description provided for @infoNotSaved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ainda não foi salvo'**
+  String get infoNotSaved;
+
+  /// No description provided for @infoOpenFolder.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir a pasta do arquivo'**
+  String get infoOpenFolder;
+
+  /// No description provided for @sizeBytes.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} bytes'**
+  String sizeBytes(int n);
+
+  /// No description provided for @sizeKb.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} KB'**
+  String sizeKb(int n);
+
+  /// No description provided for @sizeMb.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} MB'**
+  String sizeMb(String n);
+
+  /// No description provided for @decimalSeparator.
+  ///
+  /// In pt, this message translates to:
+  /// **','**
+  String get decimalSeparator;
+
+  /// No description provided for @prefStart.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ao abrir o Quill sem um arquivo'**
+  String get prefStart;
+
+  /// No description provided for @prefStartScreen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tela inicial'**
+  String get prefStartScreen;
+
+  /// No description provided for @prefStartBlank.
+  ///
+  /// In pt, this message translates to:
+  /// **'Documento em branco'**
+  String get prefStartBlank;
+
+  /// No description provided for @startTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Começar'**
+  String get startTitle;
+
+  /// No description provided for @startBlank.
+  ///
+  /// In pt, this message translates to:
+  /// **'Documento em branco'**
+  String get startBlank;
+
+  /// No description provided for @startOpen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir um arquivo…'**
+  String get startOpen;
+
+  /// No description provided for @statusMoreInfo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mais informações…'**
+  String get statusMoreInfo;
+
+  /// No description provided for @commandStatusBar.
+  ///
+  /// In pt, this message translates to:
+  /// **'Barra de status'**
+  String get commandStatusBar;
+
+  /// No description provided for @groupPageLayout.
+  ///
+  /// In pt, this message translates to:
+  /// **'Páginas'**
+  String get groupPageLayout;
+
+  /// No description provided for @groupWindow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Janela'**
+  String get groupWindow;
+
+  /// No description provided for @groupModes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Modos'**
+  String get groupModes;
 }
 
 class _AppLocalizationsDelegate

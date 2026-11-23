@@ -3,6 +3,7 @@
 // Observer: a UI escuta este ChangeNotifier, e ele escuta o QuillKit. Nada
 // aqui é adivinhado: o negrito ativo, o cursor, o "modificado", o desfazer
 // e a página vêm do motor.
+import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
@@ -20,6 +21,7 @@ import 'search.dart';
 import 'text_clipboard.dart';
 
 export 'doc_tab.dart' show DocStatus, DocTab;
+export '../kit/lok/lok_payloads.dart' show DocLanguage;
 
 enum KitStatus { starting, ready, failed }
 
@@ -1013,6 +1015,23 @@ class DocumentController extends ChangeNotifier {
     if (canEdit || command == '.uno:Copy') kit.uno(command);
   }
 
+  /// Os idiomas com ortografia instalada (pedidos uma vez, ao abrir).
+  List<DocLanguage> languages = const [];
+
+  /// O idioma onde está o cursor (ou o da seleção).
+  DocLanguage? get language => parseLanguage(commandStates['.uno:LanguageStatus']);
+
+  /// Muda o idioma da seleção ou, sem seleção, do parágrafo (D-063): [name]
+  /// é o nome que o motor deu na lista; null tira a verificação; [reset]
+  /// volta ao idioma do estilo.
+  void setLanguage(String? name, {bool reset = false}) {
+    if (!canEdit) return;
+    final where = hasSelection ? 'Current_' : 'Paragraph_';
+    final what = reset ? 'RESET_LANGUAGES' : name ?? 'LANGUAGE_NONE';
+    kit.uno('.uno:LanguageStatus', jsonEncode({'Language': {'type': 'string', 'value': '$where$what'}}));
+    _edited();
+  }
+
   /// Liga e desliga a ortografia automática (os sublinhados vermelhos).
   void toggleSpellOnline() {
     if (isOpen) kit.uno('.uno:SpellOnline');
@@ -1129,6 +1148,7 @@ class DocumentController extends ChangeNotifier {
         // motor disser (com uma imagem selecionada, por exemplo).
         cursorVisible = true;
         if (fonts.isEmpty) kit.requestCommandValues('.uno:CharFontName');
+        if (languages.isEmpty) kit.requestCommandValues('.uno:LanguageStatus');
         kit.requestCommandValues('.uno:StyleApply');
         snapshot = FodtSnapshot.empty;
         refreshSnapshot();
@@ -1209,6 +1229,8 @@ class DocumentController extends ChangeNotifier {
         final lists = parseStyleLists(json);
         paragraphStyles = lists.paragraph;
         characterStyles = lists.character;
+      case CommandValues(command: '.uno:LanguageStatus', :final json):
+        languages = parseLanguageList(json);
       case CommandValues(:final command, :final json):
         if (command != '.uno:CharFontName') return;
         fonts = parseFontList(json);

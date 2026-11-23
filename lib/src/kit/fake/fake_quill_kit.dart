@@ -159,6 +159,7 @@ class FakeQuillKit implements QuillKit {
     _state('.uno:Redo', 'disabled');
     _state('.uno:StatePageNumber', 'Página 1 de 3');
     _state('.uno:StateWordCount', '0 palavras, 0 caracteres');
+    _state('.uno:LanguageStatus', 'Português (Brasil);pt-BR');
     _state('.uno:StyleApply', 'Estilo de parágrafo padrão');
     _emitCursor();
   }
@@ -220,6 +221,9 @@ class FakeQuillKit implements QuillKit {
     }
   }
 
+  /// Os idiomas com ortografia que o falso diz ter.
+  List<String> languages = const ['Inglês (EUA);en-US', 'Português (Brasil);pt-BR'];
+
   /// As fontes que o falso diz ter.
   List<String> fonts = const ['Liberation Sans', 'Liberation Serif', 'Noto Serif'];
 
@@ -232,6 +236,10 @@ class FakeQuillKit implements QuillKit {
             'commandName': command,
             'commandValues': {'ParagraphStyles': paragraphStyles, 'CharacterStyles': characterStyles},
           })));
+      return;
+    }
+    if (command == '.uno:LanguageStatus') {
+      _emit(CommandValues(command, jsonEncode({'commandName': command, 'commandValues': languages})));
       return;
     }
     if (command != '.uno:CharFontName') return;

@@ -641,3 +641,41 @@ O passo 5 da Etapa 7, a partir das capturas do OnlyOffice (D-049).
 - **O Localizar é um painel à esquerda** (`FindPanel`), no lugar da barra em cima da página. Os campos e as opções ficam em cima, e a lista de ocorrências embaixo, com a página e o trecho. O clique leva à ocorrência e o painel continua aberto. A lista sai da cópia da busca única (D-050), com até 50 linhas, e só as visíveis são construídas (`ListView.builder`). O painel abre por cima do painel da esquerda que estiver aberto, e esse volta quando ele fecha.
 - **A cópia se renova quando o texto muda:** a busca única é modal e uma cópia bastava, mas o painel fica aberto enquanto se escreve. O `searchText(fresh: true)` refaz a cópia se a contagem de palavras e caracteres mudou desde ela. Usar a `statusRevision` refazia a cópia também ao rolar e ao saltar a uma ocorrência, o que o teste mostrou. Quem esperava uma cópia descartada recebe "sem resultado", em vez de esperar para sempre.
 - **Limite conhecido:** a lista é a busca simples do texto. Diferenciar maiúsculas, palavra inteira e expressão regular valem para as setas, "Todas" e substituir, que vão pelo motor, mas não para a lista.
+
+## D-063 · A barra de status clicável: o idioma, as estatísticas e o zoom
+
+O passo 6 da Etapa 7 (D-049).
+
+- **Cada campo é um botão de verdade:** recebe o foco pelo Tab, abre com Enter ou Espaço, tem o anel de foco, e o leitor de tela lê o texto do campo com a dica (antes, lia só a dica, e não havia caminho pelo teclado). Os campos com menu abrem um `MenuAnchor` no lugar, e os itens só são construídos enquanto o menu está aberto. O Esc fecha, também nos menus só de leitura.
+- **As palavras** abrem as estatísticas: páginas, palavras (ou as selecionadas) e caracteres.
+- **O idioma** abre a lista dos idiomas com ortografia instalada, "Sem verificação de ortografia", "Voltar ao idioma do estilo" e a ortografia ao digitar. A troca vale para a seleção ou, sem seleção, para o parágrafo.
+- **Sondado na 24.2 com o `lok_script`:**
+  - o `.uno:LanguageStatus` aceita `Current_<nome>` (a seleção), `Paragraph_<nome>`, `Paragraph_LANGUAGE_NONE` e `Paragraph_RESET_LANGUAGES`;
+  - o nome é o da interface do LibreOffice ("Inglês (EUA)"), e não a etiqueta: `Current_en-US` e `Paragraph_es-ES` não fizeram nada;
+  - o `getCommandValues(".uno:LanguageStatus")` dá a lista dos idiomas com ortografia instalada, no mesmo formato do estado ("Inglês (EUA);en-US"). O Quill pede a lista uma vez, ao abrir, e usa os nomes que o motor deu. Assim, o nome muda com a língua do sistema sem quebrar nada;
+  - o `.uno:GotoPage` com valor abre uma janela e trava o roteiro. A página continua abrindo a Estrutura.
+- **O zoom** (a porcentagem) abre as medidas comuns (50 a 200 %), Ajustar à largura e Ajustar à página. Os dois ajustes são comandos do registro (`exibir.ajustarLargura`, `exibir.ajustarPagina`), na paleta e na aba Exibir. O cálculo é o `fitZoom` (`document_view.dart`): a largura da fileira de páginas, ou a altura de uma página, na área do documento, arredondado para baixo em passos de 5 %.
+- **"Modificado"** salva no clique.
+
+## D-064 · Os bastidores do Arquivo e a tela inicial
+
+O passo 7 da Etapa 7, a partir das capturas do OnlyOffice (D-049).
+
+- **Os bastidores:** uma lista à esquerda, com itens altos (44 px), e o conteúdo à direita. Na lista: Voltar ao documento; Novo e Abrir; Recentes; Informações; Salvar, Salvar como e Fechar; Preferências e Sobre. Os comandos rodam e voltam ao documento; as seções (Recentes, Informações, Preferências) mudam o lado direito, e só a aberta é construída, como no painel Formatar (D-038).
+- **A seção ao entrar:** Informações quando o documento tem arquivo, e Recentes quando não tem. "Mais informações…", no menu das palavras da barra de status, entra direto nas Informações.
+- **Informações:** o nome, a pasta, o tamanho e quando o arquivo mudou (lidos do disco ao abrir a seção), as páginas, as palavras e os caracteres (do motor), e "Abrir a pasta do arquivo". A pasta abre pelo `xdg-open` (o padrão do freedesktop), sem o Quill saber qual gerenciador de arquivos existe. Nada sai do computador.
+- **Recentes numa tabela:** o nome, a pasta e quando mudou. Um arquivo que sumiu fica apagado, com "Não encontrado". A data é lida do disco só quando a tabela é construída (no máximo 10 arquivos).
+- **A tela inicial:** sem documento aberto, o lugar da página mostra dois cartões grandes (Documento em branco, com o foco, e Abrir um arquivo…) e os recentes na mesma tabela. Ela aparece ao fechar a última aba e, sem um arquivo na linha de comando, ao abrir o Quill.
+- **A preferência "Ao abrir o Quill sem um arquivo":** Tela inicial (o padrão) ou Documento em branco (o de antes). Fica nas preferências (`telaInicial`).
+- **As Preferências** saíram do painel para um widget próprio (`PreferencesView`), que a Etapa 9 divide em seções.
+
+## D-065 · A aba Exibir com as caixas, a disposição e os ajustes do zoom
+
+O passo 8 da Etapa 7, a partir da aba Ver do OnlyOffice e do Word (D-049).
+
+- **Mostrar, em caixas de seleção:** Régua, Barra de status, Marcas de formatação, Estrutura, Painel Formatar e Revelar formatação. Cada caixa é um comando de ligar e desligar do registro (`CommandCheck`), com o estado "marcado" para o leitor de tela. Antes, eram seis ícones soltos, sem nome.
+- **A barra de status pode sumir** (`exibir.barraStatus`, guardado nas preferências como `barraStatus`). Escondida, ela não é construída.
+- **Páginas:** Uma página, Várias páginas e Livro (pares), botões grandes. São os mesmos três da barra de status (D-047), agora também comandos (`exibir.umaPagina`, `exibir.variasPaginas`, `exibir.livro`), na paleta e no Clássico 97.
+- **Zoom:** 100 %, Ajustar à página e Ajustar à largura, grandes; + e − pequenos ao lado. Os ajustes são os do D-063.
+- **Modos:** o zen. **Janela:** a paleta e Recolher a faixa.
+- **A chave da memoização da faixa** (D-037) ganhou a régua e a barra de status: as caixas leem preferências que não vêm do motor. Sem isso, a caixa da Régua já ficava velha antes desta etapa.

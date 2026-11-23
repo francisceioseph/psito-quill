@@ -1230,4 +1230,127 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get findHitsList => 'Ocorrências no documento';
+
+  @override
+  String get commandFitWidth => 'Ajustar à largura';
+
+  @override
+  String get commandFitPage => 'Ajustar à página';
+
+  @override
+  String get statusZoomTip => 'Zoom';
+
+  @override
+  String get statusLanguageTip => 'Idioma e ortografia';
+
+  @override
+  String get statusWordsTip => 'Estatísticas do documento';
+
+  @override
+  String get statusInfoPages => 'Páginas';
+
+  @override
+  String get statusInfoWords => 'Palavras';
+
+  @override
+  String get statusInfoCharacters => 'Caracteres';
+
+  @override
+  String get statusInfoSelected => 'Palavras selecionadas';
+
+  @override
+  String get languageForSelection => 'Idioma da seleção';
+
+  @override
+  String get languageForParagraph => 'Idioma do parágrafo';
+
+  @override
+  String get languageNone => 'Sem verificação de ortografia';
+
+  @override
+  String get languageReset => 'Voltar ao idioma do estilo';
+
+  @override
+  String get recentHeading => 'Arquivos recentes';
+
+  @override
+  String get recentName => 'Nome';
+
+  @override
+  String get recentFolder => 'Pasta';
+
+  @override
+  String get recentModified => 'Modificado';
+
+  @override
+  String get recentMissing => 'Não encontrado';
+
+  @override
+  String get fileInfo => 'Informações';
+
+  @override
+  String get infoFolder => 'Pasta';
+
+  @override
+  String get infoSize => 'Tamanho';
+
+  @override
+  String get infoModified => 'Modificado em';
+
+  @override
+  String get infoNotSaved => 'Ainda não foi salvo';
+
+  @override
+  String get infoOpenFolder => 'Abrir a pasta do arquivo';
+
+  @override
+  String sizeBytes(int n) {
+    return '$n bytes';
+  }
+
+  @override
+  String sizeKb(int n) {
+    return '$n KB';
+  }
+
+  @override
+  String sizeMb(String n) {
+    return '$n MB';
+  }
+
+  @override
+  String get decimalSeparator => ',';
+
+  @override
+  String get prefStart => 'Ao abrir o Quill sem um arquivo';
+
+  @override
+  String get prefStartScreen => 'Tela inicial';
+
+  @override
+  String get prefStartBlank => 'Documento em branco';
+
+  @override
+  String get startTitle => 'Começar';
+
+  @override
+  String get startBlank => 'Documento em branco';
+
+  @override
+  String get startOpen => 'Abrir um arquivo…';
+
+  @override
+  String get statusMoreInfo => 'Mais informações…';
+
+  @override
+  String get commandStatusBar => 'Barra de status';
+
+  @override
+  String get groupPageLayout => 'Páginas';
+
+  @override
+  String get groupWindow => 'Janela';
+
+  @override
+  String get groupModes => 'Modos';
 }

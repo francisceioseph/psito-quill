@@ -102,6 +102,35 @@ int _toInt(String s) => int.parse(s.replaceAll(RegExp(r'[^\d]'), ''));
   return (words: n[0], characters: n[1], selection: payload.contains(':'));
 }
 
+/// Um idioma como o motor diz: o nome na língua da interface do LibreOffice
+/// ("Inglês (EUA)") e a etiqueta ("en-US"). O nome é o que o
+/// `.uno:LanguageStatus` aceita para trocar (sondado na 24.2, D-063).
+typedef DocLanguage = ({String name, String tag});
+
+/// O estado `.uno:LanguageStatus` ("Português (Brasil);pt-BR"; "[Nenhum];-"
+/// sem verificação).
+DocLanguage? parseLanguage(String? state) {
+  if (state == null) return null;
+  final i = state.lastIndexOf(';');
+  if (i <= 0) return null;
+  return (name: state.substring(0, i), tag: state.substring(i + 1));
+}
+
+/// `getCommandValues(".uno:LanguageStatus")`: os idiomas com ortografia
+/// instalada, em ordem do nome.
+List<DocLanguage> parseLanguageList(String json) {
+  try {
+    final values = (jsonDecode(json) as Map<String, dynamic>)['commandValues'];
+    if (values is! List) return const [];
+    return [
+      for (final v in values)
+        if (v is String) ?parseLanguage(v),
+    ]..sort((a, b) => a.name.compareTo(b.name));
+  } on FormatException {
+    return const [];
+  }
+}
+
 /// `getCommandValues(".uno:CharFontName")`: as fontes instaladas, em ordem.
 List<String> parseFontList(String json) {
   try {

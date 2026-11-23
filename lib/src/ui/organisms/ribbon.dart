@@ -23,6 +23,7 @@ import '../molecules/adaptive_ribbon.dart';
 import '../molecules/color_menu_button.dart';
 import '../molecules/command_menu.dart';
 import '../molecules/command_button.dart';
+import '../molecules/command_check.dart';
 import '../molecules/measure_field.dart';
 import '../molecules/ribbon_group.dart';
 import '../molecules/style_card.dart';
@@ -261,21 +262,7 @@ class Ribbon extends StatelessWidget {
                         (l10n.groupProofing, [CommandIds.spellOnline]),
                         (l10n.groupEditing, [ViewCommandIds.find, ViewCommandIds.replace]),
                       ]),
-                      RibbonTab.view => _groups(commands, onRan, [
-                        (
-                          l10n.groupShow,
-                          [
-                            ViewCommandIds.outline,
-                            ViewCommandIds.inspector,
-                            ViewCommandIds.ruler,
-                            ViewCommandIds.zen,
-                            ViewCommandIds.reveal,
-                            CommandIds.formattingMarks,
-                          ],
-                        ),
-                        (l10n.groupZoom, [CommandIds.zoomOut, CommandIds.zoomReset, CommandIds.zoomIn]),
-                        (l10n.commandPalette, [ViewCommandIds.palette, ViewCommandIds.collapseRibbon]),
-                      ]),
+                      RibbonTab.view => _ViewTab(commands: commands, onRan: onRan),
                       RibbonTab.table => _groups(commands, onRan, [
                         (
                           l10n.groupRowsColumns,
@@ -377,6 +364,55 @@ Widget _big(CommandRegistry commands, String id, VoidCallback onRan, {double? wi
           }
         : null,
   );
+}
+
+/// A aba Exibir (D-065): as caixas do que se mostra, a disposição das
+/// páginas, o zoom com os ajustes, e os modos.
+class _ViewTab extends StatelessWidget {
+  const _ViewTab({required this.commands, required this.onRan});
+  final CommandRegistry commands;
+  final VoidCallback onRan;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    Widget check(String id) => CommandCheck(commands: commands, id: id, onRan: onRan);
+    Widget cmd(String id) => CommandButton(commands: commands, id: id, onRan: onRan);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        RibbonGroup(
+          title: l10n.groupShow,
+          firstRow: [check(ViewCommandIds.ruler), check(ViewCommandIds.statusBar), check(CommandIds.formattingMarks)],
+          secondRow: [check(ViewCommandIds.outline), check(ViewCommandIds.inspector), check(ViewCommandIds.reveal)],
+        ),
+        RibbonGroup(
+          title: l10n.groupPageLayout,
+          firstRow: [
+            _big(commands, ViewCommandIds.layoutSingle, onRan),
+            _big(commands, ViewCommandIds.layoutMulti, onRan),
+            _big(commands, ViewCommandIds.layoutBook, onRan),
+          ],
+        ),
+        RibbonGroup(
+          title: l10n.groupZoom,
+          firstRow: [
+            _big(commands, CommandIds.zoomReset, onRan),
+            _big(commands, ViewCommandIds.fitPage, onRan),
+            _big(commands, ViewCommandIds.fitWidth, onRan),
+          ],
+          secondRow: null,
+          leading: Column(mainAxisAlignment: MainAxisAlignment.center, children: [cmd(CommandIds.zoomIn), cmd(CommandIds.zoomOut)]),
+        ),
+        RibbonGroup(title: l10n.groupModes, firstRow: [_big(commands, ViewCommandIds.zen, onRan)]),
+        RibbonGroup(
+          title: l10n.groupWindow,
+          last: true,
+          firstRow: [_big(commands, ViewCommandIds.palette, onRan), _big(commands, ViewCommandIds.collapseRibbon, onRan)],
+        ),
+      ],
+    );
+  }
 }
 
 class _InsertTab extends StatelessWidget {

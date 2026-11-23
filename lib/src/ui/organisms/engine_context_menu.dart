@@ -9,6 +9,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
@@ -132,25 +133,29 @@ List<Widget> contextMenuChildren(
         if (out.isNotEmpty && out.last is! Divider) out.add(Divider(height: t.space.md, color: c.border));
       case EngineEntry(:final label, :final command):
         final suggestion = command.startsWith(_suggestion);
-        out.add(MenuItemButton(
-          leadingIcon: Icon(
-            suggestion ? Symbols.spellcheck_rounded : Symbols.visibility_off_rounded,
-            size: t.density.icon - 2,
-            color: c.onFrame,
+        out.add(
+          MenuItemButton(
+            leadingIcon: Icon(
+              suggestion ? Symbols.spellcheck_rounded : Symbols.visibility_off_rounded,
+              size: t.density.icon - 2,
+              color: c.onFrame,
+            ),
+            onPressed: () => doc.runEngineCommand(command),
+            child: Text(label, style: suggestion ? style.copyWith(fontWeight: FontWeight.w600) : style),
           ),
-          onPressed: () => doc.runEngineCommand(command),
-          child: Text(label, style: suggestion ? style.copyWith(fontWeight: FontWeight.w600) : style),
-        ));
+        );
       case CommandEntry(:final id):
         out.addAll(commandMenuItems(context, commands, [id]));
       case SubmenuEntry(:final label, :final icon, :final ids):
         final children = commandMenuItems(context, commands, ids);
         if (children.isEmpty) continue;
-        out.add(SubmenuButton(
-          leadingIcon: Icon(icon, size: t.density.icon - 2, color: c.onFrame),
-          menuChildren: children,
-          child: Text(label, style: style),
-        ));
+        out.add(
+          SubmenuButton(
+            leadingIcon: Icon(icon, size: t.density.icon - 2, color: c.onFrame),
+            menuChildren: children,
+            child: Text(label, style: style),
+          ),
+        );
     }
   }
   if (out.isNotEmpty && out.last is Divider) out.removeLast();
@@ -172,26 +177,47 @@ Future<void> showEngineContextMenu(
   final at = box.globalToLocal(position);
   final controller = MenuController();
   final closed = Completer<void>();
+  // O menu abre pelo motor, não por um botão: o foco estava no documento, e o
+  // Esc iria ao motor. Enquanto o menu está aberto, o foco fica com ele.
+  final previous = FocusManager.instance.primaryFocus;
+  final focus = FocusNode(debugLabel: 'menu de contexto');
   final entry = OverlayEntry(
     builder: (context) => Positioned(
       left: at.dx,
       top: at.dy,
-      child: MenuAnchor(
-        controller: controller,
-        onClose: () {
-          if (!closed.isCompleted) closed.complete();
+      child: Focus(
+        focusNode: focus,
+        onKeyEvent: (node, e) {
+          if (e is KeyDownEvent && e.logicalKey == LogicalKeyboardKey.escape) {
+            controller.close();
+            return KeyEventResult.handled;
+          }
+          return KeyEventResult.ignored;
         },
-        menuChildren: contextMenuChildren(context, entries: entries, doc: doc, commands: commands),
-        child: const SizedBox(width: 1, height: 1),
+        child: MenuAnchor(
+          controller: controller,
+          onClose: () {
+            if (!closed.isCompleted) closed.complete();
+          },
+          menuChildren: contextMenuChildren(context, entries: entries, doc: doc, commands: commands),
+          child: const SizedBox(width: 1, height: 1),
+        ),
       ),
     ),
   );
   overlay.insert(entry);
   SchedulerBinding.instance.addPostFrameCallback((_) {
-    if (entry.mounted) controller.open();
+    if (!entry.mounted) return;
+    controller.open();
+    focus.requestFocus();
   });
   await closed.future;
+  // O foco volta para onde estava (o documento).
+  if (previous != null && previous.context != null) previous.requestFocus();
   // O item escolhido roda depois do quadro em que o menu fecha: a camada sai
   // só depois disso.
-  SchedulerBinding.instance.addPostFrameCallback((_) => entry.remove());
+  SchedulerBinding.instance.addPostFrameCallback((_) {
+    entry.remove();
+    focus.dispose();
+  });
 }

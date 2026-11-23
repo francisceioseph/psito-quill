@@ -12,7 +12,7 @@ class EditorTemplate extends StatelessWidget {
     super.key,
     required this.top,
     required this.body,
-    required this.statusBar,
+    this.statusBar,
     this.banner,
     this.rail,
     this.leftPanel,
@@ -21,7 +21,10 @@ class EditorTemplate extends StatelessWidget {
     this.rightRail,
   });
 
-  final Widget top, body, statusBar;
+  final Widget top, body;
+
+  /// null: escondida (Exibir › Barra de status).
+  final Widget? statusBar;
   final Widget? banner, rail, leftPanel, ruler, sidePanel, rightRail;
 
   @override
@@ -59,7 +62,7 @@ class EditorTemplate extends StatelessWidget {
             ?rightRail,
           ]),
         ),
-        statusBar,
+        ?statusBar,
       ]),
     );
   }

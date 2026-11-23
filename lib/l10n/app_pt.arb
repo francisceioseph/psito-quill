@@ -592,9 +592,21 @@
   "commandPreviousTab": "Aba anterior",
   "tabsLabel": "Documentos abertos",
   "tabCloseNamed": "Fechar {name}",
-  "@tabCloseNamed": {"placeholders": {"name": {"type": "String"}}},
+  "@tabCloseNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "tabModifiedNamed": "{name}, com alterações não salvas",
-  "@tabModifiedNamed": {"placeholders": {"name": {"type": "String"}}},
+  "@tabModifiedNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "stylesMore": "Mais estilos",
   "railFind": "Localizar",
   "commandKeepWithNext": "Manter com o próximo",
@@ -608,5 +620,65 @@
   "fieldIndentFirstShort": "1ª linha",
   "fieldIndentRightShort": "Direita",
   "findPanelTitle": "Localizar e substituir",
-  "findHitsList": "Ocorrências no documento"
+  "findHitsList": "Ocorrências no documento",
+  "commandFitWidth": "Ajustar à largura",
+  "commandFitPage": "Ajustar à página",
+  "statusZoomTip": "Zoom",
+  "statusLanguageTip": "Idioma e ortografia",
+  "statusWordsTip": "Estatísticas do documento",
+  "statusInfoPages": "Páginas",
+  "statusInfoWords": "Palavras",
+  "statusInfoCharacters": "Caracteres",
+  "statusInfoSelected": "Palavras selecionadas",
+  "languageForSelection": "Idioma da seleção",
+  "languageForParagraph": "Idioma do parágrafo",
+  "languageNone": "Sem verificação de ortografia",
+  "languageReset": "Voltar ao idioma do estilo",
+  "recentHeading": "Arquivos recentes",
+  "recentName": "Nome",
+  "recentFolder": "Pasta",
+  "recentModified": "Modificado",
+  "recentMissing": "Não encontrado",
+  "fileInfo": "Informações",
+  "infoFolder": "Pasta",
+  "infoSize": "Tamanho",
+  "infoModified": "Modificado em",
+  "infoNotSaved": "Ainda não foi salvo",
+  "infoOpenFolder": "Abrir a pasta do arquivo",
+  "sizeBytes": "{n} bytes",
+  "@sizeBytes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "sizeKb": "{n} KB",
+  "@sizeKb": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "sizeMb": "{n} MB",
+  "@sizeMb": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "decimalSeparator": ",",
+  "prefStart": "Ao abrir o Quill sem um arquivo",
+  "prefStartScreen": "Tela inicial",
+  "prefStartBlank": "Documento em branco",
+  "startTitle": "Começar",
+  "startBlank": "Documento em branco",
+  "startOpen": "Abrir um arquivo…",
+  "statusMoreInfo": "Mais informações…",
+  "commandStatusBar": "Barra de status",
+  "groupPageLayout": "Páginas",
+  "groupWindow": "Janela",
+  "groupModes": "Modos"
 }

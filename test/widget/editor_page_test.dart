@@ -228,6 +228,8 @@ void main() {
     await tester.tap(find.text('Arquivo'));
     await tester.pumpAndSettle();
     expect(find.text('Recentes'), findsOneWidget);
+    await tester.tap(find.text('Recentes'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('capitulo-2.odt'));
     await tester.pumpAndSettle();
     expect(kit.opened.last, recent);
@@ -242,6 +244,8 @@ void main() {
   testWidgets('preferências: o jogo de atalhos em inglês troca Ctrl+S e Ctrl+B', (tester) async {
     await pumpApp(tester);
     await tester.tap(find.text('Arquivo'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Preferências'));
     await tester.pumpAndSettle();
     await tester.tap(find.textContaining('Word em inglês'));
     await tester.pumpAndSettle();

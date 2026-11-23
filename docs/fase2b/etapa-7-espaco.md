@@ -156,3 +156,30 @@ O ▾ ao lado dos cartões de estilo do Início desce a galeria inteira, com as 
   - `fase2_test`: o Ctrl+U e o substituir pelo painel novo.
 - **Para olhar à mão:** os dois trilhos em 1366 px com os dois painéis abertos (a página fica com ~600 px); a lista num capítulo longo; o painel Localizar no Clássico 97.
 
+
+## A barra de status clicável (passo 6, D-063)
+
+- `lib/src/ui/organisms/status_bar.dart`: o `_StatusButton` com o `FocusableActionDetector` (Tab, Enter, Espaço, o anel de foco) e o `StatusField(menu:)`, que abre um `MenuAnchor` construído só ao abrir; o `StatusInfoRow` para as linhas só de leitura; a porcentagem do `ZoomControl` virou um botão com menu.
+- `editor_page.dart`: os menus `_wordsMenu`, `_languageMenu` e `_zoomMenu`, e o `zoomToFit` (o `EditorViewActions` ganhou o método).
+- `document_controller.dart`: `languages` (pedidos ao abrir), `language` e `setLanguage`. O `parseLanguage` e o `parseLanguageList` ficam em `lok_payloads.dart`.
+- `plainMenuItem` (`command_menu.dart`): um item de menu com o desenho dos comandos, para o que não é comando (um idioma, um zoom).
+- **Testes:** `test/widget/fase2b_status_test.dart` (o idioma, as estatísticas, o zoom, o Enter no campo, "modificado" salva, o `fitZoom` e a leitura do idioma).
+- **Para olhar à mão:** o anel de foco nos campos; o menu do idioma num documento com dois idiomas; Ajustar à página no modo Várias.
+
+## Os bastidores e a tela inicial (passo 7, D-064)
+
+- `lib/src/ui/organisms/file_panel.dart`: o `FilePanel` com a `FileSection` (recentes, informações, preferências), o `_BackstageItem` e as Informações (`_InfoView`, `formatFileSize`).
+- `recent_list.dart` (a tabela dos recentes), `start_screen.dart` (a tela inicial) e `preferences_view.dart` (as preferências).
+- `lib/src/files/open_folder.dart`: o `xdg-open`, trocável nos testes.
+- `Settings.startScreen` e o `main.dart`, que só abre o documento em branco se a preferência pedir.
+- **Testes:** `test/widget/fase2b_backstage_test.dart`; o `editor_page_test` passou a escolher a seção (Recentes, Preferências) antes de clicar.
+- **Para olhar à mão:** a tela inicial ao abrir o Quill sem arquivo; os bastidores no Clássico 97; "Abrir a pasta do arquivo" no gerenciador de arquivos.
+
+## A aba Exibir (passo 8, D-065)
+
+- `ribbon.dart`: o `_ViewTab`, com os grupos Mostrar, Páginas, Zoom, Modos e Janela.
+- `lib/src/ui/molecules/command_check.dart`: um comando de ligar e desligar como caixa de seleção.
+- `commands_view.dart`: `statusBar`, `layoutSingle`, `layoutMulti`, `layoutBook`, `fitWidth` e `fitPage`. O `EditorViewActions` ganhou `toggleStatusBar`, `statusBarShown` e `pageLayout`.
+- `EditorTemplate(statusBar:)` aceita null, e `Settings.statusBar` guarda a escolha.
+- **Testes:** `test/widget/fase2b_view_test.dart` (em 1024, 1366 e 1920 px; as caixas com o estado para o leitor de tela; a disposição e os ajustes).
+- **Para olhar à mão:** a aba Exibir em 1024 px (ela rola de lado, como as outras abas curtas); as caixas no Clássico 97.
