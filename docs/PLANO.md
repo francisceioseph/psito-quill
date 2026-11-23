@@ -378,7 +378,7 @@ end)
 | Rolar | 60 fps sem quadros perdidos no capítulo de 30 páginas | 59,5 fps, 0 perdidos ✅ |
 | Abrir capítulo | ≤ 400 ms | 515 ms ❌ |
 
-**Depois da Fase 2B** (`FASE2B-RESULTADOS.md`), lado a lado com a Fase 2 no mesmo dia: 376 MB vazio e 452 MB com o capítulo (RSS), +11,3 MB de memória anônima com o capítulo em dez etapas; tecla → ladrilho p95 9,4 ms; rolar 59,5 fps; **abrir 854 ms ❌** (a Fase 2 abria em 369 ms; a lentidão está no motor e ainda não tem causa).
+**Depois da Fase 2B** (`FASE2B-RESULTADOS.md`), lado a lado com a Fase 2 no mesmo dia: 376 MB vazio e 452 MB com o capítulo (RSS), +11,3 MB de memória anônima com o capítulo em dez etapas; tecla → ladrilho p95 9,4 ms; rolar 59,5 fps; **abrir 854 ms ❌** (a Fase 2 abria em 369 ms). A maior parte é o dicionário da ortografia carregando antes do "aberto" (D-068); no primeiro ladrilho, a 2B fica ~120 ms acima da Fase 2.
 
 A memória é o RSS do app inteiro, na mediana de pelo menos 3 execuções do `tool/bench.sh` (varia uns 20 MB de uma para outra).
 

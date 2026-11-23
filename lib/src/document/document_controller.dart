@@ -108,7 +108,8 @@ const pageSizes = [
 typedef PageMargins = ({double left, double right, double top, double bottom});
 
 class DocumentController extends ChangeNotifier {
-  DocumentController(this.kit, {TextClipboard? clipboard}) : clipboard = clipboard ?? const SystemTextClipboard() {
+  DocumentController(this.kit, {TextClipboard? clipboard, this.deferOpenWork = false})
+      : clipboard = clipboard ?? const SystemTextClipboard() {
     _sub = kit.events.listen(_onEvent);
   }
 
@@ -1078,6 +1079,38 @@ class DocumentController extends ChangeNotifier {
 
   // ------------------------------------------------------------ salvar --
 
+  // ------------------------------- o trabalho depois de abrir (D-068) --
+
+  /// O que o Quill pede ao motor ao abrir (a cópia da Estrutura e dos
+  /// estilos, as listas de fontes, de estilos e de idiomas) espera o primeiro
+  /// ladrilho: tudo roda na thread do motor, e a cópia de um capítulo
+  /// atrasava a primeira tela. Sem ladrilho (sem a vista), vai depois de 1 s.
+  ///
+  /// Ligado no app (`main.dart`); nos testes, o trabalho vai na hora, como
+  /// antes, salvo nos que conferem o adiamento.
+  final bool deferOpenWork;
+  Timer? _openWork;
+  static const openWorkFallback = Duration(seconds: 1);
+
+  void _deferOpenWork() {
+    if (!deferOpenWork) {
+      _runOpenWork();
+      return;
+    }
+    _openWork?.cancel();
+    _openWork = Timer(openWorkFallback, _runOpenWork);
+  }
+
+  void _runOpenWork() {
+    _openWork?.cancel();
+    _openWork = null;
+    if (!isOpen || _disposed) return;
+    if (fonts.isEmpty) kit.requestCommandValues('.uno:CharFontName');
+    if (languages.isEmpty) kit.requestCommandValues('.uno:LanguageStatus');
+    kit.requestCommandValues('.uno:StyleApply');
+    refreshSnapshot();
+  }
+
   // ------------------------------------------- ocupado (Etapa 8, D-066) --
 
   /// Salvando: de pedir até o motor responder (salvo ou falhou).
@@ -1227,12 +1260,9 @@ class DocumentController extends ChangeNotifier {
         // só depois da primeira tecla. O cursor começa visível; só some se o
         // motor disser (com uma imagem selecionada, por exemplo).
         cursorVisible = true;
-        if (fonts.isEmpty) kit.requestCommandValues('.uno:CharFontName');
-        if (languages.isEmpty) kit.requestCommandValues('.uno:LanguageStatus');
         if (_accessibility) kit.setAccessibility(true);
-        kit.requestCommandValues('.uno:StyleApply');
         snapshot = FodtSnapshot.empty;
-        refreshSnapshot();
+        _deferOpenWork();
       case DocumentOpenFailed(:final message):
         progress = null;
         final tab = _pendingOpens.isEmpty ? _current : _pendingOpens.removeAt(0);
@@ -1291,6 +1321,7 @@ class DocumentController extends ChangeNotifier {
         documentSize = size;
       case TilePlaced(:final slot, :final key):
         _tiles[slot] = TilePlacement(slot, key, kit.textureId(slot));
+        if (_openWork != null) _runOpenWork();
       case CursorMoved(:final rect):
         cursor = rect;
       case CursorVisibility(:final visible):
@@ -1456,6 +1487,7 @@ class DocumentController extends ChangeNotifier {
     _disposed = true;
     _outlineTimer?.cancel();
     _savingGuard?.cancel();
+    _openWork?.cancel();
     if (_exporting case final p?) _deleteCopy(p);
     endTextSearch();
     _sub.cancel();

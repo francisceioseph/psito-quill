@@ -36,7 +36,7 @@ void main(List<String> args) {
   // Cópias temporárias de uma sessão que caiu (D-044): têm o texto do livro.
   DocumentController.cleanStaleCopies();
   final kit = LokQuillKit(profile: profile, tileSlots: tileSlotsFor(_largestDisplay()));
-  final doc = DocumentController(kit);
+  final doc = DocumentController(kit, deferOpenWork: true);
   final recents = RecentFiles(File('${config.path}/recentes.json'), keep: settings.keepRecents);
   settings.addListener(() => recents.keep = settings.keepRecents);
   final workspace = Workspace(

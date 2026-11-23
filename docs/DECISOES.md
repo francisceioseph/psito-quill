@@ -721,3 +721,16 @@ A Etapa 9 da Fase 2B.
 - **O zoom ao abrir:** 100 %, Ajustar à largura ou Ajustar à página, uma vez por aba.
 - **As Preferências** ganharam as seções Geral (a abertura, o zoom ao abrir), Aparência (o tema), Acessibilidade, Privacidade e Atalhos. Só a seção aberta é construída.
 - **Dois nós de leitor de tela consertados:** a régua vertical e o controle deslizante do zoom não tinham nó próprio, e o nome deles se juntava ao da janela.
+
+## D-068 · Abrir: o "854 ms" era o dicionário da ortografia, e o trabalho de abrir espera o primeiro ladrilho
+
+A investigação da lentidão ao abrir que o fecho da Fase 2B achou (369 ms na Fase 2, 854 ms no fim da 2B).
+
+- **Onde estava o tempo:** marcando cada chamada do `LokEngine::open`, o pico ficou todo no `initializeForRendering`, que às vezes levava 800 ms (e 5 ms nas outras). Com o `gdb` parando o processo no meio do pico, a thread do kit esperava a trava global do LibreOffice (o SolarMutex). Quem a segurava era a thread principal do LibreOffice, rodando a ortografia automática do capítulo recém-aberto (`SwViewShell::LayoutIdle` → `SwTextFrame::AutoSpell_`), que carregava o dicionário pt-BR (`Hunspell::Hunspell`). Isso acontece uma vez por processo, na primeira verificação de texto. Sem a ortografia (`LOK_ALLOWLIST_LANGUAGES=xx_XX`), os picos de 800 ms sumiram.
+- **Não era nenhuma mudança da 2B em si:** nem o callback do escritório (D-066), nem o `SAL_LOG`, nem os documentos que continuam carregados (D-054). Os três foram desligados um de cada vez, e os picos continuaram.
+- **O que a medida mostrava:** o carregamento do dicionário às vezes cai antes do "aberto" e às vezes depois, e o bench mede só até o "aberto". Na Fase 2, ele caía depois (o primeiro ladrilho vinha em 709 ms, contra 356 do "aberto"). Medidas lado a lado no mesmo dia, as duas builds do app, alternadas, 4 vezes cada:
+  - o "aberto": Fase 2 de 529 a 695 ms, Fase 2B de 574 a 748 ms (o host estava mais lento que na medida do fecho);
+  - o **primeiro ladrilho**, que é o que quem escreve sente: Fase 2 ~1320 ms, Fase 2B ~1520 ms. Essa era a perda real, uns 200 ms.
+- **A correção:** ao abrir, o Quill pedia ao motor, de uma vez, a cópia do documento (a Estrutura e os estilos, D-044), a lista de fontes, a de estilos e a de idiomas. Tudo isso roda na thread do motor e passava na frente dos ladrilhos. Agora espera o primeiro ladrilho chegar (ou 1 s, sem vista). Depois da correção, o primeiro ladrilho foi a ~1430 ms (Fase 2 a ~1315 na mesma rodada): uns 90 ms recuperados, e ~120 ms ainda acima da Fase 2.
+- **Nos testes,** o adiamento é uma opção do `DocumentController` (`deferOpenWork`), ligada no app e na integração. Os testes de unidade e de widget continuam com o trabalho na hora; o `open_work_test` confere o adiamento.
+- **O que sobra:** a meta de abrir em 400 ms não se cumpre com o dicionário carregando junto. Carregar o dicionário antes, com o Quill ainda na tela inicial, tiraria os 800 ms do primeiro capítulo aberto depois. Não foi feito: pede uma decisão (o dicionário passaria a ocupar a memória mesmo sem documento).

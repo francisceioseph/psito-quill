@@ -32,4 +32,4 @@ O `tool/ab.py` monta o commit anterior numa `git worktree` temporária, faz a bu
 - Etapa 7 (nova, D-049): o Francisco testou o app e achou os comandos densos, mal distribuídos e difíceis de clicar, sem aproveitar as telas grandes, e os menus pobres. Ela vem antes de "ocupado" e "acessibilidade", que viraram 8 e 9.
 - Etapa 7: feita (D-049 a D-065), com `./test.sh --integracao` verde. O Esc no menu de contexto foi corrigido pela integração (o foco fica no menu enquanto ele está aberto).
 - Etapas 8 e 9: feitas (D-066, D-067), com `./test.sh --integracao` verde.
-- O fecho: feito (`docs/FASE2B-RESULTADOS.md`). A pendência maior é abrir o capítulo, que ficou em 854 ms (a Fase 2 abria em 369).
+- O fecho: feito (`docs/FASE2B-RESULTADOS.md`). Abrir o capítulo: investigado no D-068 (o dicionário da ortografia; o primeiro ladrilho ficou ~120 ms acima da Fase 2).

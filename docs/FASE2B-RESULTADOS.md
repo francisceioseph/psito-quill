@@ -16,7 +16,7 @@ A interface nova (seção 10 do `PLANO.md`), em 23/11/2026. O detalhe de cada et
 
 **A memória cresceu pouco:** +11,3 MB de memória anônima com o capítulo, em dez etapas (o orçamento era ~5 MB por etapa). A rolagem (59,5 fps) e a tecla → ladrilho (p95 9,4 ms) ficaram iguais.
 
-**Abrir o capítulo ficou mais lento e não cumpre mais a meta:** 369 ms na Fase 2 e 854 ms agora (meta de 400 ms). A lentidão está no motor, não no Dart, e a causa ainda não foi achada (abaixo).
+**Abrir o capítulo ficou mais lento na medida, e menos de verdade:** o bench deu 369 ms na Fase 2 e 854 ms agora (meta de 400 ms). A investigação (D-068) mostrou que a maior parte é o dicionário da ortografia caindo antes do "aberto", em vez de depois. A perda real, no primeiro ladrilho, era de ~200 ms e caiu para ~120 ms (abaixo).
 
 ## O que entrou, por etapa
 
@@ -53,23 +53,11 @@ A interface nova (seção 10 do `PLANO.md`), em 23/11/2026. O detalhe de cada et
 
 **Para onde foi a memória** (o `tool/mapas.py`, com o capítulo): a memória anônima +9,8 MB (o mapa não separa o Dart do motor nela), as fontes +2,5 MB de arquivo, o heap +1,6 MB e a `libmergedlo` +3,4 MB de arquivo (páginas do LibreOffice que o kernel devolve). O RSS sobe mais que a anônima por causa das páginas de arquivo.
 
-### A lentidão ao abrir
+### A lentidão ao abrir (investigada depois do fecho, D-068)
 
-- **Está no motor.** O `lok_probe`, que mede o motor sem o app, abre o capítulo em ~270 ms com o código da Fase 2 (287, 235, 283) e em ~640 ms com o de agora (624, 636, 695).
-- **Não é o callback do escritório** (D-066): sem ele, deu o mesmo (634, 634, 684).
-- **É bimodal:** algumas aberturas levam ~280 ms e outras ~640. Fechar o documento vazio antes de abrir (como a Fase 2 fazia) deu 632, 286 e 682; no `lok_script`, abrir com o vazio carregado deu 283, 634 e 278. Algo assíncrono no motor atrasa o abrir uns 350 ms em parte das vezes.
-- **O que mudou no núcleo desde a Fase 2:** vários documentos no mesmo motor, com o callback de cada um ligado antes do `getDocumentSize` (D-054); o `SAL_LOG`; o callback do escritório. A causa ainda não foi isolada. Fica como a primeira pendência da Fase 2B.
-
-### As medidas de cada etapa
-
-Cada etapa foi medida contra a anterior, no mesmo dia (D-038), pelo `tool/ab.py`:
-
-| Etapas | Memória anônima com o capítulo | Onde está |
-|---|---|---|
-| 0, 1, 2 | dentro do orçamento | `etapa-0-privacidade.md`, `etapa-1-material3.md` |
-| 3 a 5 | +2,9 MB (antes da correção da régua, +18,5) | `README.md` da pasta |
-| 7, passos 4 a 8 | −4,6 MB | `etapa-7-espaco.md` |
-| 8 | −4,1 MB (dentro do ruído) | `etapa-8-ocupado.md` |
+- **O "854 ms" era quase todo o dicionário da ortografia.** O pico estava no `initializeForRendering`: a thread do kit esperava a trava global do LibreOffice, que a thread principal dele segurava enquanto carregava o dicionário pt-BR do Hunspell (~800 ms, uma vez por processo). Às vezes isso cai antes do "aberto", às vezes depois, e o bench mede só até o "aberto". Na Fase 2, caía depois (o primeiro ladrilho vinha em 709 ms).
+- **A perda real era no primeiro ladrilho,** medido lado a lado no mesmo dia: ~1320 ms na Fase 2 e ~1520 ms na 2B. A cópia do documento (a Estrutura e os estilos) e as listas de fontes, estilos e idiomas, pedidas ao abrir, passavam na frente dos ladrilhos na thread do motor. Agora esperam o primeiro ladrilho: ~1430 ms, com a Fase 2 a ~1315 na mesma rodada.
+- **Fica:** ~120 ms acima da Fase 2 no primeiro ladrilho, e a meta de 400 ms no "aberto" sem cumprir enquanto o dicionário carregar junto com o primeiro capítulo.
 
 ## Testes por nível
 

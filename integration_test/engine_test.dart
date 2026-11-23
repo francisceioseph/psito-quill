@@ -45,7 +45,7 @@ void main() {
     final profile = LoProfile(Directory('${tmp.path}/perfil'))..ensureSettings(paperSchemes(builtInThemes));
     final kit = LokQuillKit(profile: profile);
     final clipboard = MemoryTextClipboard();
-    final doc = DocumentController(kit, clipboard: clipboard);
+    final doc = DocumentController(kit, clipboard: clipboard, deferOpenWork: true);
     final dialogs = FakeFileDialogs();
     final workspace = Workspace(
       doc: doc,
