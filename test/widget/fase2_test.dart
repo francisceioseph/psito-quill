@@ -20,12 +20,25 @@ import 'package:psito_quill/src/ui/organisms/document_view.dart';
 import 'package:psito_quill/src/ui/organisms/find_bar.dart';
 import 'package:psito_quill/src/ui/organisms/inspector.dart';
 import 'package:psito_quill/src/ui/organisms/ribbon.dart';
+import 'package:psito_quill/src/ui/atoms/w_segmented.dart';
+import 'package:psito_quill/src/ui/molecules/style_card.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../support/harness.dart';
 
 class _NoView implements EditorViewActions {
   @override
-  bool inspectorOpen = false, revealOpen = false;
+  bool inspectorOpen = false, revealOpen = false, outlineOpen = false, stylesPanelOpen = false, ribbonCollapsed = false, rulerShown = true, zenOpen = false;
+  @override
+  void toggleZen() {}
+  @override
+  void toggleRuler() {}
+  @override
+  void toggleOutline() {}
+  @override
+  void toggleStylesPanel() {}
+  @override
+  void toggleRibbon() {}
   @override
   void about() {}
   @override
@@ -96,10 +109,11 @@ void main() {
     }
   });
 
-  testWidgets('Ctrl+L abre a busca; Enter acha, "Todas" conta, Esc fecha', (tester) async {
+  testWidgets('Ctrl+U abre o painel Localizar e substituir; Enter acha, "Todas" conta, Esc fecha', (tester) async {
     await pumpApp(tester);
     h.doc.insertText('Um texto e outro texto.');
-    await keys(tester, LogicalKeyboardKey.keyL);
+    // O Ctrl+L abre a busca única (D-050); o painel com as opções é o Ctrl+U.
+    await keys(tester, LogicalKeyboardKey.keyU);
     expect(find.byType(FindBar), findsOneWidget);
     await tester.enterText(find.byType(TextField).first, 'texto');
     await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -150,6 +164,9 @@ void main() {
     expect(kit.unoCommands.last, '.uno:Color');
     expect(kit.unoArgs.last, contains('${0xC9211E}'));
 
+    // O recuo está na seção Parágrafo: só a seção escolhida é construída.
+    await tester.tap(find.descendant(of: find.byType(WSegmented<InspectorPart>), matching: find.text('Parágrafo')));
+    await tester.pump();
     final indent = find.descendant(
       of: find.ancestor(of: find.text('Recuo à esquerda'), matching: find.byType(Row)).first,
       matching: find.byType(TextField),
@@ -189,11 +206,39 @@ void main() {
     expect(kit.text, 'um erro');
   });
 
+  testWidgets('clique direito › Parágrafo › Manter com o próximo (D-061)', (tester) async {
+    await pumpApp(tester);
+    h.doc.insertText('um parágrafo');
+    await tester.pump();
+    await tester.tapAt(tester.getCenter(find.byType(DocumentView)), buttons: kSecondaryButton);
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(SubmenuButton, 'Estilo'), findsOneWidget);
+    expect(find.text('Selecionar tudo'), findsOneWidget);
+    await tester.tap(find.widgetWithText(SubmenuButton, 'Parágrafo'));
+    await tester.pumpAndSettle();
+    expect(find.text('Permitir separar do próximo'), findsOneWidget);
+    expect(find.text('Permitir dividir as linhas'), findsOneWidget);
+    await tester.tap(find.text('Manter com o próximo'));
+    await tester.pumpAndSettle();
+    expect(kit.unoCommands.last, '.uno:ParaKeepTogether');
+    expect(kit.unoArgs.last, contains('"value":true'));
+    expect(find.widgetWithText(SubmenuButton, 'Estilo'), findsNothing, reason: 'o menu fechou');
+
+    await tester.tapAt(tester.getCenter(find.byType(DocumentView)), buttons: kSecondaryButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(SubmenuButton, 'Parágrafo'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Manter as linhas juntas'));
+    await tester.pumpAndSettle();
+    expect(kit.unoCommands.last, '.uno:ParaSplit');
+    expect(kit.unoArgs.last, contains('"value":false'), reason: 'manter juntas é não dividir');
+  });
+
   testWidgets('Inserir › Tabela: a grade insere, e a aba Tabela aparece', (tester) async {
     await pumpApp(tester);
     await tester.tap(find.widgetWithText(WTextButton, 'Inserir'));
     await tester.pump();
-    await tester.tap(find.widgetWithText(WButton, 'Tabela…'));
+    await tester.tap(find.widgetWithText(WBigButton, 'Tabela…'));
     await tester.pumpAndSettle();
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
@@ -202,7 +247,7 @@ void main() {
     expect(kit.unoArgs.last, allOf(contains('"Rows":{"type":"long","value":2}'), contains('"value":4}')));
     await tester.tap(find.widgetWithText(WTextButton, 'Tabela'));
     await tester.pump();
-    await tester.tap(find.widgetWithIcon(WButton, Icons.call_merge));
+    await tester.tap(find.widgetWithIcon(WButton, Symbols.call_merge_rounded));
     expect(kit.unoCommands.last, '.uno:MergeCells');
   });
 
@@ -211,7 +256,7 @@ void main() {
     h.dialogs.imageAnswer = '/fotos/capa.png';
     await tester.tap(find.widgetWithText(WTextButton, 'Inserir'));
     await tester.pump();
-    await tester.tap(find.widgetWithText(WButton, 'Imagem…'));
+    await tester.tap(find.widgetWithText(WBigButton, 'Imagem…'));
     await tester.pumpAndSettle();
     expect(h.dialogs.images, ['Imagens']);
     expect(h.doc.graphic, isNotNull);
@@ -229,7 +274,9 @@ void main() {
 
   testWidgets('novo estilo: nome repetido não passa; o criado entra na galeria', (tester) async {
     await pumpApp(tester);
-    await tester.tap(find.widgetWithIcon(WButton, Icons.style_outlined));
+    await tester.tap(find.widgetWithText(WTextButton, 'Estilos'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(WButton, 'Novo estilo a partir da seleção…'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'Heading 1');
     await tester.pump();
@@ -239,9 +286,9 @@ void main() {
     await tester.tap(find.widgetWithText(WTextButton, 'Criar'));
     await tester.pumpAndSettle();
     expect(kit.unoCommands, contains('.uno:StyleNewByExample'));
-    final chip = find.descendant(of: find.byType(Ribbon), matching: find.widgetWithText(WTextButton, 'Cena'));
-    expect(chip, findsOneWidget);
-    expect(tester.widget<WTextButton>(chip).selected, isTrue);
+    final card = find.descendant(of: find.byType(Ribbon), matching: find.ancestor(of: find.text('Cena'), matching: find.byType(StyleCard)));
+    expect(card, findsOneWidget);
+    expect(tester.widget<StyleCard>(card).selected, isTrue);
   });
 
   testWidgets('Clássico 97: menus completos com atalhos, barras Padrão e Formatação', (tester) async {

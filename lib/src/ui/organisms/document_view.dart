@@ -108,6 +108,23 @@ class PageGeometry {
   Offset scrollFor(Offset twips, Offset anchor) => origin + twips * pxPerTwip - anchor;
 }
 
+/// Onde a página está na tela, para as réguas (D-046): a borda esquerda e
+/// a de cima do documento, em pixels da área da página (já com a rolagem),
+/// e a escala. As réguas só se repintam com isto; nada se reconstrói.
+@immutable
+class DocViewport {
+  const DocViewport({required this.left, required this.top, required this.pxPerTwip, required this.viewSize});
+  final double left, top, pxPerTwip;
+  final Size viewSize;
+
+  @override
+  bool operator ==(Object other) =>
+      other is DocViewport && other.left == left && other.top == top && other.pxPerTwip == pxPerTwip && other.viewSize == viewSize;
+
+  @override
+  int get hashCode => Object.hash(left, top, pxPerTwip, viewSize);
+}
+
 class DocumentView extends StatefulWidget {
   const DocumentView({
     super.key,
@@ -116,7 +133,21 @@ class DocumentView extends StatefulWidget {
     required this.semanticLabel,
     this.scrollController,
     this.focusNode,
+    this.viewport,
+    this.typewriter = false,
+    this.focusLines = 0,
   });
+
+  /// Máquina de escrever (o modo zen): a linha do cursor fica no meio da
+  /// tela. Só a rolagem do Flutter; o motor não sabe.
+  final bool typewriter;
+
+  /// Foco (o modo zen): escurece o que está a mais de [focusLines] linhas do
+  /// cursor, para cima e para baixo. 0: desligado.
+  final int focusLines;
+
+  /// Recebe onde a página está, a cada rolagem ou zoom (as réguas).
+  final ValueNotifier<DocViewport?>? viewport;
 
   final DocumentController doc;
   final CommandRegistry commands;
@@ -202,7 +233,30 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
 
   DocStatus? _lastStatus;
   Rect _lastCursor = Rect.zero;
+  late int _lastTab = widget.doc.tabRevision;
+
+  /// Trocou de aba (D-054): volta à rolagem dela, com o tamanho dela já na
+  /// tela, e pede os ladrilhos.
+  void _restoreTabScroll(Offset want) {
+    for (final (controller, value) in [(_hscroll, want.dx), (_scroll, want.dy)]) {
+      if (!controller.hasClients) continue;
+      final p = controller.position;
+      controller.jumpTo(value.clamp(p.minScrollExtent, p.maxScrollExtent));
+    }
+    _pushViewport();
+  }
+
   void _onDoc() {
+    if (widget.doc.tabRevision != _lastTab) {
+      _lastTab = widget.doc.tabRevision;
+      _lastCursor = widget.doc.cursor;
+      // Agora: até o quadro seguinte, a rolagem pode mexer sozinha (o tamanho
+      // do outro documento) e escrever por cima.
+      final want = widget.doc.scrollPosition;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _restoreTabScroll(want);
+      });
+    }
     final status = widget.doc.docStatus;
     if (status != _lastStatus) {
       _lastStatus = status;
@@ -215,9 +269,22 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
     }
     if (widget.doc.cursor != _lastCursor) {
       _lastCursor = widget.doc.cursor;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _sendCaretRect());
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _sendCaretRect();
+        if (widget.typewriter) _centerCaret();
+      });
     }
     if (mounted) setState(() {});
+  }
+
+  /// A linha do cursor no meio da área (a máquina de escrever).
+  void _centerCaret() {
+    final g = _geometry;
+    final c = widget.doc.cursor;
+    if (g == null || c == Rect.zero || !_scroll.hasClients) return;
+    final p = _scroll.position;
+    final target = (g.toLocal(c).center.dy - g.viewSize.height / 2).clamp(p.minScrollExtent, p.maxScrollExtent);
+    if ((target - p.pixels).abs() > 1) _scroll.jumpTo(target);
   }
 
   // ------------------------------------------------- entrada pelo sistema --
@@ -331,7 +398,15 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
     final g = _geometry;
     if (g == null || !_scroll.hasClients) return;
     final s = _scrollOffset;
+    widget.doc.scrollPosition = s;
     widget.doc.setViewport(g.visibleTwips(s.dx, s.dy), _scaleMilli);
+    // O ValueNotifier só avisa se o valor mudou (o == de DocViewport).
+    widget.viewport?.value = DocViewport(
+      left: g.origin.dx - s.dx,
+      top: g.origin.dy - s.dy,
+      pxPerTwip: g.pxPerTwip,
+      viewSize: g.viewSize,
+    );
   }
 
   /// O zoom mudou: rola para o ponto que estava sob a âncora continuar lá.
@@ -538,6 +613,23 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
               child: ColoredBox(color: t.colors.selection),
             ),
           if (doc.graphic case final r?) ..._graphicFrame(t, g, r),
+          // O foco do modo zen: o papel por cima do que está longe do cursor.
+          if (widget.focusLines > 0 && doc.cursor != Rect.zero) ...() {
+            final r = g.toLocal(doc.cursor);
+            final band = r.height * (widget.focusLines + 0.5);
+            final dim = t.colors.paper.withValues(alpha: 0.72);
+            final page = g.toLocal(Offset.zero & doc.documentSize);
+            return [
+              Positioned.fromRect(
+                rect: Rect.fromLTRB(page.left, page.top, page.right, math.max(page.top, r.center.dy - band)),
+                child: IgnorePointer(child: ColoredBox(color: dim)),
+              ),
+              Positioned.fromRect(
+                rect: Rect.fromLTRB(page.left, math.min(page.bottom, r.center.dy + band), page.right, page.bottom),
+                child: IgnorePointer(child: ColoredBox(color: dim)),
+              ),
+            ];
+          }(),
           if (doc.cursorVisible && doc.cursor != Rect.zero && _caretOn && _focus.hasFocus)
             Positioned.fromRect(
               rect: () {

@@ -190,6 +190,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prefShortcuts => 'Keyboard shortcuts';
 
   @override
+  String get prefPrivacy => 'Privacy';
+
+  @override
+  String get prefKeepRecents => 'Keep the list of recent files';
+
+  @override
+  String get prefPrivacyNote =>
+      'Nothing leaves this computer: no network, no telemetry, no log files.';
+
+  @override
   String get schemeWordPt => 'Word in Portuguese (Ctrl+N bold, Ctrl+B save)';
 
   @override
@@ -300,7 +310,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commandReplace => 'Replace';
 
   @override
-  String get commandPalette => 'Command palette';
+  String get commandPalette => 'Search';
 
   @override
   String get commandInspector => 'Format panel';
@@ -537,10 +547,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get findNotFound => 'No matches';
 
   @override
-  String get paletteHint => 'Type a command';
+  String get paletteHint => 'A word from the text or a command';
 
   @override
-  String get paletteEmpty => 'No command with that name';
+  String get paletteEmpty => 'Nothing found';
 
   @override
   String get inspectorTitle => 'Format';
@@ -860,4 +870,345 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commandFilePanel => 'Recent files and preferences…';
+
+  @override
+  String get outlineTitle => 'Outline';
+
+  @override
+  String get outlineClose => 'Close the outline';
+
+  @override
+  String get outlineEmpty =>
+      'The document headings show up here (the Heading 1, 2 and 3 styles).';
+
+  @override
+  String get railLabel => 'Panels';
+
+  @override
+  String get stylesPanelClose => 'Close the styles';
+
+  @override
+  String get ribbonStyles => 'Styles';
+
+  @override
+  String get ribbonCollapse => 'Collapse';
+
+  @override
+  String get ribbonCollapseTip => 'Collapse the ribbon';
+
+  @override
+  String get ribbonExpandTip => 'Show the ribbon';
+
+  @override
+  String get ribbonTabs => 'Ribbon tabs';
+
+  @override
+  String get searchCommands => 'Search the text and commands';
+
+  @override
+  String get inspectorClose => 'Close the Format panel';
+
+  @override
+  String get inspectorSections => 'Panel section';
+
+  @override
+  String get sectionText => 'Text';
+
+  @override
+  String get fontGrow => 'Grow font';
+
+  @override
+  String get fontShrink => 'Shrink font';
+
+  @override
+  String get moreStyles => 'More styles';
+
+  @override
+  String get commandLineSpacingMenu => 'Line spacing';
+
+  @override
+  String get zoomSlider => 'Zoom';
+
+  @override
+  String zoomPercent(int percent) {
+    return '$percent %';
+  }
+
+  @override
+  String statusStyle(Object name) {
+    return 'Style: $name';
+  }
+
+  @override
+  String get commandCollapseRibbon => 'Collapse the ribbon';
+
+  @override
+  String get commandOutline => 'Outline panel';
+
+  @override
+  String get commandStylesPanel => 'Styles panel';
+
+  @override
+  String get styleSampleBody => 'Once upon a time';
+
+  @override
+  String get styleSampleHeading => 'Chapter';
+
+  @override
+  String get styleSampleQuote => 'she said';
+
+  @override
+  String get styleSampleOther => 'Aa';
+
+  @override
+  String styleCardApplied(Object name) {
+    return 'Style $name, applied';
+  }
+
+  @override
+  String styleCard(Object name) {
+    return 'Style $name';
+  }
+
+  @override
+  String colorMenuMore(Object name, Object value) {
+    return '$name: $value';
+  }
+
+  @override
+  String get fieldWidth => 'Width';
+
+  @override
+  String get fieldHeight => 'Height';
+
+  @override
+  String get keepRatio => 'Keep the proportion';
+
+  @override
+  String get groupSize => 'Size';
+
+  @override
+  String get fontSearch => 'Search for a font';
+
+  @override
+  String get fontInDocument => 'In this document';
+
+  @override
+  String get fontRecent => 'Recent';
+
+  @override
+  String get fontAll => 'All';
+
+  @override
+  String get fontSerif => 'Serif';
+
+  @override
+  String get fontSans => 'Sans serif';
+
+  @override
+  String get fontMono => 'Mono';
+
+  @override
+  String get fontNone => 'No font with that name';
+
+  @override
+  String get fontFilters => 'Filter the fonts';
+
+  @override
+  String get stylesSearch => 'Search for a style';
+
+  @override
+  String get stylesKind => 'Style kind';
+
+  @override
+  String get stylesFromBook => 'From the book';
+
+  @override
+  String get stylesFromLibreOffice => 'From LibreOffice';
+
+  @override
+  String get stylesNone => 'No style with that name';
+
+  @override
+  String get revealDirect => 'direct';
+
+  @override
+  String get revealFromStyle => 'style';
+
+  @override
+  String get revealClearDirect => 'Remove direct formatting';
+
+  @override
+  String get rulerFirstLine => 'First line indent';
+
+  @override
+  String get rulerLeftIndent => 'Left indent';
+
+  @override
+  String get rulerRightIndent => 'Right indent';
+
+  @override
+  String get rulerHorizontal => 'Ruler';
+
+  @override
+  String get rulerVertical => 'Vertical ruler';
+
+  @override
+  String get commandRuler => 'Ruler';
+
+  @override
+  String get prefRulerUnit => 'Ruler unit';
+
+  @override
+  String get unitMm => 'mm';
+
+  @override
+  String get unitInch => 'in';
+
+  @override
+  String get unitPt => 'pt';
+
+  @override
+  String get layoutLabel => 'Page layout';
+
+  @override
+  String get layoutSingle => 'One page';
+
+  @override
+  String get layoutMulti => 'Multiple pages';
+
+  @override
+  String get layoutBook => 'Book (spreads)';
+
+  @override
+  String get themeSepia => 'Sepia';
+
+  @override
+  String get commandZen => 'Zen mode';
+
+  @override
+  String get zenExitHint => 'Esc or F11 exits';
+
+  @override
+  String get zenFocus => 'Focus on the paragraph';
+
+  @override
+  String get zenTypewriter => 'Typewriter';
+
+  @override
+  String get zenPaper => 'Paper';
+
+  @override
+  String get zenOptions => 'Zen mode options';
+
+  @override
+  String zenSession(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes min this session',
+      one: '1 min this session',
+      zero: 'just started',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ribbonMoreFont => 'More font options';
+
+  @override
+  String get searchSectionDocument => 'In the document';
+
+  @override
+  String get searchSectionCommands => 'Commands';
+
+  @override
+  String get searchSearching => 'Searching the document…';
+
+  @override
+  String get searchNoHits => 'Nothing in the document';
+
+  @override
+  String searchPage(int page) {
+    return 'p. $page';
+  }
+
+  @override
+  String searchMoreHits(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'and $count more matches',
+      one: 'and 1 more match',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get searchFindOptions => 'Find and replace, with options…';
+
+  @override
+  String searchHitLabel(String text, int page) {
+    return '$text, page $page';
+  }
+
+  @override
+  String searchHitsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count matches',
+      one: '1 match',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get railFindReplace => 'Find and replace';
+
+  @override
+  String get commandCloseTab => 'Close tab';
+
+  @override
+  String get commandNextTab => 'Next tab';
+
+  @override
+  String get commandPreviousTab => 'Previous tab';
+
+  @override
+  String get tabsLabel => 'Open documents';
+
+  @override
+  String tabCloseNamed(String name) {
+    return 'Close $name';
+  }
+
+  @override
+  String tabModifiedNamed(String name) {
+    return '$name, with unsaved changes';
+  }
+
+  @override
+  String get stylesMore => 'More styles';
+
+  @override
+  String get railFind => 'Find';
+
+  @override
+  String get commandKeepWithNext => 'Keep with next';
+
+  @override
+  String get commandSeparateFromNext => 'Allow separating from next';
+
+  @override
+  String get commandKeepLines => 'Keep lines together';
+
+  @override
+  String get commandSplitLines => 'Allow splitting lines';
+
+  @override
+  String get contextStyle => 'Style';
+
+  @override
+  String get contextParagraph => 'Paragraph';
 }

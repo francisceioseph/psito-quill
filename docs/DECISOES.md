@@ -348,3 +348,286 @@ O Francisco aprovou (23/11/2026) os desenhos do canvas "Psito Quill — nova int
 - **A IA local fica para a Fase 5**, como plugin com permissões.
 
 Cada etapa tem um orçamento de ~5 MB de memória anônima, medido lado a lado com a build anterior (D-038).
+
+## D-041 · Privacidade: o perfil do motor trava o que fala para fora
+
+Pedido do Francisco: nada de rede, de telemetria ou de log, tudo no computador. O app em Dart já não abre a rede; o risco estava no LibreOffice. O `LoProfile.ensureSettings` (antes `ensureSchemes`) grava, junto dos esquemas de cor, estas travas no `registrymodifications.xcu` (nomes conferidos no `main.xcd` da 24.2):
+
+| Chave | Valor | Por quê |
+|---|---|---|
+| `Office.Common/Misc/CrashReport` | false | Sem relatório de falha enviado à TDF |
+| `Office.Common/Security/Scripting/BlockUntrustedRefererLinks` | true | Um documento não busca imagens e links de fora sozinho |
+| `Office.Common/Security/Scripting/DisableMacrosExecution` | true | Macro de documento não roda (poderia abrir a rede ou gravar arquivos) |
+| `Office.Common/History/PickListSize` | 0 | O motor não guarda a lista de recentes dele |
+| `Office.Common/History/RecentDocsThumbnail` | false | Nem as miniaturas |
+| `Office.Common/Save/Document/GenerateThumbnail` | false | O arquivo salvo não leva a miniatura da primeira página |
+
+- **Os logs da UNO** já vêm desligados (o `LogLevel` padrão é o máximo, ou seja, nada). A 24.2 do Ubuntu não tem verificação de atualizações, nem a coleta de uso.
+- **Os avisos do LibreOffice** iam para o terminal. O `LokEngine::init` define `SAL_LOG=-WARN-INFO` sem sobrescrever: quem depura define a variável antes.
+- **Os recentes do Quill:** a preferência "Guardar a lista de arquivos recentes" (ligada por padrão). Desligada, a lista vale só enquanto o Quill está aberto e o `recentes.json` é apagado.
+- **Um teste** (`test/unit/privacy_test.dart`) confere as travas no perfil, que nada em `lib/` usa `HttpClient`, `Socket` ou parecido, e que o núcleo nativo (fora das ferramentas de medição) não abre a rede nem grava arquivo.
+
+Ficam de fora, de propósito: a cópia de segurança do LibreOffice (`CreateBackup`), que fica no perfil, no próprio computador, e é útil num livro longo.
+
+## D-042 · Os tokens do Material 3 e os átomos novos (Etapa 1 da Fase 2B)
+
+- **Os tons ficam prontos nos arquivos de tema**, copiados do desenho (o Material Theme Builder com a semente #415F91). O `toThemeData` monta o `ColorScheme` com eles, sem o `ColorScheme.fromSeed`: o mesmo resultado, sem calcular paleta ao trocar de tema, e o Clássico 97 continua com os cinzas dele.
+- **Os nomes antigos do `QuillColors` ficam** (`frame`, `accent`, `accentSoft`...), agora com o papel do M3 escrito ao lado (`frame` é o `surface`, `accentSoft` é o `secondaryContainer`). Entram os que faltavam: `onAccentSoft`, `accentContainer`, `tertiary` e o container (as abas de contexto), os cinco tons de superfície, `outline` e o container de erro. Trocar todos os nomes num commit só mexeria em 44 lugares sem mudar nada na tela; os organismos novos da Etapa 2 já usam os papéis certos.
+- **O ligado é tonal:** o fundo `secondaryContainer`, o texto `onSecondaryContainer` e o ícone preenchido (o eixo FILL do Material Symbols). O realce do mouse é o `surfaceContainerHigh`; apertado, o `Highest`.
+- **Densidade:** `QuillDensity.compact` (32 px, o padrão) e `.comfortable` (44 px, ícone de 24). A preferência entra na Etapa 8.
+- **Ícones:** o pacote `material_symbols_icons`, estilo Rounded. Os 78 ícones do app passaram de `Icons.x_outlined` para `Symbols.x_rounded`.
+- **Átomos novos:** `WSegmented`, `WSwitch`, `WSlider` (o `Slider` do Flutter, que já traz teclado e leitor de tela) e `WChip`. Cada um tem o desenho bisel do Clássico 97 pelo `ComponentStyle`.
+- **O `tokens_test`** confere 4,5:1 nos pares novos e 3:1 no contorno e na cor da marca sobre a superfície (WCAG 1.4.11) nos temas modernos.
+
+## D-043 · A casca do editor da Fase 2B (Etapa 2)
+
+- **A fileira de abas** fica sobre o `surfaceContainer`: o Arquivo preenchido (a cor da marca), as abas Início, Inserir, Layout, **Estilos** (nova), Revisão e Exibir em pílula, as de contexto (Tabela, Imagem) no terciário. Na ponta direita: salvar, desfazer, refazer, o tema escuro, a pesquisa (abre a paleta Ctrl+K) e o **Recolher** (Ctrl+F1, guardado nas preferências). Numa janela com menos de 1100 px a pesquisa vira só o ícone, e as abas rolam em vez de estourar.
+- **A faixa** é um cartão de cantos de 16 px. Os grupos têm uma ou duas linhas, o nome embaixo e a divisória à direita (`RibbonGroup.firstRow`, `secondRow`, `leading`). Início: Colar grande; Fonte com − e + (andam pela lista de tamanhos, sem comando novo), a cor da fonte e o realce em menus de amostras; Parágrafo com o menu de entrelinhas; os cartões de estilo; Localizar e Substituir em chips.
+- **Os cartões de estilo** (`StyleCard`) mostram uma amostra genérica pelo tipo (título maior e em negrito, citação em itálico). As propriedades de verdade entram na Etapa 3.
+- **O trilho** (`NavRail`), à esquerda: Estrutura, Localizar (abre a barra de localizar) e Estilos. Clicar no aberto fecha. A Estrutura recebe os títulos na Etapa 5; até lá, diz onde eles vão aparecer. O painel Estilos lista os de parágrafo (lista preguiçosa) e aplica ao clicar.
+- **O painel Formatar** tem as seções Texto, Parágrafo e Página num `WSegmented`, mais Imagem e Tabela com a seleção. **Só a seção escolhida é construída** (o D-038 mediu ~3,5 MB para o painel inteiro).
+- **A barra de status:** a mensagem, a página, as palavras, o idioma com o ícone da ortografia, o estilo atual e o zoom (−, o controle deslizante, + e a porcentagem). **Arrastar o zoom só muda o número**; o motor recebe o zoom ao soltar. O RSS virou um widget próprio (`MemoryLabel`): antes, o relógio de 2 s refazia a página inteira quando o número mudava.
+- **A barra de status e o trilho também são memoizados** pela chave da faixa (D-037), que ganhou o painel da esquerda, a seção do Formatar e o Recolher.
+- **O tamanho da imagem em cm** (aba Imagem, grupo Tamanho). Sondado no `lok_script`: o `.uno:Size` com valores e o `.uno:TransformWidth` não fazem nada na 24.2. O que funciona são as alças, pelo `setGraphicSelection`:
+  - a do canto **sempre mantém a proporção** (pedir 3000 × 2500 twips num 6000 × 3000 deu 5001 × 2500);
+  - a da direita muda só a largura, e a de baixo só a altura, com precisão de uns 5 twips.
+  Por isso: com o cadeado, vai a alça do canto pela largura; sem, a da direita e, quando o retângulo novo chega, a de baixo (`DocumentController.setGraphicSizeCm`).
+- **Ficam de fora, sondados:** "Original" (o `.uno:OriginalSize` não volta ao tamanho original depois de redimensionar) e "Legenda" (o `.uno:InsertCaptionDialog` só abre um diálogo, que o LOK não entrega). Voltam com a Fase 3, se houver outro caminho.
+
+## D-044 · As prévias de estilo: a cópia temporária, e nada de prévia no texto
+
+**A cópia temporária (sondada no `lok_script`).** O motor não diz as propriedades de um estilo nos estados. Um `saveAs` sem `TakeOwnership`, em ODT plano (`fodt`, um XML só, sem zip), grava uma cópia sem mudar o documento: o caminho continua o mesmo e o "modificado" continua ligado. No capítulo de 30 páginas a cópia tem 173 KB, com os 23 estilos (`style:style`, com `style:text-properties` e `style:paragraph-properties`) e os títulos com o nível (`text:h text:outline-level`), que a Etapa 5 usa para a Estrutura. A cópia vai para o `$XDG_RUNTIME_DIR` (memória, só do usuário), é lida num isolate e apagada na hora. O ODT plano dispensa uma biblioteca de zip.
+
+**Sem prévia ao vivo no texto.** Aplicar e desfazer devolve o "modificado" a falso, mas **liga o Refazer**: passar o mouse num estilo trocaria o que o autor tinha para refazer (uma edição dele que ele desfez) pela prévia. A LOK não tem como limpar o Refazer. Por isso a prévia fica nos cartões e na lista de fontes, desenhada pelo Flutter, e o texto só muda ao clicar.
+
+## D-045 · A lista de fontes na própria fonte, com filtros do fontconfig
+
+- **A lista é do Quill** (`FontPicker`), não um menu simples: cada nome desenhado na própria fonte, a busca, os filtros Com serifa, Sem serifa e Mono, e as seções "Neste documento" (as fontes declaradas na cópia temporária, D-044), "Recentes" (as 5 últimas escolhidas, nas preferências) e "Todas". Enter na busca aplica a primeira que sobrou.
+- **Preguiçosa:** um `ListView.builder` de altura fixa. Só as fontes visíveis (umas 12) são construídas e só elas carregam o arquivo da fonte. O sistema de teste tem 299 famílias.
+- **Os filtros vêm do fontconfig**, numa função nativa pequena (`pqk_font_classes`, `core/font_info.cc`), uma chamada para a lista inteira quando ela chega do motor. Não passa pela thread do kit: não é o LibreOffice. A classe é a primeira família genérica que as regras do sistema acrescentam (`45-latin.conf`), e o mono vem do espaçamento da fonte de verdade. **Limite conhecido:** uma fonte que as regras não conhecem ganha "sem serifa" (o `49-sansserif.conf` faz isso). É só um filtro: ela continua em "Todas".
+- **A galeria aberta** ("Gerenciar estilos…") virou cartões com as prévias, a busca, Parágrafo ou Caractere, "Do livro" e "Do LibreOffice", e o atalho de cada estilo (os títulos têm Ctrl+Alt+1 a 3).
+- **"Revelar formatação" diz de onde vem cada coisa:** compara os estados do motor no cursor com as propriedades do estilo do parágrafo (a cópia): "estilo" ou "direto" ao lado de cada valor, também para o leitor de tela. "Tirar o que é direto" é o `.uno:ResetAttributes` que já existia (Limpar a formatação).
+
+## D-046 · A régua: o callback 35, a cópia para a vertical, e nada se reconstrói ao rolar
+
+**Sondado no `lok_script`:** o `LOK_CALLBACK_RULER_UPDATE` (35) chega sozinho ao abrir, sem pedir nada: `margin1` (o recuo esquerdo), `margin2` (a largura do texto), `leftOffset` (a margem esquerda), `pageWidth` e as tabulações, em centésimos de mm. As tabulações vêm com a chave repetida (`""`), que o `jsonDecode` juntaria numa só: o `parseRuler` lê por expressões regulares. Não vêm o recuo da primeira linha nem o direito: esses saem do estado `.uno:LeftRightParaMargin`, que o Quill já lia. Não há estado das margens de cima e de baixo (nem `.uno:PageULMargin`, nem `getCommandValues`): a régua vertical as lê do estilo de página da cópia temporária (D-044), que se refaz depois de mudar o tamanho, a orientação ou as margens da página.
+
+**Também aprendido:** o `.uno:LeftRightParaMargin` com um argumento de nome errado abre o diálogo Parágrafo (o callback 46). Os nomes certos são os `LRSpace.*` que o `setIndents` já usa.
+
+**Desenho e memória:**
+- O `DocumentView` publica onde a página está (a borda, o topo, a escala) num `ValueNotifier<DocViewport>`, a cada rolagem e zoom. Cada régua é um `CustomPaint` com esse notifier como `repaint`: a rolagem repinta a régua, sem reconstruir widget nenhum.
+- As marcas que recebem o foco (o teclado e o leitor de tela) são caixas transparentes sobre o desenho. Elas só se refazem quando a parte horizontal muda (zoom, rolagem para os lados, outro parágrafo), nunca com a rolagem vertical.
+- Arrastar mexe só em notifiers locais (a marca e a linha tracejada sobre a página); o motor recebe o recuo ao soltar, já arredondado para o milímetro. Arrastar o recuo esquerdo leva a primeira linha junto, como no Word.
+- Pelo teclado: Tab até a marca, as setas andam 1 mm, Shift + setas 1 cm. O leitor de tela tem o nome, o valor em cm e as ações de aumentar e diminuir.
+- O duplo clique abre o painel Formatar na seção Parágrafo. Exibir › Régua liga e desliga (guardado), e a unidade (cm, mm, pol, pt) fica nas preferências (`unidadeRegua`; a tela de preferências entra na Etapa 8).
+
+**Ficam para depois:** criar e mover tabulações pela régua (e o seletor do tipo no canto) e arrastar as margens da página pela régua. A régua mostra as tabulações, mas o comando para criá-las não foi sondado ainda.
+
+## D-047 · Várias páginas pelo ViewLayout, e a Estrutura pela cópia
+
+- **A disposição das páginas** fica na barra de status: Uma página, Várias páginas e Livro (pares), guardada nas preferências (`paginas`). É o `.uno:ViewLayout` (`ViewLayout.Columns`, `ViewLayout.BookMode`), sondado na Fase 2: com 3 colunas, o documento fica com 3 páginas de largura, e o `DocumentView` não precisa mudar (a área pedida ao motor continua sendo a visível).
+- **Em "Várias", as colunas saem do zoom e da largura da área**: o quanto cabe de páginas (a largura da régua do motor mais o espaço de 284 twips). O cálculo roda quando o `DocViewport` muda, e o motor só recebe o comando quando o número muda.
+- **O zoom mínimo caiu de 50 % para 20 %**, para caber o capítulo.
+- **A régua vertical some** com mais de uma coluna (não há uma pilha só); a horizontal segue a primeira coluna.
+- **A Estrutura** são os títulos da cópia temporária (D-044), com o nível. A página de cada título vem das quebras que o LibreOffice escreve no ODT (`text:soft-page-break`): o título atual é o último que começa na página do cursor ou antes. É uma aproximação: a página é a da última cópia.
+- **A cópia só se refaz ao vivo com a Estrutura aberta**: uma pausa de 2 s na digitação refaz a cópia; com o painel fechado, nenhuma (ninguém paga pelo que não vê). Abrir o painel depois de editar refaz na hora.
+- **Ir para um título** é a busca do texto dele, com maiúsculas: a 24.2 não tem um comando de ir para um título pela LOK. O título fica selecionado. Dois títulos com o mesmo texto levam ao próximo depois do cursor.
+
+## D-048 · O modo zen: tela cheia do GTK, Sépia, e o foco por faixa de linhas
+
+- **A tela cheia é a do GTK** (`gtk_window_fullscreen`, pela porta `AppWindow`). Ela é de verdade: cobre o painel do sistema, e o gerenciador de janelas devolve o tamanho de antes ao sair.
+- **O Esc sai do zen** por um tratador do `HardwareKeyboard` que só existe enquanto o zen está aberto. Assim, os usos que o Esc já tinha no editor continuam iguais fora do zen.
+- **O papel padrão do zen é o Sépia**, um tema novo e completo (também escolhível para a interface). O papel do zen fica nas preferências, separado do tema da interface. O modo zen em si não é guardado: o Quill sempre abre fora dele.
+- **O foco escurece por faixa de linhas** (2 acima e 2 abaixo do cursor), e não pelo parágrafo. O retângulo do parágrafo viria dos callbacks de acessibilidade do motor, que custam memória e trabalho a cada tecla. Eles ficam para a Etapa 9, ligados só para quem usa leitor de tela.
+- **Nada se refaz sem precisar:**
+  - a barrinha de opções usa um `Timer` e um `ValueNotifier`;
+  - o relógio da sessão muda uma vez por minuto e só refaz o rótulo;
+  - a máquina de escrever só rola o Flutter.
+
+## D-049 · A interface que respira: uma etapa nova antes de "ocupado"
+
+**O retorno.** O Francisco testou a casca das Etapas 2 a 5 e achou os comandos densos, mal distribuídos no Início e difíceis de ver e de clicar. A interface não aproveitava as telas grandes (nem maximizada), e os menus eram pobres. Ele mandou capturas do OnlyOffice como referência.
+
+**A decisão.** Uma Etapa 7 nova, "a interface que respira" (`docs/fase2b/etapa-7-espaco.md`). "Ocupado sem janelas" vira a 8 e "acessibilidade" a 9. Ela vem antes porque é o que ele sente a cada minuto de uso. Seguimos os padrões de layout do OnlyOffice e do Office, sem copiar a cara.
+
+**O que muda:**
+- **Na densidade padrão:** de 32 para 36 px, com texto de 14 px. O desenho do Claude Design pedia 32 px "como o Google Docs", mas o Docs tem poucos comandos por linha, e a nossa faixa tem muitos.
+- **Na faixa:** os grupos passam a ter quatro tamanhos, do grande com nome ao recolhido num menu, escolhidos pela largura. É o que o Office faz desde 2007, e resolve ao mesmo tempo a densidade, a distribuição e as telas grandes e pequenas.
+- **No menu de contexto:** passa a ser do Quill, com as sugestões do motor dentro dele. Antes era só o que o motor mandava (D-033).
+- **No Arquivo:** vira bastidores na janela inteira, e as Preferências nascem ali.
+
+**O que não muda:** os comandos continuam saindo do `CommandRegistry` (o Clássico 97 continua com os mesmos), e só a seção visível é construída.
+
+## D-050 · Uma busca só: o texto e os comandos no mesmo campo
+
+**O retorno.** O Francisco achou confuso ter "Pesquisar comandos" e "Localizar" lado a lado, com a mesma lupa. Escolheu uma busca só.
+
+**Como ficou:**
+- **Um campo,** na ponta direita da fileira de abas: "Pesquisar no texto e nos comandos". O Ctrl+L, o Ctrl+F, o Ctrl+K e o botão Localizar da faixa abrem esse campo.
+- **Duas seções nos resultados:**
+  - "No documento": as ocorrências, com o trecho em volta (o achado em negrito) e a página, e a contagem;
+  - "Comandos": como a antiga paleta.
+- **O último item** é "Localizar e substituir, com opções…". Ele abre o painel com a palavra digitada. O painel continua no Ctrl+H/Ctrl+U e no trilho, que agora se chama "Localizar e substituir".
+
+**De onde vêm as ocorrências:**
+- **A cópia temporária** (D-044) é feita na primeira busca no texto e apagada quando a busca fecha. A busca é modal, e o documento não muda enquanto ela está aberta, então uma cópia basta.
+- **A cada pausa de 250 ms** na digitação, a cópia é lida num isolate: o texto do livro nunca fica na memória do app, e só as primeiras 50 ocorrências voltam.
+- **A página** sai das quebras que o LibreOffice escreve na cópia (`text:soft-page-break`). Ela foi conferida no capítulo de 30 páginas: 29 quebras.
+
+**Ir a uma ocorrência** é uma busca por expressão regular com o contexto: `(?<=antes)achado(?=depois)`. O lookbehind e o lookahead do ICU foram sondados no `lok_script` (24.2). A busca seleciona só a ocorrência pedida, mesmo com outras iguais antes dela, e dá a volta do fim para o começo sozinha. A integração confere o salto a uma ocorrência da página 5 ou mais.
+
+## D-051 · Abas de documentos, leves: só o ativo (e os não salvos) no motor
+
+**O pedido.** O Francisco quer abrir documentos em abas.
+
+**As opções que ele viu:**
+- **Abas completas:** todos os documentos carregados no motor. Seria ~50 MB por capítulo de 30 páginas (o bench: 180 MB vazio, 230 MB com o capítulo), e 10 capítulos passariam de 500 MB.
+- **Abas leves:** só o documento ativo carregado.
+- **Esperar o Fichário** da Fase 3.
+
+**A escolha: abas leves.**
+- **O que fica guardado:** uma aba inativa é só o caminho e a posição (o cursor, a rolagem e o zoom). Trocar de aba reabre o documento, o que leva ~0,3 s num capítulo (o `abrir_ms` do bench).
+- **Documento não salvo:** fica carregado até ser salvo ou fechado, porque descartar alterações ao trocar de aba seria inaceitável. Para isso, o kit passa a aceitar mais de um documento. A sonda vem antes: dois documentos no mesmo processo LOK na 24.2, e quanto custa o segundo.
+- **Na Fase 3,** os capítulos abertos do Fichário usam as mesmas abas.
+
+## D-052 · A página e as palavras não refazem a faixa; o "+9,4 MB depois de digitar" era ruído
+
+**A investigação.** A medida dos passos 1 a 3 da Etapa 7 deu +9,4 MB de memória anônima depois de digitar. O `tool/mapas.py` e o `tool/ab.py` passaram a separar também a etapa "depois de rolar" e a mostrar os grupos de mapeamento em cada etapa com o capítulo. Com o mesmo código, três A/B de 3 rodadas deram, depois de digitar, +9,4, −1,2 e +5,6 MB. A diferença está toda no grupo `anon`, onde o Dart guarda o heap dele: o número depende de quando o coletor rodou perto da amostra. O `heap` (malloc) fica estável em +2 MB, e o RSS a mais é quase todo de arquivo (fontes +2,6 MB, libmergedlo +3 MB), que o kernel devolve.
+
+**O desperdício que apareceu no caminho.** A página atual e a contagem de palavras chegam como estados do motor. Elas mudam a cada página na rolagem e a cada tecla, e cada uma subia a `stateRevision`, refazendo a faixa, o painel Formatar e o trilho. Só a barra de status e a Estrutura as leem.
+
+**A decisão:**
+- **`.uno:StatePageNumber` e `.uno:StateWordCount`** (os `statusOnlyStates` do `DocumentController`) sobem só a nova `statusRevision`. Qualquer outra mudança sobe as duas.
+- **A barra de status e o painel da esquerda** são memoizados pela chave com a `statusRevision`. A faixa, o trilho e o painel Formatar continuam na `stateRevision`.
+- **Na hora de medir** uma etapa, o que conta é o grupo `heap` e a tendência de mais de uma rodada do A/B. Uma variação do `anon` de ±5 MB entre rodadas, sozinha, é o coletor do Dart.
+
+**O resultado** (A/B de 3 rodadas contra a Fase 2, com a correção): anônima +3,3 MB com o capítulo, +1,0 depois de rolar e +5,6 depois de digitar; rolar a 59,5 fps, tecla → ladrilho p95 9,4 ms, abrir 277 ms. O teste: `fase2_controller_test` ("a página e as palavras sobem só a revisão da barra de status").
+
+## D-053 · A sonda das abas: dois documentos no mesmo motor funcionam, e o segundo custa ~4 MB
+
+O `lok_two_docs` (D-051, passo 9 da Etapa 7) abriu dois capítulos de 30 páginas no mesmo processo do LibreOffice 24.2. A entrada, os callbacks, os ladrilhos e o salvar de cada um ficaram separados, sem `setView`. O segundo capítulo custou +3,9 MB de memória anônima; fechar e reabrir levou ~90 ms e não deixou memória para trás depois da terceira vez. Os números estão no `docs/fase2b/etapa-7-espaco.md`.
+
+**Consequência:** o kit pode guardar vários documentos (um `LibreOfficeKitDocument` por aba, todos na thread `pqk-kit`). A suposição do D-051 (~50 MB por capítulo) estava errada; ela era o custo do Writer subir. A escolha entre manter as abas carregadas ou reabrir ao trocar volta para o Francisco.
+
+## D-054 · Abas de documentos: todas carregadas no motor, com um limite
+
+**A escolha.** Com a sonda (D-053), o Francisco trocou as abas leves do D-051 por abas todas carregadas: a troca é na hora, e cada documento guarda o próprio desfazer.
+
+**Como fica no kit:**
+- O motor guarda vários `LibreOfficeKitDocument`, cada um com um número, e só um ativo. Todas as chamadas (teclas, comandos, salvar, ladrilhos) vão ao ativo.
+- O callback de cada documento sabe o número dele. O que chega de um documento que não é o ativo é descartado na thread do kit: ele não recebe entrada, então não tem nada a dizer.
+- `pqk_open` abre mais um documento e o ativa, sem fechar os outros. `pqk_activate(id)` troca o ativo: limpa as vagas de ladrilho e repinta. `pqk_close_document(id)` fecha um só.
+- O `PQK_EVENT_OPENED` e o novo `PQK_EVENT_ACTIVATED` levam o número e o tamanho, e o `PQK_EVENT_CLOSED` leva o número.
+
+**Como fica no Dart:**
+- O `DocumentController` continua um só, a fachada do documento ativo, para a interface não precisar trocar de ouvinte. O estado de cada documento (os estados do motor, o cursor, a estrutura, o zoom, a posição da rolagem) fica num `DocTab`.
+- Os eventos do motor vão para o `DocTab` que o motor tem ativo. A interface mostra o da aba escolhida, que passa a ser o do motor quando chega o `DocumentActivated`. Assim, um evento atrasado do documento anterior não cai no novo.
+
+**Os fluxos:**
+- Novo, Abrir e os recentes abrem numa aba nova. Um documento novo, vazio e sem alterações dá lugar ao que se abre. Um arquivo que já está aberto só ganha o foco.
+- Fechar a aba pergunta se há alterações, como fechar o documento. Sair pergunta por aba, cada uma com o foco.
+
+**O limite:** 8 abas carregadas. Passou disso, a aba salva usada há mais tempo é fechada no motor e guarda só o caminho, o zoom e a rolagem. Ao voltar, ela reabre (~0,3 s). Uma aba com alterações nunca é fechada assim. 8 capítulos de texto custam uns 30 MB no motor.
+
+**A fileira de abas** fica acima da faixa e aparece só com 2 abas ou mais, para não gastar altura com um documento só. Os atalhos: Ctrl+Tab e Ctrl+Shift+Tab trocam, Ctrl+W fecha, e o clique do meio também fecha.
+
+**O que ficou de fora ou não foi conferido:**
+- **O Ctrl+Tab é das abas.** Numa tabela, ele não insere mais uma tabulação (o Writer usa o Ctrl+Tab para isso). Se fizer falta, a tabulação na tabela pode ir para outro atalho.
+- **O papel nas abas fora da tela:** o `.uno:ChangeTheme` vai ao documento da tela. Ao voltar a outra aba, o motor repinta tudo, e na 24.2 o esquema de cores parece ser do programa inteiro, mas isso não foi conferido com duas abas e uma troca de tema no meio.
+- **O motor, ao abrir,** entrega o `OPENED` antes de qualquer callback do documento novo: os que chegam antes ficam guardados e saem logo depois dele (`LokEngine::Doc::early`). Sem isso, o Dart, que descarta os eventos de documento até o `OPENED`, perdia o cursor.
+- **Os testes:** `test/unit/tabs_test.dart` (o controlador), `test/unit/workspace_test.dart` (os fluxos), `test/widget/fase2b_tabs_test.dart` (a fileira e os atalhos) e o passo 13b da integração (três documentos no motor, o desfazer de cada um, salvar o certo, fechar a do meio).
+
+## D-055 · A galeria de estilos do Início desce com o ▾, com as prévias
+
+**O retorno.** O Francisco notou que os estilos do Início não abriam como lista: eram só os cartões que cabiam e, ao lado, um ícone que abria "Gerenciar estilos" numa janela. Ele escolheu a galeria com as prévias, que desce.
+
+**Como ficou:**
+- **Ao lado dos cartões,** o ▾ ("Mais estilos") desce a galeria inteira por cima da galeria da faixa, a partir do canto dela, como o "Mais" do Word. Ela tem os mesmos cartões com as prévias da cópia temporária, a busca, Parágrafo ou Caractere, "Do livro" e "Do LibreOffice", e Novo e Atualizar.
+- **Escolher um estilo aplica e fecha.** Esc ou o clique fora também fecham.
+- **O corpo é o mesmo da janela "Gerenciar estilos…"** (`StylesDialog`, com `dropdown: true`): um widget só, sem lista duplicada na memória. Ele só existe enquanto a lista está aberta.
+- **"Gerenciar estilos…"** saiu do lado da galeria e ganhou um botão com nome na aba Estilos, ao lado de "Novo estilo". Continua nos menus do Clássico 97, no painel Estilos e na busca.
+
+**O teste:** `fase2b_previews_test` ("o ▾ da galeria do Início desce todos os estilos; escolher aplica e fecha").
+
+## D-056 · A contagem de palavras às vezes não vem ao abrir: vale a da cópia
+
+**O que se viu.** A integração passou a falhar no passo 2 ("página, palavras, fontes") durante as abas. O LibreOffice 24.2 nem gera a `.uno:StateWordCount` depois de abrir o capítulo, em 60 s; o resto (a página, as fontes, os estados) chega. Abrir o capítulo direto no app, sem o bench, deu o mesmo: a barra de status ficava sem as palavras.
+
+**A causa não é do Quill.** Uma bisseção com a Fase 2 (ac8a2d6) numa `git worktree` pareceu apontar arquivos (o motor de várias abas, depois só o `quill_kit_api.h`, que só declara funções). Repetida em A-B-A, a mesma configuração passou e falhou. É uma corrida dentro do LibreOffice: a contagem sai de uma tarefa de fundo (o Idle de estatísticas do Writer), que às vezes não avisa. A Fase 2 também está sujeita a ela, só que passou mais vezes.
+
+**A decisão:** enquanto o motor não manda a contagem, a barra de status usa a da cópia temporária que o Quill já faz ao abrir e ao salvar (D-044): o LibreOffice grava `meta:document-statistic` com as palavras e os caracteres (no capítulo, os mesmos 21.069 da barra). O `FodtSnapshot` lê o `words` e o `characters`; o `DocumentController.wordCount` usa o do motor quando ele vem e o da cópia até lá. Não custa memória nem trabalho a mais: a cópia já era lida num isolate.
+
+**O limite:** se o motor não mandar nada, a contagem da cópia fica parada até a próxima cópia (salvar, mudar um estilo, ou uma pausa de 2 s com a Estrutura aberta). O teste: `fodt_test` ("as palavras e os caracteres vêm do meta:document-statistic") e `fase2_controller_test` ("sem a contagem do motor, as palavras vêm da cópia").
+
+
+## D-057 · Os painéis na largura que têm: ações na largura toda e cores numa linha
+
+**O retorno.** No Formatar e no painel Estilos, as ações eram chips de larguras diferentes, que cortavam os nomes longos ("Novo estilo a partir da se…"). As amostras de cor (36 px cada) não cabiam na largura do painel: a última cor caía sozinha na linha de baixo, e "Limpar formatação" ficava solta embaixo do realce.
+
+**Como ficou:**
+- **`PanelAction`** (molécula): um botão com contorno na largura toda do painel, com o ícone e o nome do comando, e a dica com o nome inteiro e o atalho. No Formatar: "Atualizar estilo pela seleção", "Novo estilo a partir da seleção…" e "Limpar formatação"; no painel Estilos: "Novo estilo" e "Gerenciar estilos…".
+- **`SwatchRow`** (molécula): a fileira de cores divide a largura que tem, e cada botão encolhe até 28 px para tudo caber numa linha. Abaixo disso, quebra a linha como antes.
+- **A barra de status:** os campos do documento ficam à esquerda; a mensagem ("Salvo"), no meio, só quando existe; a vista (memória, disposição das páginas e zoom), à direita. O seletor da disposição usa o `WSegmented` compacto, na altura da barra.
+
+**O teste:** `fase2b_panels_test` (em 1366 e 1920 px: cada fileira de cores numa linha, e as três ações com a mesma largura).
+
+## D-058 · Rodapé office profissional e equilíbrio dos painéis
+
+**O retorno.** As melhorias de espaçamento no rodapé precisavam fechar tanto em tela pequena (sem estourar ou truncar campos) quanto em tela maximizada (com o controle deslizante de zoom ativo nos tamanhos padrão de laptop e desktop). Os painéis laterais precisavam de respiro simétrico e larguras proporcionais para não cortar ações e títulos.
+
+**Como ficou:**
+- **No rodapé (`StatusBar`):**
+  - O limiar do controle deslizante de zoom (`WSlider`) baixou de 1500 para 1050 px: agora telas como 1366×768 (o laptop maximizado) e 1080p exibem o slider completo, enquanto janelas estreitas (< 1050 px) usam o modo compacto (`[-] 100% [+]`) sem poluição.
+  - Priorização responsiva dos campos em telas estreitas: página e contagem de palavras têm prioridade 1 (sempre visíveis sem reticências desnecessárias); idioma e status (somente leitura, modificado) entram a partir de 750 px; estilo entra a partir de 980 px.
+  - Campos clicáveis (`_StatusButton`) com destaque suave ao passar o mouse: clicar na página abre o painel Estrutura; clicar no estilo abre o painel Estilos.
+  - Borda superior de 1 px separando o rodapé da folha e dos painéis.
+- **Nos painéis laterais (`SidePanel`):**
+  - `SidePanel` com margens horizontais balanceadas (16 px de cada lado) e divisória sutil na borda interna, definindo o limite contra a área da página.
+  - Os painéis Estrutura e Estilos passaram de 240 para 280 px de largura, dando espaço natural para títulos longos de capítulos e para as ações ("Novo estilo a partir da seleção…").
+  - O `WSegmented` ganhou o modo `expanded: true` no topo do painel Formatar, distribuindo as seções proporcionalmente na largura total.
+  - O `WDropdown` de estilos no Formatar acompanha a largura total via `LayoutBuilder`, alinhando-se perfeitamente com os botões `PanelAction`.
+
+**Os testes:** `fase2b_space_test` (testes de rodapé em 800×600, 1024×768, 1366×768, 1920×1080 e 2560×1440, mais cliques nos campos) e `fase2b_panels_test` (largura de 280 px dos painéis e alinhamento de ações e dropdown).
+
+## D-057 · O respiro dos painéis
+
+**O retorno.** O Francisco achou que o maior problema dos painéis (Formatar, Estilos) era a falta de respiro entre os elementos: 4 px entre um controle e o seguinte, 2 px entre os ícones e as cores, 8 px de margem. O rótulo de um grupo ("Cor da fonte") ficava tão perto do controle de cima quanto do seu.
+
+**Como ficou** (só nos painéis; a faixa tem o layout medido dela, D-049):
+- **A `InspectorSection`:** 12 px entre um controle e o seguinte, e 4 px entre o rótulo de um grupo e o controle dele. O rótulo fica colado no que nomeia e longe do grupo de cima. Há 12 px depois do título e 20 px no fim da seção.
+- **O `SidePanel`:** 20 px de margem à esquerda e 12 px à direita.
+- **Os ícones, os chips e as cores:** 4 px entre eles.
+- **No painel Estilos:** a lista com 4 px entre os itens, e as ações com 12 px em cima e 20 px embaixo.
+
+## D-058 · A régua segue a página do cursor; a vista da barra de status colada à direita
+
+- **A régua no modo Livro e no Várias:** o callback 35 manda o `pageOffset`, onde começa a página do cursor, em centésimos de mm (sondado na 24.2: 501 com uma página por linha, que é o vão entre as páginas, e 21502 no Livro, com a primeira página na coluna da direita). A régua horizontal fica em "área da página + (`pageOffset` − vão)": com uma página por linha não muda nada, e no Livro e no Várias ela acompanha a página do cursor. Antes, ela ficava sempre na primeira coluna, longe da página.
+- **A barra de status:** os campos do documento e a mensagem ficam numa fileira que ocupa toda a sobra, e a vista (memória, disposição, zoom) fica colada à direita. Com os campos flexíveis direto na fileira de fora, a parte que eles não usavam ficava vazia no fim da barra.
+- **O trilho:** "Localizar", curto (cortava "Localizar e substituir"). O nome inteiro e o atalho ficam na dica.
+
+## D-059 · A régua no modo Livro: a página inteira e a régua vertical por fileira
+
+- **O `pageOffset` é a posição da página no documento, e o vão não se desconta.** Os dois valores sondados na 24.2 batem assim: 501 (o vão de 284 twips) com uma página por linha, e 21502 (o vão mais a largura de uma página) no Livro, em que as duas páginas de um par se encostam. O D-058 descontava o vão, e a régua ficava 284 twips à esquerda da página em todas as disposições (19 px a 100 %); a margem da régua não batia com a do papel.
+- **A borda direita da régua sai da esquerda** (`pageLeft + largura`). Antes, ela ficava na primeira coluna: com o cursor numa página da direita, a faixa se fechava, e a régua sumia.
+- **A régua vertical mede fileiras, não páginas** (`pageRows`): uma coluna, uma página por fileira; várias, `colunas` por fileira; no Livro, a primeira sozinha e depois os pares. Antes, ela se desligava com mais de uma coluna. A altura sai de `(altura − vão) / fileiras − vão`, a mesma pilha do D-036.
+- **O `pageSizeMm100` (o paisagem) segue as fileiras,** e, com mais de uma coluna, tira a largura da régua do motor. Sem isso, virar a página no Livro mandaria a largura de duas páginas.
+- **Não conferido:** a pilha das fileiras no Livro e no Várias (o vão entre elas) ficou por conta da mesma regra do D-036; o `lok_script` não mostrou a mudança de tamanho depois do `.uno:ViewLayout`. A conferência é a olho, no app.
+
+## D-060 · As marcas da régua no desenho do Office, refinado
+
+- **Escolhido pelo Francisco entre três** (Office refinado, Docs e alças Material): a ampulheta do Word, que quem escreve livro já conhece. Em cima, a primeira linha; embaixo, o recuo esquerdo com a caixinha (que leva a primeira linha junto); à direita, o triângulo do recuo direito.
+- **O desenho:** 14 px de largura (antes 10), preenchidas na cor do papel com contorno de 1 px, cantos arredondados no estilo moderno e retos no bisel do Clássico 97. Cabem inteiras na régua (antes saíam da borda e pareciam cortadas). Com o foco do teclado ou arrastando, o fundo vai para o `accentContainer` e o contorno para o `accent`.
+- **A área de clique** acompanha: 10 px para cada lado da marca (antes 9).
+
+## D-061 · O menu de contexto do Quill, com os submenus Estilo e Parágrafo
+
+- **O menu é um `MenuAnchor`** numa camada do `Overlay` que só existe enquanto ele está aberto (antes, o `showMenu`, sem submenus). Os itens são os mesmos dos menus de comandos da faixa (`commandMenuItems`): ícone, nome, atalho à direita. Teclado e leitor de tela vêm do `MenuAnchor`.
+- **A ordem:** as sugestões de ortografia do motor (com o "Ignorar"); Recortar, Copiar, Colar; os de tabela ou de imagem, quando é o caso; **Estilo ›** (Novo a partir da seleção, Atualizar, Gerenciar); **Parágrafo ›** (o fluxo entre as páginas); Limpar formatação; Selecionar tudo.
+- **O fluxo do parágrafo, sondado na 24.2 com o `lok_script`** e conferido no XML salvo:
+  - `.uno:ParaKeepTogether` com `true`/`false` liga e desliga o `fo:keep-with-next` ("Manter com o próximo");
+  - `.uno:ParaSplit` com `false`/`true` liga e desliga o `fo:keep-together` ("Manter as linhas juntas");
+  - sem o argumento, os dois não fazem nada (não alternam);
+  - o motor não diz o estado (o `values` volta vazio, e não há callback de estado);
+  - o `.uno:ParaWidows` com valor não mudou nada; o `.uno:PageBreak` (a quebra antes, como atributo) também não.
+- **Por isso, pares, sem a marca de ligado** (escolhido pelo Francisco): "Manter com o próximo" e "Permitir separar do próximo", "Manter as linhas juntas" e "Permitir dividir as linhas". Cada item faz uma coisa só. A "quebra de página antes" fica como "Quebra de página" (inserir, o que já existia).
+- **Os quatro são comandos do registro:** entram no menu Formatar do Clássico 97 e na paleta Ctrl+K.

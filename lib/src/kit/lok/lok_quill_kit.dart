@@ -45,7 +45,7 @@ class LokQuillKit implements QuillKit {
   @override
   void start() {
     _sub ??= _native.events.listen((e) {
-      final event = translate(e.type, e.payload);
+      final event = _copyOrSave(translate(e.type, e.payload));
       if (event != null) _events.add(event);
     });
     _native.init(installPath: installPath, profileUrl: profile.url, tileSlots: tileSlots);
@@ -66,6 +66,12 @@ class LokQuillKit implements QuillKit {
 
   @override
   void close() => _native.close();
+
+  @override
+  void activate(int id) => _native.activate(id);
+
+  @override
+  void closeDocument(int id) => _native.closeDocument(id);
 
   @override
   void setViewport(int scaleMilli, Rect v) =>
@@ -100,7 +106,32 @@ class LokQuillKit implements QuillKit {
   void uno(String command, [String argsJson = '']) => _native.uno(command, argsJson);
 
   @override
-  void saveAs(String path, String format) => _native.saveAs(path, format, 'TakeOwnership');
+  void saveAs(String path, String format) {
+    _saves.add(null);
+    _native.saveAs(path, format, 'TakeOwnership');
+  }
+
+  @override
+  List<int> fontClasses(List<String> families) => _native.fontClasses(families);
+
+  @override
+  void exportCopy(String path, String format) {
+    _saves.add(path);
+    _native.saveAs(path, format, '');
+  }
+
+  /// Os salvamentos em andamento, na ordem (a fila do kit é uma só): null é
+  /// um salvamento de verdade; um caminho, uma cópia. O núcleo responde aos
+  /// dois com o mesmo evento.
+  final _saves = <String?>[];
+
+  /// O fim de uma cópia vira [CopyExported], e não um salvamento.
+  KitEvent? _copyOrSave(KitEvent? e) {
+    if (e is! DocumentSaved && e is! SaveFailed) return e;
+    final copy = _saves.isEmpty ? null : _saves.removeAt(0);
+    if (copy == null) return e;
+    return CopyExported(copy, ok: e is DocumentSaved);
+  }
 
   @override
   void extTextInput(String text, {required bool commit}) {
@@ -159,13 +190,15 @@ class LokQuillKit implements QuillKit {
       case PqkEvent.PQK_EVENT_INIT_FAILED:
         return KitFailed(payload);
       case PqkEvent.PQK_EVENT_OPENED:
-        return DocumentOpened(parseOpened(payload));
+        return DocumentOpened(parseOpened(payload), id: parseDocumentId(payload));
+      case PqkEvent.PQK_EVENT_ACTIVATED:
+        return DocumentActivated(parseDocumentId(payload), parseOpened(payload));
       case PqkEvent.PQK_EVENT_OPEN_FAILED:
         return DocumentOpenFailed(payload);
       case PqkEvent.PQK_EVENT_TILE:
         return parseTilePlaced(payload);
       case PqkEvent.PQK_EVENT_CLOSED:
-        return const DocumentClosed();
+        return DocumentClosed(int.tryParse(payload.trim()) ?? 0);
       case PqkEvent.PQK_EVENT_SAVED:
         return DocumentSaved(payload);
       case PqkEvent.PQK_EVENT_SAVE_FAILED:
@@ -196,6 +229,11 @@ class LokQuillKit implements QuillKit {
         return SearchNotFound(payload);
       case LibreOfficeKitCallbackType.LOK_CALLBACK_CONTEXT_MENU:
         return ContextMenuReady(parseContextMenu(payload));
+      case LibreOfficeKitCallbackType.LOK_CALLBACK_RULER_UPDATE:
+        return switch (parseRuler(payload)) {
+          final r? => RulerUpdated(r),
+          null => OtherKitEvent(type, payload),
+        };
       case LibreOfficeKitCallbackType.LOK_CALLBACK_GRAPHIC_SELECTION:
         return GraphicSelected(parseGraphicSelection(payload));
       case LibreOfficeKitCallbackType.LOK_CALLBACK_TABLE_SELECTED:

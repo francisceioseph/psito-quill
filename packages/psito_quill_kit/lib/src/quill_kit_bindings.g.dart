@@ -23,6 +23,14 @@ class QuillKitBindings {
     ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName) lookup,
   ) : _lookup = lookup;
 
+  void pqk_activate(int id) {
+    return _pqk_activate(id);
+  }
+
+  late final _pqk_activatePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int32)>>('pqk_activate');
+  late final _pqk_activate = _pqk_activatePtr.asFunction<void Function(int)>();
+
   void pqk_close() {
     return _pqk_close();
   }
@@ -31,6 +39,17 @@ class QuillKitBindings {
     'pqk_close',
   );
   late final _pqk_close = _pqk_closePtr.asFunction<void Function()>();
+
+  void pqk_close_document(int id) {
+    return _pqk_close_document(id);
+  }
+
+  late final _pqk_close_documentPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int32)>>(
+        'pqk_close_document',
+      );
+  late final _pqk_close_document = _pqk_close_documentPtr
+      .asFunction<void Function(int)>();
 
   void pqk_command_values(ffi.Pointer<ffi.Char> command) {
     return _pqk_command_values(command);
@@ -64,6 +83,21 @@ class QuillKitBindings {
       >('pqk_ext_text_input');
   late final _pqk_ext_text_input = _pqk_ext_text_inputPtr
       .asFunction<void Function(int, ffi.Pointer<ffi.Char>)>();
+
+  ffi.Pointer<ffi.Char> pqk_font_classes(
+    ffi.Pointer<ffi.Char> families_by_line,
+  ) {
+    return _pqk_font_classes(families_by_line);
+  }
+
+  late final _pqk_font_classesPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>)
+        >
+      >('pqk_font_classes');
+  late final _pqk_font_classes = _pqk_font_classesPtr
+      .asFunction<ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>)>();
 
   void pqk_free_string(ffi.Pointer<ffi.Char> s) {
     return _pqk_free_string(s);
@@ -275,6 +309,17 @@ class QuillKitBindings {
           ffi.Pointer<ffi.Char>,
         )
       >();
+
+  void pqk_set_fullscreen(int on) {
+    return _pqk_set_fullscreen(on);
+  }
+
+  late final _pqk_set_fullscreenPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int32)>>(
+        'pqk_set_fullscreen',
+      );
+  late final _pqk_set_fullscreen = _pqk_set_fullscreenPtr
+      .asFunction<void Function(int)>();
 
   void pqk_set_graphic_selection(int type, int x, int y) {
     return _pqk_set_graphic_selection(type, x, y);
@@ -1231,6 +1276,7 @@ sealed class PqkEvent {
   static const PQK_EVENT_CLOSED = 10007;
   static const PQK_EVENT_COMMAND_VALUES = 10008;
   static const PQK_EVENT_TEXT_SELECTION = 10009;
+  static const PQK_EVENT_ACTIVATED = 10010;
   static const PQK_EVENT_LUA_LOG = 10100;
   static const PQK_EVENT_LUA_DONE = 10101;
 }

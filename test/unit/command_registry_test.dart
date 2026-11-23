@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:psito_quill/l10n/gen/app_localizations.dart';
 import 'package:psito_quill/src/commands/command_registry.dart';
 import 'package:psito_quill/src/commands/commands_document.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../support/harness.dart';
 
@@ -11,7 +12,7 @@ void main() {
   Command cmd(String id, VoidCallback run, {bool Function()? canRun}) => Command(
         id: id,
         label: id,
-        icon: Icons.circle,
+        icon: Symbols.circle_rounded,
         run: run,
         canRun: canRun,
         shortcuts: const {

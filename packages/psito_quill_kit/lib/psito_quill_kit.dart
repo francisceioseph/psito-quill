@@ -85,7 +85,9 @@ class NativeQuillKit {
   int textureId(int slot) => _b.pqk_tile_texture_id(slot);
 
   void open(String path) => _withString(path, _b.pqk_open);
+  void activate(int id) => _b.pqk_activate(id);
   void close() => _b.pqk_close();
+  void closeDocument(int id) => _b.pqk_close_document(id);
 
   void setViewport(int scaleMilli, int x, int y, int w, int h) =>
       _b.pqk_set_viewport(scaleMilli, x, y, w, h);
@@ -134,7 +136,20 @@ class NativeQuillKit {
 
   void setWindowTitle(String title) => _withString(title, _b.pqk_set_window_title);
 
+  void setFullscreen(bool on) => _b.pqk_set_fullscreen(on ? 1 : 0);
+
   int get residentBytes => _b.pqk_resident_bytes();
+
+  /// As classes de cada fonte pelo fontconfig (1 mono, 2 com serifa, 4 sem
+  /// serifa, 0 não instalada). Síncrona e sem a thread do kit: não toca no
+  /// LibreOffice. Uma chamada para a lista toda.
+  List<int> fontClasses(List<String> families) => using((arena) {
+        final out = _b.pqk_font_classes(families.join('\n').toNativeUtf8(allocator: arena).cast());
+        final text = out == nullptr ? '' : out.cast<Utf8>().toDartString();
+        _b.pqk_free_string(out);
+        final parts = text.isEmpty ? const <String>[] : text.split('\n');
+        return [for (var i = 0; i < families.length; i++) i < parts.length ? int.tryParse(parts[i]) ?? 0 : 0];
+      });
 
   KeyLatency keyLatency() => using((arena) {
         final p50 = arena<Int64>(), p95 = arena<Int64>(), max = arena<Int64>();

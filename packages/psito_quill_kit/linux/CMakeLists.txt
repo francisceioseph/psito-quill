@@ -11,6 +11,8 @@ set(PLUGIN_NAME "psito_quill_kit_plugin")
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LUA REQUIRED IMPORTED_TARGET lua5.4)
+# O fontconfig classifica as fontes para os filtros da lista (o GTK já o traz).
+pkg_check_modules(FONTCONFIG REQUIRED IMPORTED_TARGET fontconfig)
 # O LibreOfficeKit.h vem do libreofficekit-dev. A biblioteca do LO é aberta em
 # tempo de execução (lok_init faz dlopen), então não há link com ela.
 find_path(LOK_INCLUDE_DIR LibreOfficeKit/LibreOfficeKit.h REQUIRED)
@@ -21,6 +23,7 @@ list(APPEND PLUGIN_SOURCES
   "core/tile_cache.cc"
   "core/lok_engine.cc"
   "core/lua_sandbox.cc"
+  "core/font_info.cc"
 )
 
 add_library(${PLUGIN_NAME} SHARED ${PLUGIN_SOURCES})
@@ -33,6 +36,6 @@ target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL)
 
 target_include_directories(${PLUGIN_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(${PLUGIN_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}" "${LOK_INCLUDE_DIR}")
-target_link_libraries(${PLUGIN_NAME} PRIVATE flutter PkgConfig::GTK PkgConfig::LUA ${CMAKE_DL_LIBS})
+target_link_libraries(${PLUGIN_NAME} PRIVATE flutter PkgConfig::GTK PkgConfig::LUA PkgConfig::FONTCONFIG ${CMAKE_DL_LIBS})
 
 set(psito_quill_kit_bundled_libraries "" PARENT_SCOPE)

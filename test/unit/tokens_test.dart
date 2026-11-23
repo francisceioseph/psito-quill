@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:psito_quill/src/ui/tokens/themes/themes.dart';
+import 'package:psito_quill/src/ui/tokens/tokens.dart';
 
 double _luminance(Color c) => c.computeLuminance();
 double contrast(Color a, Color b) {
@@ -20,6 +21,27 @@ void main() {
         expect(contrast(t.colors.onFrameMuted, t.colors.frame), greaterThanOrEqualTo(4.5));
         expect(contrast(t.colors.onAccent, t.colors.accent), greaterThanOrEqualTo(4.5));
       });
+
+      test('os pares do Material 3 são legíveis (4,5:1)', () {
+        final c = t.colors;
+        for (final (fg, bg, what) in [
+          (c.onAccentSoft, c.accentSoft, 'ligado'),
+          (c.onAccentContainer, c.accentContainer, 'destaque'),
+          (c.onTertiaryContainer, c.tertiaryContainer, 'aba de contexto'),
+          (c.onDangerContainer, c.dangerContainer, 'erro'),
+          (c.onFrameMuted, c.surfaceHighest, 'texto secundário no tom mais alto'),
+          (c.onFrame, c.surfaceLowest, 'campo'),
+        ]) {
+          expect(contrast(fg, bg), greaterThanOrEqualTo(4.5), reason: what);
+        }
+      });
+
+      if (t.component == ComponentStyle.modern) {
+        test('o contorno forte aparece na superfície (WCAG 1.4.11, 3:1)', () {
+          expect(contrast(t.colors.outline, t.colors.frame), greaterThanOrEqualTo(3));
+          expect(contrast(t.colors.accent, t.colors.frame), greaterThanOrEqualTo(3));
+        });
+      }
 
       test('tinta no papel com contraste de leitura longa (7:1)', () {
         expect(contrast(t.colors.paperInk, t.colors.paper), greaterThanOrEqualTo(7));

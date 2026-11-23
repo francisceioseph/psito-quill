@@ -54,20 +54,65 @@ void main() {
     expect(h.doc.path, '${h.dir.path}/novo.docx');
   });
 
-  test('alterações: Cancelar não troca de documento; Salvar salva antes', () async {
+  test('abas: novo e abrir não perguntam nada, cada um numa aba (D-054)', () async {
     final p = h.file('cap.odt');
     await h.workspace.openPath(p);
     h.doc.insertText('olá');
-    expect(h.doc.modified, isTrue);
+    h.workspace.onUnsaved = () async => fail('não devia perguntar');
+    await h.workspace.newDocument();
+    expect(h.doc.tabs, hasLength(2));
+    expect(h.doc.tabModified(h.doc.tabs.first), isTrue);
+  });
+
+  test('abrir um arquivo já aberto só traz a aba dele', () async {
+    final a = h.file('a.odt'), b = h.file('b.odt');
+    await h.workspace.openPath(a);
+    await h.workspace.openPath(b);
+    await h.workspace.openPath(a);
+    expect(h.doc.tabs, hasLength(2));
+    expect(h.doc.path, a);
+    expect(h.kit.opened, [a, b]);
+  });
+
+  test('fechar a aba com alterações: Cancelar fica; Salvar salva e fecha', () async {
+    final p = h.file('cap.odt');
+    await h.workspace.openPath(p);
+    await h.workspace.openPath(h.file('outro.odt'));
+    final cap = h.doc.tabs.first;
+    h.doc.activateTab(cap);
+    h.doc.insertText('olá');
+    h.doc.activateTab(h.doc.tabs.last);
 
     h.workspace.onUnsaved = () async => UnsavedChoice.cancel;
-    await h.workspace.newDocument();
-    expect(h.doc.path, p);
+    expect(await h.workspace.closeTab(cap), isFalse);
+    expect(h.doc.tabs, hasLength(2));
+    expect(h.doc.currentTab, cap, reason: 'a pergunta vem com a aba na tela');
 
     h.workspace.onUnsaved = () async => UnsavedChoice.save;
-    await h.workspace.newDocument();
+    expect(await h.workspace.closeTab(cap), isTrue);
     expect(h.kit.saved.single.$1, p);
-    expect(h.kit.opened.last, '');
+    expect(h.doc.tabs, hasLength(1));
+  });
+
+  test('sair pergunta por aba com alterações; Cancelar em uma não sai', () async {
+    await h.workspace.openPath(h.file('a.odt'));
+    h.doc.insertText('x');
+    await h.workspace.openPath(h.file('b.odt'));
+    await h.workspace.openPath(h.file('c.odt'));
+    h.doc.insertText('y');
+    final asked = <String?>[];
+    h.workspace.onUnsaved = () async {
+      asked.add(h.doc.path);
+      return asked.length == 1 ? UnsavedChoice.discard : UnsavedChoice.cancel;
+    };
+    expect(await h.workspace.requestExit(), isFalse);
+    expect(asked, [h.file('a.odt'), h.file('c.odt')]);
+    expect(h.doc.tabs, hasLength(3));
+
+    h.workspace.onUnsaved = () async => UnsavedChoice.discard;
+    expect(await h.workspace.requestExit(), isTrue);
+    expect(h.doc.tabs, isEmpty);
+    expect(h.kit.openIds, isEmpty);
   });
 
   test('sem ninguém para perguntar, nada se perde (cancela)', () async {

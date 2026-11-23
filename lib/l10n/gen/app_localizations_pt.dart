@@ -190,6 +190,16 @@ class AppLocalizationsPt extends AppLocalizations {
   String get prefShortcuts => 'Atalhos de teclado';
 
   @override
+  String get prefPrivacy => 'Privacidade';
+
+  @override
+  String get prefKeepRecents => 'Guardar a lista de arquivos recentes';
+
+  @override
+  String get prefPrivacyNote =>
+      'Nada sai deste computador: sem rede, sem telemetria, sem arquivo de log.';
+
+  @override
   String get schemeWordPt =>
       'Word em português (Ctrl+N negrito, Ctrl+B salvar)';
 
@@ -301,7 +311,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get commandReplace => 'Substituir';
 
   @override
-  String get commandPalette => 'Paleta de comandos';
+  String get commandPalette => 'Pesquisar';
 
   @override
   String get commandInspector => 'Painel Formatar';
@@ -538,10 +548,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get findNotFound => 'Nada encontrado';
 
   @override
-  String get paletteHint => 'Digite um comando';
+  String get paletteHint => 'Uma palavra do texto ou um comando';
 
   @override
-  String get paletteEmpty => 'Nenhum comando com esse nome';
+  String get paletteEmpty => 'Nada encontrado';
 
   @override
   String get inspectorTitle => 'Formatar';
@@ -861,4 +871,345 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get commandFilePanel => 'Recentes e preferências…';
+
+  @override
+  String get outlineTitle => 'Estrutura';
+
+  @override
+  String get outlineClose => 'Fechar a estrutura';
+
+  @override
+  String get outlineEmpty =>
+      'Os títulos do documento aparecem aqui (os estilos Título 1, 2 e 3).';
+
+  @override
+  String get railLabel => 'Painéis';
+
+  @override
+  String get stylesPanelClose => 'Fechar os estilos';
+
+  @override
+  String get ribbonStyles => 'Estilos';
+
+  @override
+  String get ribbonCollapse => 'Recolher';
+
+  @override
+  String get ribbonCollapseTip => 'Recolher a faixa';
+
+  @override
+  String get ribbonExpandTip => 'Mostrar a faixa';
+
+  @override
+  String get ribbonTabs => 'Abas da faixa';
+
+  @override
+  String get searchCommands => 'Pesquisar no texto e nos comandos';
+
+  @override
+  String get inspectorClose => 'Fechar o painel Formatar';
+
+  @override
+  String get inspectorSections => 'Seção do painel';
+
+  @override
+  String get sectionText => 'Texto';
+
+  @override
+  String get fontGrow => 'Aumentar a fonte';
+
+  @override
+  String get fontShrink => 'Diminuir a fonte';
+
+  @override
+  String get moreStyles => 'Mais estilos';
+
+  @override
+  String get commandLineSpacingMenu => 'Entrelinhas';
+
+  @override
+  String get zoomSlider => 'Zoom';
+
+  @override
+  String zoomPercent(int percent) {
+    return '$percent %';
+  }
+
+  @override
+  String statusStyle(Object name) {
+    return 'Estilo: $name';
+  }
+
+  @override
+  String get commandCollapseRibbon => 'Recolher a faixa';
+
+  @override
+  String get commandOutline => 'Painel Estrutura';
+
+  @override
+  String get commandStylesPanel => 'Painel Estilos';
+
+  @override
+  String get styleSampleBody => 'Era uma vez';
+
+  @override
+  String get styleSampleHeading => 'Capítulo';
+
+  @override
+  String get styleSampleQuote => 'disse ela';
+
+  @override
+  String get styleSampleOther => 'Aa';
+
+  @override
+  String styleCardApplied(Object name) {
+    return 'Estilo $name, aplicado';
+  }
+
+  @override
+  String styleCard(Object name) {
+    return 'Estilo $name';
+  }
+
+  @override
+  String colorMenuMore(Object name, Object value) {
+    return '$name: $value';
+  }
+
+  @override
+  String get fieldWidth => 'Largura';
+
+  @override
+  String get fieldHeight => 'Altura';
+
+  @override
+  String get keepRatio => 'Manter a proporção';
+
+  @override
+  String get groupSize => 'Tamanho';
+
+  @override
+  String get fontSearch => 'Procurar uma fonte';
+
+  @override
+  String get fontInDocument => 'Neste documento';
+
+  @override
+  String get fontRecent => 'Recentes';
+
+  @override
+  String get fontAll => 'Todas';
+
+  @override
+  String get fontSerif => 'Com serifa';
+
+  @override
+  String get fontSans => 'Sem serifa';
+
+  @override
+  String get fontMono => 'Mono';
+
+  @override
+  String get fontNone => 'Nenhuma fonte com esse nome';
+
+  @override
+  String get fontFilters => 'Filtrar as fontes';
+
+  @override
+  String get stylesSearch => 'Procurar um estilo';
+
+  @override
+  String get stylesKind => 'Tipo de estilo';
+
+  @override
+  String get stylesFromBook => 'Do livro';
+
+  @override
+  String get stylesFromLibreOffice => 'Do LibreOffice';
+
+  @override
+  String get stylesNone => 'Nenhum estilo com esse nome';
+
+  @override
+  String get revealDirect => 'direto';
+
+  @override
+  String get revealFromStyle => 'estilo';
+
+  @override
+  String get revealClearDirect => 'Tirar o que é direto';
+
+  @override
+  String get rulerFirstLine => 'Recuo da primeira linha';
+
+  @override
+  String get rulerLeftIndent => 'Recuo esquerdo';
+
+  @override
+  String get rulerRightIndent => 'Recuo direito';
+
+  @override
+  String get rulerHorizontal => 'Régua';
+
+  @override
+  String get rulerVertical => 'Régua vertical';
+
+  @override
+  String get commandRuler => 'Régua';
+
+  @override
+  String get prefRulerUnit => 'Unidade da régua';
+
+  @override
+  String get unitMm => 'mm';
+
+  @override
+  String get unitInch => 'pol';
+
+  @override
+  String get unitPt => 'pt';
+
+  @override
+  String get layoutLabel => 'Disposição das páginas';
+
+  @override
+  String get layoutSingle => 'Uma página';
+
+  @override
+  String get layoutMulti => 'Várias páginas';
+
+  @override
+  String get layoutBook => 'Livro (pares)';
+
+  @override
+  String get themeSepia => 'Sépia';
+
+  @override
+  String get commandZen => 'Modo zen';
+
+  @override
+  String get zenExitHint => 'Esc ou F11 sai';
+
+  @override
+  String get zenFocus => 'Foco no parágrafo';
+
+  @override
+  String get zenTypewriter => 'Máquina de escrever';
+
+  @override
+  String get zenPaper => 'Papel';
+
+  @override
+  String get zenOptions => 'Opções do modo zen';
+
+  @override
+  String zenSession(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes min nesta sessão',
+      one: '1 min nesta sessão',
+      zero: 'começou agora',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ribbonMoreFont => 'Mais da fonte';
+
+  @override
+  String get searchSectionDocument => 'No documento';
+
+  @override
+  String get searchSectionCommands => 'Comandos';
+
+  @override
+  String get searchSearching => 'Procurando no documento…';
+
+  @override
+  String get searchNoHits => 'Nada no documento';
+
+  @override
+  String searchPage(int page) {
+    return 'p. $page';
+  }
+
+  @override
+  String searchMoreHits(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'e mais $count ocorrências',
+      one: 'e mais 1 ocorrência',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get searchFindOptions => 'Localizar e substituir, com opções…';
+
+  @override
+  String searchHitLabel(String text, int page) {
+    return '$text, página $page';
+  }
+
+  @override
+  String searchHitsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ocorrências',
+      one: '1 ocorrência',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get railFindReplace => 'Localizar e substituir';
+
+  @override
+  String get commandCloseTab => 'Fechar a aba';
+
+  @override
+  String get commandNextTab => 'Próxima aba';
+
+  @override
+  String get commandPreviousTab => 'Aba anterior';
+
+  @override
+  String get tabsLabel => 'Documentos abertos';
+
+  @override
+  String tabCloseNamed(String name) {
+    return 'Fechar $name';
+  }
+
+  @override
+  String tabModifiedNamed(String name) {
+    return '$name, com alterações não salvas';
+  }
+
+  @override
+  String get stylesMore => 'Mais estilos';
+
+  @override
+  String get railFind => 'Localizar';
+
+  @override
+  String get commandKeepWithNext => 'Manter com o próximo';
+
+  @override
+  String get commandSeparateFromNext => 'Permitir separar do próximo';
+
+  @override
+  String get commandKeepLines => 'Manter as linhas juntas';
+
+  @override
+  String get commandSplitLines => 'Permitir dividir as linhas';
+
+  @override
+  String get contextStyle => 'Estilo';
+
+  @override
+  String get contextParagraph => 'Parágrafo';
 }

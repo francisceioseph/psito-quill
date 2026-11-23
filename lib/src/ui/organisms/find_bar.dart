@@ -5,6 +5,7 @@
 // ao documento. O motor seleciona a ocorrência e diz quantas há.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../document/document_controller.dart';
@@ -118,29 +119,29 @@ class FindBarState extends State<FindBar> {
                   },
                 ),
                 SizedBox(width: t.space.sm),
-                WButton(icon: Icons.keyboard_arrow_up, label: l10n.findPrevious, onPressed: () => _next(backward: true)),
-                WButton(icon: Icons.keyboard_arrow_down, label: l10n.findNext, onPressed: _next),
+                WButton(icon: Symbols.keyboard_arrow_up_rounded, label: l10n.findPrevious, onPressed: () => _next(backward: true)),
+                WButton(icon: Symbols.keyboard_arrow_down_rounded, label: l10n.findNext, onPressed: _next),
                 WButton(
-                  icon: Icons.select_all,
+                  icon: Symbols.select_all_rounded,
                   label: l10n.findAll,
                   showLabel: true,
                   onPressed: () => doc.findAll(query),
                 ),
                 SizedBox(width: t.space.sm),
                 WToggle(
-                  icon: Icons.text_fields,
+                  icon: Symbols.text_fields_rounded,
                   label: l10n.findMatchCase,
                   value: _matchCase,
                   onPressed: () => setState(() => _matchCase = !_matchCase),
                 ),
                 WToggle(
-                  icon: Icons.space_bar,
+                  icon: Symbols.space_bar_rounded,
                   label: l10n.findWholeWord,
                   value: _wholeWord,
                   onPressed: () => setState(() => _wholeWord = !_wholeWord),
                 ),
                 WToggle(
-                  icon: Icons.data_object,
+                  icon: Symbols.data_object_rounded,
                   label: l10n.findRegex,
                   value: _regex,
                   onPressed: () => setState(() => _regex = !_regex),
@@ -153,7 +154,7 @@ class FindBarState extends State<FindBar> {
                   ),
                 ),
                 WButton(
-                  icon: Icons.close,
+                  icon: Symbols.close_rounded,
                   label: l10n.findClose,
                   onPressed: () {
                     doc.clearSearch();

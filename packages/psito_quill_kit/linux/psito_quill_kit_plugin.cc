@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 
+#include "core/font_info.h"
 #include "core/lok_engine.h"
 #include "core/lua_sandbox.h"
 #include "core/task_queue.h"
@@ -153,8 +154,14 @@ int32_t pqk_tile_size(void) { return pqk::kTileSize; }
 void pqk_open(const char* path) {
   if (g_kit) g_kit->engine().open(str(path));
 }
+void pqk_activate(int32_t id) {
+  if (g_kit) g_kit->engine().activate(id);
+}
 void pqk_close(void) {
   if (g_kit) g_kit->engine().close();
+}
+void pqk_close_document(int32_t id) {
+  if (g_kit) g_kit->engine().closeDocument(id);
 }
 void pqk_set_viewport(int32_t scale_milli, int64_t x, int64_t y, int64_t w, int64_t h) {
   if (g_kit) g_kit->engine().setViewport(scale_milli, {x, y, w, h});
@@ -256,6 +263,26 @@ double pqk_debug_tiles_luma(void) {
     }
   }
   return n ? sum / n : -1;
+}
+
+void pqk_set_fullscreen(int32_t on) {
+  if (!g_view) return;
+  g_idle_add_full(G_PRIORITY_DEFAULT_IDLE,
+                  [](gpointer data) -> gboolean {
+                    GtkWidget* top = gtk_widget_get_toplevel(GTK_WIDGET(g_view));
+                    if (GTK_IS_WINDOW(top)) {
+                      if (GPOINTER_TO_INT(data))
+                        gtk_window_fullscreen(GTK_WINDOW(top));
+                      else
+                        gtk_window_unfullscreen(GTK_WINDOW(top));
+                    }
+                    return G_SOURCE_REMOVE;
+                  },
+                  GINT_TO_POINTER(on ? 1 : 0), nullptr);
+}
+
+char* pqk_font_classes(const char* families_by_line) {
+  return strdup(pqk::classifyFonts(str(families_by_line)).c_str());
 }
 
 void pqk_free_string(char* s) { free(s); }

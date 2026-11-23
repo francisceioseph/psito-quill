@@ -3,6 +3,7 @@
 // O menu é o MenuAnchor do Flutter (teclado e leitor de tela de graça), com
 // as cores dos tokens.
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../tokens/tokens.dart';
 import 'w_button.dart';
@@ -46,8 +47,8 @@ class WDropdown<T> extends StatelessWidget {
     return MenuAnchor(
       onClose: onClosed,
       style: MenuStyle(
-        backgroundColor: WidgetStatePropertyAll(c.frameRaised),
-        surfaceTintColor: WidgetStatePropertyAll(c.frameRaised),
+        backgroundColor: WidgetStatePropertyAll(c.surfaceContainer),
+        surfaceTintColor: WidgetStatePropertyAll(c.surfaceContainer),
         side: WidgetStatePropertyAll(BorderSide(color: c.border)),
         maximumSize: const WidgetStatePropertyAll(Size(double.infinity, 420)),
         shape: WidgetStatePropertyAll(RoundedRectangleBorder(
@@ -60,7 +61,7 @@ class WDropdown<T> extends StatelessWidget {
             onPressed: onSelected == null ? null : () => onSelected!(item.value),
             style: ButtonStyle(
               foregroundColor: WidgetStatePropertyAll(c.onFrame),
-              overlayColor: WidgetStatePropertyAll(c.accentSoft),
+              overlayColor: WidgetStatePropertyAll(c.surfaceHigh),
               minimumSize: WidgetStatePropertyAll(Size(width, t.density.control)),
             ),
             child: Text(item.label, style: style),
@@ -68,7 +69,7 @@ class WDropdown<T> extends StatelessWidget {
       ],
       builder: (context, controller, _) => WControlSurface(
         text: text,
-        trailingIcon: Icons.arrow_drop_down,
+        trailingIcon: Symbols.arrow_drop_down_rounded,
         width: width,
         outlined: true,
         tooltip: label,

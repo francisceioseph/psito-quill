@@ -31,10 +31,27 @@ class LoProfile {
 
   static const _marker = 'psito-quill: esquemas';
 
-  /// Garante que os esquemas estão no perfil. Chamar antes de ligar o motor:
-  /// o LibreOffice lê o arquivo ao iniciar e o regrava ao sair, mantendo o
-  /// que não conhece.
-  void ensureSchemes(List<PaperScheme> schemes) {
+  /// O que o perfil trava para nada sair do computador nem ficar registrado
+  /// (D-041). Caminho do registro, nome e valor; os nomes foram conferidos no
+  /// `main.xcd` da 24.2. Os logs da UNO já vêm desligados (`LogLevel` no
+  /// máximo), e a 24.2 do Ubuntu não tem verificação de atualizações.
+  static const privacy = <(String, String, String)>[
+    // Sem relatório de falha (o envio ao servidor da TDF).
+    ('/org.openoffice.Office.Common/Misc', 'CrashReport', 'false'),
+    // Um documento não busca imagens e links de fora sozinho.
+    ('/org.openoffice.Office.Common/Security/Scripting', 'BlockUntrustedRefererLinks', 'true'),
+    // Macro de documento não roda (poderia abrir a rede ou gravar arquivos).
+    ('/org.openoffice.Office.Common/Security/Scripting', 'DisableMacrosExecution', 'true'),
+    // O motor não guarda a lista de recentes dele, nem as miniaturas.
+    ('/org.openoffice.Office.Common/History', 'PickListSize', '0'),
+    ('/org.openoffice.Office.Common/History', 'RecentDocsThumbnail', 'false'),
+    ('/org.openoffice.Office.Common/Save/Document', 'GenerateThumbnail', 'false'),
+  ];
+
+  /// Garante os esquemas e as travas de privacidade no perfil. Chamar antes
+  /// de ligar o motor: o LibreOffice lê o arquivo ao iniciar e o regrava ao
+  /// sair, mantendo o que não conhece.
+  void ensureSettings(List<PaperScheme> schemes) {
     final file = _registry;
     file.parent.createSync(recursive: true);
     var text = file.existsSync() ? file.readAsStringSync() : _emptyRegistry;
@@ -43,12 +60,19 @@ class LoProfile {
     for (final s in schemes) {
       items.writeln(schemeItem(s));
     }
+    for (final (path, name, value) in privacy) {
+      items.writeln(propItem(path, name, value));
+    }
     items.write('<!-- /$_marker -->\n');
     text = text.replaceFirst('</oor:items>', '$items</oor:items>');
     file.writeAsStringSync(text);
   }
 
   static String _removeOurItems(String text) {
+    // O LibreOffice regrava as travas no mesmo formato, sem os comentários.
+    for (final (path, name, value) in privacy) {
+      text = text.replaceAll('${propItem(path, name, value)}\n', '');
+    }
     final start = text.indexOf('<!-- $_marker -->');
     final end = text.indexOf('<!-- /$_marker -->');
     if (start < 0 || end < 0) {
@@ -57,6 +81,9 @@ class LoProfile {
     }
     return text.substring(0, start) + text.substring(end + '<!-- /$_marker -->\n'.length);
   }
+
+  static String propItem(String path, String name, String value) =>
+      '<item oor:path="$path"><prop oor:name="$name" oor:op="fuse"><value>$value</value></prop></item>';
 
   static String schemeItem(PaperScheme s) {
     String entry(String name, int color) =>

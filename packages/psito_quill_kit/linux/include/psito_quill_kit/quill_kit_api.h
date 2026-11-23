@@ -31,14 +31,15 @@ extern "C" {
 enum PqkEvent {
   PQK_EVENT_READY = 10000,         // payload: versão do LibreOffice (JSON)
   PQK_EVENT_INIT_FAILED = 10001,
-  PQK_EVENT_OPENED = 10002,        // payload: {"width":tw,"height":tw,"parts":n}
+  PQK_EVENT_OPENED = 10002,        // payload: {"id":n,"width":tw,"height":tw,"parts":n}
   PQK_EVENT_OPEN_FAILED = 10003,
   PQK_EVENT_TILE = 10004,          // payload: "vaga,coluna,linha,escalaMilli"
   PQK_EVENT_SAVED = 10005,
   PQK_EVENT_SAVE_FAILED = 10006,
-  PQK_EVENT_CLOSED = 10007,
+  PQK_EVENT_CLOSED = 10007,        // payload: o número do documento
   PQK_EVENT_COMMAND_VALUES = 10008, // payload: "comando\n" + JSON
   PQK_EVENT_TEXT_SELECTION = 10009, // payload: "mime\n" + texto
+  PQK_EVENT_ACTIVATED = 10010,     // payload: {"id":n,"width":tw,"height":tw,"parts":n}
   PQK_EVENT_LUA_LOG = 10100,
   PQK_EVENT_LUA_DONE = 10101,      // payload: {"ok":true} ou {"ok":false,"error":"..."}
 };
@@ -56,9 +57,14 @@ PQK_EXPORT int64_t pqk_tile_texture_id(int32_t slot);
 PQK_EXPORT int32_t pqk_tile_slots(void);
 PQK_EXPORT int32_t pqk_tile_size(void);
 
-// "" ou NULL abre um documento vazio.
+// Vários documentos abertos, um ativo (D-054); as outras chamadas vão ao ativo.
+// pqk_open abre mais um e o ativa ("" ou NULL: um documento vazio).
 PQK_EXPORT void pqk_open(const char* path);
+// Troca o ativo pelo número que veio no OPENED.
+PQK_EXPORT void pqk_activate(int32_t id);
+// Fecha o ativo, ou um pelo número.
 PQK_EXPORT void pqk_close(void);
+PQK_EXPORT void pqk_close_document(int32_t id);
 // Área visível em twips, e a escala (pixels físicos por pixel lógico × zoom) × 1000.
 PQK_EXPORT void pqk_set_viewport(int32_t scale_milli, int64_t x, int64_t y, int64_t w,
                                  int64_t h);
@@ -86,6 +92,10 @@ PQK_EXPORT void pqk_trim_memory(int32_t target);
 // Título da janela do app (o Flutter no Linux não tem API para isso).
 PQK_EXPORT void pqk_set_window_title(const char* title);
 
+// Tela cheia de verdade (o modo zen, Fase 2B): gtk_window_fullscreen ou
+// unfullscreen, na thread principal.
+PQK_EXPORT void pqk_set_fullscreen(int32_t on);
+
 // Plugins Lua: roda o código numa caixa de areia própria, na thread de
 // plugins. psito.log vira PQK_EVENT_LUA_LOG; o fim, PQK_EVENT_LUA_DONE.
 PQK_EXPORT void pqk_lua_run(const char* source, const char* chunk_name,
@@ -100,6 +110,12 @@ PQK_EXPORT void pqk_reset_key_latency(void);
 // Luminância média (0–255) dos ladrilhos em uso: confere o papel escuro sem
 // olhar a tela.
 PQK_EXPORT double pqk_debug_tiles_luma(void);
+
+// As classes das fontes (1 mono, 2 com serifa, 4 sem serifa; 0 se não está
+// instalada), uma família por linha na entrada e um número por linha na
+// saída. Não passa pela thread do kit: é o fontconfig, não o LibreOffice.
+// Liberar com pqk_free_string.
+PQK_EXPORT char* pqk_font_classes(const char* families_by_line);
 
 PQK_EXPORT void pqk_free_string(char* s);
 

@@ -83,6 +83,9 @@ void LokEngine::init(const std::string& installPath, const std::string& profileU
     // Sem esta lista, o LOK desliga a ortografia ("No language allowlisted").
     // Quem rodar com a variável já definida escolhe as línguas.
     setenv("LOK_ALLOWLIST_LANGUAGES", kSpellLanguages, 0);
+    // Os avisos do LibreOffice não vão para o terminal (privacidade, D-041).
+    // Quem depura define o SAL_LOG antes, e ele vale.
+    setenv("SAL_LOG", "-WARN-INFO", 0);
     kit_ = lok_init_2(installPath.c_str(),
                       profileUrl.empty() ? nullptr : profileUrl.c_str());
     if (!kit_) {
@@ -104,43 +107,94 @@ void LokEngine::open(const std::string& path) {
       sink_->onEvent(kEvOpenFailed, "motor não iniciado");
       return;
     }
-    if (doc_) {
-      doc_->pClass->destroy(doc_);
-      doc_ = nullptr;
-    }
-    cache_.clear();
-    std::fill(announced_.begin(), announced_.end(), false);
     const std::string url = path.empty() ? "private:factory/swriter" : toFileUrl(path);
-    doc_ = kit_->pClass->documentLoadWithOptions(kit_, url.c_str(), "Language=pt-BR");
-    if (!doc_) {
+    auto* doc = kit_->pClass->documentLoadWithOptions(kit_, url.c_str(), "Language=pt-BR");
+    if (!doc) {
       sink_->onEvent(kEvOpenFailed,
                      takeLokString(kit_, kit_->pClass->getError(kit_)));
       return;
     }
-    doc_->pClass->initializeForRendering(doc_, "{}");
-    doc_->pClass->registerCallback(doc_, &LokEngine::lokCallback, this);
-    tileMode_ = doc_->pClass->getTileMode ? doc_->pClass->getTileMode(doc_)
-                                          : LOK_TILEMODE_RGBA;
-    long w = 0, h = 0;
-    doc_->pClass->getDocumentSize(doc_, &w, &h);
-    char buf[160];
-    snprintf(buf, sizeof buf, "{\"width\":%ld,\"height\":%ld,\"parts\":%d}", w, h,
-             doc_->pClass->getParts(doc_));
-    sink_->onEvent(kEvOpened, buf);
+    auto d = std::make_unique<Doc>();
+    d->engine = this;
+    d->id = nextId_++;
+    d->doc = doc;
+    d->tileMode = LOK_TILEMODE_RGBA;
+    // O novo vira o ativo. O callback entra antes de tudo (o getDocumentSize
+    // monta as páginas e manda a contagem de palavras nessa hora; sem o
+    // callback, ela se perde), mas o que chegar antes do OPENED fica guardado
+    // e sai logo depois dele: o Dart descarta os eventos de documento até o
+    // OPENED (D-054).
+    makeActive(d.get());
+    doc->pClass->initializeForRendering(doc, "{}");
+    doc->pClass->registerCallback(doc, &LokEngine::lokCallback, d.get());
+    d->tileMode = doc->pClass->getTileMode ? doc->pClass->getTileMode(doc) : LOK_TILEMODE_RGBA;
+    tileMode_ = d->tileMode;
+    sink_->onEvent(kEvOpened, sizeJson(*d));
+    std::vector<std::pair<int, std::string>> early;
+    {
+      std::lock_guard<std::mutex> lock(d->mutex);
+      d->announced = true;
+      early.swap(d->early);
+    }
+    for (auto& [type, payload] : early) handleCallback(type, payload);
+    docs_.push_back(std::move(d));
     scheduleRender();
   });
 }
 
+void LokEngine::makeActive(Doc* d) {
+  activeId_ = d ? d->id : 0;
+  doc_ = d ? d->doc : nullptr;
+  tileMode_ = d ? d->tileMode : 0;
+  cache_.clear();
+  std::fill(announced_.begin(), announced_.end(), false);
+  // A área visível é a do Dart, que manda a do documento novo logo depois.
+  viewport_ = {};
+}
+
+std::string LokEngine::sizeJson(const Doc& d) {
+  long w = 0, h = 0;
+  d.doc->pClass->getDocumentSize(d.doc, &w, &h);
+  char buf[192];
+  snprintf(buf, sizeof buf, "{\"id\":%d,\"width\":%ld,\"height\":%ld,\"parts\":%d}", d.id, w, h,
+           d.doc->pClass->getParts(d.doc));
+  return buf;
+}
+
+void LokEngine::activate(int id) {
+  queue_.post([this, id] {
+    for (auto& d : docs_) {
+      if (d->id != id) continue;
+      makeActive(d.get());
+      sink_->onEvent(kEvActivated, sizeJson(*d));
+      return;
+    }
+  });
+}
+
+void LokEngine::destroyDoc(int id) {
+  for (auto it = docs_.begin(); it != docs_.end(); ++it) {
+    if ((*it)->id != id) continue;
+    if (activeId_ == id) makeActive(nullptr);
+    (*it)->doc->pClass->destroy((*it)->doc);
+    docs_.erase(it);
+    sink_->onEvent(kEvClosed, std::to_string(id));
+    return;
+  }
+}
+
 void LokEngine::close() {
   queue_.post([this] {
-    if (doc_) {
-      doc_->pClass->destroy(doc_);
-      doc_ = nullptr;
+    if (activeId_ == 0) {
+      sink_->onEvent(kEvClosed, "0");
+      return;
     }
-    cache_.clear();
-    std::fill(announced_.begin(), announced_.end(), false);
-    sink_->onEvent(kEvClosed, "");
+    destroyDoc(activeId_);
   });
+}
+
+void LokEngine::closeDocument(int id) {
+  queue_.post([this, id] { destroyDoc(id); });
 }
 
 void LokEngine::setViewport(int32_t scaleMilli, const TwipRect& visible) {
@@ -266,8 +320,9 @@ void LokEngine::repaintAll() {
 
 void LokEngine::shutdown() {
   queue_.post([this] {
-    if (doc_) doc_->pClass->destroy(doc_);
-    doc_ = nullptr;
+    makeActive(nullptr);
+    for (auto& d : docs_) d->doc->pClass->destroy(d->doc);
+    docs_.clear();
     // kit_->destroy encerra o LibreOffice; depois dele o processo não pode
     // iniciar outro LOK. Fica para o fim do processo.
     if (kit_) kit_->pClass->destroy(kit_);
@@ -314,8 +369,19 @@ void LokEngine::resetLatency() {
 
 // Chamado pelo LibreOffice, numa thread dele. Não pode bloquear nem tocar no
 // LOK: só repassa e põe trabalho na fila.
+// Os de um documento que não é o ativo são descartados (D-054): ele não
+// recebe entrada, e as vagas de ladrilho são do ativo.
 void LokEngine::lokCallback(int type, const char* payload, void* data) {
-  static_cast<LokEngine*>(data)->handleCallback(type, payload ? payload : "");
+  auto* d = static_cast<Doc*>(data);
+  if (d->engine->activeId_ != d->id) return;
+  {
+    std::lock_guard<std::mutex> lock(d->mutex);
+    if (!d->announced) {
+      d->early.emplace_back(type, payload ? payload : "");
+      return;
+    }
+  }
+  d->engine->handleCallback(type, payload ? payload : "");
 }
 
 void LokEngine::handleCallback(int type, const std::string& payload) {

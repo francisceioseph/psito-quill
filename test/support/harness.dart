@@ -44,6 +44,10 @@ class FakeFileDialogs implements FileDialogs {
 
 class FakeAppWindow implements AppWindow {
   final titles = <String>[];
+  final fullscreen = <bool>[];
+
+  @override
+  void setFullscreen(bool on) => fullscreen.add(on);
 
   @override
   void setTitle(String title) {

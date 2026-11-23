@@ -24,30 +24,39 @@ Future<UnsavedChoice> showUnsavedDialog(BuildContext context, String name) async
           constraints: const BoxConstraints(maxWidth: 440),
           child: Padding(
             padding: EdgeInsets.all(t.space.xl),
-            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Semantics(header: true, child: WLabel(l10n.unsavedTitle, heading: true)),
-              SizedBox(height: t.space.md),
-              WLabel(l10n.unsavedBody(name), maxLines: 3),
-              SizedBox(height: t.space.xl),
-              Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                WTextButton(
-                  label: l10n.unsavedCancel,
-                  onPressed: () => Navigator.pop(context, UnsavedChoice.cancel),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Semantics(header: true, child: WLabel(l10n.unsavedTitle, heading: true)),
+                SizedBox(height: t.space.md),
+                WLabel(l10n.unsavedBody(name), maxLines: 3),
+                SizedBox(height: t.space.xl),
+                // Quebra a linha se os três não couberem (textos longos, letra grande).
+                OverflowBar(
+                  alignment: MainAxisAlignment.end,
+                  spacing: t.space.sm,
+                  overflowSpacing: t.space.sm,
+                  overflowAlignment: OverflowBarAlignment.end,
+                  children: [
+                    WTextButton(
+                      label: l10n.unsavedCancel,
+                      onPressed: () => Navigator.pop(context, UnsavedChoice.cancel),
+                    ),
+                    WTextButton(
+                      label: l10n.unsavedDiscard,
+                      onPressed: () => Navigator.pop(context, UnsavedChoice.discard),
+                    ),
+                    WTextButton(
+                      label: l10n.unsavedSave,
+                      selected: true,
+                      autofocus: true,
+                      onPressed: () => Navigator.pop(context, UnsavedChoice.save),
+                    ),
+                  ],
                 ),
-                SizedBox(width: t.space.sm),
-                WTextButton(
-                  label: l10n.unsavedDiscard,
-                  onPressed: () => Navigator.pop(context, UnsavedChoice.discard),
-                ),
-                SizedBox(width: t.space.sm),
-                WTextButton(
-                  label: l10n.unsavedSave,
-                  selected: true,
-                  autofocus: true,
-                  onPressed: () => Navigator.pop(context, UnsavedChoice.save),
-                ),
-              ]),
-            ]),
+              ],
+            ),
           ),
         ),
       );

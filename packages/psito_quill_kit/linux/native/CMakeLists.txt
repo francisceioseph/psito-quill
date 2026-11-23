@@ -9,6 +9,7 @@ add_compile_options(-Wall -Wextra -Werror -Wno-unused-parameter)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LUA REQUIRED IMPORTED_TARGET lua5.4)
+pkg_check_modules(FONTCONFIG REQUIRED IMPORTED_TARGET fontconfig)
 find_package(GTest REQUIRED)
 find_package(Threads REQUIRED)
 
@@ -19,14 +20,16 @@ add_library(pqk_core STATIC
   ${KIT}/core/tile_cache.cc
   ${KIT}/core/lok_engine.cc
   ${KIT}/core/lua_sandbox.cc
+  ${KIT}/core/font_info.cc
 )
 target_include_directories(pqk_core PUBLIC ${KIT})
-target_link_libraries(pqk_core PUBLIC PkgConfig::LUA Threads::Threads ${CMAKE_DL_LIBS})
+target_link_libraries(pqk_core PUBLIC PkgConfig::LUA PkgConfig::FONTCONFIG Threads::Threads ${CMAKE_DL_LIBS})
 
 add_executable(pqk_tests
   ${KIT}/test/task_queue_test.cc
   ${KIT}/test/tile_cache_test.cc
   ${KIT}/test/lua_sandbox_test.cc
+  ${KIT}/test/font_info_test.cc
 )
 target_link_libraries(pqk_tests PRIVATE pqk_core GTest::gtest_main)
 
@@ -41,3 +44,7 @@ gtest_discover_tests(pqk_tests)
 # instalada responde). Veja o cabeçalho de tools/lok_script.cc.
 add_executable(lok_script ${KIT}/tools/lok_script.cc)
 target_link_libraries(lok_script PRIVATE pqk_core)
+
+# A sonda das abas leves (D-051): dois documentos no mesmo processo.
+add_executable(lok_two_docs ${KIT}/tools/lok_two_docs.cc)
+target_link_libraries(lok_two_docs PRIVATE pqk_core)

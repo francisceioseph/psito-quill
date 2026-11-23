@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../commands/command_registry.dart';
@@ -19,15 +20,24 @@ import '../molecules/command_button.dart';
 import '../molecules/info_banner.dart';
 import '../organisms/classic_bars.dart';
 import '../organisms/command_palette.dart';
+import '../organisms/doc_tabs.dart';
 import '../organisms/document_view.dart';
 import '../organisms/file_panel.dart';
 import '../organisms/find_bar.dart';
 import '../organisms/inspector.dart';
+import '../organisms/nav_rail.dart';
+import '../../document/outline.dart';
+import '../atoms/w_segmented.dart';
+import '../organisms/outline_panel.dart';
+import '../organisms/ruler.dart';
 import '../organisms/ribbon.dart';
 import '../organisms/styles_dialog.dart';
+import '../organisms/styles_panel.dart';
 import '../organisms/table_size_dialog.dart';
 import '../organisms/status_bar.dart';
 import '../organisms/unsaved_dialog.dart';
+import '../organisms/zen_view.dart';
+import '../style_labels.dart';
 import '../templates/editor_template.dart';
 import '../tokens/tokens.dart';
 
@@ -56,6 +66,10 @@ class EditorPage extends StatefulWidget {
   State<EditorPage> createState() => _EditorPageState();
 }
 
+/// Os painéis do trilho, à esquerda. Localizar abre a barra de localizar,
+/// não um painel.
+enum _LeftPanel { outline, find, styles }
+
 /// Os temas como comandos (a paleta e o menu Exibir do tema 97 os mostram).
 const themeCommandPrefix = 'tema.';
 
@@ -69,8 +83,10 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
   bool? _find;
   final _findKey = GlobalKey<FindBarState>();
   bool _reveal = false;
-  Timer? _memoryTimer;
-  int _rssMb = 0;
+
+  /// O painel da esquerda, aberto pelo trilho.
+  _LeftPanel? _left;
+  InspectorPart _part = InspectorPart.text;
 
   DocumentController get doc => widget.workspace.doc;
 
@@ -78,19 +94,32 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
   void initState() {
     super.initState();
     widget.settings.addListener(_onSettings);
-    if (widget.showMemory) {
-      _readMemory();
-      _memoryTimer = Timer.periodic(const Duration(seconds: 2), (_) => _readMemory());
-    }
+    _viewport.addListener(_applyLayout);
   }
 
-  void _readMemory() {
-    final mb = ProcessInfo.currentRss >> 20;
-    if (mb != _rssMb && mounted) setState(() => _rssMb = mb);
+  /// Aplica a disposição das páginas (D-047). Em "Várias", as colunas saem
+  /// do zoom e da largura da área; o motor só recebe quando o número muda.
+  void _applyLayout() {
+    if (!doc.isOpen) return;
+    switch (widget.settings.pageLayout) {
+      case 'livro':
+        doc.setViewLayout(columns: 2, book: true);
+      case 'varias':
+        final v = _viewport.value;
+        if (v == null) return;
+        // A largura de uma página: a da régua do motor, ou a A4.
+        final pageTwips = (doc.ruler?.pageWidth ?? 21000) * 1440 / 2540;
+        final per = (pageTwips + pageGapTwips) * v.pxPerTwip;
+        final columns = per <= 0 ? 1 : ((v.viewSize.width - 48) / per).floor().clamp(1, 12);
+        doc.setViewLayout(columns: columns);
+      default:
+        doc.setViewLayout(columns: 1);
+    }
   }
 
   void _onSettings() {
     _commands?.scheme = widget.settings.shortcuts;
+    _applyLayout();
     if (mounted) setState(() {});
   }
 
@@ -115,16 +144,32 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
   }
 
   void _closeFind() {
+    _findSeed = null;
     setState(() => _find = null);
     _backToDocument();
   }
 
+  /// A busca única (D-050): o texto e os comandos. "Com opções" abre o
+  /// painel Localizar e substituir com o que foi digitado.
   @override
   void openPalette() => unawaited(
-    showCommandPalette(context, _commands!).then((id) {
-      if (id == null) _backToDocument();
+    showCommandPalette(context, _commands!, doc: doc).then((choice) {
+      switch (choice) {
+        case null:
+          _backToDocument();
+        case OpenFindOptions(:final query):
+          _findSeed = query;
+          openFind(replace: true);
+        case GoToHit():
+          _backToDocument();
+        case RunCommand():
+          break;
+      }
     }),
   );
+
+  /// O texto que a busca única passa ao painel Localizar.
+  String? _findSeed;
 
   @override
   void toggleInspector() {
@@ -159,10 +204,69 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
   }());
 
   @override
-  void manageStyles() => unawaited(showStylesDialog(context, doc).then((_) => _backToDocument()));
+  void manageStyles() => unawaited(showStylesDialog(context, doc, commands: _commands).then((_) => _backToDocument()));
 
   @override
   void openFilePanel() => setState(() => _fileOpen = true);
+
+  @override
+  bool get outlineOpen => _left == _LeftPanel.outline;
+
+  @override
+  void toggleOutline() => _setLeft(outlineOpen ? null : _LeftPanel.outline);
+
+  /// Abre um painel da esquerda. A Estrutura aberta pede ao controlador que
+  /// refaça a cópia nas pausas da digitação (D-047).
+  void _setLeft(_LeftPanel? p) {
+    setState(() => _left = p);
+    doc.liveOutline = p == _LeftPanel.outline;
+  }
+
+  @override
+  bool get stylesPanelOpen => _left == _LeftPanel.styles;
+
+  @override
+  void toggleStylesPanel() => _setLeft(stylesPanelOpen ? null : _LeftPanel.styles);
+
+  @override
+  bool get zenOpen => widget.settings.zen;
+
+  /// O modo zen (D-048): tela cheia de verdade, só a página. O Esc sai por um
+  /// tratador do teclado, que só existe enquanto o zen está aberto (no
+  /// documento, o Esc iria para o motor).
+  @override
+  void toggleZen() {
+    final on = !widget.settings.zen;
+    widget.settings.zen = on;
+    widget.window?.setFullscreen(on);
+    if (on) {
+      HardwareKeyboard.instance.addHandler(_zenEscape);
+    } else {
+      HardwareKeyboard.instance.removeHandler(_zenEscape);
+    }
+    _backToDocument();
+  }
+
+  bool _zenEscape(KeyEvent e) {
+    if (e is! KeyDownEvent || e.logicalKey != LogicalKeyboardKey.escape || !widget.settings.zen) return false;
+    toggleZen();
+    return true;
+  }
+
+  @override
+  bool get rulerShown => widget.settings.ruler;
+
+  @override
+  void toggleRuler() => widget.settings.ruler = !widget.settings.ruler;
+
+  /// Onde a página está na tela, para as réguas (D-046).
+  final _viewport = ValueNotifier<DocViewport?>(null);
+
+  @override
+  bool get ribbonCollapsed => widget.settings.ribbonCollapsed;
+
+  @override
+  void toggleRibbon() => widget.settings.ribbonCollapsed = !widget.settings.ribbonCollapsed;
 
   @override
   void about() {
@@ -206,13 +310,14 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
       for (final (id, label) in [
         ('claro', l10n.themeClaro),
         ('escuro', l10n.themeEscuro),
+        ('sepia', l10n.themeSepia),
         ('classico97', l10n.themeClassico),
       ]) {
         registry.register(
           Command(
             id: '$themeCommandPrefix$id',
             label: label,
-            icon: Icons.palette_outlined,
+            icon: Symbols.palette_rounded,
             run: () => widget.settings.theme = id,
             isActive: () => widget.settings.theme == id,
           ),
@@ -244,9 +349,11 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
   void dispose() {
     widget.settings.removeListener(_onSettings);
     if (widget.workspace.onUnsaved != null) widget.workspace.onUnsaved = null;
-    _memoryTimer?.cancel();
     _commands?.dispose();
     _docFocus.dispose();
+    HardwareKeyboard.instance.removeHandler(_zenEscape);
+    _viewport.removeListener(_applyLayout);
+    _viewport.dispose();
     super.dispose();
   }
 
@@ -287,6 +394,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
         listenable: Listenable.merge([doc, commands]),
         builder: (context, _) {
           widget.window?.setTitle(_windowTitle(l10n));
+          if (widget.settings.zen && doc.isOpen && !doc.documentSize.isEmpty) return _zenView(l10n);
           final classic = t.component == ComponentStyle.bevel;
           // Tudo o que a faixa e o painel leem e não vem do motor.
           final key = (
@@ -297,12 +405,19 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
             _fileOpen,
             _reveal,
             _find != null,
+            _left,
+            _part,
+            widget.settings.ribbonCollapsed,
+            widget.settings.recentFonts,
+            widget.settings.pageLayout,
           );
+          // A barra de status e a Estrutura leem também a página e as palavras.
+          final statusKey = (key, doc.statusRevision);
           return EditorTemplate(
             top: _memoized(
               'top',
               key,
-              () => classic
+              () => _withTabs(classic
                   ? Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -314,7 +429,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
                               menuChildren: [
                                 for (final c in commands.all.where((c) => c.id.startsWith(themeCommandPrefix)))
                                   MenuItemButton(
-                                    leadingIcon: Icon(c.active ? Icons.check : null, size: 16),
+                                    leadingIcon: Icon(c.active ? Symbols.check_rounded : null, size: 16),
                                     onPressed: c.run,
                                     child: Text(c.label),
                                   ),
@@ -337,38 +452,100 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
                           _tab = tab;
                           _fileOpen = false;
                         });
+                        // Com a faixa recolhida, a aba a mostra de novo.
+                        if (widget.settings.ribbonCollapsed) widget.settings.ribbonCollapsed = false;
                         _backToDocument();
                       },
                       onRan: _backToDocument,
+                      collapsed: widget.settings.ribbonCollapsed,
+                      onToggleCollapsed: toggleRibbon,
+                      onSearch: openPalette,
+                      onStylesPanel: toggleStylesPanel,
+                      recentFonts: widget.settings.recentFonts,
+                      onFontUsed: widget.settings.useFont,
                       trailing: [
                         WToggle(
-                          icon: Icons.dark_mode_outlined,
+                          icon: Symbols.dark_mode_rounded,
                           label: l10n.commandDarkPaper,
                           value: t.brightness == Brightness.dark,
                           onPressed: () => widget.settings.theme = t.brightness == Brightness.dark ? 'claro' : 'escuro',
                         ),
                       ],
-                    ),
+                    )),
             ),
             findBar: _find != null && doc.isOpen && !_fileOpen
                 ? FindBar(
                     key: _findKey,
                     doc: doc,
                     replace: _find!,
-                    initialText: doc.search.query?.text ?? '',
+                    initialText: _findSeed ?? doc.search.query?.text ?? '',
                     onClose: _closeFind,
                   )
                 : null,
+            rail: classic || _fileOpen || !doc.isOpen
+                ? null
+                : _memoized(
+                    'rail',
+                    key,
+                    () => NavRail<_LeftPanel?>(
+                      label: l10n.railLabel,
+                      items: [
+                        NavRailItem(_LeftPanel.outline, Symbols.toc_rounded, l10n.outlineTitle),
+                        NavRailItem(_LeftPanel.find, Symbols.find_replace_rounded, l10n.railFind,
+                            tooltip: commands.tooltipOf(ViewCommandIds.replace)),
+                        NavRailItem(_LeftPanel.styles, Symbols.style_rounded, l10n.ribbonStyles),
+                      ],
+                      selected: _find != null ? _LeftPanel.find : _left,
+                      onSelected: (p) {
+                        if (p == _LeftPanel.find || (p == null && _find != null)) {
+                          _find == null ? openFind(replace: true) : _closeFind();
+                          return;
+                        }
+                        _setLeft(p);
+                      },
+                    ),
+                  ),
+            leftPanel: _left == null || _fileOpen || !doc.isOpen
+                ? null
+                : _memoized(
+                    'left',
+                    statusKey,
+                    () => switch (_left!) {
+                      _LeftPanel.outline => OutlinePanel(
+                          entries: doc.snapshot.outline,
+                          current: currentHeading(doc.snapshot.outline, doc.page?.$1),
+                          onJump: (i) {
+                            doc.goToHeading(doc.snapshot.outline[i]);
+                            _backToDocument();
+                          },
+                          onClose: toggleOutline,
+                        ),
+                      _LeftPanel.styles || _LeftPanel.find => StylesPanel(
+                          doc: doc,
+                          commands: commands,
+                          onClose: toggleStylesPanel,
+                          onRan: _backToDocument,
+                        ),
+                    },
+                  ),
             sidePanel: widget.settings.inspector && doc.isOpen && !_fileOpen
                 ? _memoized(
                     'inspector',
                     key,
-                    () => Inspector(doc: doc, commands: commands, reveal: _reveal, onRan: _backToDocument),
+                    () => Inspector(
+                      doc: doc,
+                      commands: commands,
+                      reveal: _reveal,
+                      part: _part,
+                      onPart: (p) => setState(() => _part = p),
+                      onClose: toggleInspector,
+                      onRan: _backToDocument,
+                    ),
                   )
                 : null,
             banner: doc.readOnly && !_fileOpen
                 ? InfoBanner(
-                    icon: Icons.lock_outline,
+                    icon: Symbols.lock_outline_rounded,
                     text: l10n.readOnlyBanner(doc.lockOwner ?? ''),
                     actionLabel: l10n.readOnlySaveCopy,
                     onAction: () => unawaited(widget.workspace.saveAs()),
@@ -384,40 +561,170 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
                   )
                 : !doc.isOpen || doc.documentSize.isEmpty
                 ? Center(child: WLabel(_statusText(l10n), tone: WLabelTone.muted))
-                : DocumentView(
-                    doc: doc,
-                    commands: commands,
-                    focusNode: _docFocus,
-                    semanticLabel: l10n.documentArea,
-                    scrollController: widget.scrollController,
+                : _withRulers(
+                    DocumentView(
+                      doc: doc,
+                      commands: commands,
+                      focusNode: _docFocus,
+                      semanticLabel: l10n.documentArea,
+                      scrollController: widget.scrollController,
+                      viewport: _viewport,
+                    ),
                   ),
-            statusBar: StatusBar(
-              fields: [
-                StatusField(_statusText(l10n), tone: _statusTone(), flex: true),
-                if (doc.isOpen) ...[
-                  if (doc.page case (final page, final pages)) StatusField(l10n.statusPage(page, pages)),
-                  if (doc.wordCount case final w?)
-                    StatusField(w.selection ? l10n.statusWordsSelected(w.words) : l10n.statusWords(w.words)),
-                  if (doc.readOnly) StatusField(l10n.statusReadOnly, tone: WLabelTone.normal),
-                  if (doc.modified) StatusField(l10n.statusModified),
-                  if (doc.commandStates['.uno:LanguageStatus'] case final lang?) StatusField(lang.split(';').first),
-                ],
-                if (widget.showMemory) StatusField(l10n.statusMemory(_rssMb)),
-              ],
-              trailing: doc.isOpen
-                  ? [
-                      CommandButton(commands: commands, id: CommandIds.zoomOut),
-                      SizedBox(
-                        width: 52,
-                        child: Center(child: WLabel(l10n.statusZoom((doc.zoom * 100).round()), small: true)),
+            statusBar: _memoized(
+              'status',
+              statusKey,
+              () => StatusBar(
+                fields: [
+                  StatusField(_statusText(l10n), tone: _statusTone(), flex: true),
+                  if (doc.isOpen) ...[
+                    if (doc.page case (final page, final pages))
+                      StatusField(
+                        l10n.statusPage(page, pages),
+                        tooltip: l10n.outlineTitle,
+                        onTap: toggleOutline,
+                        priority: 1,
                       ),
-                      CommandButton(commands: commands, id: CommandIds.zoomIn),
-                    ]
-                  : const [],
+                    if (doc.wordCount case final w?)
+                      StatusField(
+                        w.selection ? l10n.statusWordsSelected(w.words) : l10n.statusWords(w.words),
+                        priority: 1,
+                      ),
+                    if (doc.commandStates['.uno:LanguageStatus'] case final lang?)
+                      StatusField(
+                        lang.split(';').first,
+                        icon: Symbols.spellcheck_rounded,
+                        priority: 2,
+                      ),
+                    if (doc.readOnly) StatusField(l10n.statusReadOnly, tone: WLabelTone.normal, priority: 2),
+                    if (doc.modified) StatusField(l10n.statusModified, priority: 2),
+                    if (doc.paragraphStyleId case final s?)
+                      StatusField(
+                        styleLabel(l10n, s),
+                        tooltip: l10n.ribbonStyles,
+                        onTap: toggleStylesPanel,
+                        priority: 3,
+                      ),
+                  ],
+                ],
+                trailing: [
+                  if (widget.showMemory) ...[MemoryLabel(format: l10n.statusMemory), SizedBox(width: t.space.md)],
+                  if (doc.isOpen) ...[
+                    WSegmented<String>(
+                      label: l10n.layoutLabel,
+                      segments: [
+                        WSegment('uma', l10n.layoutSingle, icon: Symbols.description_rounded, iconOnly: true),
+                        WSegment('varias', l10n.layoutMulti, icon: Symbols.view_module_rounded, iconOnly: true),
+                        WSegment('livro', l10n.layoutBook, icon: Symbols.menu_book_rounded, iconOnly: true),
+                      ],
+                      selected: widget.settings.pageLayout,
+                      onChanged: (v) => widget.settings.pageLayout = v,
+                      compact: true,
+                    ),
+                    SizedBox(width: t.space.md),
+                  ],
+                  if (doc.isOpen)
+                    ZoomControl(
+                      zoom: doc.zoom,
+                      min: minZoom,
+                      max: maxZoom,
+                      label: l10n.zoomSlider,
+                      percentLabel: l10n.zoomPercent,
+                      onZoom: doc.setZoom,
+                      zoomOut: CommandButton(commands: commands, id: CommandIds.zoomOut),
+                      zoomIn: CommandButton(commands: commands, id: CommandIds.zoomIn),
+                    ),
+                ],
+              ),
             ),
           );
         },
       ),
+    );
+  }
+
+  /// A fileira das abas em cima da faixa, só com duas abas ou mais (D-054).
+  Widget _withTabs(Widget bars) {
+    if (doc.tabs.length < 2) return bars;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DocTabStrip(doc: doc, onClose: (tab) => unawaited(widget.workspace.closeTab(tab))),
+        bars,
+      ],
+    );
+  }
+
+  /// O modo zen: só a página, com a máquina de escrever e o foco.
+  Widget _zenView(AppLocalizations l10n) {
+    final s = widget.settings;
+    final w = doc.wordCount;
+    return ZenView(
+      words: w == null ? null : l10n.statusWords(w.words),
+      focus: s.zenFocus,
+      typewriter: s.zenTypewriter,
+      paper: s.zenPaper,
+      onFocus: () => s.zenFocus = !s.zenFocus,
+      onTypewriter: () => s.zenTypewriter = !s.zenTypewriter,
+      onPaper: () => s.zenPaper = switch (s.zenPaper) {
+        'sepia' => 'claro',
+        'claro' => 'escuro',
+        _ => 'sepia',
+      },
+      child: DocumentView(
+        doc: doc,
+        commands: _commands!,
+        focusNode: _docFocus,
+        semanticLabel: l10n.documentArea,
+        scrollController: widget.scrollController,
+        viewport: _viewport,
+        typewriter: s.zenTypewriter,
+        focusLines: s.zenFocus ? 2 : 0,
+      ),
+    );
+  }
+
+  /// A página com as réguas, se estiverem ligadas (Exibir › Régua).
+  Widget _withRulers(Widget view) {
+    if (!widget.settings.ruler) return view;
+    final r = doc.ruler;
+    final indents = doc.paragraphIndents;
+    final pages = doc.page?.$2;
+    final size = doc.documentSize;
+    final margins = doc.snapshot.pageMargins;
+    return RulerFrame(
+      viewport: _viewport,
+      unit: RulerUnit.values.asNameMap()[widget.settings.rulerUnit] ?? RulerUnit.cm,
+      data: r == null
+          ? null
+          : RulerData(
+              info: r,
+              leftCm: indents['left'] ?? r.indent / 1000,
+              firstLineCm: indents['firstline'] ?? 0,
+              rightCm: indents['right'] ?? 0,
+            ),
+      // A pilha do motor: (altura − espaço) / fileiras − espaço (D-036).
+      // Com páginas lado a lado, a régua vertical mede uma fileira por vez.
+      pages: switch (pages == null || size.isEmpty ? 0 : pageRows(pages, columns: doc.viewColumns, book: doc.bookMode)) {
+        <= 0 => null,
+        final rows => (
+            page: Size(size.width - 2 * pageGapTwips, (size.height - pageGapTwips) / rows - pageGapTwips),
+            count: rows,
+          ),
+      },
+      margins: margins == null ? null : (top: margins.top, bottom: margins.bottom),
+      onIndents: doc.canEdit
+          ? ({double? left, double? firstLine, double? right}) {
+              doc.setIndents(left: left, firstLine: firstLine, right: right);
+            }
+          : null,
+      // Duplo clique: o painel Formatar, na seção Parágrafo.
+      onDoubleTap: () {
+        setState(() => _part = InspectorPart.paragraph);
+        if (!widget.settings.inspector) widget.settings.inspector = true;
+      },
+      child: view,
     );
   }
 

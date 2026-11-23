@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../commands/command_registry.dart';
@@ -57,7 +58,7 @@ class FilePanel extends StatelessWidget {
               padding: EdgeInsets.all(t.space.xl),
               decoration: BoxDecoration(border: Border(right: BorderSide(color: t.colors.border))),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                WTextButton(label: l10n.fileBack, icon: Icons.arrow_back, onPressed: onClose),
+                WTextButton(label: l10n.fileBack, icon: Symbols.arrow_back_rounded, onPressed: onClose),
                 SizedBox(height: t.space.xl),
                 action(CommandIds.newDocument),
                 action(CommandIds.open),
@@ -93,7 +94,7 @@ class FilePanel extends StatelessWidget {
                     WLabel(l10n.prefTheme, tone: WLabelTone.muted),
                     SizedBox(height: t.space.sm),
                     Wrap(spacing: t.space.sm, children: [
-                      for (final (id, label) in [('claro', l10n.themeClaro), ('escuro', l10n.themeEscuro), ('classico97', l10n.themeClassico)])
+                      for (final (id, label) in [('claro', l10n.themeClaro), ('escuro', l10n.themeEscuro), ('sepia', l10n.themeSepia), ('classico97', l10n.themeClassico)])
                         WTextButton(
                           label: label,
                           selected: settings.theme == id,
@@ -115,6 +116,16 @@ class FilePanel extends StatelessWidget {
                           onPressed: () => settings.shortcuts = scheme,
                         ),
                       ),
+                    SizedBox(height: t.space.lg),
+                    WLabel(l10n.prefPrivacy, tone: WLabelTone.muted),
+                    SizedBox(height: t.space.sm),
+                    WTextButton(
+                      label: l10n.prefKeepRecents,
+                      selected: settings.keepRecents,
+                      onPressed: () => settings.keepRecents = !settings.keepRecents,
+                    ),
+                    SizedBox(height: t.space.sm),
+                    WLabel(l10n.prefPrivacyNote, tone: WLabelTone.muted),
                   ]),
                 ),
               ]),
@@ -139,7 +150,7 @@ class _RecentEntry extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(bottom: t.space.xs),
       child: Row(children: [
-        WTextButton(label: file.uri.pathSegments.last, icon: Icons.description_outlined, onPressed: onOpen),
+        WTextButton(label: file.uri.pathSegments.last, icon: Symbols.description_rounded, onPressed: onOpen),
         SizedBox(width: t.space.md),
         Flexible(child: WLabel(file.parent.path, small: true, tone: WLabelTone.muted)),
       ]),

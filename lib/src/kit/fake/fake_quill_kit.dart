@@ -8,7 +8,8 @@
 // estilos, imagens e tabelas (só os eventos).
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui' show Rect, Size;
+import 'dart:io';
+import 'dart:ui' show Offset, Rect, Size;
 
 import '../quill_kit.dart';
 
@@ -85,6 +86,57 @@ class FakeQuillKit implements QuillKit {
   @override
   int textureId(int slot) => -1;
 
+  // Os documentos abertos (D-054): o ativo vive nos campos de cima (text,
+  // openedPath...); os outros, guardados aqui.
+  final _docs = <int, _FakeDoc>{};
+  int _nextId = 1;
+
+  /// O número do documento ativo (0: nenhum).
+  int activeId = 0;
+
+  /// Os números dos documentos abertos.
+  Iterable<int> get openIds => _docs.keys;
+
+  void _stash() {
+    if (activeId == 0) return;
+    _docs[activeId] = _FakeDoc(openedPath, text, bold, [..._undo], [..._redo]);
+  }
+
+  void _load(_FakeDoc d) {
+    openedPath = d.path;
+    text = d.text;
+    bold = d.bold;
+    preedit = '';
+    _undo
+      ..clear()
+      ..addAll(d.undo);
+    _redo
+      ..clear()
+      ..addAll(d.redo);
+    _placed.clear();
+  }
+
+  @override
+  void activate(int id) {
+    final d = _docs[id];
+    if (d == null) return;
+    _stash();
+    activeId = id;
+    _load(d);
+    _emit(DocumentActivated(id, documentSize));
+  }
+
+  @override
+  void closeDocument(int id) {
+    if (!_docs.containsKey(id)) return;
+    if (id == activeId) {
+      close();
+      return;
+    }
+    _docs.remove(id);
+    _emit(DocumentClosed(id));
+  }
+
   @override
   void open(String path) {
     opened.add(path);
@@ -92,15 +144,16 @@ class FakeQuillKit implements QuillKit {
       _emit(const DocumentOpenFailed('arquivo estragado'));
       return;
     }
-    openedPath = path;
-    text = '';
-    preedit = '';
-    _undo.clear();
-    _redo.clear();
-    _placed.clear();
+    _stash();
+    final id = _nextId++;
+    activeId = id;
+    _load(_FakeDoc(path, '', false, const [], const []));
+    _docs[id] = _FakeDoc(path, '', false, const [], const []);
     // Como o LOK: ao abrir, manda onde está o cursor, mas não manda o
     // "cursor visível" (esse só chega depois da primeira tecla).
-    _emit(DocumentOpened(documentSize));
+    _emit(DocumentOpened(documentSize, id: id));
+    // A régua de uma A4 com 2 cm à esquerda e 1 cm à direita (o capítulo).
+    _emit(const RulerUpdated(RulerInfo(pageWidth: 21001, leftMargin: 2000, textWidth: 18000)));
     _state('.uno:ModifiedStatus', 'false');
     _state('.uno:Undo', 'disabled');
     _state('.uno:Redo', 'disabled');
@@ -112,8 +165,11 @@ class FakeQuillKit implements QuillKit {
 
   @override
   void close() {
+    final id = activeId;
+    _docs.remove(id);
+    activeId = 0;
     openedPath = null;
-    _emit(const DocumentClosed());
+    _emit(DocumentClosed(id));
   }
 
   @override
@@ -232,6 +288,7 @@ class FakeQuillKit implements QuillKit {
   /// primeira que estiver no texto.
   Map<String, List<String>> misspelled = {};
   final graphicDrags = <(GraphicDrag, int, int)>[];
+  Offset? _dragFrom;
 
   /// A imagem selecionada (twips), ou null.
   Rect? graphic;
@@ -292,9 +349,14 @@ class FakeQuillKit implements QuillKit {
   void setGraphicSelection(GraphicDrag type, int x, int y) {
     graphicDrags.add((type, x, y));
     final g = graphic;
+    if (type == GraphicDrag.start) _dragFrom = Offset(x.toDouble(), y.toDouble());
     if (type == GraphicDrag.end && g != null) {
-      // Como o motor: a alça de baixo à direita muda o tamanho.
-      graphic = Rect.fromLTRB(g.left, g.top, x.toDouble(), y.toDouble());
+      // Como o motor (sondado no D-043): a alça da direita muda só a
+      // largura, a de baixo só a altura, e a do canto as duas.
+      final from = _dragFrom ?? g.bottomRight;
+      final right = (from.dx - g.right).abs() < 30, bottom = (from.dy - g.bottom).abs() < 30;
+      graphic = Rect.fromLTRB(g.left, g.top, right ? x.toDouble() : g.right, bottom ? y.toDouble() : g.bottom);
+      _dragFrom = null;
       _emit(GraphicSelected(graphic));
     }
   }
@@ -358,6 +420,65 @@ class FakeQuillKit implements QuillKit {
     _state('.uno:ModifiedStatus', 'false');
   }
 
+  /// As cópias pedidas (o caminho e o formato).
+  final copies = <(String, String)>[];
+
+  /// Os títulos que a cópia leva (os testes da Estrutura preenchem).
+  List<(int, String)> headings = const [];
+
+  /// Os parágrafos de texto da cópia (a busca no texto, D-050).
+  List<String> bodyParagraphs = const [];
+
+  /// Não responde às cópias (para testar a fila de pedidos).
+  bool holdCopies = false;
+  final heldCopies = <String>[];
+
+  @override
+  List<int> fontClasses(List<String> families) => [
+        for (final f in families)
+          f.contains('Mono')
+              ? FontClass.mono
+              : f.contains('Serif')
+                  ? FontClass.serif
+                  : FontClass.sans,
+      ];
+
+  @override
+  void exportCopy(String path, String format) {
+    copies.add((path, format));
+    if (holdCopies) {
+      heldCopies.add(path);
+      return;
+    }
+    finishCopy(path);
+  }
+
+  /// Grava um ODT plano com os estilos e os títulos do falso, e avisa.
+  void finishCopy(String path) {
+    String esc(String v) => v.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('"', '&quot;');
+    final styles = StringBuffer();
+    for (final name in paragraphStyles) {
+      final heading = RegExp(r'^Heading (\d)$').firstMatch(name);
+      final size = heading == null ? 12 : 20 - 2 * int.parse(heading[1]!);
+      final italic = name == 'Quotations' ? ' fo:font-style="italic"' : '';
+      final weight = heading != null ? ' fo:font-weight="bold"' : '';
+      styles.write('<style:style style:name="${esc(name.replaceAll(' ', '_20_'))}" style:display-name="${esc(name)}" '
+          'style:family="paragraph"><style:text-properties style:font-name="Liberation Serif" fo:font-size="${size}pt"$weight$italic/></style:style>');
+    }
+    final body = [
+      for (final (level, text) in headings) '<text:h text:outline-level="$level">${esc(text)}</text:h>',
+      for (final text in bodyParagraphs) '<text:p text:style-name="Text_20_body">${esc(text)}</text:p>',
+    ].join();
+    // As estatísticas, como o LibreOffice grava (as palavras do texto falso).
+    final words = text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
+    File(path).writeAsStringSync('<office:document><office:meta>'
+        '<meta:document-statistic meta:word-count="$words" meta:character-count="${text.length}"/></office:meta>'
+        '<office:font-face-decls>'
+        '<style:font-face style:name="Liberation Serif" svg:font-family="&apos;Liberation Serif&apos;"/></office:font-face-decls>'
+        '<office:styles>$styles</office:styles><office:body><office:text>$body</office:text></office:body></office:document>');
+    _emit(CopyExported(path));
+  }
+
   @override
   void runLua(String source, String name, {int memoryLimit = 16 << 20, int instructionLimit = 10000000}) {
     luaRuns.add(name);
@@ -383,4 +504,12 @@ class FakeQuillKit implements QuillKit {
 
   @override
   double debugTilesLuma() => -1;
+}
+
+class _FakeDoc {
+  _FakeDoc(this.path, this.text, this.bold, this.undo, this.redo);
+  final String? path;
+  final String text;
+  final bool bold;
+  final List<String> undo, redo;
 }

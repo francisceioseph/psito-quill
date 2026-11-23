@@ -12,23 +12,23 @@ void main() {
   File registry() => File('${dir.path}/user/registrymodifications.xcu');
 
   test('cria o registro com os esquemas dos temas', () {
-    LoProfile(dir).ensureSchemes(paperSchemes(builtInThemes));
+    LoProfile(dir).ensureSettings(paperSchemes(builtInThemes));
     final text = registry().readAsStringSync();
     expect(text, startsWith('<?xml'));
     expect(text, contains('oor:name="PsitoQuillClaro"'));
     expect(text, contains('oor:name="PsitoQuillEscuro"'));
-    // O papel escuro do tema Escuro: 0x232427.
-    expect(text, contains('<value>${0x232427}</value>'));
+    // O papel do tema Escuro.
+    expect(text, contains('<value>${escuro.colors.paper.toARGB32() & 0xFFFFFF}</value>'));
     expect(text.trim(), endsWith('</oor:items>'));
   });
 
   test('não duplica ao chamar de novo e preserva o resto', () {
     final p = LoProfile(dir);
-    p.ensureSchemes(paperSchemes(builtInThemes));
+    p.ensureSettings(paperSchemes(builtInThemes));
     final file = registry();
     file.writeAsStringSync(file.readAsStringSync().replaceFirst(
         '</oor:items>', '<item oor:path="/org.openoffice.Office.Common/Misc"><prop oor:name="X"><value>1</value></prop></item>\n</oor:items>'));
-    p.ensureSchemes(paperSchemes(builtInThemes));
+    p.ensureSettings(paperSchemes(builtInThemes));
     final text = file.readAsStringSync();
     expect('PsitoQuillEscuro'.allMatches(text).length, 1);
     expect(text, contains('Office.Common/Misc'));
@@ -36,10 +36,10 @@ void main() {
 
   test('o LibreOffice regrava sem os comentários: os nós antigos saem pelo nome', () {
     final p = LoProfile(dir);
-    p.ensureSchemes(paperSchemes(builtInThemes));
+    p.ensureSettings(paperSchemes(builtInThemes));
     final file = registry();
     file.writeAsStringSync(file.readAsStringSync().replaceAll(RegExp(r'<!--[^>]*-->\n'), ''));
-    p.ensureSchemes(paperSchemes(builtInThemes));
+    p.ensureSettings(paperSchemes(builtInThemes));
     expect('PsitoQuillClaro'.allMatches(file.readAsStringSync()).length, 1);
   });
 

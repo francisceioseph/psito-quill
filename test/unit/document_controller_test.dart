@@ -194,11 +194,23 @@ void main() {
       expect(doc.path, '/c.docx');
     });
 
-    test('arquivo que não abre: mensagem com o caminho', () {
+    test('arquivo que não abre: mensagem com o caminho, e volta à aba de antes', () {
       kit.openFails = true;
       doc.open('/ruim.docx');
-      expect(doc.docStatus, DocStatus.failed);
+      expect(doc.docStatus, DocStatus.open);
+      expect(doc.path, '/a.odt');
+      expect(doc.tabs, hasLength(1));
       expect((doc.message as OpenFailedMessage).path, '/ruim.docx');
+    });
+
+    test('arquivo que não abre, sem outra aba: falhou', () {
+      final k = FakeQuillKit(openFails: true);
+      final d = DocumentController(k)..start();
+      d.open('/ruim.docx');
+      expect(d.docStatus, DocStatus.failed);
+      expect(d.tabs, isEmpty);
+      expect((d.message as OpenFailedMessage).path, '/ruim.docx');
+      d.dispose();
     });
   });
 }

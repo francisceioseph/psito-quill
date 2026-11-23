@@ -4,6 +4,8 @@
 // LibreOfficeKit por FFI; o `FakeQuillKit` roda nos testes, sem o LibreOffice.
 import 'dart:ui' show Rect, Size;
 
+import 'package:flutter/foundation.dart' show immutable, listEquals;
+
 /// Twips: 1/1440 polegada. A 96 dpi e zoom 1, 1 px lógico = 15 twips.
 const double twipsPerPixel = 15;
 
@@ -47,10 +49,22 @@ class KitFailed extends KitEvent {
   final String message;
 }
 
+/// Um documento foi aberto e é o ativo (os outros continuam abertos, D-054).
 class DocumentOpened extends KitEvent {
-  const DocumentOpened(this.size);
+  const DocumentOpened(this.size, {this.id = 1});
 
   /// Tamanho em twips.
+  final Size size;
+
+  /// O número do documento no motor, para [QuillKit.activate].
+  final int id;
+}
+
+/// O motor trocou o documento ativo ([QuillKit.activate]). Daqui em diante,
+/// os eventos são dele.
+class DocumentActivated extends KitEvent {
+  const DocumentActivated(this.id, this.size);
+  final int id;
   final Size size;
 }
 
@@ -61,7 +75,10 @@ class DocumentOpenFailed extends KitEvent {
 
 /// O documento foi fechado no motor (e a trava .~lock, apagada).
 class DocumentClosed extends KitEvent {
-  const DocumentClosed();
+  const DocumentClosed([this.id = 0]);
+
+  /// O número do documento fechado (0: nenhum estava aberto).
+  final int id;
 }
 
 class DocumentSizeChanged extends KitEvent {
@@ -107,6 +124,69 @@ class DocumentSaved extends KitEvent {
 class SaveFailed extends KitEvent {
   const SaveFailed(this.message);
   final String message;
+}
+
+/// A régua do parágrafo do cursor (o callback 35, D-046), em centésimos de
+/// milímetro: onde começa o texto na página, a largura dele, o recuo e as
+/// tabulações. O recuo da primeira linha e o da direita não vêm aqui (vêm
+/// do estado `.uno:LeftRightParaMargin`).
+@immutable
+class RulerInfo {
+  const RulerInfo({
+    required this.pageWidth,
+    required this.leftMargin,
+    required this.textWidth,
+    this.indent = 0,
+    this.tabs = const [],
+    this.pageOffset,
+  });
+
+  final int pageWidth;
+
+  /// Onde começa a página do cursor, da borda esquerda do documento
+  /// (`pageOffset`, em centésimos de mm). Com uma página por linha, é o vão
+  /// entre as páginas (501); no modo Livro ou Várias, a coluna da página.
+  final int? pageOffset;
+
+  /// A margem esquerda da página (`leftOffset`).
+  final int leftMargin;
+
+  /// A largura da área do texto, da margem esquerda (`margin2`).
+  final int textWidth;
+
+  /// O recuo esquerdo do parágrafo (`margin1`).
+  final int indent;
+
+  /// As tabulações, da margem esquerda: a posição e o tipo do LibreOffice.
+  final List<({int position, int style})> tabs;
+
+  int get rightMargin => pageWidth - leftMargin - textWidth;
+
+  @override
+  bool operator ==(Object other) =>
+      other is RulerInfo &&
+      other.pageWidth == pageWidth &&
+      other.leftMargin == leftMargin &&
+      other.textWidth == textWidth &&
+      other.indent == indent &&
+      other.pageOffset == pageOffset &&
+      listEquals(other.tabs, tabs);
+
+  @override
+  int get hashCode => Object.hash(pageWidth, leftMargin, textWidth, indent, pageOffset, tabs.length);
+}
+
+class RulerUpdated extends KitEvent {
+  const RulerUpdated(this.ruler);
+  final RulerInfo ruler;
+}
+
+/// A cópia de [QuillKit.exportCopy] foi gravada (ou não, com [ok] falso).
+/// Não é um salvamento: o documento não muda.
+class CopyExported extends KitEvent {
+  const CopyExported(this.path, {this.ok = true});
+  final String path;
+  final bool ok;
 }
 
 class PluginLog extends KitEvent {
@@ -210,9 +290,18 @@ abstract interface class QuillKit {
   /// Id da textura do Flutter da vaga, ou -1 (kit sem texturas).
   int textureId(int slot);
 
-  /// [path] vazio abre um documento novo.
+  /// Abre mais um documento e o ativa, sem fechar os outros (D-054). [path]
+  /// vazio abre um documento novo. Responde com [DocumentOpened] (com o
+  /// número) ou [DocumentOpenFailed].
   void open(String path);
+
+  /// Troca o documento ativo; todas as outras chamadas vão a ele. Responde
+  /// com [DocumentActivated].
+  void activate(int id);
+
+  /// Fecha o ativo ([close]) ou um pelo número. Responde com [DocumentClosed].
   void close();
+  void closeDocument(int id);
 
   /// Área visível em twips e a escala × 1000.
   void setViewport(int scaleMilli, Rect visibleTwips);
@@ -224,6 +313,15 @@ abstract interface class QuillKit {
   /// Salva em [path]. O documento passa a ser aquele arquivo (os próximos
   /// salvamentos vão para lá), mesmo num formato diferente.
   void saveAs(String path, String format);
+
+  /// As classes de cada fonte do sistema, para os filtros da lista de
+  /// fontes: a soma de [FontClass.mono], [FontClass.serif], [FontClass.sans];
+  /// 0 se não está instalada. Síncrona e barata (o fontconfig, não o motor).
+  List<int> fontClasses(List<String> families);
+
+  /// Grava uma cópia em [path] sem mudar o documento: o caminho e o
+  /// "modificado" continuam os mesmos (D-044). Responde com [CopyExported].
+  void exportCopy(String path, String format);
 
   /// Entrada composta (IME). Sem [commit], é a pré-edição, que a próxima
   /// chamada substitui. Com [commit], o texto entra no documento.
@@ -256,4 +354,9 @@ abstract interface class QuillKit {
 
   /// Luminância média (0–255) dos ladrilhos em uso, ou -1. Só para medir.
   double debugTilesLuma();
+}
+
+/// As classes de fonte de [QuillKit.fontClasses].
+abstract final class FontClass {
+  static const mono = 1, serif = 2, sans = 4;
 }

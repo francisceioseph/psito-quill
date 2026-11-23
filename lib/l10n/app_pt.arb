@@ -98,6 +98,9 @@
   "preferencesTitle": "Preferências",
   "prefTheme": "Tema",
   "prefShortcuts": "Atalhos de teclado",
+  "prefPrivacy": "Privacidade",
+  "prefKeepRecents": "Guardar a lista de arquivos recentes",
+  "prefPrivacyNote": "Nada sai deste computador: sem rede, sem telemetria, sem arquivo de log.",
   "schemeWordPt": "Word em português (Ctrl+N negrito, Ctrl+B salvar)",
   "schemeWordEn": "Word em inglês (Ctrl+B negrito, Ctrl+S salvar)",
   "themeClaro": "Claro",
@@ -200,7 +203,7 @@
   },
   "commandFind": "Localizar",
   "commandReplace": "Substituir",
-  "commandPalette": "Paleta de comandos",
+  "commandPalette": "Pesquisar",
   "commandInspector": "Painel Formatar",
   "commandRevealFormatting": "Revelar formatação",
   "commandFormattingMarks": "Marcas de formatação",
@@ -279,8 +282,8 @@
   "findRegex": "Expressão regular",
   "findClose": "Fechar a busca",
   "findNotFound": "Nada encontrado",
-  "paletteHint": "Digite um comando",
-  "paletteEmpty": "Nenhum comando com esse nome",
+  "paletteHint": "Uma palavra do texto ou um comando",
+  "paletteEmpty": "Nada encontrado",
   "inspectorTitle": "Formatar",
   "sectionCharacter": "Caractere",
   "sectionParagraph": "Parágrafo",
@@ -432,5 +435,172 @@
   },
   "unitCm": "cm",
   "fileTypeImages": "Imagens",
-  "commandFilePanel": "Recentes e preferências…"
+  "commandFilePanel": "Recentes e preferências…",
+  "outlineTitle": "Estrutura",
+  "outlineClose": "Fechar a estrutura",
+  "outlineEmpty": "Os títulos do documento aparecem aqui (os estilos Título 1, 2 e 3).",
+  "railLabel": "Painéis",
+  "stylesPanelClose": "Fechar os estilos",
+  "ribbonStyles": "Estilos",
+  "ribbonCollapse": "Recolher",
+  "ribbonCollapseTip": "Recolher a faixa",
+  "ribbonExpandTip": "Mostrar a faixa",
+  "ribbonTabs": "Abas da faixa",
+  "searchCommands": "Pesquisar no texto e nos comandos",
+  "inspectorClose": "Fechar o painel Formatar",
+  "inspectorSections": "Seção do painel",
+  "sectionText": "Texto",
+  "fontGrow": "Aumentar a fonte",
+  "fontShrink": "Diminuir a fonte",
+  "moreStyles": "Mais estilos",
+  "commandLineSpacingMenu": "Entrelinhas",
+  "zoomSlider": "Zoom",
+  "zoomPercent": "{percent} %",
+  "@zoomPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "statusStyle": "Estilo: {name}",
+  "@statusStyle": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "commandCollapseRibbon": "Recolher a faixa",
+  "commandOutline": "Painel Estrutura",
+  "commandStylesPanel": "Painel Estilos",
+  "styleSampleBody": "Era uma vez",
+  "styleSampleHeading": "Capítulo",
+  "styleSampleQuote": "disse ela",
+  "styleSampleOther": "Aa",
+  "styleCardApplied": "Estilo {name}, aplicado",
+  "@styleCardApplied": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "styleCard": "Estilo {name}",
+  "@styleCard": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "colorMenuMore": "{name}: {value}",
+  "@colorMenuMore": {
+    "placeholders": {
+      "name": {},
+      "value": {}
+    }
+  },
+  "fieldWidth": "Largura",
+  "fieldHeight": "Altura",
+  "keepRatio": "Manter a proporção",
+  "groupSize": "Tamanho",
+  "fontSearch": "Procurar uma fonte",
+  "fontInDocument": "Neste documento",
+  "fontRecent": "Recentes",
+  "fontAll": "Todas",
+  "fontSerif": "Com serifa",
+  "fontSans": "Sem serifa",
+  "fontMono": "Mono",
+  "fontNone": "Nenhuma fonte com esse nome",
+  "fontFilters": "Filtrar as fontes",
+  "stylesSearch": "Procurar um estilo",
+  "stylesKind": "Tipo de estilo",
+  "stylesFromBook": "Do livro",
+  "stylesFromLibreOffice": "Do LibreOffice",
+  "stylesNone": "Nenhum estilo com esse nome",
+  "revealDirect": "direto",
+  "revealFromStyle": "estilo",
+  "revealClearDirect": "Tirar o que é direto",
+  "rulerFirstLine": "Recuo da primeira linha",
+  "rulerLeftIndent": "Recuo esquerdo",
+  "rulerRightIndent": "Recuo direito",
+  "rulerHorizontal": "Régua",
+  "rulerVertical": "Régua vertical",
+  "commandRuler": "Régua",
+  "prefRulerUnit": "Unidade da régua",
+  "unitMm": "mm",
+  "unitInch": "pol",
+  "unitPt": "pt",
+  "layoutLabel": "Disposição das páginas",
+  "layoutSingle": "Uma página",
+  "layoutMulti": "Várias páginas",
+  "layoutBook": "Livro (pares)",
+  "themeSepia": "Sépia",
+  "commandZen": "Modo zen",
+  "zenExitHint": "Esc ou F11 sai",
+  "zenFocus": "Foco no parágrafo",
+  "zenTypewriter": "Máquina de escrever",
+  "zenPaper": "Papel",
+  "zenOptions": "Opções do modo zen",
+  "zenSession": "{minutes, plural, =0{começou agora} =1{1 min nesta sessão} other{{minutes} min nesta sessão}}",
+  "@zenSession": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "ribbonMoreFont": "Mais da fonte",
+  "searchSectionDocument": "No documento",
+  "searchSectionCommands": "Comandos",
+  "searchSearching": "Procurando no documento…",
+  "searchNoHits": "Nada no documento",
+  "searchPage": "p. {page}",
+  "@searchPage": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "searchMoreHits": "{count, plural, =1{e mais 1 ocorrência} other{e mais {count} ocorrências}}",
+  "@searchMoreHits": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchFindOptions": "Localizar e substituir, com opções…",
+  "searchHitLabel": "{text}, página {page}",
+  "@searchHitLabel": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      },
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "searchHitsCount": "{count, plural, =1{1 ocorrência} other{{count} ocorrências}}",
+  "@searchHitsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "railFindReplace": "Localizar e substituir",
+  "commandCloseTab": "Fechar a aba",
+  "commandNextTab": "Próxima aba",
+  "commandPreviousTab": "Aba anterior",
+  "tabsLabel": "Documentos abertos",
+  "tabCloseNamed": "Fechar {name}",
+  "@tabCloseNamed": {"placeholders": {"name": {"type": "String"}}},
+  "tabModifiedNamed": "{name}, com alterações não salvas",
+  "@tabModifiedNamed": {"placeholders": {"name": {"type": "String"}}},
+  "stylesMore": "Mais estilos",
+  "railFind": "Localizar",
+  "commandKeepWithNext": "Manter com o próximo",
+  "commandSeparateFromNext": "Permitir separar do próximo",
+  "commandKeepLines": "Manter as linhas juntas",
+  "commandSplitLines": "Permitir dividir as linhas",
+  "contextStyle": "Estilo",
+  "contextParagraph": "Parágrafo"
 }

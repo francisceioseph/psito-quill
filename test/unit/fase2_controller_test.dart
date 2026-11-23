@@ -1,10 +1,10 @@
+import 'dart:io';
 // O controlador nos recursos da Fase 2, com o kit falso: estilos, busca,
 // menu de contexto, imagens, tabelas, parágrafo e página. E as funções
 // puras da paleta, do menu e das alças.
 import 'dart:convert';
 import 'dart:ui';
 
-import 'package:flutter/material.dart' show Icons;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:psito_quill/l10n/gen/app_localizations_pt.dart';
 import 'package:psito_quill/src/commands/command_registry.dart';
@@ -17,6 +17,7 @@ import 'package:psito_quill/src/kit/quill_kit.dart';
 import 'package:psito_quill/src/ui/molecules/measure_field.dart';
 import 'package:psito_quill/src/ui/organisms/document_view.dart';
 import 'package:psito_quill/src/ui/organisms/engine_context_menu.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 void main() {
   late FakeQuillKit kit;
@@ -123,6 +124,7 @@ void main() {
             EngineEntry(:final label) => label,
             CommandEntry(:final id) => id,
             SeparatorEntry() => '—',
+            SubmenuEntry(:final label, :final ids) => '$label › ${ids.join(' ')}',
           }
       ];
       expect(labels.take(4), ['erro', 'Ignorar', 'Ignorar sempre', '—']);
@@ -131,6 +133,14 @@ void main() {
       expect(labels, isNot(contains('Ortografia…')));
       expect(labels, contains('tabela.linhaAcima'));
       expect(labels, isNot(contains('imagem.emVolta')));
+      // Os submenus de estilo e de parágrafo, com os pares de manter (D-061).
+      expect(labels, contains('Estilo › estilo.novo estilo.atualizar - estilo.gerenciar'));
+      expect(
+        labels,
+        contains('Parágrafo › paragrafo.manterComProximo paragrafo.separarDoProximo - '
+            'paragrafo.manterLinhas paragrafo.dividirLinhas - inserir.quebraPagina'),
+      );
+      expect(labels.last, 'editar.selecionarTudo');
     });
   });
 
@@ -215,7 +225,10 @@ void main() {
     });
 
     test('ladrilho e cursor não sobem a revisão dos estados (D-037)', () async {
-      await Future<void>.delayed(Duration.zero);
+      // A cópia de quando abriu chega antes (ela sobe a revisão, de propósito).
+      for (var i = 0; i < 20 && doc.snapshot.styles.isEmpty; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
       final r = doc.stateRevision;
       kit.emit(const CursorMoved(Rect.fromLTWH(0, 0, 20, 280)));
       kit.emit(const CursorVisibility(true));
@@ -224,6 +237,37 @@ void main() {
       kit.emitState('.uno:Bold', 'true');
       await Future<void>.delayed(Duration.zero);
       expect(doc.stateRevision, greaterThan(r));
+    });
+
+    test('a página e as palavras sobem só a revisão da barra de status', () async {
+      for (var i = 0; i < 20 && doc.snapshot.styles.isEmpty; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
+      final r = doc.stateRevision, s = doc.statusRevision;
+      kit.emitState('.uno:StatePageNumber', 'Página 7 de 30');
+      kit.emitState('.uno:StateWordCount', '120 palavras, 700 caracteres');
+      await Future<void>.delayed(Duration.zero);
+      expect(doc.stateRevision, r);
+      expect(doc.statusRevision, s + 2);
+      expect(doc.page, (7, 30));
+      kit.emitState('.uno:Italic', 'true');
+      await Future<void>.delayed(Duration.zero);
+      expect(doc.stateRevision, greaterThan(r));
+      expect(doc.statusRevision, s + 3);
+    });
+
+    test('sem a contagem do motor, as palavras vêm da cópia; com ela, a do motor', () async {
+      for (var i = 0; i < 20 && doc.snapshot.styles.isEmpty; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
+      kit.emitState('.uno:StateWordCount', '');
+      await Future<void>.delayed(Duration.zero);
+      expect(doc.snapshot.words, isNotNull);
+      expect(doc.wordCount?.words, doc.snapshot.words);
+      expect(doc.wordCount?.selection, isFalse);
+      kit.emitState('.uno:StateWordCount', '120 palavras, 700 caracteres');
+      await Future<void>.delayed(Duration.zero);
+      expect(doc.wordCount?.words, 120);
     });
 
     test('margens: duas chamadas, em centésimos de milímetro', () {
@@ -244,9 +288,9 @@ void main() {
 
   group('paleta e medidas', () {
     CommandRegistry registry() => CommandRegistry()
-      ..register(Command(id: 'a', label: 'Negrito', icon: Icons.abc, run: () {}))
-      ..register(Command(id: 'b', label: 'Inserir quebra de página', icon: Icons.abc, run: () {}))
-      ..register(Command(id: 'c', label: 'Ação desligada', icon: Icons.abc, run: () {}, canRun: () => false));
+      ..register(Command(id: 'a', label: 'Negrito', icon: Symbols.abc_rounded, run: () {}))
+      ..register(Command(id: 'b', label: 'Inserir quebra de página', icon: Symbols.abc_rounded, run: () {}))
+      ..register(Command(id: 'c', label: 'Ação desligada', icon: Symbols.abc_rounded, run: () {}, canRun: () => false));
 
     test('sem acento, sem maiúsculas, o começo primeiro', () {
       expect(foldForSearch('Ação…'), 'acao');
@@ -269,6 +313,102 @@ void main() {
       expect(formatCm(0.5, 'en'), '0.5');
       expect(parseCm('1,5 cm'), 1.5);
       expect(parseCm('abc'), isNull);
+    });
+  });
+
+  // O tamanho da imagem pela aba Imagem (D-043): o motor não aceita o
+  // `.uno:Size` com valores, e o tamanho vai pelas alças.
+  group('tamanho da imagem', () {
+    const cm = 1440 / 2.54;
+    setUp(() {
+      doc.insertImage('/fotos/capa.png');
+      kit.graphicDrags.clear();
+    });
+
+    test('com a proporção: a alça do canto, pela largura', () {
+      final r = doc.graphic!;
+      doc.setGraphicSizeCm(width: 5, keepRatio: true);
+      expect(kit.graphicDrags.first, (GraphicDrag.start, r.right.round(), r.bottom.round()));
+      final end = kit.graphicDrags.last;
+      expect(end.$2, (r.left + 5 * cm).round());
+      expect(end.$3, (r.top + 5 * cm * r.height / r.width).round());
+    });
+
+    test('com a proporção, pela altura: a largura sai da altura', () {
+      final r = doc.graphic!;
+      doc.setGraphicSizeCm(height: 2, keepRatio: true);
+      expect(kit.graphicDrags.last.$3, (r.top + 2 * cm).round());
+    });
+
+    test('sem a proporção: a alça da direita e, depois, a de baixo', () async {
+      final r = doc.graphic!;
+      doc.setGraphicSizeCm(width: 4, height: 3, keepRatio: false);
+      // A altura vai quando o retângulo novo chega (um evento do motor).
+      await Future<void>.delayed(Duration.zero);
+      expect(kit.graphicDrags, hasLength(4));
+      expect(kit.graphicDrags[0], (GraphicDrag.start, r.right.round(), r.center.dy.round()));
+      expect(kit.graphicDrags[3].$3, (r.top + 3 * cm).round());
+      expect(doc.graphic!.width, closeTo(4 * cm, 1));
+      expect(doc.graphic!.height, closeTo(3 * cm, 1));
+    });
+
+    test('sem imagem ou só leitura, nada vai', () {
+      doc.graphic = null;
+      doc.setGraphicSizeCm(width: 4, keepRatio: true);
+      expect(kit.graphicDrags, isEmpty);
+    });
+  });
+
+  // A cópia temporária (D-044): pedida ao abrir, lida num isolate, apagada.
+  group('a cópia temporária', () {
+    Future<void> settle() async {
+      for (var i = 0; i < 20 && doc.snapshot.styles.isEmpty; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
+    }
+
+    test('ao abrir: os estilos com as propriedades, e o arquivo some', () async {
+      await settle();
+      expect(kit.copies, hasLength(1));
+      expect(kit.copies.single.$2, 'fodt');
+      expect(doc.snapshot.styles['Heading 1']!.bold, isTrue);
+      expect(doc.snapshot.styles['Heading 1']!.sizePt, 18);
+      expect(doc.snapshot.fonts, ['Liberation Serif']);
+      expect(File(kit.copies.single.$1).existsSync(), isFalse, reason: 'a cópia tem o texto do livro');
+      expect(doc.modified, isFalse, reason: 'a cópia não é um salvamento');
+      expect(doc.message, isNull);
+    });
+
+    test('um estilo novo pede outra cópia; pedidos no meio esperam a vez', () async {
+      await settle();
+      kit.holdCopies = true;
+      doc.newStyleFromSelection('Cena');
+      doc.updateStyleFromSelection('Cena');
+      expect(kit.copies, hasLength(2), reason: 'a segunda espera a primeira terminar');
+      kit.holdCopies = false;
+      kit.finishCopy(kit.heldCopies.single);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(kit.copies, hasLength(3));
+      for (var i = 0; i < 20 && !doc.snapshot.styles.containsKey('Cena'); i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
+      expect(doc.snapshot.styles, contains('Cena'));
+    });
+
+    test('salvar pede uma cópia nova; fechar esquece', () async {
+      await settle();
+      doc.saveAs('/livro/cap.odt');
+      await Future<void>.delayed(Duration.zero);
+      expect(kit.copies, hasLength(2));
+      await doc.close();
+      await Future<void>.delayed(Duration.zero);
+      expect(doc.snapshot.styles, isEmpty);
+    });
+
+    test('as cópias velhas de uma sessão que caiu são apagadas', () {
+      final old = File('${DocumentController.copyDir}/psito-quill-copia-1-0.fodt')..writeAsStringSync('x');
+      DocumentController.cleanStaleCopies();
+      expect(old.existsSync(), isFalse);
     });
   });
 }

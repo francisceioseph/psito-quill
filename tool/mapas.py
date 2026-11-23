@@ -62,8 +62,31 @@ def sample(pid):
     return out
 
 
-def main():
-    bundle, doc, dest = sys.argv[1:4]
+STAGES = ('rss_motor_ligado_mb', 'rss_vazio_mb', 'rss_30p_mb', 'rss_depois_de_rolar_mb', 'rss_depois_de_digitar_mb')
+
+
+def total(s, i=0):
+    """i=0: RSS; i=1: anônima. Em MB."""
+    return sum(v[i] for v in s['g'].values()) / 1024
+
+
+def stage_samples(result, samples):
+    """Cada etapa do bench: a primeira amostra, depois da anterior, com o RSS
+    mais perto do que o bench mediu."""
+    out = []
+    start = 0
+    for key in STAGES:
+        if key not in result or not samples:
+            continue
+        mb = result[key]
+        best = min(range(start, len(samples)), key=lambda i: abs(total(samples[i]) - mb))
+        start = best
+        out.append((key, mb, samples[best]))
+    return out
+
+
+def run(bundle, doc):
+    """Roda o bench uma vez e devolve (resultado do bench, amostras)."""
     work = tempfile.mkdtemp(prefix='mapas-')
     copy = os.path.join(work, 'trabalho.docx')
     shutil.copy(doc, copy)
@@ -78,24 +101,19 @@ def main():
             samples.append({'t': round(time.monotonic() - t0, 2), 'g': s})
         time.sleep(0.5)
     result = json.load(open(bench)) if os.path.exists(bench) else {}
+    shutil.rmtree(work, ignore_errors=True)
+    return result, samples
+
+
+def main():
+    bundle, doc, dest = sys.argv[1:4]
+    result, samples = run(bundle, doc)
     json.dump({'bench': result, 'amostras': samples}, open(dest, 'w'))
-
-    def total(s):
-        return sum(v[0] for v in s['g'].values()) / 1024
-
-    # Cada etapa: a primeira amostra, depois da anterior, com o RSS mais
-    # perto do que o bench mediu.
-    stages = [(k, result[k]) for k in ('rss_motor_ligado_mb', 'rss_vazio_mb', 'rss_30p_mb', 'rss_depois_de_digitar_mb') if k in result]
-    start = 0
-    for key, mb in stages:
-        best = min(range(start, len(samples)), key=lambda i: abs(total(samples[i]) - mb))
-        start = best
-        s = samples[best]
+    for key, mb, s in stage_samples(result, samples):
         print(f'== {key}: bench {mb} MB, amostra {total(s):.1f} MB (t={s["t"]} s)')
         for g, (rss, anon) in sorted(s['g'].items(), key=lambda kv: -kv[1][0]):
             if rss >= 1024:
                 print(f'   {g:18s} RSS {rss / 1024:7.1f}  anônima {anon / 1024:7.1f}')
-    shutil.rmtree(work, ignore_errors=True)
 
 
 if __name__ == '__main__':

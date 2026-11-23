@@ -12,12 +12,18 @@ import '../../commands/command_registry.dart';
 import '../../commands/commands_document.dart';
 import '../../document/doc_colors.dart';
 import '../../document/document_controller.dart';
-import '../atoms/w_button.dart';
-import '../atoms/w_color_swatch.dart';
+import '../../document/format_origin.dart';
+import '../../commands/commands_view.dart';
+import '../atoms/w_chip.dart';
+import '../atoms/w_dropdown.dart';
 import '../atoms/w_label.dart';
+import '../atoms/w_segmented.dart';
 import '../molecules/command_button.dart';
 import '../molecules/inspector_section.dart';
 import '../molecules/measure_field.dart';
+import '../molecules/panel_action.dart';
+import '../molecules/swatch_row.dart';
+import '../molecules/side_panel.dart';
 import '../style_labels.dart';
 import '../tokens/tokens.dart';
 import 'ribbon.dart' show formatPoints;
@@ -50,15 +56,41 @@ String pageSizeLabel(AppLocalizations l10n, PageSize s) => switch (s.id) {
       _ => s.id,
     };
 
+/// As seções do painel Formatar. Imagem e Tabela só aparecem com a seleção.
+enum InspectorPart { text, paragraph, page, image, table }
+
 class Inspector extends StatelessWidget {
-  const Inspector({super.key, required this.doc, required this.commands, required this.reveal, this.onRan});
+  const Inspector({
+    super.key,
+    required this.doc,
+    required this.commands,
+    required this.reveal,
+    this.part = InspectorPart.text,
+    this.onPart,
+    this.onClose,
+    this.onRan,
+  });
 
   final DocumentController doc;
   final CommandRegistry commands;
 
   /// Mostra a seção "Revelar formatação".
   final bool reveal;
+
+  /// A seção escolhida. Só ela é construída (D-038: o painel inteiro custava
+  /// uns 3,5 MB).
+  final InspectorPart part;
+  final ValueChanged<InspectorPart>? onPart;
+  final VoidCallback? onClose;
   final VoidCallback? onRan;
+
+  /// A seção que aparece: Imagem e Tabela voltam para Texto quando a seleção
+  /// sai delas.
+  InspectorPart get shownPart => switch (part) {
+        InspectorPart.image when doc.graphic == null => InspectorPart.text,
+        InspectorPart.table when !doc.inTable => InspectorPart.text,
+        final p => p,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -66,131 +98,150 @@ class Inspector extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).toLanguageTag();
     Widget cmd(String id) => CommandButton(commands: commands, id: id, onRan: onRan);
-    Widget row(List<String> ids) => Wrap(spacing: t.space.xs, runSpacing: t.space.xs, children: [for (final id in ids) cmd(id)]);
+    Widget row(List<String> ids) => Wrap(spacing: t.space.sm, runSpacing: t.space.sm, children: [for (final id in ids) cmd(id)]);
     final editable = doc.canEdit;
-    final indents = doc.paragraphIndents;
     final unit = l10n.unitCm;
+    final shown = shownPart;
 
-    return Semantics(
-      container: true,
-      label: l10n.inspectorTitle,
-      explicitChildNodes: true,
-      child: Container(
-        width: 280,
-        decoration: BoxDecoration(
-          color: t.colors.frame,
-          border: Border(left: BorderSide(color: t.colors.border)),
-        ),
-        child: ListView(children: [
-          if (reveal) _RevealSection(doc: doc),
-          if (doc.graphic != null)
-            InspectorSection(title: l10n.sectionImage, children: [
-              if (doc.graphicSizeCm case final s?)
-                WLabel(l10n.imageSizeCm(formatCm(s.width, locale), formatCm(s.height, locale)), small: true),
-              row([CommandIds.wrapOff, CommandIds.wrapIdeal, CommandIds.wrapThrough]),
-              row([CommandIds.imageLeft, CommandIds.imageCenter, CommandIds.imageRight]),
-            ]),
-          if (doc.inTable)
-            InspectorSection(title: l10n.sectionTable, children: [
-              row([CommandIds.rowAbove, CommandIds.rowBelow, CommandIds.columnLeft, CommandIds.columnRight]),
-              row([CommandIds.deleteRow, CommandIds.deleteColumn, CommandIds.deleteTable, CommandIds.mergeCells]),
-            ]),
-          InspectorSection(title: l10n.sectionCharacter, children: [
-            row([
-              CommandIds.bold,
-              CommandIds.italic,
-              CommandIds.underline,
-              CommandIds.strikeout,
-              CommandIds.superscript,
-              CommandIds.subscript,
-            ]),
-            WLabel(l10n.fieldFontColor, small: true, tone: WLabelTone.muted),
-            Wrap(spacing: t.space.xs, children: [
-              WColorSwatch(
-                rgb: null,
-                label: l10n.colorAutomatic,
-                selected: doc.fontColor == null,
-                onPressed: editable ? () => doc.setFontColor(null) : null,
-              ),
-              for (final (name, rgb) in fontColorChoices)
-                WColorSwatch(
-                  rgb: rgb,
-                  label: colorName(l10n, name),
-                  selected: doc.fontColor == rgb,
-                  onPressed: editable ? () => doc.setFontColor(rgb) : null,
-                ),
-            ]),
-            WLabel(l10n.fieldHighlight, small: true, tone: WLabelTone.muted),
-            Wrap(spacing: t.space.xs, children: [
-              WColorSwatch(
-                rgb: null,
-                label: l10n.highlightNone,
-                selected: doc.highlightColor == null,
-                onPressed: editable ? () => doc.setHighlight(null) : null,
-              ),
-              for (final (name, rgb) in highlightChoices)
-                WColorSwatch(
-                  rgb: rgb,
-                  label: colorName(l10n, name),
-                  selected: doc.highlightColor == rgb,
-                  onPressed: editable ? () => doc.setHighlight(rgb) : null,
-                ),
-            ]),
-            row([CommandIds.clearFormatting]),
+    final segments = [
+      WSegment(InspectorPart.text, l10n.sectionText),
+      WSegment(InspectorPart.paragraph, l10n.sectionParagraph),
+      WSegment(InspectorPart.page, l10n.sectionPage),
+      if (doc.graphic != null) WSegment(InspectorPart.image, l10n.sectionImage),
+      if (doc.inTable) WSegment(InspectorPart.table, l10n.sectionTable),
+    ];
+
+    final Widget section = switch (shown) {
+      InspectorPart.text => _textSection(context, l10n, t, row, editable),
+      InspectorPart.paragraph => InspectorSection(title: l10n.sectionParagraph, children: [
+          row([CommandIds.alignLeft, CommandIds.alignCenter, CommandIds.alignRight, CommandIds.justify]),
+          row([CommandIds.bullets, CommandIds.numbering, CommandIds.indentLess, CommandIds.indentMore]),
+          LabeledRow(
+            label: l10n.fieldLineSpacing,
+            child: row([CommandIds.lineSpacing1, CommandIds.lineSpacing15, CommandIds.lineSpacing2]),
+          ),
+          MeasureField(
+            label: l10n.fieldIndentLeft,
+            value: doc.paragraphIndents['left'],
+            unit: unit,
+            onDone: onRan,
+            onChanged: editable ? (v) => doc.setIndents(left: v) : null,
+          ),
+          MeasureField(
+            label: l10n.fieldIndentFirst,
+            value: doc.paragraphIndents['firstline'],
+            unit: unit,
+            onDone: onRan,
+            onChanged: editable ? (v) => doc.setIndents(firstLine: v) : null,
+          ),
+          MeasureField(
+            label: l10n.fieldIndentRight,
+            value: doc.paragraphIndents['right'],
+            unit: unit,
+            onDone: onRan,
+            onChanged: editable ? (v) => doc.setIndents(right: v) : null,
+          ),
+          LabeledRow(label: l10n.fieldSpacing, child: row([CommandIds.spaceLess, CommandIds.spaceMore])),
+        ]),
+      InspectorPart.page => InspectorSection(title: l10n.sectionPage, children: [
+          row([CommandIds.portrait, CommandIds.landscape]),
+          WLabel(l10n.fieldPageSize, small: true, tone: WLabelTone.muted),
+          Wrap(spacing: t.space.sm, runSpacing: t.space.sm, children: [
+            for (final s in pageSizes)
+              WChip(label: pageSizeLabel(l10n, s), onPressed: editable ? () => doc.setPageSize(s) : null),
           ]),
-          InspectorSection(title: l10n.sectionParagraph, children: [
-            row([CommandIds.alignLeft, CommandIds.alignCenter, CommandIds.alignRight, CommandIds.justify]),
-            row([CommandIds.bullets, CommandIds.numbering, CommandIds.indentLess, CommandIds.indentMore]),
-            LabeledRow(
-              label: l10n.fieldLineSpacing,
-              child: row([CommandIds.lineSpacing1, CommandIds.lineSpacing15, CommandIds.lineSpacing2]),
-            ),
-            MeasureField(
-              label: l10n.fieldIndentLeft,
-              value: indents['left'],
-              unit: unit,
-              onDone: onRan,
-              onChanged: editable ? (v) => doc.setIndents(left: v) : null,
-            ),
-            MeasureField(
-              label: l10n.fieldIndentFirst,
-              value: indents['firstline'],
-              unit: unit,
-              onDone: onRan,
-              onChanged: editable ? (v) => doc.setIndents(firstLine: v) : null,
-            ),
-            MeasureField(
-              label: l10n.fieldIndentRight,
-              value: indents['right'],
-              unit: unit,
-              onDone: onRan,
-              onChanged: editable ? (v) => doc.setIndents(right: v) : null,
-            ),
-            LabeledRow(label: l10n.fieldSpacing, child: row([CommandIds.spaceLess, CommandIds.spaceMore])),
-          ]),
-          InspectorSection(title: l10n.sectionPage, children: [
-            row([CommandIds.portrait, CommandIds.landscape]),
-            WLabel(l10n.fieldPageSize, small: true, tone: WLabelTone.muted),
-            Wrap(spacing: t.space.xs, runSpacing: t.space.xs, children: [
-              for (final s in pageSizes)
-                WTextButton(label: pageSizeLabel(l10n, s), onPressed: editable ? () => doc.setPageSize(s) : null),
-            ]),
-            WLabel(l10n.fieldMargins, small: true, tone: WLabelTone.muted),
-            Wrap(spacing: t.space.xs, runSpacing: t.space.xs, children: [
-              for (final (label, m) in marginPresets(l10n))
-                WTextButton(label: label, onPressed: editable ? () => doc.setPageMargins(m) : null),
-            ]),
+          WLabel(l10n.fieldMargins, small: true, tone: WLabelTone.muted),
+          Wrap(spacing: t.space.sm, runSpacing: t.space.sm, children: [
+            for (final (label, m) in marginPresets(l10n))
+              WChip(label: label, onPressed: editable ? () => doc.setPageMargins(m) : null),
           ]),
         ]),
-      ),
+      InspectorPart.image => InspectorSection(title: l10n.sectionImage, children: [
+          if (doc.graphicSizeCm case final s?)
+            WLabel(l10n.imageSizeCm(formatCm(s.width, locale), formatCm(s.height, locale)), small: true),
+          row([CommandIds.wrapOff, CommandIds.wrapIdeal, CommandIds.wrapThrough]),
+          row([CommandIds.imageLeft, CommandIds.imageCenter, CommandIds.imageRight]),
+        ]),
+      InspectorPart.table => InspectorSection(title: l10n.sectionTable, children: [
+          row([CommandIds.rowAbove, CommandIds.rowBelow, CommandIds.columnLeft, CommandIds.columnRight]),
+          row([CommandIds.deleteRow, CommandIds.deleteColumn, CommandIds.deleteTable, CommandIds.mergeCells]),
+        ]),
+    };
+
+    return SidePanel(
+      title: l10n.inspectorTitle,
+      closeLabel: commands.tooltipOf(ViewCommandIds.inspector).replaceFirst(l10n.commandInspector, l10n.inspectorClose),
+      onClose: onClose ?? () => commands.run(ViewCommandIds.inspector),
+      width: 300,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        WSegmented<InspectorPart>(
+          label: l10n.inspectorSections,
+          segments: segments,
+          selected: shown,
+          onChanged: onPart,
+          expanded: true,
+        ),
+        SizedBox(height: t.space.sm),
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.only(bottom: t.space.md),
+            children: [
+              if (reveal) _RevealSection(doc: doc, commands: commands, onRan: onRan),
+              section,
+            ],
+          ),
+        ),
+      ]),
     );
+  }
+
+  Widget _textSection(BuildContext context, AppLocalizations l10n, QuillTokens t, Widget Function(List<String>) row, bool editable) {
+    final styles = doc.paragraphStyles;
+    return InspectorSection(title: l10n.sectionText, children: [
+      WLabel(l10n.fieldStyle, small: true, tone: WLabelTone.muted),
+      LayoutBuilder(
+        builder: (context, box) => WDropdown<String>(
+          label: l10n.fieldStyle,
+          text: doc.paragraphStyleId == null ? '' : styleLabel(l10n, doc.paragraphStyleId!),
+          width: box.maxWidth,
+          items: [for (final s in styles) WDropdownItem(s, styleLabel(l10n, s))],
+          onSelected: editable && styles.isNotEmpty ? doc.applyParagraphStyle : null,
+          onClosed: onRan,
+        ),
+      ),
+      PanelAction(commands: commands, id: ViewCommandIds.updateStyle, onRan: onRan),
+      PanelAction(commands: commands, id: ViewCommandIds.newStyle, onRan: onRan),
+      row([
+        CommandIds.bold,
+        CommandIds.italic,
+        CommandIds.underline,
+        CommandIds.strikeout,
+        CommandIds.superscript,
+        CommandIds.subscript,
+      ]),
+      WLabel(l10n.fieldFontColor, small: true, tone: WLabelTone.muted),
+      SwatchRow(swatches: [
+        (rgb: null, label: l10n.colorAutomatic, selected: doc.fontColor == null, onPressed: editable ? () => doc.setFontColor(null) : null),
+        for (final (name, rgb) in fontColorChoices)
+          (rgb: rgb, label: colorName(l10n, name), selected: doc.fontColor == rgb, onPressed: editable ? () => doc.setFontColor(rgb) : null),
+      ]),
+      WLabel(l10n.fieldHighlight, small: true, tone: WLabelTone.muted),
+      SwatchRow(swatches: [
+        (rgb: null, label: l10n.highlightNone, selected: doc.highlightColor == null, onPressed: editable ? () => doc.setHighlight(null) : null),
+        for (final (name, rgb) in highlightChoices)
+          (rgb: rgb, label: colorName(l10n, name), selected: doc.highlightColor == rgb, onPressed: editable ? () => doc.setHighlight(rgb) : null),
+      ]),
+      PanelAction(commands: commands, id: CommandIds.clearFormatting, onRan: onRan),
+    ]);
   }
 }
 
 /// "Revelar formatação": o que vale no cursor, lido dos estados do motor.
 class _RevealSection extends StatelessWidget {
-  const _RevealSection({required this.doc});
+  const _RevealSection({required this.doc, required this.commands, this.onRan});
   final DocumentController doc;
+  final CommandRegistry commands;
+  final VoidCallback? onRan;
 
   @override
   Widget build(BuildContext context) {
@@ -221,38 +272,116 @@ class _RevealSection extends StatelessWidget {
         : fontColorChoices.where((c) => c.$2 == colorRgb).map((c) => colorName(l10n, c.$1)).firstOrNull ??
             '#${colorRgb.toRadixString(16).padLeft(6, '0').toUpperCase()}';
     final size = doc.fontSize;
-    final rows = [
-      (l10n.revealParagraphStyle, doc.paragraphStyleId == null ? '—' : styleLabel(l10n, doc.paragraphStyleId!)),
-      (l10n.revealFont, [doc.fontName ?? '—', if (size != null) '${formatPoints(size, locale)} pt'].join(', ')),
-      (l10n.revealEffects, effects.isEmpty ? l10n.revealNone : effects.join(', ')),
-      (l10n.revealColor, color),
-      (l10n.revealAlignment, align),
+    final alignId = doc.isOn('.uno:CenterPara')
+        ? 'center'
+        : doc.isOn('.uno:RightPara')
+            ? 'end'
+            : doc.isOn('.uno:JustifyPara')
+                ? 'justify'
+                : 'start';
+    // De onde vem cada coisa: do estilo ou direta (a cópia, D-044).
+    final origin = formatOrigins(
+      style: doc.paragraphStyleId == null ? null : doc.snapshot.styles[doc.paragraphStyleId],
+      fontName: doc.fontName,
+      fontSize: size,
+      bold: doc.isOn('.uno:Bold'),
+      italic: doc.isOn('.uno:Italic'),
+      color: colorRgb,
+      alignment: alignId,
+      firstLineCm: indents['firstline'],
+    );
+    bool? direct(List<FormatAspect> aspects) {
+      final known = [for (final a in aspects) ?origin[a]];
+      return known.isEmpty ? null : known.any((d) => d);
+    }
+
+    final rows = <(String, String, bool?)>[
+      (l10n.revealParagraphStyle, doc.paragraphStyleId == null ? '—' : styleLabel(l10n, doc.paragraphStyleId!), null),
+      (
+        l10n.revealFont,
+        [doc.fontName ?? '—', if (size != null) '${formatPoints(size, locale)} pt'].join(', '),
+        direct([FormatAspect.font, FormatAspect.size])
+      ),
+      (l10n.revealEffects, effects.isEmpty ? l10n.revealNone : effects.join(', '), direct([FormatAspect.bold, FormatAspect.italic])),
+      (l10n.revealColor, color, direct([FormatAspect.color])),
+      (l10n.revealAlignment, align, direct([FormatAspect.alignment])),
       (
         l10n.revealIndents,
-        '${l10n.fieldIndentLeft} ${cm(indents['left'])} · ${l10n.fieldIndentFirst} ${cm(indents['firstline'])}'
+        '${l10n.fieldIndentLeft} ${cm(indents['left'])} · ${l10n.fieldIndentFirst} ${cm(indents['firstline'])}',
+        direct([FormatAspect.firstLine])
       ),
-      (l10n.revealSpacing, '${cm(spacing['upper'])} · ${cm(spacing['lower'])}'),
+      (l10n.revealSpacing, '${cm(spacing['upper'])} · ${cm(spacing['lower'])}', null),
       (
         l10n.revealLineSpacing,
         switch (doc.lineSpacing) {
           final p? => l10n.percentValue(p),
           null => l10n.revealOther,
-        }
+        },
+        null
       ),
-      (l10n.revealLanguage, (s['.uno:LanguageStatus'] ?? '—').split(';').first),
-      (l10n.revealPageStyle, s['.uno:PageStyleName'] ?? '—'),
+      (l10n.revealLanguage, (s['.uno:LanguageStatus'] ?? '—').split(';').first, null),
+      (l10n.revealPageStyle, s['.uno:PageStyleName'] ?? '—', null),
     ];
+    final t = QuillTokens.of(context);
     return InspectorSection(title: l10n.sectionReveal, children: [
-      for (final (label, value) in rows)
+      for (final (label, value, isDirect) in rows)
         Semantics(
-          label: '$label: $value',
+          label: isDirect == null
+              ? '$label: $value'
+              : '$label: $value, ${isDirect ? l10n.revealDirect : l10n.revealFromStyle}',
           child: ExcludeSemantics(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               WLabel(label, small: true, tone: WLabelTone.muted),
-              WLabel(value, maxLines: 2),
+              Row(children: [
+                Flexible(child: WLabel(value, maxLines: 2)),
+                if (isDirect != null) ...[SizedBox(width: t.space.sm), _OriginTag(direct: isDirect)],
+              ]),
             ]),
           ),
         ),
+      if (commands[CommandIds.clearFormatting] case final c?)
+        Align(
+          alignment: Alignment.centerLeft,
+          child: WChip(
+            label: l10n.revealClearDirect,
+            icon: c.icon,
+            onPressed: c.enabled
+                ? () {
+                    commands.run(CommandIds.clearFormatting);
+                    onRan?.call();
+                  }
+                : null,
+          ),
+        ),
     ]);
+  }
+}
+
+/// A etiqueta "estilo" ou "direto" ao lado do valor.
+class _OriginTag extends StatelessWidget {
+  const _OriginTag({required this.direct});
+  final bool direct;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = QuillTokens.of(context);
+    final c = t.colors;
+    final l10n = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+      decoration: BoxDecoration(
+        color: direct ? c.accentContainer : c.surfaceHigh,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        direct ? l10n.revealDirect : l10n.revealFromStyle,
+        style: TextStyle(
+          color: direct ? c.onAccentContainer : c.onFrameMuted,
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+          fontFamily: t.font.family,
+        ),
+      ),
+    );
   }
 }

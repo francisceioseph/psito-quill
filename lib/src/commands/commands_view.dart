@@ -3,9 +3,9 @@
 //
 // Command com receptor: o comando só sabe pedir; quem mostra a tela é a
 // página do editor, que implementa [EditorViewActions].
-import 'package:flutter/material.dart' show Icons;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' show SingleActivator;
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../l10n/gen/app_localizations.dart';
 import '../document/document_controller.dart';
@@ -24,6 +24,11 @@ abstract final class ViewCommandIds {
   static const manageStyles = 'estilo.gerenciar';
   static const about = 'ajuda.sobre';
   static const filePanel = 'arquivo.painel';
+  static const outline = 'exibir.estrutura';
+  static const stylesPanel = 'exibir.estilos';
+  static const collapseRibbon = 'exibir.recolherFaixa';
+  static const ruler = 'exibir.regua';
+  static const zen = 'exibir.zen';
 }
 
 /// O que a página do editor sabe abrir.
@@ -42,6 +47,24 @@ abstract interface class EditorViewActions {
 
   /// O painel Arquivo (recentes e preferências).
   void openFilePanel();
+
+  /// Os painéis do trilho, à esquerda (Fase 2B).
+  void toggleOutline();
+  bool get outlineOpen;
+  void toggleStylesPanel();
+  bool get stylesPanelOpen;
+
+  /// A faixa só com as abas (Ctrl+F1).
+  void toggleRibbon();
+  bool get ribbonCollapsed;
+
+  /// As réguas (Exibir › Régua).
+  void toggleRuler();
+  bool get rulerShown;
+
+  /// O modo zen (F11).
+  void toggleZen();
+  bool get zenOpen;
 }
 
 void registerViewCommands(
@@ -62,15 +85,16 @@ void registerViewCommands(
     Command(
       id: ViewCommandIds.find,
       label: l10n.commandFind,
-      icon: Icons.search,
-      run: () => view.openFind(replace: false),
+      icon: Symbols.search_rounded,
+      // A busca única (D-050): o texto e os comandos num campo só.
+      run: view.openPalette,
       canRun: open,
       shortcuts: schemes(ctrl(LogicalKeyboardKey.keyL), ctrl(LogicalKeyboardKey.keyF)),
     ),
     Command(
       id: ViewCommandIds.replace,
       label: l10n.commandReplace,
-      icon: Icons.find_replace,
+      icon: Symbols.find_replace_rounded,
       run: () => view.openFind(replace: true),
       canRun: editable,
       shortcuts: schemes(ctrl(LogicalKeyboardKey.keyU), ctrl(LogicalKeyboardKey.keyH)),
@@ -79,14 +103,14 @@ void registerViewCommands(
     Command(
       id: ViewCommandIds.palette,
       label: l10n.commandPalette,
-      icon: Icons.keyboard_command_key,
+      icon: Symbols.keyboard_command_key_rounded,
       run: view.openPalette,
       shortcuts: both(ctrl(LogicalKeyboardKey.keyK)),
     ),
     Command(
       id: ViewCommandIds.inspector,
       label: l10n.commandInspector,
-      icon: Icons.tune,
+      icon: Symbols.tune_rounded,
       run: view.toggleInspector,
       isActive: () => view.inspectorOpen,
       shortcuts: both(const SingleActivator(LogicalKeyboardKey.f10)),
@@ -95,7 +119,7 @@ void registerViewCommands(
     Command(
       id: ViewCommandIds.reveal,
       label: l10n.commandRevealFormatting,
-      icon: Icons.visibility_outlined,
+      icon: Symbols.visibility_rounded,
       run: view.toggleReveal,
       isActive: () => view.revealOpen,
       canRun: open,
@@ -104,28 +128,28 @@ void registerViewCommands(
     Command(
       id: ViewCommandIds.insertImage,
       label: l10n.commandInsertImage,
-      icon: Icons.image_outlined,
+      icon: Symbols.image_rounded,
       run: view.insertImage,
       canRun: editable,
     ),
     Command(
       id: ViewCommandIds.insertTable,
       label: l10n.commandInsertTable,
-      icon: Icons.table_chart_outlined,
+      icon: Symbols.table_chart_rounded,
       run: view.insertTable,
       canRun: editable,
     ),
     Command(
       id: ViewCommandIds.newStyle,
       label: l10n.commandNewStyle,
-      icon: Icons.style_outlined,
+      icon: Symbols.style_rounded,
       run: view.newStyle,
       canRun: editable,
     ),
     Command(
       id: ViewCommandIds.updateStyle,
       label: l10n.commandUpdateStyle,
-      icon: Icons.published_with_changes,
+      icon: Symbols.published_with_changes_rounded,
       run: () {
         if (doc.paragraphStyleId case final s?) doc.updateStyleFromSelection(s);
       },
@@ -134,20 +158,62 @@ void registerViewCommands(
     Command(
       id: ViewCommandIds.manageStyles,
       label: l10n.commandManageStyles,
-      icon: Icons.format_paint_outlined,
+      icon: Symbols.format_paint_rounded,
       run: view.manageStyles,
       canRun: open,
     ),
     Command(
       id: ViewCommandIds.filePanel,
       label: l10n.commandFilePanel,
-      icon: Icons.history,
+      icon: Symbols.history_rounded,
       run: view.openFilePanel,
+    ),
+    Command(
+      id: ViewCommandIds.outline,
+      label: l10n.commandOutline,
+      icon: Symbols.toc_rounded,
+      run: view.toggleOutline,
+      isActive: () => view.outlineOpen,
+      canRun: open,
+    ),
+    Command(
+      id: ViewCommandIds.stylesPanel,
+      label: l10n.commandStylesPanel,
+      icon: Symbols.style_rounded,
+      run: view.toggleStylesPanel,
+      isActive: () => view.stylesPanelOpen,
+      canRun: open,
+    ),
+    // Ctrl+F1, como no Word.
+    Command(
+      id: ViewCommandIds.collapseRibbon,
+      label: l10n.commandCollapseRibbon,
+      icon: Symbols.expand_less_rounded,
+      run: view.toggleRibbon,
+      isActive: () => view.ribbonCollapsed,
+      shortcuts: both(ctrl(LogicalKeyboardKey.f1)),
+    ),
+    Command(
+      id: ViewCommandIds.ruler,
+      label: l10n.commandRuler,
+      icon: Symbols.straighten_rounded,
+      run: view.toggleRuler,
+      isActive: () => view.rulerShown,
+    ),
+    // F11, como a tela cheia dos navegadores (Esc também sai).
+    Command(
+      id: ViewCommandIds.zen,
+      label: l10n.commandZen,
+      icon: Symbols.center_focus_strong_rounded,
+      run: view.toggleZen,
+      isActive: () => view.zenOpen,
+      canRun: open,
+      shortcuts: both(const SingleActivator(LogicalKeyboardKey.f11)),
     ),
     Command(
       id: ViewCommandIds.about,
       label: l10n.commandAbout,
-      icon: Icons.info_outline,
+      icon: Symbols.info_rounded,
       run: view.about,
     ),
   ]) {

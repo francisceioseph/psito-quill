@@ -41,8 +41,12 @@ class QuillAppState extends State<QuillApp> {
 
   DocumentController get doc => widget.workspace.doc;
 
-  QuillTokens get theme =>
-      builtInThemes.firstWhere((t) => t.id == widget.settings.theme, orElse: () => builtInThemes.first);
+  /// O tema da interface; no modo zen, o do papel escolhido para ele (a
+  /// janela inteira fica da cor do papel).
+  QuillTokens get theme {
+    final id = widget.settings.zen ? widget.settings.zenPaper : widget.settings.theme;
+    return builtInThemes.firstWhere((t) => t.id == id, orElse: () => builtInThemes.first);
+  }
 
   @override
   void initState() {

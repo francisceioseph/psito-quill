@@ -61,25 +61,26 @@ class Workspace extends ChangeNotifier {
     }
   }
 
-  /// Um documento novo, vazio.
-  Future<void> newDocument() async {
-    if (!await _confirmDiscard()) return;
-    doc.open('');
-  }
+  /// Um documento novo, vazio, numa aba nova (D-054).
+  Future<void> newDocument() async => doc.open('');
 
   Future<void> openWithDialog() async {
-    if (!await _confirmDiscard()) return;
     final path = await dialogs.pickOpen(label: labels.documents);
     if (path != null) _open(path);
   }
 
-  /// Abre [path] (dos recentes, da linha de comando).
-  Future<void> openPath(String path) async {
-    if (!await _confirmDiscard()) return;
-    _open(path);
-  }
+  /// Abre [path] (dos recentes, da linha de comando) numa aba nova.
+  Future<void> openPath(String path) async => _open(path);
 
   void _open(String path) {
+    // Já aberto: só ganha a tela.
+    for (final t in doc.tabs) {
+      if (doc.tabPath(t) == path) {
+        doc.activateTab(t);
+        recents.add(path);
+        return;
+      }
+    }
     final verdict = locks.inspect(path);
     _pendingRecent = path;
     doc.open(path, lockOwner: verdict is LockedBy ? verdict.lock.owner : null);
@@ -111,8 +112,24 @@ class Workspace extends ChangeNotifier {
     if (ok) recents.add(target);
     final reopen = _reopenAfterSave;
     _reopenAfterSave = null;
-    if (ok && reopen != null) _open(reopen);
+    if (ok && reopen != null) {
+      // A aba só leitura dá lugar à cópia, editável.
+      final old = doc.currentTab;
+      if (old != null) await doc.closeTab(old);
+      _open(reopen);
+    }
     return ok;
+  }
+
+  /// Fecha uma aba (a da tela, sem [tab]): pergunta se há alterações, com a
+  /// aba na tela. false: o usuário cancelou.
+  Future<bool> closeTab([DocTab? tab]) async {
+    final t = tab ?? doc.currentTab;
+    if (t == null) return true;
+    if (doc.tabModified(t) && t != doc.currentTab) doc.activateTab(t);
+    if (t == doc.currentTab && !await _confirmDiscard()) return false;
+    await doc.closeTab(t);
+    return true;
   }
 
   Future<bool> _nextSaveResult() => doc.kit.events
@@ -123,7 +140,13 @@ class Workspace extends ChangeNotifier {
   /// Fechar a janela: pergunta se há alterações, e fecha o documento no
   /// motor (tira a trava). false: o usuário cancelou.
   Future<bool> requestExit() async {
-    if (!await _confirmDiscard()) return false;
+    // Uma pergunta por aba com alterações, cada uma na tela.
+    for (final t in [...doc.tabs]) {
+      if (!doc.tabModified(t)) continue;
+      doc.activateTab(t);
+      if (!await _confirmDiscard()) return false;
+    }
+    if (doc.tabs.isEmpty && !await _confirmDiscard()) return false;
     await doc.close();
     return true;
   }

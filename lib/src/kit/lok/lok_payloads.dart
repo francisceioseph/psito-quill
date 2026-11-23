@@ -74,6 +74,9 @@ Size parseOpened(String payload) {
   return Size((json['width'] as num).toDouble(), (json['height'] as num).toDouble());
 }
 
+/// O número do documento no PQK_EVENT_OPENED e no PQK_EVENT_ACTIVATED.
+int parseDocumentId(String payload) => ((jsonDecode(payload) as Map<String, dynamic>)['id'] as num?)?.toInt() ?? 1;
+
 // ------------------------------------------------- estados da barra de status --
 // O texto vem no idioma da interface do LibreOffice ("Página 3 de 30",
 // "Page 3 of 30"). Só os números interessam: a frase é da l10n do app.
@@ -214,4 +217,29 @@ Size? parseObjectSize(String? payload) {
   if (payload == null) return null;
   final n = _ints.allMatches(payload).map((m) => int.parse(m.group(0)!)).toList();
   return n.length < 2 ? null : Size(n[0].toDouble(), n[1].toDouble());
+}
+
+/// O callback 35 da 24.2:
+/// `{ "margin1": 0, "margin2": 18000, "leftOffset": 2000, "pageOffset": 501,
+/// "pageWidth": 21001, "tabs": { "": { "position": 2000, "style": 4}, ...},
+/// "unit": " cm"}`. As tabulações vêm com a chave repetida (`""`), que o
+/// `jsonDecode` juntaria numa só: por isso as expressões regulares.
+RulerInfo? parseRuler(String payload) {
+  int? field(String name) => switch (RegExp('"$name"\\s*:\\s*(-?\\d+)').firstMatch(payload)) {
+        final m? => int.parse(m[1]!),
+        null => null,
+      };
+  final pageWidth = field('pageWidth'), left = field('leftOffset'), width = field('margin2');
+  if (pageWidth == null || left == null || width == null) return null;
+  return RulerInfo(
+    pageWidth: pageWidth,
+    leftMargin: left,
+    textWidth: width,
+    indent: field('margin1') ?? 0,
+    pageOffset: field('pageOffset'),
+    tabs: [
+      for (final m in RegExp(r'"position"\s*:\s*(-?\d+)\s*,\s*"style"\s*:\s*(\d+)').allMatches(payload))
+        (position: int.parse(m[1]!), style: int.parse(m[2]!)),
+    ],
+  );
 }

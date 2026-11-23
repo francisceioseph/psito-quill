@@ -7,8 +7,11 @@ import 'package:psito_quill/src/document/document_controller.dart';
 import 'package:psito_quill/src/kit/fake/fake_quill_kit.dart';
 import 'package:psito_quill/src/kit/quill_kit.dart';
 import 'package:psito_quill/src/ui/atoms/w_button.dart';
+import 'package:psito_quill/src/ui/molecules/style_card.dart';
+import 'package:psito_quill/src/ui/organisms/font_picker.dart';
 import 'package:psito_quill/src/ui/atoms/w_dropdown.dart';
 import 'package:psito_quill/src/ui/tokens/themes/themes.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../support/harness.dart';
 
@@ -55,9 +58,9 @@ void main() {
 
   testWidgets('o botão Negrito acende pelo estado do motor', (tester) async {
     await pumpApp(tester);
-    WToggle bold() => tester.widget<WToggle>(find.widgetWithIcon(WToggle, Icons.format_bold));
+    WToggle bold() => tester.widget<WToggle>(find.widgetWithIcon(WToggle, Symbols.format_bold_rounded));
     expect(bold().value, isFalse);
-    await tester.tap(find.widgetWithIcon(WToggle, Icons.format_bold));
+    await tester.tap(find.widgetWithIcon(WToggle, Symbols.format_bold_rounded));
     await tester.pump();
     expect(kit.unoCommands, contains('.uno:Bold'));
     expect(bold().value, isTrue);
@@ -69,11 +72,11 @@ void main() {
       expect(find.text(g), findsWidgets, reason: g);
     }
     for (final icon in [
-      Icons.save_outlined, // acesso rápido, ao lado das abas
-      Icons.undo,
-      Icons.content_paste,
-      Icons.format_italic,
-      Icons.format_align_center,
+      Symbols.save_rounded, // acesso rápido, ao lado das abas
+      Symbols.undo_rounded,
+      Symbols.content_paste_rounded,
+      Symbols.format_italic_rounded,
+      Symbols.format_align_center_rounded,
     ]) {
       expect(find.byIcon(icon), findsOneWidget);
     }
@@ -81,12 +84,12 @@ void main() {
 
   testWidgets('a dica do botão traz o atalho do jogo atual', (tester) async {
     await pumpApp(tester);
-    expect(tester.widget<WToggle>(find.widgetWithIcon(WToggle, Icons.format_bold)).tooltip, 'Negrito (Ctrl+N)');
+    expect(tester.widget<WToggle>(find.widgetWithIcon(WToggle, Symbols.format_bold_rounded)).tooltip, 'Negrito (Ctrl+N)');
   });
 
   testWidgets('Salvar grava e a barra de status avisa', (tester) async {
     await pumpApp(tester);
-    await tester.tap(find.widgetWithIcon(WButton, Icons.save_outlined));
+    await tester.tap(find.widgetWithIcon(WButton, Symbols.save_rounded));
     await tester.pump();
     expect(kit.saved.single, ('/livro/cap.docx', 'docx'));
     expect(find.text('Salvo em /livro/cap.docx'), findsOneWidget);
@@ -104,7 +107,7 @@ void main() {
 
   testWidgets('Desfazer e Refazer seguem o estado do motor', (tester) async {
     await pumpApp(tester);
-    WButton undo() => tester.widget<WButton>(find.widgetWithIcon(WButton, Icons.undo));
+    WButton undo() => tester.widget<WButton>(find.widgetWithIcon(WButton, Symbols.undo_rounded));
     expect(undo().onPressed, isNull);
     type(tester, 'olá');
     await tester.pump();
@@ -134,7 +137,7 @@ void main() {
 
   testWidgets('a galeria de estilos aplica pelo nome do LibreOffice', (tester) async {
     await pumpApp(tester);
-    await tester.tap(find.widgetWithText(WTextButton, 'Título 2'));
+    await tester.tap(find.ancestor(of: find.text('Título 2'), matching: find.byType(StyleCard)).first);
     await tester.pump();
     expect(kit.unoCommands.last, '.uno:StyleApply');
     expect(kit.unoArgs.last, contains('"Heading 2"'));
@@ -142,7 +145,7 @@ void main() {
 
   testWidgets('a lista de fontes vem do motor, e o tamanho aplica em pontos', (tester) async {
     await pumpApp(tester);
-    await tester.tap(find.byWidgetPredicate((w) => w is WDropdown && w.label == 'Fonte'));
+    await tester.tap(find.byType(FontPicker));
     await tester.pumpAndSettle();
     expect(find.text('Noto Serif'), findsOneWidget);
     await tester.tap(find.text('Noto Serif'));
@@ -165,7 +168,7 @@ void main() {
     expect(find.text('Página 2 de 30'), findsOneWidget);
     expect(find.text('21069 palavras'), findsOneWidget);
     expect(find.text('100 %'), findsOneWidget);
-    await tester.tap(find.widgetWithIcon(WButton, Icons.zoom_in));
+    await tester.tap(find.widgetWithIcon(WButton, Symbols.zoom_in_rounded));
     await tester.pump();
     expect(find.text('110 %'), findsOneWidget);
   });
@@ -174,7 +177,7 @@ void main() {
     await pumpApp(tester, lockOwner: 'Maria');
     expect(find.textContaining('Maria está com este arquivo aberto'), findsOneWidget);
     expect(find.text('só leitura'), findsOneWidget);
-    expect(tester.widget<WToggle>(find.widgetWithIcon(WToggle, Icons.format_bold)).onPressed, isNull);
+    expect(tester.widget<WToggle>(find.widgetWithIcon(WToggle, Symbols.format_bold_rounded)).onPressed, isNull);
     h.dialogs.saveAnswer = '/livro/copia.docx';
     await tester.tap(find.text('Salvar uma cópia…'));
     await tester.pump();
@@ -193,21 +196,28 @@ void main() {
     expect(h.window.titles.last, '• cap.docx — Psito Quill');
   });
 
-  testWidgets('Novo com alterações pergunta; Cancelar mantém o documento', (tester) async {
+  testWidgets('Novo abre numa aba sem perguntar; Ctrl+W com alterações pergunta (D-054)', (tester) async {
     await pumpApp(tester);
     type(tester, 'texto');
     await tester.pump();
     await ctrl(tester, LogicalKeyboardKey.keyO); // Novo, no Word em português
     await tester.pumpAndSettle();
+    expect(find.text('Salvar as alterações?'), findsNothing);
+    expect(kit.opened, ['/livro/cap.docx', '']);
+    h.doc.activateTab(h.doc.tabs.first);
+    await tester.pumpAndSettle();
+    await ctrl(tester, LogicalKeyboardKey.keyW);
+    await tester.pumpAndSettle();
     expect(find.text('Salvar as alterações?'), findsOneWidget);
     await tester.tap(find.text('Cancelar'));
     await tester.pumpAndSettle();
-    expect(kit.opened, ['/livro/cap.docx']);
-    await ctrl(tester, LogicalKeyboardKey.keyO);
+    expect(h.doc.tabs, hasLength(2));
+    await ctrl(tester, LogicalKeyboardKey.keyW);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Não salvar'));
     await tester.pumpAndSettle();
-    expect(kit.opened.last, '');
+    expect(h.doc.tabs, hasLength(1));
+    expect(h.doc.path, isNull, reason: 'sobrou o documento novo');
     expect(kit.saved, isEmpty);
   });
 
@@ -247,7 +257,7 @@ void main() {
   testWidgets('o tema escuro troca a moldura e o papel do motor, e fica nas preferências', (tester) async {
     await pumpApp(tester);
     kit.unoCommands.clear();
-    await tester.tap(find.widgetWithIcon(WToggle, Icons.dark_mode_outlined));
+    await tester.tap(find.widgetWithIcon(WToggle, Symbols.dark_mode_rounded));
     await tester.pumpAndSettle();
     expect(kit.unoCommands, ['.uno:ChangeTheme']);
     expect(h.settings.theme, 'escuro');
@@ -267,7 +277,7 @@ void main() {
 
   testWidgets('em inglês, os rótulos mudam', (tester) async {
     await pumpApp(tester, locale: const Locale('en'));
-    expect(tester.widget<WToggle>(find.widgetWithIcon(WToggle, Icons.format_bold)).label, 'Bold');
+    expect(tester.widget<WToggle>(find.widgetWithIcon(WToggle, Symbols.format_bold_rounded)).label, 'Bold');
     expect(find.text('Home'), findsOneWidget);
   });
 
@@ -275,7 +285,7 @@ void main() {
     final handle = tester.ensureSemantics();
     await pumpApp(tester);
     for (final name in ['Negrito', 'Itálico', 'Desfazer', 'Colar', 'Centralizar', 'Fonte', 'Tamanho da fonte',
-        'Título 1', 'Localizar', 'Inserir', 'Tema escuro', 'Documento', 'Arquivo', 'Aumentar o zoom']) {
+        'Estilo Título 1', 'Localizar', 'Inserir', 'Tema escuro', 'Documento', 'Arquivo', 'Aumentar o zoom']) {
       expect(find.bySemanticsLabel(RegExp('^$name')), findsWidgets, reason: name);
     }
     handle.dispose();

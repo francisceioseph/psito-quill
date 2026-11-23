@@ -215,13 +215,13 @@ test/ integration_test/ docs/
 ```
 
 **Revisto na Fase 2B** (os desenhos estão no canvas "Psito Quill — nova interface", no Claude Design):
-- **Material 3 com densidade de desktop**, como o Google Docs: controles de 32 px (44 px na densidade confortável), cores tonais a partir da semente #415F91, ícones Material Symbols Rounded.
-- **A barra de título é a do GTK.** A pesquisa de comandos (Ctrl+K) fica na ponta direita da fileira de abas.
+- **Material 3 com densidade de desktop:** controles de 36 px (eram 32; subiu na Etapa 7, D-049) e 44 px na densidade confortável, cores tonais a partir da semente #415F91, ícones Material Symbols Rounded.
+- **A barra de título é a do GTK.** A busca única, no texto e nos comandos (Ctrl+F e Ctrl+K, D-050), fica na ponta direita da fileira de abas.
 - **A fonte da interface é a do sistema** (Ubuntu/Cantarell): nada embutido, nada a mais na memória.
 - **À esquerda,** um trilho com Estrutura, Localizar e Estilos; o Fichário entra nele na Fase 3. **À direita,** o painel Formatar, uma seção de cada vez.
 
 - **As laterais recolhem** (`F9`, `F10`), e a faixa também (`Ctrl+F1`) vira só as abas.
-- **A faixa tem poucos botões grandes**, como no OnlyOffice. O resto fica no inspetor e na paleta.
+- **A faixa se adapta à largura** (Etapa 7, D-049): os grupos têm quatro tamanhos, do grande com nome ao recolhido num menu, como no Office. O resto fica no painel Formatar, no menu de contexto e na paleta.
 - **Estilos rápidos** com prévia real: cada cartão é desenhado com as propriedades do estilo do livro, e passar o mouse mostra no texto, se o motor deixar (Fase 2B, Etapa 3).
 
 ### 5.2 Menus (os mesmos comandos nos dois temas)
@@ -481,14 +481,38 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
   - foco no parágrafo, pelo retângulo dos callbacks de acessibilidade (sonda; a alternativa é uma faixa de linhas ao redor do cursor);
   - a barrinha de opções que some depois de 2 s;
   - as palavras e o tempo da sessão, atualizados uma vez por minuto.
-- **Etapa 7, ocupado sem janelas:**
+- **Etapa 7, a interface que respira** (o retorno do Francisco em 23/11, testando o app; D-049). Os comandos estavam densos, mal distribuídos no Início, difíceis de ver e de clicar, sem aproveitar telas grandes, e os menus pobres. A referência é o OnlyOffice: os padrões de layout, não a cara. O detalhe está em `docs/fase2b/etapa-7-espaco.md`.
+  - **Escala:** o texto da interface sobe de 13 para 14 px (as abas, 15), e a densidade padrão vai de 32 para 36 px, com ícones de 22. A confortável (44 px) continua, para a Etapa 9.
+  - **A faixa adaptável, como a do Office:**
+    - cada grupo tem quatro tamanhos: grande (ícone em cima do nome), médio (ícone e nome ao lado), só ícones, e recolhido num botão com o nome do grupo que abre o grupo num menu;
+    - um `LayoutBuilder` escolhe o maior tamanho que cabe, encolhendo da direita para a esquerda pela prioridade de cada grupo;
+    - de 1280 px para cima, nada rola de lado;
+    - em telas largas, a galeria de estilos cresce e mostra mais cartões, no lugar de deixar um vazio à direita.
+  - **O Início redistribuído:**
+    - Área de transferência (Colar grande);
+    - Fonte (fonte, tamanho, N I S, cor);
+    - Parágrafo (alinhamentos, listas, recuos);
+    - Estilos (a galeria que cresce);
+    - Edição (Localizar e Substituir, grandes).
+    - Sobrescrito, subscrito, tachado, limpar, realce e o espaçamento de linha ficam nos tamanhos maiores e, quando falta espaço, no menu do grupo.
+  - **Acesso rápido:** salvar, desfazer e refazer à esquerda das abas. Na ponta direita, a pesquisa e o Recolher.
+  - **Uma busca só** (D-050): "Pesquisar no texto e nos comandos". As ocorrências no documento (com a página e o trecho) e os comandos ficam no mesmo campo, aberto por Ctrl+F/L/K. Substituir fica no painel.
+  - **Abas de documentos, leves** (D-051): as abas ficam acima da faixa e mostram os documentos abertos, mas só o da aba ativa fica carregado no motor.
+    - Trocar de aba guarda a posição (o cursor, a rolagem e o zoom) e reabre o outro documento (~0,3 s num capítulo).
+    - Um documento com alterações não salvas continua carregado até ser salvo ou fechado, e a aba ganha um ponto.
+    - A memória fica perto da de um documento só. Cada documento a mais carregado custa ~50 MB, e só os não salvos ficam.
+    - **O que muda no motor:** o kit passa a guardar mais de um documento (`pqk_doc_*` por documento, um id em cada evento). A sonda confere se a 24.2 aceita dois documentos no mesmo processo e quanto custa o segundo.
+    - **Os fluxos** de Novo, Abrir, Recentes, Fechar e Sair passam pelas abas: sair pergunta por cada documento não salvo.
+    - **Teclado:** Ctrl+Tab, Ctrl+Shift+Tab e Ctrl+W; o clique do meio fecha a aba.
+    - No modo Livro (Fase 3), os capítulos abertos do Fichário viram abas.
+- **Etapa 8, ocupado sem janelas:**
   - os callbacks `STATUS_INDICATOR` (9, 10, 11) viram o evento `Progress`;
   - abrir e salvar travam a tela com um `BusyScope`: os cliques e as teclas param, o cursor vira relógio e um véu leve fica por cima;
   - o progresso aparece no rodapé, como região viva para o leitor de tela;
   - sem "Cancelar", porque o LOK não cancela;
   - o trabalho de fundo não trava nada;
   - saem os avisos que piscam.
-- **Etapa 8, acessibilidade:**
+- **Etapa 9, acessibilidade:**
   - **Temas e tamanhos:**
     - Alto contraste, escuro e claro (7:1), e Sépia;
     - o tamanho do texto da interface (segue o sistema; um teste a 200 %);

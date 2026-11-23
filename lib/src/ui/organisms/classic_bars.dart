@@ -5,6 +5,7 @@
 // Alt abre a barra de menus pelo teclado (o MenuBar do Flutter cuida das
 // setas e do Esc).
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../commands/command_registry.dart';
@@ -61,7 +62,7 @@ class ClassicMenuBar extends StatelessWidget {
     if (c == null) return const SizedBox.shrink();
     return MenuItemButton(
       leadingIcon: c.isActive != null
-          ? Icon(c.active ? Icons.check : null, size: 16, color: t.colors.onFrame)
+          ? Icon(c.active ? Symbols.check_rounded : null, size: 16, color: t.colors.onFrame)
           : Icon(c.icon, size: 16, color: t.colors.onFrame),
       shortcut: commands.shortcutOf(id),
       onPressed: c.enabled

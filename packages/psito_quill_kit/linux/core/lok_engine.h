@@ -14,6 +14,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "task_queue.h"
@@ -28,14 +29,15 @@ namespace pqk {
 enum EngineEvent : int32_t {
   kEvReady = 10000,      // payload: versão do LibreOffice (JSON do LOK)
   kEvInitFailed = 10001, // payload: motivo
-  kEvOpened = 10002,     // payload: {"width":tw,"height":tw,"parts":n}
+  kEvOpened = 10002,     // payload: {"id":n,"width":tw,"height":tw,"parts":n}
   kEvOpenFailed = 10003, // payload: motivo
   kEvTile = 10004,       // payload: "vaga,col,linha,escalaMilli"
   kEvSaved = 10005,      // payload: caminho
   kEvSaveFailed = 10006, // payload: motivo
-  kEvClosed = 10007,
+  kEvClosed = 10007,     // payload: o número do documento
   kEvCommandValues = 10008,  // payload: "comando\n" + JSON
   kEvTextSelection = 10009,  // payload: "mime\n" + texto selecionado
+  kEvActivated = 10010,  // payload: {"id":n,"width":tw,"height":tw,"parts":n}
   kEvLuaLog = 10100,     // payload: texto do psito.log
   kEvLuaDone = 10101,    // payload: {"ok":bool,"error":"..."}
 };
@@ -59,8 +61,15 @@ class LokEngine {
 
   // Tudo assíncrono.
   void init(const std::string& installPath, const std::string& profileUrl);
-  void open(const std::string& path);  // "" abre um documento vazio
+  // Os documentos (D-054): vários abertos, um ativo. Toda chamada abaixo vai
+  // ao ativo, e os callbacks dos outros são descartados.
+  // Abre mais um e o ativa, sem fechar os outros ("" abre um vazio).
+  void open(const std::string& path);
+  // Troca o ativo: limpa as vagas e repinta. Responde com kEvActivated.
+  void activate(int id);
+  // Fecha o ativo (close) ou um pelo número. Responde com kEvClosed.
   void close();
+  void closeDocument(int id);
   void setViewport(int32_t scaleMilli, const TwipRect& visible);
   void postKey(int type, int charCode, int keyCode);
   void postMouse(int type, int x, int y, int count, int buttons, int modifier);
@@ -93,7 +102,21 @@ class LokEngine {
   void drain();
 
  private:
+  struct Doc {
+    LokEngine* engine = nullptr;
+    int id = 0;
+    _LibreOfficeKitDocument* doc = nullptr;
+    int tileMode = 0;
+    // Os callbacks que chegam antes do OPENED, guardados até ele sair.
+    std::mutex mutex;
+    bool announced = false;
+    std::vector<std::pair<int, std::string>> early;
+  };
+
   static void lokCallback(int type, const char* payload, void* data);
+  void makeActive(Doc* d);
+  void destroyDoc(int id);
+  std::string sizeJson(const Doc& d);
   void handleCallback(int type, const std::string& payload);
   void scheduleRender();
   void renderPass();
@@ -105,6 +128,10 @@ class LokEngine {
 
   // Só tocados na thread da fila:
   _LibreOfficeKit* kit_ = nullptr;
+  std::vector<std::unique_ptr<Doc>> docs_;
+  int nextId_ = 1;
+  // O ativo (doc_ e tileMode_ são os dele). Atômico: os callbacks leem.
+  std::atomic<int> activeId_{0};
   _LibreOfficeKitDocument* doc_ = nullptr;
   int tileMode_ = 0;
   int32_t scaleMilli_ = 1000;

@@ -42,7 +42,7 @@ void main() {
     final source = File('test/fixtures/capitulo-30p.docx').absolute;
     final work = source.copySync('${tmp.path}/capitulo.docx').path;
 
-    final profile = LoProfile(Directory('${tmp.path}/perfil'))..ensureSchemes(paperSchemes(builtInThemes));
+    final profile = LoProfile(Directory('${tmp.path}/perfil'))..ensureSettings(paperSchemes(builtInThemes));
     final kit = LokQuillKit(profile: profile);
     final clipboard = MemoryTextClipboard();
     final doc = DocumentController(kit, clipboard: clipboard);
@@ -95,11 +95,64 @@ void main() {
     expect(doc.cursorVisible, isTrue);
 
     // 2. A barra de status e a faixa leem o motor.
-    await until(() => doc.page != null && doc.wordCount != null && doc.fonts.isNotEmpty, 'página, palavras, fontes');
+    await until(() => doc.page != null && doc.wordCount != null && doc.fonts.isNotEmpty, 'página, palavras, fontes',
+        detail: () => '(página ${doc.page}, palavras ${doc.wordCount}, ${doc.fonts.length} fontes)');
     expect(doc.page!.$2, inInclusiveRange(29, 31));
     expect(doc.wordCount!.words, greaterThan(15000));
     expect(doc.fonts, contains('Liberation Serif'));
     expect(doc.modified, isFalse);
+
+    // 2b. A cópia temporária (D-044): os estilos com as propriedades e os
+    // títulos; o arquivo some, e o documento não muda. E o fontconfig
+    // classifica as fontes (D-045).
+    await until(() => doc.snapshot.styles.isNotEmpty, 'a cópia temporária lida');
+    expect(doc.snapshot.styles['Heading 1']?.bold, isTrue);
+    expect(doc.snapshot.outline, isNotEmpty);
+    expect(doc.modified, isFalse);
+    expect(doc.path, endsWith('.docx'));
+    expect(
+      Directory(DocumentController.copyDir).listSync().where((f) => f.path.contains(DocumentController.copyPrefixOfThisProcess)),
+      isEmpty,
+      reason: 'a cópia tem o texto do livro',
+    );
+    expect(doc.fontClasses['Liberation Mono'], FontClass.mono);
+    expect(doc.fontClasses['Liberation Serif'], FontClass.serif);
+    // 2c. A régua (D-046): o callback 35 chega ao abrir, e as margens da
+    // página vêm da cópia (2 cm e 1 cm no capítulo).
+    await until(() => doc.ruler != null, 'a régua do motor');
+    expect(doc.ruler!.pageWidth, inInclusiveRange(20990, 21010));
+    expect(doc.ruler!.leftMargin, inInclusiveRange(1990, 2010));
+    expect(doc.snapshot.pageMargins!.left, closeTo(2, 0.01));
+    // 2d. A Estrutura e as várias páginas (D-047): o salto ao último título
+    // pela busca, e três páginas lado a lado pelo .uno:ViewLayout.
+    final last = doc.snapshot.outline.last;
+    doc.goToHeading(last);
+    await until(() => (doc.page?.$1 ?? 0) >= last.page - 1, 'o salto ao último título (página ${last.page})');
+    final single = doc.documentSize.width;
+    doc.setViewLayout(columns: 3);
+    await until(() => doc.documentSize.width > single * 2.5, 'três páginas de largura');
+    doc.setViewLayout(columns: 1);
+    await until(() => (doc.documentSize.width - single).abs() < 10, 'uma página de novo');
+    doc.postKey(0, VclKey.home | VclKey.mod1);
+    // 2e. A busca única (D-050): as ocorrências vêm de uma cópia, e o salto
+    // a uma delas pela expressão com o contexto seleciona só ela, na página
+    // certa. Fechar a busca apaga a cópia.
+    final textHits = await doc.searchText('que', limit: 400);
+    expect(textHits.total, greaterThan(50));
+    final far = textHits.hits.firstWhere((h) => h.page >= 5);
+    // Antes, o Ctrl+Home do passo anterior precisa ter chegado (a página e a
+    // seleção do salto ao título ainda podem ser as velhas).
+    await until(() => doc.page?.$1 == 1 && !doc.hasSelection, 'o começo do documento');
+    doc.goToHit(far);
+    await until(() => doc.hasSelection && (doc.page?.$1 ?? 0) >= far.page - 1, 'o salto à ocorrência da página ${far.page}');
+    expect(doc.page!.$1, inInclusiveRange(far.page - 1, far.page + 1));
+    doc.endTextSearch();
+    expect(
+      Directory(DocumentController.copyDir).listSync().where((f) => f.path.contains(DocumentController.copyPrefixOfThisProcess)),
+      isEmpty,
+      reason: 'a cópia da busca saiu',
+    );
+    doc.postKey(0, VclKey.home | VclKey.mod1);
 
     // 3. Rolar até o meio pede ladrilhos de lá.
     final scrollable = tester.state<ScrollableState>(find.byType(Scrollable).first);
@@ -215,6 +268,29 @@ void main() {
     expect(laco.ok, isFalse);
     expect(laco.error, contains('interrompido'));
 
+    // 13b. As abas (D-054): os documentos de antes continuam abertos no
+    //      motor, cada um com o seu desfazer, e o texto vai só para o da tela.
+    expect(doc.tabs.map(doc.tabPath), [odt, copia, velho]);
+    doc.activateTab(doc.tabs.first);
+    await until(() => doc.path == odt && doc.tiles.isNotEmpty && doc.page != null, 'voltar à aba do ODT');
+    expect(doc.modified, isFalse, reason: 'foi salvo no passo 9');
+    expect(doc.canUndo, isTrue, reason: 'o desfazer da aba continua');
+    doc.insertText('Abas ');
+    await until(() => doc.modified, 'editar na aba do ODT');
+    doc.activateTab(doc.tabs.last);
+    await until(() => doc.path == velho && doc.tiles.isNotEmpty, 'ir à aba do velho');
+    expect(doc.modified, isTrue, reason: 'o "ok" do passo 11');
+    doc.cycleTab();
+    await until(() => doc.path == odt && doc.tiles.isNotEmpty, 'dar a volta até o ODT');
+    expect(doc.modified, isTrue);
+    expect(await workspace.save(), isTrue);
+    expect(unzip(odt, 'content.xml'), contains('Abas '));
+    expect(unzip(copia, 'word/document.xml'), isNot(contains('Abas ')));
+    // Fechar a aba do meio (a cópia, salva) não pergunta nada.
+    expect(await workspace.closeTab(doc.tabs[1]), isTrue);
+    expect(doc.tabs.map(doc.tabPath), [odt, velho]);
+    expect(doc.path, odt);
+
     // ------------------------------------------------------------ Fase 2 --
     workspace.onUnsaved = () async => UnsavedChoice.discard;
     await workspace.newDocument();
@@ -290,6 +366,15 @@ void main() {
     final before = doc.graphic!;
     doc.dragGraphic(before.bottomRight, before.bottomRight - Offset(before.width / 2, before.height / 2));
     await until(() => doc.graphic != null && doc.graphic!.width < before.width - 10, 'a imagem diminuir');
+    // 18b. A aba Imagem: o tamanho em cm pelas alças (D-043). Com a
+    // proporção, a do canto; sem, a da direita e depois a de baixo.
+    const cm = 1440 / 2.54;
+    doc.setGraphicSizeCm(width: 2, keepRatio: true);
+    await until(() => (doc.graphic!.width - 2 * cm).abs() < 30, 'a largura de 2 cm, com a proporção');
+    final ratio = doc.graphic!.height / doc.graphic!.width;
+    expect(ratio, closeTo(before.height / before.width, 0.05));
+    doc.setGraphicSizeCm(width: 3, height: 1, keepRatio: false);
+    await until(() => (doc.graphic!.width - 3 * cm).abs() < 30 && (doc.graphic!.height - cm).abs() < 30, '3 × 1 cm, sem a proporção');
 
     // 19. Página: A5 deitada.
     final width = doc.documentSize.width;

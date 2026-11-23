@@ -68,7 +68,7 @@ class WTextField extends StatelessWidget {
         decoration: InputDecoration(
           isDense: true,
           filled: true,
-          fillColor: bevel ? c.paper : c.frameRaised,
+          fillColor: bevel ? c.paper : c.surfaceLowest,
           hintText: hint ?? label,
           hintStyle: TextStyle(color: c.onFrameMuted, fontSize: t.font.ui, fontFamily: t.font.family),
           semanticCounterText: '',

@@ -5,6 +5,9 @@
 // callbacks). Cada linha do roteiro (na entrada padrão) é um passo:
 //
 //   open <arquivo>            abre ("" ou "-" para um documento novo)
+//   open0 <arquivo>           abre sem mandar a área visível (como o app,
+//                             que manda no quadro seguinte)
+//   view <escala> <x> <y> <w> <h>  a área visível, em twips
 //   uno <.uno:Cmd> [json]     despacha um comando
 //   values <.uno:Cmd>         getCommandValues
 //   type <texto>              digita (como o IME confirmado)
@@ -89,6 +92,13 @@ int main(int argc, char** argv) {
     if (op == "open") {
       e.open(rest == "-" ? "" : rest);
       e.setViewport(1000, {0, 0, 18000, 12000});
+    } else if (op == "open0") {
+      e.open(rest == "-" ? "" : rest);
+    } else if (op == "view") {
+      int sc = 1000;
+      long long x = 0, y = 0, w = 0, h = 0;
+      std::istringstream(rest) >> sc >> x >> y >> w >> h;
+      e.setViewport(sc, {x, y, w, h});
     } else if (op == "uno") {
       auto sp = rest.find(' ');
       e.uno(rest.substr(0, sp), sp == std::string::npos ? "" : rest.substr(sp + 1));
