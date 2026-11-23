@@ -2,7 +2,7 @@
 
 Um editor de texto para escrever livros longos. O motor é o LibreOffice (pelo LibreOfficeKit do sistema), a interface é em Flutter, e os plugins são em Lua 5.4.
 
-Em construção. A Fase 2 (estilos, o painel Formatar, localizar e substituir, ortografia, tabelas, imagens, página, a paleta de comandos e o tema Clássico 97) está em `docs/FASE2-RESULTADOS.md`. A Fase 1 (o editor básico: digitar com acentos, desfazer, copiar e colar, a faixa Início, abrir e salvar ODT e DOCX, os recentes) está em `docs/FASE1-RESULTADOS.md`; a prova do motor, em `docs/FASE0-RESULTADOS.md`; o plano completo, em `docs/PLANO.md`.
+Em construção. A Fase 2B (a interface nova: Material 3, a faixa que se adapta à largura, os trilhos, a régua, várias páginas, a Estrutura, o modo zen, as abas de documentos, os bastidores, o progresso sem janelas e a acessibilidade) está em `docs/FASE2B-RESULTADOS.md`. A Fase 2 (estilos, o painel Formatar, localizar e substituir, ortografia, tabelas, imagens, página, a paleta de comandos e o tema Clássico 97) está em `docs/FASE2-RESULTADOS.md`. A Fase 1 (o editor básico: digitar com acentos, desfazer, copiar e colar, a faixa Início, abrir e salvar ODT e DOCX, os recentes) está em `docs/FASE1-RESULTADOS.md`; a prova do motor, em `docs/FASE0-RESULTADOS.md`; o plano completo, em `docs/PLANO.md`.
 
 ## Para compilar (Ubuntu 24.04)
 
@@ -19,6 +19,10 @@ build/linux/x64/release/bundle/psito-quill capitulo.docx
 ./test.sh --integracao  # e com o LibreOffice real (abre uma janela)
 tool/bench.sh           # as medições de memória e latência
 ```
+
+## Acessibilidade
+
+Temas de alto contraste, o tamanho da interface até 200 %, botões maiores, o cursor mais grosso e sem piscar, e reduzir movimento ficam em Arquivo › Preferências › Acessibilidade. Para o leitor de tela, o Quill expõe o parágrafo onde está o cursor (o motor desenha a página como imagem, e não dá o documento inteiro): o leitor lê o parágrafo e acompanha o cursor dentro dele.
 
 ## Licença
 

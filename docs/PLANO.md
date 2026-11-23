@@ -223,6 +223,13 @@ test/ integration_test/ docs/
 - **As laterais recolhem** (`F9`, `F10`), e a faixa também (`Ctrl+F1`) vira só as abas.
 - **A faixa se adapta à largura** (Etapa 7, D-049): os grupos têm quatro tamanhos, do grande com nome ao recolhido num menu, como no Office. O resto fica no painel Formatar, no menu de contexto e na paleta.
 - **Estilos rápidos** com prévia real: cada cartão é desenhado com as propriedades do estilo do livro, e passar o mouse mostra no texto, se o motor deixar (Fase 2B, Etapa 3).
+- **Como ficou no fim da Fase 2B** (`docs/FASE2B-RESULTADOS.md`):
+  - em cima, as abas dos documentos abertos (com dois ou mais), o acesso rápido (salvar, desfazer, refazer), o Arquivo, as abas da faixa e a busca única;
+  - os trilhos dos dois lados: Estrutura, Localizar e Estilos à esquerda; as seções do Formatar à direita (D-062);
+  - o Arquivo abre os bastidores (a lista à esquerda, a seção à direita) e, sem documento, a tela inicial mostra os cartões e os recentes (D-064);
+  - a barra de status é clicável: as estatísticas, o idioma, a disposição das páginas e o zoom com os ajustes (D-063). Abrir e salvar mostram o progresso nela, sem janela (D-066);
+  - a aba Exibir tem as caixas do que se mostra, as páginas e o zoom (D-065);
+  - o tamanho da interface vai até 200 %, e tudo cresce junto (D-067).
 
 ### 5.2 Menus (os mesmos comandos nos dois temas)
 
@@ -371,6 +378,8 @@ end)
 | Rolar | 60 fps sem quadros perdidos no capítulo de 30 páginas | 59,5 fps, 0 perdidos ✅ |
 | Abrir capítulo | ≤ 400 ms | 515 ms ❌ |
 
+**Depois da Fase 2B** (`FASE2B-RESULTADOS.md`), lado a lado com a Fase 2 no mesmo dia: 376 MB vazio e 452 MB com o capítulo (RSS), +11,3 MB de memória anônima com o capítulo em dez etapas; tecla → ladrilho p95 9,4 ms; rolar 59,5 fps; **abrir 854 ms ❌** (a Fase 2 abria em 369 ms; a lentidão está no motor e ainda não tem causa).
+
 A memória é o RSS do app inteiro, na mediana de pelo menos 3 execuções do `tool/bench.sh` (varia uns 20 MB de uma para outra).
 
 **Depois da Fase 2** (D-038, D-039): o RSS muda uns 20 MB de um dia para outro, então cada fase e cada etapa se comparam **lado a lado** com a build anterior, pelo `tool/mapas.py`, olhando a memória anônima. **O orçamento é de ~5 MB de memória anônima por etapa;** passar disso pede um motivo e uma decisão. A ortografia em português custa uns 35 MB (o Hunspell) e foi aceita.
@@ -505,6 +514,7 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
     - **Os fluxos** de Novo, Abrir, Recentes, Fechar e Sair passam pelas abas: sair pergunta por cada documento não salvo.
     - **Teclado:** Ctrl+Tab, Ctrl+Shift+Tab e Ctrl+W; o clique do meio fecha a aba.
     - No modo Livro (Fase 3), os capítulos abertos do Fichário viram abas.
+  - **A barra de status clicável** (D-063), **os bastidores do Arquivo e a tela inicial** (D-064) e **a aba Exibir** (D-065): os passos 6 a 8, no `etapa-7-espaco.md`.
 - **Etapa 8, ocupado sem janelas:**
   - os callbacks `STATUS_INDICATOR` (9, 10, 11) viram o evento `Progress`;
   - abrir e salvar travam a tela com um `BusyScope`: os cliques e as teclas param, o cursor vira relógio e um véu leve fica por cima;
@@ -515,7 +525,7 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
 - **Etapa 9, acessibilidade:**
   - **Temas e tamanhos:**
     - Alto contraste, escuro e claro (7:1), e Sépia;
-    - o tamanho do texto da interface (segue o sistema; um teste a 200 %);
+    - o tamanho do texto da interface (segue o sistema; um teste a 200 %). Feito como o tamanho da interface inteira: só o texto vazava a 200 % (D-067);
     - a densidade confortável.
   - **O cursor e o foco:**
     - a espessura do cursor e o piscar;
@@ -529,6 +539,7 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
   - **O zoom ao abrir.**
   - **A tela de Preferências:** Geral, Aparência, Acessibilidade, Privacidade, Atalhos.
 - **Fecho:** o `FASE2B-RESULTADOS.md`, com os números lado a lado com a Fase 2. Atualizar `ARCHITECTURE.md`, `README.md` e `CLAUDE.md`.
+- **Estado em 23/11/2026:** as Etapas 0 a 9 e o fecho estão feitos. Os resultados, as sondas e o que ficou para conferir à mão estão no `docs/FASE2B-RESULTADOS.md`.
 
 **Fica para a Fase 5:** a IA local (llama.cpp em outro processo, desligada por padrão, como plugin com permissões). Na Fase 2B, só o lugar dela no trilho.
 
@@ -560,7 +571,7 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
 | Risco | Mitigação |
 |---|---|
 | O LOK do Debian ou Ubuntu muda entre versões | Os bindings são gerados do cabeçalho instalado, e o app checa a versão ao abrir. A fase 0 testa a 24.2 (host) e a 25.2 (Debian 13) |
-| Acessibilidade fraca no LOK (o leitor de tela não lê ladrilhos) | Expor o parágrafo atual e a seleção pelo `Semantics` do Flutter, a partir do texto que o LOK devolve. Não fica perfeito, e isso deve ser dito no README |
+| Acessibilidade fraca no LOK (o leitor de tela não lê ladrilhos) | Feito na Fase 2B (D-067): o parágrafo do cursor e a posição dele vêm dos callbacks de acessibilidade do LOK e viram um campo de texto no `Semantics`. Não lê o documento inteiro, só o parágrafo; o README diz isso. Falta conferir com o Orca |
 | IME (acentos compostos, `´` + `a`) | `postExtTextInputEvent`, testado com o teclado ABNT2 já na fase 1 |
 | Papel escuro não suportado | Moldura escura com papel claro (seção 4) |
 | Um crash do LibreOffice derruba o app | Salvamento automático a cada 60 s em `.~lock` próprio + recuperação. Se for frequente, o kit vai para um processo à parte (1.2) |

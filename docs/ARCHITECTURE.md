@@ -7,16 +7,22 @@ O plano completo está no `PLANO.md`. Este documento descreve o que existe no c�
 ```
 Flutter (Dart)
   pages       EditorPage
-  templates   EditorTemplate (faixa ou menus 97, aviso, barra de localizar, corpo, painel lateral, status)
-  organisms   DocumentView (a página), Ribbon, ClassicMenuBar, ClassicToolbars, Inspector (Formatar),
-              FindBar, CommandPalette, menu de contexto do motor, diálogos (estilos, tabela, "salvar?"),
-              FilePanel, StatusBar
-  molecules   CommandButton, RibbonGroup, InfoBanner, InspectorSection, MeasureField
-  atoms       WButton, WToggle, WTextButton, WDropdown, WTextField, WColorSwatch, WLabel, WSeparator
+  templates   EditorTemplate (abas de documentos, faixa ou menus 97, aviso, trilhos, painéis, régua,
+              corpo, status, o véu de ocupado), UiZoom (o tamanho da interface)
+  organisms   DocumentView (a página e o DocumentSemantics), Ribbon, ClassicMenuBar, ClassicToolbars,
+              Inspector (Formatar), NavRail, OutlinePanel, StylesPanel, FindPanel, CommandPalette
+              (a busca única), FontPicker, Ruler, DocTabStrip, ZenView, BusyScope, menu de contexto,
+              diálogos (estilos, tabela, "salvar?"), FilePanel (os bastidores), StartScreen,
+              RecentList, PreferencesView, StatusBar
+  molecules   CommandButton, CommandMenu, CommandCheck, AdaptiveRibbon, RibbonGroup, StyleCard,
+              SidePanel, PanelAction, InspectorSection, MeasureField, ColorMenuButton, InfoBanner
+  atoms       WButton, WToggle, WTextButton, WBigButton, WDropdown, WTextField, WSegmented, WSwitch,
+              WSlider, WChip, WColorSwatch, WLabel, WSeparator
               ← só leem QuillTokens
   ─────────────────────────────────────────────
-  fluxos      Workspace (novo, abrir, salvar, recentes, sair)
-  estado      DocumentController, CommandRegistry, Settings, RecentFiles, PluginHost
+  fluxos      Workspace (novo, abrir, salvar, recentes, abas, sair)
+  estado      DocumentController (com as abas, a Estrutura, a busca, o ocupado e a acessibilidade),
+              CommandRegistry, Settings, RecentFiles, PluginHost
   portas      QuillKit ← LokQuillKit (FFI) | FakeQuillKit (testes)
               FileDialogs, TextClipboard, AppWindow, e o LockInspector (a trava)
                       │
@@ -38,7 +44,7 @@ packages/psito_quill_kit (C++)
 |---|---|---|
 | UI / plataforma | Flutter | Widgets e entrada. Só chama `pqk_*`, que põem uma tarefa na fila e voltam na hora |
 | `pqk-kit` | `TaskQueue` | É a única que chama o LOK: abrir, teclas, `paintTile`, salvar |
-| LibreOffice | o LOK | Roda o laço principal dele e chama o nosso callback. O callback só repassa o evento e põe trabalho na fila |
+| LibreOffice | o LOK | Roda o laço principal dele e chama os nossos callbacks (o de cada documento e o do escritório, com o progresso, D-066). O callback só repassa o evento e põe trabalho na fila |
 | `pqk-lua` | `TaskQueue` | Roda os plugins na caixa de areia |
 | raster | Flutter | Chama o `copy_pixels` das texturas e copia a vaga sob o mutex dela |
 
@@ -67,6 +73,8 @@ Enquanto o ladrilho novo não chega, o velho continua na tela, sem quadro em bra
 | Observer | Callbacks do LOK → `Stream<KitEvent>` tipado → `DocumentController` (`ChangeNotifier`) | O estado dos botões (negrito ligado) vem do motor, não é adivinhado |
 | Flyweight + LRU | `TileCache`: vagas fixas, cada uma uma textura | A memória dos ladrilhos é fixa, seja qual for o documento |
 | Strategy | `ComponentStyle` (moderno ou bisel) nos átomos | O mesmo átomo vira moderno ou Clássico 97 |
+| Memoização | A `EditorPage` guarda a faixa, os painéis e a barra de status pela `stateRevision` e pela `statusRevision` (D-037) | A cada tecla, só a vista e o rodapé se refazem |
+| Flyweight de arquivo | As cópias temporárias (D-044): a Estrutura, os estilos e a busca leem uma cópia FODT num isolate | O texto do livro não fica na memória do app |
 | Atomic design + tokens | `lib/src/ui/` (atoms → molecules → organisms → templates → pages) e `QuillTokens` | Nenhuma cor literal fora de `tokens/themes/` (o `tokens_test` confere) |
 | Memento | (Fase 3) instantâneos de capítulo | |
 | Repository | (Fase 3) `BookRepository` | |
@@ -79,15 +87,18 @@ lib/
   l10n/                      app_pt.arb (modelo), app_en.arb → gen/
   src/app.dart               MaterialApp, tema das preferências, "salvar?" ao sair
   src/kit/                   quill_kit.dart (a porta), lok/ (adaptador; lo_styles.dart, gerado), fake/
-  src/document/              document_controller.dart, workspace.dart, text_clipboard.dart,
-                             search.dart, doc_colors.dart
-  src/files/                 lo_lock.dart (a trava), recent_files.dart, file_dialogs.dart, app_window.dart
-  src/settings/              settings.dart (tema, atalhos), config_dir.dart
+  src/document/              document_controller.dart, doc_tab.dart (as abas), workspace.dart, fodt.dart
+                             (a cópia lida), outline.dart, search.dart, format_origin.dart,
+                             text_clipboard.dart, doc_colors.dart
+  src/files/                 lo_lock.dart (a trava), recent_files.dart, file_dialogs.dart, app_window.dart,
+                             open_folder.dart (xdg-open)
+  src/settings/              settings.dart (tema, atalhos, painéis, acessibilidade), config_dir.dart
   src/commands/              command_registry.dart, commands_document.dart (os do documento),
                              commands_view.dart (os que abrem tela), menus.dart, palette_search.dart
   src/plugins/               plugin_host.dart
   src/bench/                 bench_runner.dart (medições da Fase 0)
-  src/ui/tokens/             tokens.dart, themes/ (claro, escuro, clássico 97)
+  src/ui/tokens/             tokens.dart, themes/ (claro, escuro, sépia, alto contraste, clássico 97)
+  src/ui/style_labels.dart, theme_labels.dart   os nomes dos estilos e dos temas
   src/ui/{atoms,molecules,organisms,templates,pages}/
 packages/psito_quill_kit/
   ffigen.yaml                bindings → lib/src/quill_kit_bindings.g.dart
@@ -111,8 +122,8 @@ tool/                        native-test.sh, bench.sh, make_fixture.py
 |---|---|---|---|
 | Unidade | `flutter test` | `./test.sh` | Leitura dos callbacks e dos estados (busca, menu de contexto, imagem, tabela, estilos, medidas), teclas → VCL e a rota delas, comandos (sem atalho repetido), perfil do LO, a trava, recentes, preferências, controlador e `Workspace` com o kit falso, tokens, contraste e cores literais |
 | Nativo | GoogleTest | `tool/native-test.sh` (também no `./test.sh`) | Fila do kit, cache LRU, caixa de areia do Lua |
-| Widget | `flutter test` | `./test.sh` | Átomos em cada tema e estilo, a página (IME, rotas das teclas, só leitura, zoom, alças da imagem), a faixa e a galeria, os menus 97, localizar e substituir, a paleta, o painel Formatar, o menu de contexto, o painel Arquivo, o "salvar?", rótulos de acessibilidade |
-| Integração | `integration_test` | `./test.sh --integracao` | O LibreOffice real: abrir, status, digitar (também pelo IME), desfazer, negrito, copiar e colar, salvar DOCX e ODT e conferir o XML, a trava, Lua; ortografia, localizar e substituir, estilo novo, recuo, tabela, imagem, página |
+| Widget | `flutter test` | `./test.sh` | Átomos em cada tema e estilo, a página (IME, rotas das teclas, só leitura, zoom, alças da imagem), a faixa adaptável nos quatro tamanhos de tela, os menus 97, a busca única e o painel Localizar, o painel Formatar e os trilhos, a régua, a Estrutura, as abas, o zen, a barra de status, os bastidores e a tela inicial, a aba Exibir, o ocupado, a acessibilidade (alto contraste, a interface a 200 %, o leitor de tela) |
+| Integração | `integration_test` | `./test.sh --integracao` | O LibreOffice real: abrir (com o progresso), status, digitar (também pelo IME), desfazer, negrito, copiar e colar, salvar DOCX e ODT (com o ocupado) e conferir o XML, a trava, Lua; ortografia, o menu de contexto, localizar e substituir, estilo novo, recuo, tabela, imagem, página; a acessibilidade |
 | Ponta a ponta | `tool/bench.sh`, `tool/fechar-test.sh` | `tool/bench.sh`; o `fechar-test` roda no `./test.sh --integracao` | Memória, latência, rolagem, papel escuro: as metas da seção 8 do plano. Fechar a janela: código 0 e a trava apagada |
 
 **O host tem pouca RAM.** O `./test.sh` roda 2 processos de teste (`TEST_JOBS`), num escopo do systemd com 2 GB de limite (`TEST_MEM`) e sem swap, como no Psito OS. Se passar do limite, só os testes morrem.
