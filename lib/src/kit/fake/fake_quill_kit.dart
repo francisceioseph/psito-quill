@@ -195,6 +195,12 @@ class FakeQuillKit implements QuillKit {
   @override
   void repaintAll() {}
 
+  /// Os pedidos de acessibilidade (ligar e desligar).
+  final accessibility = <bool>[];
+
+  @override
+  void setAccessibility(bool on) => accessibility.add(on);
+
   @override
   void postKey(KeyEventType type, {int charCode = 0, int keyCode = 0}) {
     keys.add((type, charCode, keyCode));

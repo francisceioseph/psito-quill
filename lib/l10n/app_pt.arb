@@ -683,5 +683,30 @@
   "groupModes": "Modos",
   "busyOpening": "Abrindo…",
   "busySaving": "Salvando…",
-  "busyWorking": "Trabalhando…"
+  "busyWorking": "Trabalhando…",
+  "themeHighContrastDark": "Alto contraste escuro",
+  "themeHighContrastLight": "Alto contraste claro",
+  "prefGeneral": "Geral",
+  "prefAppearance": "Aparência",
+  "prefAccessibility": "Acessibilidade",
+  "prefZoomOnOpen": "Zoom ao abrir um documento",
+  "prefUiScale": "Tamanho da interface",
+  "prefUiScaleNote": "Tudo cresce junto: o texto, os botões, os ícones e a página. Vale por cima do tamanho do texto do sistema.",
+  "prefComfortable": "Botões maiores",
+  "prefCaretWidth": "Espessura do cursor do texto",
+  "prefCaretPx": "{n} px",
+  "@prefCaretPx": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "prefCaretBlink": "O cursor do texto pisca",
+  "prefReduceMotion": "Reduzir movimento",
+  "prefReduceMotionNote": "Sem animações na interface. O Quill também segue o pedido do sistema.",
+  "prefSpellColor": "Cor da marca de ortografia",
+  "prefSpellColorNote": "Vale na próxima vez que o Quill abrir.",
+  "prefScreenReaderDoc": "Texto do documento para o leitor de tela",
+  "prefScreenReaderDocNote": "Liga sozinho quando um leitor de tela está ativo. Ligado, o motor trabalha um pouco mais a cada tecla."
 }

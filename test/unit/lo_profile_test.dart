@@ -43,6 +43,24 @@ void main() {
     expect('PsitoQuillClaro'.allMatches(file.readAsStringSync()).length, 1);
   });
 
+  test('a cor da ortografia e o esquema atual (D-067)', () {
+    final p = LoProfile(dir);
+    p.ensureSettings(paperSchemes(builtInThemes, spell: spellMarkColors['azul']), current: 'PsitoQuillSepia');
+    var text = registry().readAsStringSync();
+    expect('oor:name="Spell"'.allMatches(text).length, builtInThemes.length, reason: 'em cada esquema');
+    expect(text, contains('<value>${spellMarkColors['azul']}</value>'));
+    expect(text, contains('<prop oor:name="CurrentColorScheme" oor:op="fuse"><value>PsitoQuillSepia</value>'));
+
+    // O LibreOffice regrava o esquema atual sem o comentário: não duplica.
+    final file = registry();
+    file.writeAsStringSync(file.readAsStringSync().replaceAll(RegExp(r'<!-- /?psito-quill: esquemas -->\n'), ''));
+    p.ensureSettings(paperSchemes(builtInThemes), current: 'PsitoQuillClaro');
+    text = file.readAsStringSync();
+    expect('CurrentColorScheme'.allMatches(text).length, 1);
+    expect(text, contains('<value>PsitoQuillClaro</value></prop></item>'));
+    expect(text, isNot(contains('oor:name="Spell"')), reason: 'o vermelho do LibreOffice: sem a entrada');
+  });
+
   test('a URL do perfil é file:// sem barra no fim', () {
     expect(LoProfile(Directory('/tmp/a b/perfil')).url, 'file:///tmp/a%20b/perfil');
   });

@@ -152,6 +152,9 @@ class QuillMotion {
   const QuillMotion({this.fast = const Duration(milliseconds: 90), this.normal = const Duration(milliseconds: 180)});
   final Duration fast, normal;
 
+  /// Reduzir movimento (D-067): as transições acontecem na hora.
+  static const none = QuillMotion(fast: Duration.zero, normal: Duration.zero);
+
   /// O piscar do cursor (desenhado pelo Flutter, sem tocar no motor).
   Duration get caretBlink => const Duration(milliseconds: 530);
 }
@@ -205,7 +208,7 @@ class QuillTokens extends ThemeExtension<QuillTokens> {
   static QuillTokens of(BuildContext context) => Theme.of(context).extension<QuillTokens>()!;
 
   @override
-  QuillTokens copyWith({QuillColors? colors, ComponentStyle? component, QuillDensity? density}) => QuillTokens(
+  QuillTokens copyWith({QuillColors? colors, ComponentStyle? component, QuillDensity? density, QuillMotion? motion}) => QuillTokens(
         id: id,
         brightness: brightness,
         colors: colors ?? this.colors,
@@ -214,7 +217,7 @@ class QuillTokens extends ThemeExtension<QuillTokens> {
         component: component ?? this.component,
         paperScheme: paperScheme,
         space: space,
-        motion: motion,
+        motion: motion ?? this.motion,
         density: density ?? this.density,
       );
 

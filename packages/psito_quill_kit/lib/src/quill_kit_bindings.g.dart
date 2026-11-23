@@ -310,6 +310,17 @@ class QuillKitBindings {
         )
       >();
 
+  void pqk_set_accessibility(bool on) {
+    return _pqk_set_accessibility(on);
+  }
+
+  late final _pqk_set_accessibilityPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Bool)>>(
+        'pqk_set_accessibility',
+      );
+  late final _pqk_set_accessibility = _pqk_set_accessibilityPtr
+      .asFunction<void Function(bool)>();
+
   void pqk_set_fullscreen(int on) {
     return _pqk_set_fullscreen(on);
   }

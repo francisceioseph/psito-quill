@@ -17,6 +17,9 @@
 //   sel                       a seleção como texto
 //   save <arquivo> <formato>  salvar como
 //   wait <ms>                 espera os callbacks
+//   repaint                   redesenha todos os ladrilhos
+//   a11y on|off               setAccessibilityState (callbacks 62 e 63)
+//   color <rrggbb> [tol]      conta os pixels perto da cor nos ladrilhos
 //   # ...                     comentário
 //
 // Uso: lok_script <pasta-de-trabalho> [filtro] < roteiro
@@ -102,6 +105,29 @@ int main(int argc, char** argv) {
     } else if (op == "uno") {
       auto sp = rest.find(' ');
       e.uno(rest.substr(0, sp), sp == std::string::npos ? "" : rest.substr(sp + 1));
+    } else if (op == "repaint") {
+      e.repaintAll();
+    } else if (op == "a11y") {
+      e.setAccessibility(rest == "on");
+    } else if (op == "color") {
+      unsigned rgb = 0;
+      int tol = 40;
+      std::istringstream in(rest);
+      in >> std::hex >> rgb >> std::dec >> tol;
+      const int r = (rgb >> 16) & 255, g = (rgb >> 8) & 255, b = rgb & 255;
+      std::this_thread::sleep_for(std::chrono::milliseconds(300));
+      long count = 0;
+      for (int i = 0; i < e.tiles().slotCount(); ++i) {
+        auto& slot = e.tiles().slot(i);
+        std::lock_guard<std::mutex> lock(slot.mutex);
+        const uint8_t* p = slot.pixels.get();
+        if (!p) continue;
+        for (int j = 0; j < kTileBytes; j += 4) {
+          if (std::abs(p[j] - r) <= tol && std::abs(p[j + 1] - g) <= tol && std::abs(p[j + 2] - b) <= tol) ++count;
+        }
+      }
+      printf("  cor %06x: %ld pixels\n", rgb, count);
+      fflush(stdout);
     } else if (op == "values") {
       e.commandValues(rest);
     } else if (op == "type") {

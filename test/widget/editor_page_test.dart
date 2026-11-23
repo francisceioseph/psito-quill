@@ -247,6 +247,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Preferências'));
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Atalhos de teclado'));
+    await tester.pumpAndSettle();
     await tester.tap(find.textContaining('Word em inglês'));
     await tester.pumpAndSettle();
     expect(h.settings.shortcuts, ShortcutScheme.wordEn);

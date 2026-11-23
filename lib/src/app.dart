@@ -9,6 +9,7 @@ import 'document/workspace.dart';
 import 'files/app_window.dart';
 import 'settings/settings.dart';
 import 'ui/pages/editor_page.dart';
+import 'ui/templates/ui_zoom.dart';
 import 'ui/tokens/themes/themes.dart';
 import 'ui/tokens/tokens.dart';
 
@@ -44,8 +45,13 @@ class QuillAppState extends State<QuillApp> {
   /// O tema da interface; no modo zen, o do papel escolhido para ele (a
   /// janela inteira fica da cor do papel).
   QuillTokens get theme {
-    final id = widget.settings.zen ? widget.settings.zenPaper : widget.settings.theme;
-    return builtInThemes.firstWhere((t) => t.id == id, orElse: () => builtInThemes.first);
+    final s = widget.settings;
+    final t = themeById(s.zen ? s.zenPaper : s.theme);
+    // Acessibilidade (D-067): os botões maiores e sem animação.
+    return t.copyWith(
+      density: s.comfortable ? QuillDensity.comfortable : null,
+      motion: s.reduceMotion ? QuillMotion.none : null,
+    );
   }
 
   @override
@@ -99,6 +105,20 @@ class QuillAppState extends State<QuillApp> {
         locale: widget.locale,
         onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
         theme: theme.toThemeData(),
+        // O tamanho da interface (o do texto do sistema vezes a preferência)
+        // vira um zoom da interface inteira, e reduzir movimento (D-067).
+        builder: (context, child) {
+          final mq = MediaQuery.of(context);
+          final s = widget.settings;
+          final zoom = s.uiScale * mq.textScaler.scale(100) / 100;
+          return MediaQuery(
+            data: mq.copyWith(
+              textScaler: TextScaler.noScaling,
+              disableAnimations: mq.disableAnimations || s.reduceMotion,
+            ),
+            child: UiZoom(zoom: zoom, child: child!),
+          );
+        },
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,

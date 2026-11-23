@@ -27,3 +27,19 @@
 - Abrir um documento grande (centenas de páginas): a barra no rodapé anda, o cursor do mouse é o de espera, e a página não aceita cliques.
 - O véu no tema escuro e no Clássico 97.
 - O Orca lê "Salvando…" ao salvar.
+
+## A medida (23/11/2026)
+
+`tool/ab.py 6370706` (A, a Etapa 7) contra o `595937f` (B, esta), mediana de 3, no mesmo dia:
+
+| etapa do bench | anônima A | anônima B | Δ | RSS A | RSS B | Δ |
+|---|---|---|---|---|---|---|
+| motor ligado | 111,0 | 112,0 | +1,0 | 264,0 | 266,1 | +2,1 |
+| vazio | 177,0 | 178,8 | +1,9 | 372,5 | 375,9 | +3,4 |
+| com o capítulo | 244,7 | 240,5 | −4,1 | 446,7 | 449,1 | +2,5 |
+| depois de rolar | 245,0 | 237,2 | −7,8 | 452,1 | 445,7 | −6,3 |
+| depois de digitar | 252,0 | 255,6 | +3,5 | 460,0 | 465,2 | +5,2 |
+
+- Rolar 59,5 fps nas duas; tecla → ladrilho p95 9,1 e 9,2 ms.
+- **Abrir:** 693 ms (A) e 849 ms (B). Conferido à parte: o `lok_probe` (o motor sozinho) abre o capítulo em ~635 ms com e sem o callback do escritório (3 rodadas de cada). E o mesmo commit `6370706` deu 816 ms na medida da Etapa 7 e 693 ms nesta. O abrir do app varia uns 120 ms entre medidas neste host; a diferença não é do callback.
+- A memória ficou dentro do ruído: nada novo fica guardado (o progresso é um número; o véu só existe enquanto está ocupado).

@@ -406,6 +406,15 @@ void main() {
     expect(styles, contains('style:print-orientation="landscape"'));
     expect(content, contains('Um livro com erru de grafia'));
 
+    // 21. O documento para o leitor de tela (D-067): ligado, o motor manda o
+    //     parágrafo do cursor; desligado, para.
+    doc.setAccessibility(true);
+    doc.insertText('Z');
+    await until(() => doc.a11yParagraph != null, 'o parágrafo para o leitor de tela');
+    expect(doc.a11yParagraph, contains('Z'));
+    doc.setAccessibility(false);
+    expect(doc.a11yParagraph, isNull);
+
     // Fecha sem salvar (descarta), para não deixar trava.
     workspace.onUnsaved = () async => UnsavedChoice.discard;
     expect(await workspace.requestExit(), isTrue);

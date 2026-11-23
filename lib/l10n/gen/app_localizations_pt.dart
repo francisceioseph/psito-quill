@@ -1362,4 +1362,63 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get busyWorking => 'Trabalhando…';
+
+  @override
+  String get themeHighContrastDark => 'Alto contraste escuro';
+
+  @override
+  String get themeHighContrastLight => 'Alto contraste claro';
+
+  @override
+  String get prefGeneral => 'Geral';
+
+  @override
+  String get prefAppearance => 'Aparência';
+
+  @override
+  String get prefAccessibility => 'Acessibilidade';
+
+  @override
+  String get prefZoomOnOpen => 'Zoom ao abrir um documento';
+
+  @override
+  String get prefUiScale => 'Tamanho da interface';
+
+  @override
+  String get prefUiScaleNote =>
+      'Tudo cresce junto: o texto, os botões, os ícones e a página. Vale por cima do tamanho do texto do sistema.';
+
+  @override
+  String get prefComfortable => 'Botões maiores';
+
+  @override
+  String get prefCaretWidth => 'Espessura do cursor do texto';
+
+  @override
+  String prefCaretPx(int n) {
+    return '$n px';
+  }
+
+  @override
+  String get prefCaretBlink => 'O cursor do texto pisca';
+
+  @override
+  String get prefReduceMotion => 'Reduzir movimento';
+
+  @override
+  String get prefReduceMotionNote =>
+      'Sem animações na interface. O Quill também segue o pedido do sistema.';
+
+  @override
+  String get prefSpellColor => 'Cor da marca de ortografia';
+
+  @override
+  String get prefSpellColorNote => 'Vale na próxima vez que o Quill abrir.';
+
+  @override
+  String get prefScreenReaderDoc => 'Texto do documento para o leitor de tela';
+
+  @override
+  String get prefScreenReaderDocNote =>
+      'Liga sozinho quando um leitor de tela está ativo. Ligado, o motor trabalha um pouco mais a cada tecla.';
 }

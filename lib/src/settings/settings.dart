@@ -29,6 +29,14 @@ class Settings extends ChangeNotifier {
   String _rulerUnit = 'cm';
   bool _startScreen = true;
   bool _statusBar = true;
+  double _uiScale = 1;
+  bool _comfortable = false;
+  int _caretWidth = 2;
+  bool _caretBlink = true;
+  bool _reduceMotion = false;
+  String _spellColor = 'vermelho';
+  String _zoomOnOpen = '100';
+  bool _screenReaderDoc = false;
 
   /// O id do tema (os de `builtInThemes`).
   String get theme => _theme;
@@ -92,6 +100,40 @@ class Settings extends ChangeNotifier {
   bool get statusBar => _statusBar;
   set statusBar(bool v) => _set(() => _statusBar = v);
 
+  // ------------------------------------------ acessibilidade (D-067) --
+
+  /// O tamanho do texto da interface, por cima do do sistema (1, 1,25, 1,5
+  /// ou 2).
+  double get uiScale => _uiScale;
+  set uiScale(double v) => _set(() => _uiScale = v);
+
+  /// Botões maiores (a densidade confortável, 44 px).
+  bool get comfortable => _comfortable;
+  set comfortable(bool v) => _set(() => _comfortable = v);
+
+  /// A espessura do cursor do texto (1, 2 ou 3 px) e se ele pisca.
+  int get caretWidth => _caretWidth;
+  set caretWidth(int v) => _set(() => _caretWidth = v);
+  bool get caretBlink => _caretBlink;
+  set caretBlink(bool v) => _set(() => _caretBlink = v);
+
+  /// Sem animações (também segue o do sistema).
+  bool get reduceMotion => _reduceMotion;
+  set reduceMotion(bool v) => _set(() => _reduceMotion = v);
+
+  /// A cor do ondulado da ortografia: "vermelho", "azul" ou "laranja". Vale
+  /// ao abrir o Quill de novo (o motor lê ao ligar, D-067).
+  String get spellColor => _spellColor;
+  set spellColor(String v) => _set(() => _spellColor = v);
+
+  /// O zoom de um documento ao abrir: "100", "largura" ou "pagina".
+  String get zoomOnOpen => _zoomOnOpen;
+  set zoomOnOpen(String v) => _set(() => _zoomOnOpen = v);
+
+  /// O texto do documento para o leitor de tela, mesmo sem ele ativo.
+  bool get screenReaderDoc => _screenReaderDoc;
+  set screenReaderDoc(bool v) => _set(() => _screenReaderDoc = v);
+
   void _set(void Function() change) {
     change();
     _save();
@@ -116,6 +158,14 @@ class Settings extends ChangeNotifier {
       _rulerUnit = json['unidadeRegua'] as String? ?? _rulerUnit;
       _startScreen = json['telaInicial'] as bool? ?? _startScreen;
       _statusBar = json['barraStatus'] as bool? ?? _statusBar;
+      _uiScale = (json['escalaInterface'] as num?)?.toDouble() ?? _uiScale;
+      _comfortable = json['botoesMaiores'] as bool? ?? _comfortable;
+      _caretWidth = (json['cursorLargura'] as num?)?.toInt() ?? _caretWidth;
+      _caretBlink = json['cursorPisca'] as bool? ?? _caretBlink;
+      _reduceMotion = json['reduzirMovimento'] as bool? ?? _reduceMotion;
+      _spellColor = json['corOrtografia'] as String? ?? _spellColor;
+      _zoomOnOpen = json['zoomAoAbrir'] as String? ?? _zoomOnOpen;
+      _screenReaderDoc = json['documentoLeitorTela'] as bool? ?? _screenReaderDoc;
       _recentFonts = (json['fontesRecentes'] as List?)?.whereType<String>().take(5).toList() ?? _recentFonts;
     } on Object {
       // Sem arquivo ou estragado: os padrões.
@@ -142,6 +192,14 @@ class Settings extends ChangeNotifier {
             'unidadeRegua': _rulerUnit,
             'telaInicial': _startScreen,
             'barraStatus': _statusBar,
+            'escalaInterface': _uiScale,
+            'botoesMaiores': _comfortable,
+            'cursorLargura': _caretWidth,
+            'cursorPisca': _caretBlink,
+            'reduzirMovimento': _reduceMotion,
+            'corOrtografia': _spellColor,
+            'zoomAoAbrir': _zoomOnOpen,
+            'documentoLeitorTela': _screenReaderDoc,
           }));
     } on FileSystemException {
       // Sem onde gravar: vale só para esta sessão.

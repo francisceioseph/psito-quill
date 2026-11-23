@@ -697,3 +697,27 @@ A Etapa 8 da Fase 2B.
 - **Um trabalho com progresso que não é abrir nem salvar** aparece no rodapé com o nome que o motor dá, sem travar nada.
 - **Sem "Cancelar":** o LOK não cancela um carregamento.
 - **Saem os avisos que piscavam:** o "Abrindo…" no meio da página (o lugar fica vazio, e o progresso vai no rodapé) e o "Abrindo…" como mensagem do rodapé.
+
+## D-067 · Acessibilidade: alto contraste, o tamanho da interface, o cursor e o documento no leitor de tela
+
+A Etapa 9 da Fase 2B.
+
+- **Dois temas de alto contraste,** escuro (preto, branco e amarelo) e claro (branco, preto e azul-escuro), com bordas fortes e o papel no mesmo contraste. O `tokens_test` exige 7:1 no texto, nos pares do Material 3, nas bordas e no papel, e 4,5:1 no anel de foco. Cada um tem o seu esquema de papel no perfil do LibreOffice. O Sépia já existia (D-048).
+- **O tamanho da interface faz tudo crescer junto,** e não só o texto. O plano pedia o `MediaQuery.textScaler`, mas, a 200 %, o texto vazava dos controles de altura fixa da faixa e do painel (o teste mostrou: cinco estouros em 1366 px). Agora o `UiZoom` (`lib/src/ui/templates/ui_zoom.dart`) monta a interface numa área menor (a janela dividida pelo zoom) e a desenha ampliada, com a densidade de pixels multiplicada: a faixa se adapta como numa tela menor, e os ladrilhos do motor continuam nítidos. O tamanho de texto do sistema entra no mesmo zoom. A página também cresce; o zoom da página continua à parte. As opções são 100, 125, 150 e 200 %.
+- **Botões maiores:** a densidade confortável (44 px) da Etapa 1.
+- **O cursor do texto:** a espessura (1, 2 ou 3 px; o padrão passou de 1,5 para 2) e se pisca. Sem piscar, não há relógio nenhum.
+- **Reduzir movimento:** as durações dos tokens vão a zero e o `disableAnimations` liga (também segue o pedido do sistema). A barra de progresso sem número fica parada pela metade.
+- **O foco visível:** os átomos já desenham o anel de 2 px ao navegar pelo teclado; nos temas de alto contraste, ele tem pelo menos 4,5:1.
+- **A cor da marca de ortografia,** sondada na 24.2 (o `lok_script` ganhou o `color`, que conta os pixels de uma cor nos ladrilhos):
+  - a entrada `Spell` do esquema de cores muda o ondulado (com ela azul, 54 pixels azuis e nenhum vermelho);
+  - o motor lê a cor ao ligar: trocar de esquema com ele ligado muda o papel e não muda o ondulado;
+  - por isso a cor (vermelho, azul ou laranja) vai em todos os esquemas do Quill ao abrir, e o perfil passa a ter o esquema do tema como o atual (`CurrentColorScheme`). Sem isso, na primeira vez valeria o esquema do LibreOffice. A preferência avisa que vale na próxima vez que o Quill abrir.
+- **O documento no leitor de tela,** sondado na 24.2:
+  - com o `setAccessibilityState` ligado, o motor manda o parágrafo do cursor (callback 62: o texto e a posição) e o cursor dentro dele (63). Desligado, não manda nada;
+  - a API nova `pqk_set_accessibility` liga e desliga, e o kit religa a cada documento aberto ou trocado;
+  - o `DocumentSemantics` (`document_view.dart`) é um campo de texto de várias linhas cujo valor é o parágrafo e cuja seleção é o cursor nele;
+  - liga com a preferência ou com um leitor de tela ativo (`accessibleNavigation`), porque custa trabalho ao motor a cada tecla. Os eventos só refazem a vista.
+  - O Orca no app de verdade fica para o Francisco conferir à mão.
+- **O zoom ao abrir:** 100 %, Ajustar à largura ou Ajustar à página, uma vez por aba.
+- **As Preferências** ganharam as seções Geral (a abertura, o zoom ao abrir), Aparência (o tema), Acessibilidade, Privacidade e Atalhos. Só a seção aberta é construída.
+- **Dois nós de leitor de tela consertados:** a régua vertical e o controle deslizante do zoom não tinham nó próprio, e o nome deles se juntava ao da janela.

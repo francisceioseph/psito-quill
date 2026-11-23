@@ -47,6 +47,27 @@ void main() {
         expect(contrast(t.colors.paperInk, t.colors.paper), greaterThanOrEqualTo(7));
       });
 
+      if (isHighContrast(t)) {
+        test('alto contraste: o texto passa de 7:1 (WCAG AAA)', () {
+          final c = t.colors;
+          for (final (fg, bg, what) in [
+            (c.onFrame, c.frame, 'texto'),
+            (c.onFrameMuted, c.frame, 'texto secundário'),
+            (c.onFrame, c.frameRaised, 'painel'),
+            (c.onAccent, c.accent, 'botão cheio'),
+            (c.onAccentSoft, c.accentSoft, 'ligado'),
+            (c.onAccentContainer, c.accentContainer, 'destaque'),
+            (c.onTertiaryContainer, c.tertiaryContainer, 'aba de contexto'),
+            (c.onFrameMuted, c.surfaceHighest, 'texto no tom mais alto'),
+            (c.paperInk, c.paper, 'papel'),
+          ]) {
+            expect(contrast(fg, bg), greaterThanOrEqualTo(7), reason: what);
+          }
+          expect(contrast(c.border, c.frame), greaterThanOrEqualTo(7), reason: 'as bordas');
+          expect(contrast(c.focusRing, c.frame), greaterThanOrEqualTo(4.5), reason: 'o anel de foco');
+        });
+      }
+
       test('o cursor aparece no papel', () {
         expect(contrast(t.colors.cursor, t.colors.paper), greaterThanOrEqualTo(3));
       });

@@ -81,6 +81,9 @@ class LokQuillKit implements QuillKit {
   void repaintAll() => _native.repaintAll();
 
   @override
+  void setAccessibility(bool on) => _native.setAccessibility(on);
+
+  @override
   void postKey(KeyEventType type, {int charCode = 0, int keyCode = 0}) => _native.postKey(
       type == KeyEventType.input
           ? LibreOfficeKitKeyEventType.LOK_KEYEVENT_KEYINPUT
@@ -231,6 +234,10 @@ class LokQuillKit implements QuillKit {
         return ProgressValue((int.tryParse(payload.trim()) ?? 0).clamp(0, 100));
       case LibreOfficeKitCallbackType.LOK_CALLBACK_STATUS_INDICATOR_FINISH:
         return const ProgressFinished();
+      case LibreOfficeKitCallbackType.LOK_CALLBACK_A11Y_FOCUS_CHANGED:
+        return parseA11yParagraph(payload) ?? OtherKitEvent(type, payload);
+      case LibreOfficeKitCallbackType.LOK_CALLBACK_A11Y_CARET_CHANGED:
+        return parseA11yCaret(payload) ?? OtherKitEvent(type, payload);
       case LibreOfficeKitCallbackType.LOK_CALLBACK_SEARCH_NOT_FOUND:
         return SearchNotFound(payload);
       case LibreOfficeKitCallbackType.LOK_CALLBACK_CONTEXT_MENU:

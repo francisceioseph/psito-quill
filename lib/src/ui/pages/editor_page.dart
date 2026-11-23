@@ -40,6 +40,7 @@ import '../organisms/status_bar.dart';
 import '../organisms/unsaved_dialog.dart';
 import '../organisms/zen_view.dart';
 import '../style_labels.dart';
+import '../theme_labels.dart';
 import '../templates/editor_template.dart';
 import '../tokens/tokens.dart';
 
@@ -103,6 +104,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
   /// do zoom e da largura da área; o motor só recebe quando o número muda.
   void _applyLayout() {
     if (!doc.isOpen) return;
+    _applyOpenZoom();
     switch (widget.settings.pageLayout) {
       case 'livro':
         doc.setViewLayout(columns: 2, book: true);
@@ -119,8 +121,35 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
     }
   }
 
+  /// O documento no leitor de tela (D-067): com a preferência, ou com um
+  /// leitor de tela ativo (o `accessibleNavigation` do sistema).
+  void _syncAccessibility() {
+    final on = widget.settings.screenReaderDoc || (mounted && MediaQuery.accessibleNavigationOf(context));
+    if (on == doc.accessibility) return;
+    // Fora do build: o controlador avisa os ouvintes.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) doc.setAccessibility(on);
+    });
+  }
+
+  /// O zoom ao abrir (Acessibilidade, D-067): uma vez por aba, quando a área
+  /// do documento já tem tamanho.
+  final _zoomed = Expando<bool>('zoom ao abrir');
+  void _applyOpenZoom() {
+    final tab = doc.currentTab;
+    if (!doc.isOpen || tab == null || _zoomed[tab] == true || _viewport.value == null) return;
+    _zoomed[tab] = true;
+    switch (widget.settings.zoomOnOpen) {
+      case 'largura':
+        zoomToFit(page: false);
+      case 'pagina':
+        zoomToFit(page: true);
+    }
+  }
+
   void _onSettings() {
     _commands?.scheme = widget.settings.shortcuts;
+    _syncAccessibility();
     _applyLayout();
     if (mounted) setState(() {});
   }
@@ -334,18 +363,14 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _syncAccessibility();
     final l10n = AppLocalizations.of(context);
     // Os rótulos dos comandos vêm da l10n, que só existe com o contexto.
     if (_commands == null) {
       final registry = CommandRegistry(scheme: widget.settings.shortcuts);
       registerEditorCommands(registry, doc: doc, workspace: widget.workspace, l10n: l10n);
       registerViewCommands(registry, doc: doc, view: this, l10n: l10n);
-      for (final (id, label) in [
-        ('claro', l10n.themeClaro),
-        ('escuro', l10n.themeEscuro),
-        ('sepia', l10n.themeSepia),
-        ('classico97', l10n.themeClassico),
-      ]) {
+      for (final (id, label) in themeChoices(l10n)) {
         registry.register(
           Command(
             id: '$themeCommandPrefix$id',
@@ -646,6 +671,8 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
                       semanticLabel: l10n.documentArea,
                       scrollController: widget.scrollController,
                       viewport: _viewport,
+                      caretWidth: widget.settings.caretWidth.toDouble(),
+                      caretBlink: widget.settings.caretBlink,
                     ),
                   ),
             statusBar: !widget.settings.statusBar
@@ -836,6 +863,8 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
         viewport: _viewport,
         typewriter: s.zenTypewriter,
         focusLines: s.zenFocus ? 2 : 0,
+        caretWidth: s.caretWidth.toDouble(),
+        caretBlink: s.caretBlink,
       ),
     );
   }

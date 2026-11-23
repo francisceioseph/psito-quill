@@ -27,12 +27,16 @@ void main(List<String> args) {
 
   final bench = args.isNotEmpty && args.first == '--bench';
   final config = quillConfigDir();
-  final profile = LoProfile.standard()..ensureSettings(paperSchemes(builtInThemes));
+  final settings = Settings(bench ? null : File('${config.path}/preferencias.json'));
+  final profile = LoProfile.standard()
+    ..ensureSettings(
+      paperSchemes(builtInThemes, spell: spellMarkColors[settings.spellColor]),
+      current: themeById(settings.theme).paperScheme,
+    );
   // Cópias temporárias de uma sessão que caiu (D-044): têm o texto do livro.
   DocumentController.cleanStaleCopies();
   final kit = LokQuillKit(profile: profile, tileSlots: tileSlotsFor(_largestDisplay()));
   final doc = DocumentController(kit);
-  final settings = Settings(bench ? null : File('${config.path}/preferencias.json'));
   final recents = RecentFiles(File('${config.path}/recentes.json'), keep: settings.keepRecents);
   settings.addListener(() => recents.keep = settings.keepRecents);
   final workspace = Workspace(

@@ -1361,4 +1361,63 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get busyWorking => 'Working…';
+
+  @override
+  String get themeHighContrastDark => 'High contrast dark';
+
+  @override
+  String get themeHighContrastLight => 'High contrast light';
+
+  @override
+  String get prefGeneral => 'General';
+
+  @override
+  String get prefAppearance => 'Appearance';
+
+  @override
+  String get prefAccessibility => 'Accessibility';
+
+  @override
+  String get prefZoomOnOpen => 'Zoom when opening a document';
+
+  @override
+  String get prefUiScale => 'Interface size';
+
+  @override
+  String get prefUiScaleNote =>
+      'Everything grows together: text, buttons, icons and the page. On top of the system text size.';
+
+  @override
+  String get prefComfortable => 'Larger buttons';
+
+  @override
+  String get prefCaretWidth => 'Text cursor thickness';
+
+  @override
+  String prefCaretPx(int n) {
+    return '$n px';
+  }
+
+  @override
+  String get prefCaretBlink => 'The text cursor blinks';
+
+  @override
+  String get prefReduceMotion => 'Reduce motion';
+
+  @override
+  String get prefReduceMotionNote =>
+      'No animations in the interface. Quill also follows the system setting.';
+
+  @override
+  String get prefSpellColor => 'Spelling mark color';
+
+  @override
+  String get prefSpellColorNote => 'Takes effect the next time Quill opens.';
+
+  @override
+  String get prefScreenReaderDoc => 'Document text for the screen reader';
+
+  @override
+  String get prefScreenReaderDocNote =>
+      'Turns on by itself when a screen reader is active. When on, the engine works a little more on each key.';
 }

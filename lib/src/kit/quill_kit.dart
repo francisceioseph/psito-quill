@@ -240,6 +240,20 @@ class ProgressFinished extends KitEvent {
   const ProgressFinished();
 }
 
+/// O parágrafo do cursor mudou (callback 62): o texto e onde está o cursor
+/// nele (em caracteres).
+class A11yParagraph extends KitEvent {
+  const A11yParagraph(this.text, this.caret);
+  final String text;
+  final int caret;
+}
+
+/// O cursor andou dentro do mesmo parágrafo (callback 63).
+class A11yCaret extends KitEvent {
+  const A11yCaret(this.caret);
+  final int caret;
+}
+
 class SearchNotFound extends KitEvent {
   const SearchNotFound(this.text);
   final String text;
@@ -325,6 +339,11 @@ abstract interface class QuillKit {
   /// Área visível em twips e a escala × 1000.
   void setViewport(int scaleMilli, Rect visibleTwips);
   void repaintAll();
+
+  /// Os callbacks de acessibilidade do documento ativo (D-067): o parágrafo
+  /// do cursor ([A11yParagraph]) e a posição do cursor nele ([A11yCaret]).
+  /// Custam trabalho a cada tecla: só para quem usa leitor de tela.
+  void setAccessibility(bool on);
 
   void postKey(KeyEventType type, {int charCode = 0, int keyCode = 0});
   void postMouse(MouseEventType type, int x, int y, {int count = 1, int buttons = 1, int modifier = 0});

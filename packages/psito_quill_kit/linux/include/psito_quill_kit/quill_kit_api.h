@@ -14,6 +14,7 @@
 #ifndef PSITO_QUILL_KIT_API_H_
 #define PSITO_QUILL_KIT_API_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #ifdef FLUTTER_PLUGIN_IMPL
@@ -69,6 +70,8 @@ PQK_EXPORT void pqk_close_document(int32_t id);
 PQK_EXPORT void pqk_set_viewport(int32_t scale_milli, int64_t x, int64_t y, int64_t w,
                                  int64_t h);
 PQK_EXPORT void pqk_repaint_all(void);
+// Os callbacks de acessibilidade do documento ativo (o parágrafo e o cursor).
+PQK_EXPORT void pqk_set_accessibility(bool on);
 PQK_EXPORT void pqk_post_key(int32_t type, int32_t char_code, int32_t key_code);
 PQK_EXPORT void pqk_post_mouse(int32_t type, int32_t x, int32_t y, int32_t count,
                                int32_t buttons, int32_t modifier);

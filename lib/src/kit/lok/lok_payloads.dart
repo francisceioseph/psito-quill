@@ -272,3 +272,27 @@ RulerInfo? parseRuler(String payload) {
     ],
   );
 }
+
+/// Callback 62 (sondado na 24.2, D-067):
+/// `{"content": "...", "position": "35", "start": "-1", "end": "-1"}`.
+A11yParagraph? parseA11yParagraph(String json) {
+  try {
+    final m = jsonDecode(json);
+    if (m is! Map || m['content'] is! String) return null;
+    return A11yParagraph(m['content'] as String, int.tryParse('${m['position']}') ?? 0);
+  } on FormatException {
+    return null;
+  }
+}
+
+/// Callback 63: `{"position": "34"}`.
+A11yCaret? parseA11yCaret(String json) {
+  try {
+    final m = jsonDecode(json);
+    if (m is! Map) return null;
+    final p = int.tryParse('${m['position']}');
+    return p == null ? null : A11yCaret(p);
+  } on FormatException {
+    return null;
+  }
+}

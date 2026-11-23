@@ -597,7 +597,10 @@ class _VerticalRulerState extends State<VerticalRuler> {
   @override
   Widget build(BuildContext context) {
     final t = QuillTokens.of(context);
+    // Um nó próprio: sem o container, o nome subia e se juntava ao da
+    // janela (o teste do rodapé da Etapa 8 mostrou).
     return Semantics(
+      container: true,
       label: AppLocalizations.of(context).rulerVertical,
       child: SizedBox(
         width: rulerThickness,

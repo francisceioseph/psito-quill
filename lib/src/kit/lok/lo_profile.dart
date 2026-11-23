@@ -10,11 +10,15 @@ import '../../settings/config_dir.dart';
 
 /// Um esquema de cor do documento, em 0xRRGGBB.
 class PaperScheme {
-  const PaperScheme({required this.name, required this.paper, required this.ink, required this.backdrop});
+  const PaperScheme({required this.name, required this.paper, required this.ink, required this.backdrop, this.spell});
 
   /// O nome no LibreOffice (o valor do `.uno:ChangeTheme`).
   final String name;
   final int paper, ink, backdrop;
+
+  /// O ondulado da ortografia (a entrada `Spell`, D-067); null: o vermelho do
+  /// LibreOffice. O motor lê ao ligar: trocar de esquema depois não muda.
+  final int? spell;
 }
 
 class LoProfile {
@@ -51,7 +55,10 @@ class LoProfile {
   /// Garante os esquemas e as travas de privacidade no perfil. Chamar antes
   /// de ligar o motor: o LibreOffice lê o arquivo ao iniciar e o regrava ao
   /// sair, mantendo o que não conhece.
-  void ensureSettings(List<PaperScheme> schemes) {
+  ///
+  /// [current] vira o esquema atual do perfil: a cor da ortografia é a dele
+  /// quando o motor liga (sem isso, valeria a do LibreOffice na primeira vez).
+  void ensureSettings(List<PaperScheme> schemes, {String? current}) {
     final file = _registry;
     file.parent.createSync(recursive: true);
     var text = file.existsSync() ? file.readAsStringSync() : _emptyRegistry;
@@ -63,12 +70,17 @@ class LoProfile {
     for (final (path, name, value) in privacy) {
       items.writeln(propItem(path, name, value));
     }
+    if (current != null) items.writeln(propItem(_schemePath, 'CurrentColorScheme', current));
     items.write('<!-- /$_marker -->\n');
     text = text.replaceFirst('</oor:items>', '$items</oor:items>');
     file.writeAsStringSync(text);
   }
 
+  static const _schemePath = '/org.openoffice.Office.UI/ColorScheme';
+
   static String _removeOurItems(String text) {
+    // O esquema atual: o LibreOffice regrava (com o último `ChangeTheme`).
+    text = text.replaceAll(RegExp('<item oor:path="$_schemePath"><prop oor:name="CurrentColorScheme"[^\n]*?</item>\n?'), '');
     // O LibreOffice regrava as travas no mesmo formato, sem os comentários.
     for (final (path, name, value) in privacy) {
       text = text.replaceAll('${propItem(path, name, value)}\n', '');
@@ -91,6 +103,7 @@ class LoProfile {
     return '<item oor:path="/org.openoffice.Office.UI/ColorScheme/ColorSchemes">'
         '<node oor:name="${s.name}" oor:op="replace">'
         '${entry('DocColor', s.paper)}${entry('FontColor', s.ink)}${entry('AppBackground', s.backdrop)}'
+        '${s.spell == null ? '' : entry('Spell', s.spell!)}'
         '</node></item>';
   }
 

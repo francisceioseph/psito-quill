@@ -38,35 +38,39 @@ class WSlider extends StatelessWidget {
     final t = QuillTokens.of(context);
     final c = t.colors;
     final modern = t.component == ComponentStyle.modern;
-    return Semantics(
-      label: label,
-      child: SizedBox(
-        width: width,
-        height: t.density.control,
-        child: SliderTheme(
-          data: SliderThemeData(
-            trackHeight: modern ? 4 : 2,
-            activeTrackColor: modern ? c.accent : c.onFrame,
-            inactiveTrackColor: modern ? c.accentSoft : c.bevelDark,
-            thumbColor: modern ? c.accent : c.frameRaised,
-            overlayColor: c.accent.withValues(alpha: 0.12),
-            thumbShape: RoundSliderThumbShape(enabledThumbRadius: modern ? 7 : 6),
-            overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
-            valueIndicatorColor: c.onFrame,
-            valueIndicatorTextStyle: TextStyle(color: c.frame, fontSize: t.font.small, fontFamily: t.font.family),
-            showValueIndicator: ShowValueIndicator.onDrag,
-            // Sem marcas: o Material 3 de 2024 tira os pontinhos das divisões.
-            tickMarkShape: SliderTickMarkShape.noTickMark,
-          ),
-          child: Slider(
-            value: value.clamp(min, max),
-            min: min,
-            max: max,
-            divisions: divisions,
-            label: valueLabel,
-            semanticFormatterCallback: valueLabel == null ? null : (_) => valueLabel!,
-            onChanged: onChanged,
-            onChangeEnd: onChangeEnd,
+    // Um nó só, com o nome e o valor do controle deslizante (sem o
+    // container, o nome subia para o nó de cima).
+    return MergeSemantics(
+      child: Semantics(
+        label: label,
+        child: SizedBox(
+          width: width,
+          height: t.density.control,
+          child: SliderTheme(
+            data: SliderThemeData(
+              trackHeight: modern ? 4 : 2,
+              activeTrackColor: modern ? c.accent : c.onFrame,
+              inactiveTrackColor: modern ? c.accentSoft : c.bevelDark,
+              thumbColor: modern ? c.accent : c.frameRaised,
+              overlayColor: c.accent.withValues(alpha: 0.12),
+              thumbShape: RoundSliderThumbShape(enabledThumbRadius: modern ? 7 : 6),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+              valueIndicatorColor: c.onFrame,
+              valueIndicatorTextStyle: TextStyle(color: c.frame, fontSize: t.font.small, fontFamily: t.font.family),
+              showValueIndicator: ShowValueIndicator.onDrag,
+              // Sem marcas: o Material 3 de 2024 tira os pontinhos das divisões.
+              tickMarkShape: SliderTickMarkShape.noTickMark,
+            ),
+            child: Slider(
+              value: value.clamp(min, max),
+              min: min,
+              max: max,
+              divisions: divisions,
+              label: valueLabel,
+              semanticFormatterCallback: valueLabel == null ? null : (_) => valueLabel!,
+              onChanged: onChanged,
+              onChangeEnd: onChangeEnd,
+            ),
           ),
         ),
       ),

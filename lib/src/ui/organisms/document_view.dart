@@ -17,6 +17,7 @@ import 'dart:math' as math;
 import 'package:flutter/gestures.dart'
     show GestureBinding, PointerScrollEvent, PointerSignalEvent, kPrimaryMouseButton, kSecondaryMouseButton;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import '../../commands/command_registry.dart';
@@ -149,11 +150,18 @@ class DocumentView extends StatefulWidget {
     this.viewport,
     this.typewriter = false,
     this.focusLines = 0,
+    this.caretWidth = 1.5,
+    this.caretBlink = true,
   });
 
   /// Máquina de escrever (o modo zen): a linha do cursor fica no meio da
   /// tela. Só a rolagem do Flutter; o motor não sabe.
   final bool typewriter;
+
+  /// A espessura do cursor, em pixels, e se ele pisca (Acessibilidade,
+  /// D-067).
+  final double caretWidth;
+  final bool caretBlink;
 
   /// Foco (o modo zen): escurece o que está a mais de [focusLines] linhas do
   /// cursor, para cima e para baixo. 0: desligado.
@@ -399,6 +407,7 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
   void _restartBlink() {
     _blink?.cancel();
     _caretOn = true;
+    if (!widget.caretBlink) return;
     _blink = Timer.periodic(const QuillMotion().caretBlink, (_) {
       if (mounted) setState(() => _caretOn = !_caretOn);
     });
@@ -649,18 +658,18 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
             Positioned.fromRect(
               rect: () {
                 final r = g.toLocal(doc.cursor);
-                return Rect.fromLTWH(r.left, r.top, math.max(1.5, r.width), r.height);
+                return Rect.fromLTWH(r.left, r.top, math.max(widget.caretWidth, r.width), r.height);
               }(),
               child: ColoredBox(color: t.colors.cursor),
             ),
         ];
 
-        return Semantics(
+        return DocumentSemantics(
           key: _boxKey,
           label: widget.semanticLabel,
-          textField: true,
-          multiline: true,
           readOnly: !doc.canEdit,
+          text: doc.a11yParagraph,
+          caret: doc.a11yCaret,
           child: Focus(
             focusNode: _focus,
             autofocus: true,
@@ -730,5 +739,70 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
           ),
         ),
     ];
+  }
+}
+
+/// O documento para o leitor de tela (D-067): um campo de texto com várias
+/// linhas, cujo valor é o parágrafo do cursor (o motor manda com a
+/// acessibilidade ligada) e a seleção é a posição do cursor nele. Sem a
+/// acessibilidade, só o nome e o papel de campo de texto.
+class DocumentSemantics extends SingleChildRenderObjectWidget {
+  const DocumentSemantics({
+    super.key,
+    required this.label,
+    required this.readOnly,
+    required this.text,
+    required this.caret,
+    super.child,
+  });
+
+  final String label;
+  final bool readOnly;
+  final String? text;
+  final int caret;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderDocumentSemantics(label, readOnly, text, caret, Directionality.of(context));
+
+  @override
+  void updateRenderObject(BuildContext context, RenderObject renderObject) =>
+      (renderObject as _RenderDocumentSemantics).update(label, readOnly, text, caret);
+}
+
+class _RenderDocumentSemantics extends RenderProxyBox {
+  _RenderDocumentSemantics(this._label, this._readOnly, this._text, this._caret, this._direction);
+
+  String _label;
+  bool _readOnly;
+  String? _text;
+  int _caret;
+  final TextDirection _direction;
+
+  void update(String label, bool readOnly, String? text, int caret) {
+    if (label == _label && readOnly == _readOnly && text == _text && caret == _caret) return;
+    _label = label;
+    _readOnly = readOnly;
+    _text = text;
+    _caret = caret;
+    markNeedsSemanticsUpdate();
+  }
+
+  @override
+  void describeSemanticsConfiguration(SemanticsConfiguration config) {
+    super.describeSemanticsConfiguration(config);
+    config
+      ..isSemanticBoundary = true
+      ..label = _label
+      ..isTextField = true
+      ..isMultiline = true
+      ..isReadOnly = _readOnly
+      ..textDirection = _direction;
+    final text = _text;
+    if (text != null) {
+      config
+        ..value = text
+        ..textSelection = TextSelection.collapsed(offset: _caret.clamp(0, text.length));
+    }
   }
 }

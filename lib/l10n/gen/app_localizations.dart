@@ -2557,6 +2557,114 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Trabalhando…'**
   String get busyWorking;
+
+  /// No description provided for @themeHighContrastDark.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alto contraste escuro'**
+  String get themeHighContrastDark;
+
+  /// No description provided for @themeHighContrastLight.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alto contraste claro'**
+  String get themeHighContrastLight;
+
+  /// No description provided for @prefGeneral.
+  ///
+  /// In pt, this message translates to:
+  /// **'Geral'**
+  String get prefGeneral;
+
+  /// No description provided for @prefAppearance.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aparência'**
+  String get prefAppearance;
+
+  /// No description provided for @prefAccessibility.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acessibilidade'**
+  String get prefAccessibility;
+
+  /// No description provided for @prefZoomOnOpen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Zoom ao abrir um documento'**
+  String get prefZoomOnOpen;
+
+  /// No description provided for @prefUiScale.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tamanho da interface'**
+  String get prefUiScale;
+
+  /// No description provided for @prefUiScaleNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tudo cresce junto: o texto, os botões, os ícones e a página. Vale por cima do tamanho do texto do sistema.'**
+  String get prefUiScaleNote;
+
+  /// No description provided for @prefComfortable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Botões maiores'**
+  String get prefComfortable;
+
+  /// No description provided for @prefCaretWidth.
+  ///
+  /// In pt, this message translates to:
+  /// **'Espessura do cursor do texto'**
+  String get prefCaretWidth;
+
+  /// No description provided for @prefCaretPx.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} px'**
+  String prefCaretPx(int n);
+
+  /// No description provided for @prefCaretBlink.
+  ///
+  /// In pt, this message translates to:
+  /// **'O cursor do texto pisca'**
+  String get prefCaretBlink;
+
+  /// No description provided for @prefReduceMotion.
+  ///
+  /// In pt, this message translates to:
+  /// **'Reduzir movimento'**
+  String get prefReduceMotion;
+
+  /// No description provided for @prefReduceMotionNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem animações na interface. O Quill também segue o pedido do sistema.'**
+  String get prefReduceMotionNote;
+
+  /// No description provided for @prefSpellColor.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cor da marca de ortografia'**
+  String get prefSpellColor;
+
+  /// No description provided for @prefSpellColorNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Vale na próxima vez que o Quill abrir.'**
+  String get prefSpellColorNote;
+
+  /// No description provided for @prefScreenReaderDoc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Texto do documento para o leitor de tela'**
+  String get prefScreenReaderDoc;
+
+  /// No description provided for @prefScreenReaderDocNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Liga sozinho quando um leitor de tela está ativo. Ligado, o motor trabalha um pouco mais a cada tecla.'**
+  String get prefScreenReaderDocNote;
 }
 
 class _AppLocalizationsDelegate

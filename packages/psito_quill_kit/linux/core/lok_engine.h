@@ -89,6 +89,9 @@ class LokEngine {
   // Devolve ao sistema a memória que o LibreOffice guarda em caches.
   void trimMemory(int target);
   // Redesenha todos os ladrilhos (troca de esquema de cor, por exemplo).
+  // Liga os callbacks de acessibilidade do documento ativo (D-067): o
+  // parágrafo do cursor (62) e a posição do cursor nele (63).
+  void setAccessibility(bool on);
   void repaintAll();
 
   // Para o encerramento: espera a fila esvaziar e destrói o LOK.

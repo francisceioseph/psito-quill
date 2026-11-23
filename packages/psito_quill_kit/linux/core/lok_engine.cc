@@ -312,6 +312,13 @@ void LokEngine::trimMemory(int target) {
   });
 }
 
+void LokEngine::setAccessibility(bool on) {
+  queue_.post([this, on] {
+    if (!doc_ || !doc_->pClass->setAccessibilityState) return;
+    doc_->pClass->setAccessibilityState(doc_, doc_->pClass->getView(doc_), on);
+  });
+}
+
 void LokEngine::repaintAll() {
   queue_.post([this] {
     cache_.invalidateAll();

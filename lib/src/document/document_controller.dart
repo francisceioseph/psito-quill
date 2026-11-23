@@ -474,6 +474,7 @@ class DocumentController extends ChangeNotifier {
     documentSize = Size.zero;
     cursor = Rect.zero;
     _openingPath = path.isEmpty ? null : path;
+    a11yParagraph = null;
     docStatus = DocStatus.opening;
     readOnly = lockOwner != null;
     this.lockOwner = lockOwner;
@@ -1106,6 +1107,36 @@ class DocumentController extends ChangeNotifier {
     _savingGuard = null;
   }
 
+  /// Só a vista lê (o parágrafo para o leitor de tela): não refaz nada pesado.
+  void _notifyView() {
+    _viewOnly = true;
+    super.notifyListeners();
+    _viewOnly = false;
+  }
+
+  // ------------------------------ o documento no leitor de tela (D-067) --
+
+  /// Ligado pela preferência ou com o leitor de tela ativo. Vale para cada
+  /// documento aberto (o motor guarda por vista).
+  bool _accessibility = false;
+  bool get accessibility => _accessibility;
+
+  /// O texto do parágrafo do cursor e onde o cursor está nele, como o motor
+  /// diz; null com a acessibilidade desligada.
+  String? a11yParagraph;
+  int a11yCaret = 0;
+
+  void setAccessibility(bool on) {
+    if (on == _accessibility) return;
+    _accessibility = on;
+    if (!on) {
+      a11yParagraph = null;
+      a11yCaret = 0;
+    }
+    if (isOpen) kit.setAccessibility(on);
+    _notifyView();
+  }
+
   /// Só a barra de status lê o progresso: não refaz a faixa nem o painel.
   void _notifyStatus() {
     statusRevision++;
@@ -1198,6 +1229,7 @@ class DocumentController extends ChangeNotifier {
         cursorVisible = true;
         if (fonts.isEmpty) kit.requestCommandValues('.uno:CharFontName');
         if (languages.isEmpty) kit.requestCommandValues('.uno:LanguageStatus');
+        if (_accessibility) kit.setAccessibility(true);
         kit.requestCommandValues('.uno:StyleApply');
         snapshot = FodtSnapshot.empty;
         refreshSnapshot();
@@ -1229,6 +1261,8 @@ class DocumentController extends ChangeNotifier {
       case DocumentActivated(:final id, :final size):
         if (_current?.engineId != id) return;
         _switching = false;
+        a11yParagraph = null;
+        if (_accessibility) kit.setAccessibility(true);
         documentSize = size;
       case DocumentClosed(:final id):
         if (_unloading.remove(id)) return;
@@ -1362,6 +1396,15 @@ class DocumentController extends ChangeNotifier {
         message = PluginMessage(text);
       case PluginFinished(:final ok, :final error):
         if (!ok) message = ErrorMessage(error);
+      case A11yParagraph(:final text, :final caret):
+        a11yParagraph = text;
+        a11yCaret = caret;
+        _notifyView();
+        return;
+      case A11yCaret(:final caret):
+        a11yCaret = caret;
+        _notifyView();
+        return;
       case ProgressStarted(:final label):
         progress = 0;
         backgroundTask = busy == null ? label : null;
