@@ -19,3 +19,7 @@ build/linux/x64/release/bundle/psito-quill capitulo.docx
 ./test.sh --integracao  # e com o LibreOffice real (abre uma janela)
 tool/bench.sh           # as medições de memória e latência
 ```
+
+## Licença
+
+[Mozilla Public License 2.0](LICENSE), a mesma do LibreOffice. Os arquivos do Quill continuam abertos em qualquer versão modificada; quem usa o Quill junto com outro código não precisa abrir o resto.
