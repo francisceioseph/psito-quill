@@ -1211,4 +1211,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get contextParagraph => 'Paragraph';
+
+  @override
+  String get fieldIndents => 'Indents';
+
+  @override
+  String get fieldIndentLeftShort => 'Left';
+
+  @override
+  String get fieldIndentFirstShort => 'First line';
+
+  @override
+  String get fieldIndentRightShort => 'Right';
+
+  @override
+  String get findPanelTitle => 'Find and replace';
+
+  @override
+  String get findHitsList => 'Matches in the document';
 }

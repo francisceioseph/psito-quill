@@ -1212,4 +1212,22 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get contextParagraph => 'Parágrafo';
+
+  @override
+  String get fieldIndents => 'Recuos';
+
+  @override
+  String get fieldIndentLeftShort => 'Esquerda';
+
+  @override
+  String get fieldIndentFirstShort => '1ª linha';
+
+  @override
+  String get fieldIndentRightShort => 'Direita';
+
+  @override
+  String get findPanelTitle => 'Localizar e substituir';
+
+  @override
+  String get findHitsList => 'Ocorrências no documento';
 }

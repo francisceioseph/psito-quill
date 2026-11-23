@@ -361,5 +361,11 @@
   "commandKeepLines": "Keep lines together",
   "commandSplitLines": "Allow splitting lines",
   "contextStyle": "Style",
-  "contextParagraph": "Paragraph"
+  "contextParagraph": "Paragraph",
+  "fieldIndents": "Indents",
+  "fieldIndentLeftShort": "Left",
+  "fieldIndentFirstShort": "First line",
+  "fieldIndentRightShort": "Right",
+  "findPanelTitle": "Find and replace",
+  "findHitsList": "Matches in the document"
 }

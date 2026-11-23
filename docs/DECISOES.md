@@ -631,3 +631,13 @@ O `lok_two_docs` (D-051, passo 9 da Etapa 7) abriu dois capítulos de 30 página
   - o `.uno:ParaWidows` com valor não mudou nada; o `.uno:PageBreak` (a quebra antes, como atributo) também não.
 - **Por isso, pares, sem a marca de ligado** (escolhido pelo Francisco): "Manter com o próximo" e "Permitir separar do próximo", "Manter as linhas juntas" e "Permitir dividir as linhas". Cada item faz uma coisa só. A "quebra de página antes" fica como "Quebra de página" (inserir, o que já existia).
 - **Os quatro são comandos do registro:** entram no menu Formatar do Clássico 97 e na paleta Ctrl+K.
+
+## D-062 · Os trilhos dos dois lados, os rótulos em cima e o Localizar com a lista
+
+O passo 5 da Etapa 7, a partir das capturas do OnlyOffice (D-049).
+
+- **O trilho da direita** tem as seções do Formatar: Texto, Parágrafo, Página e, com a seleção, Imagem e Tabela. Escolher uma abre o painel nela, e escolher a aberta fecha, como no trilho da esquerda. O seletor de seções sai do painel, que fica com mais altura para os controles. No Clássico 97, que não tem trilhos, o seletor continua. O trilho é memoizado pela mesma chave da faixa, que agora inclui se o Formatar está aberto.
+- **Os rótulos em cima:** o `LabeledRow` põe o nome em cima do controle (antes, o nome à esquerda e o controle espremido à direita). Os três recuos ficam lado a lado sob "Recuos", cada um com um rótulo curto (Esquerda, 1ª linha, Direita). O nome inteiro ("Recuo à esquerda") continua sendo o do campo para o leitor de tela; o teste pegou isso, porque o rótulo curto não lê e o campo não tinha nome próprio. Na faixa, o `MeasureField` continua numa linha.
+- **O Localizar é um painel à esquerda** (`FindPanel`), no lugar da barra em cima da página. Os campos e as opções ficam em cima, e a lista de ocorrências embaixo, com a página e o trecho. O clique leva à ocorrência e o painel continua aberto. A lista sai da cópia da busca única (D-050), com até 50 linhas, e só as visíveis são construídas (`ListView.builder`). O painel abre por cima do painel da esquerda que estiver aberto, e esse volta quando ele fecha.
+- **A cópia se renova quando o texto muda:** a busca única é modal e uma cópia bastava, mas o painel fica aberto enquanto se escreve. O `searchText(fresh: true)` refaz a cópia se a contagem de palavras e caracteres mudou desde ela. Usar a `statusRevision` refazia a cópia também ao rolar e ao saltar a uma ocorrência, o que o teste mostrou. Quem esperava uma cópia descartada recebe "sem resultado", em vez de esperar para sempre.
+- **Limite conhecido:** a lista é a busca simples do texto. Diferenciar maiúsculas, palavra inteira e expressão regular valem para as setas, "Todas" e substituir, que vão pelo motor, mas não para a lista.

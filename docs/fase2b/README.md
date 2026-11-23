@@ -11,7 +11,7 @@ O plano está no `docs/PLANO.md` (seção 10). Cada etapa tem um documento aqui:
 | 4. A régua | [etapa-4-regua.md](etapa-4-regua.md) | feita (sem criar tabulações) |
 | 5. Várias páginas e a Estrutura | [etapa-5-paginas.md](etapa-5-paginas.md) | feita |
 | 6. O modo zen | [etapa-6-zen.md](etapa-6-zen.md) | feita |
-| 7. A interface que respira | [etapa-7-espaco.md](etapa-7-espaco.md) | em andamento: escala, faixa adaptável, menus ricos, abas de documentos e menu de contexto feitos; faltam os trilhos e painéis, a barra de status, os bastidores e a aba Exibir |
+| 7. A interface que respira | [etapa-7-espaco.md](etapa-7-espaco.md) | em andamento: escala, faixa adaptável, menus ricos, abas de documentos, menu de contexto, trilhos e painéis feitos; faltam a barra de status, os bastidores e a aba Exibir |
 | 8. Ocupado sem janelas | etapa-8-ocupado.md | |
 | 9. Acessibilidade | etapa-9-acessibilidade.md | |
 

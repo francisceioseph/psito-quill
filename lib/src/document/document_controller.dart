@@ -581,12 +581,24 @@ class DocumentController extends ChangeNotifier {
   String? _searchCopyPath;
   Completer<bool>? _searchCopyReady;
 
+  /// A contagem de palavras e caracteres quando a cópia foi feita (D-062):
+  /// muda com o texto, e não com a página (a `statusRevision` sobe também ao
+  /// rolar ou ao saltar a uma ocorrência).
+  String? _searchCopyCount;
+
   /// As ocorrências de [query] no documento, com a página e o contexto. A
   /// cópia é lida num isolate a cada busca: o texto do livro não fica na
   /// memória do app.
-  Future<TextSearchResult> searchText(String query, {int limit = 50}) async {
+  ///
+  /// Com [fresh], a cópia é refeita se o documento mudou desde ela: o painel
+  /// Localizar fica aberto enquanto se escreve (a busca única é modal e não
+  /// precisa).
+  Future<TextSearchResult> searchText(String query, {int limit = 50, bool fresh = false}) async {
     if (!isOpen || query.trim().length < 2) return TextSearchResult.empty;
+    final count = commandStates['.uno:StateWordCount'];
+    if (fresh && _searchCopyReady != null && _searchCopyCount != count) endTextSearch();
     if (_searchCopyReady == null) {
+      _searchCopyCount = count;
       final path = '$copyDir/$_copyPrefix$pid-${_copies++}.fodt';
       _searchCopyPath = path;
       _searchCopyReady = Completer<bool>();
@@ -604,6 +616,9 @@ class DocumentController extends ChangeNotifier {
 
   /// Fecha a busca: a cópia sai.
   void endTextSearch() {
+    // Quem ainda espera a cópia velha recebe "sem resultado", em vez de
+    // esperar para sempre.
+    if (_searchCopyReady case final r? when !r.isCompleted) r.complete(false);
     if (_searchCopyPath case final p?) _deleteCopy(p);
     _searchCopyPath = null;
     _searchCopyReady = null;

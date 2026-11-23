@@ -26,7 +26,12 @@ class MeasureField extends StatefulWidget {
     required this.unit,
     this.onChanged,
     this.onDone,
+    this.caption,
   });
+
+  /// O rótulo curto em cima do campo ("Esquerda", D-062). null: o nome à
+  /// esquerda e o campo estreito à direita, numa linha (a faixa).
+  final String? caption;
 
   final String label;
 
@@ -95,22 +100,37 @@ class _MeasureFieldState extends State<MeasureField> {
   @override
   Widget build(BuildContext context) {
     final t = QuillTokens.of(context);
+    Widget field(double? width) => WTextField(
+          label: widget.label,
+          hint: '',
+          controller: _controller,
+          focusNode: _focus,
+          width: width,
+          textAlign: TextAlign.end,
+          onSubmitted: (_) {
+            _commit();
+            widget.onDone?.call();
+          },
+        );
+    final unit = WLabel(widget.unit, small: true, tone: WLabelTone.muted);
+    if (widget.caption case final caption?) {
+      // O rótulo em cima, colado no campo (o nome inteiro fica no campo,
+      // para o leitor de tela).
+      return Semantics(
+        container: true,
+        label: widget.label,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+          ExcludeSemantics(child: WLabel(caption, small: true, tone: WLabelTone.muted, maxLines: 1)),
+          SizedBox(height: t.space.xs),
+          Row(children: [Expanded(child: field(null)), SizedBox(width: t.space.xs), unit]),
+        ]),
+      );
+    }
     return Row(children: [
       Expanded(child: WLabel(widget.label, small: true, tone: WLabelTone.muted)),
-      WTextField(
-        label: widget.label,
-        hint: '',
-        controller: _controller,
-        focusNode: _focus,
-        width: 64,
-        textAlign: TextAlign.end,
-        onSubmitted: (_) {
-          _commit();
-          widget.onDone?.call();
-        },
-      ),
+      field(64),
       SizedBox(width: t.space.sm),
-      WLabel(widget.unit, small: true, tone: WLabelTone.muted),
+      unit,
     ]);
   }
 }

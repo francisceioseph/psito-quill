@@ -8,7 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:psito_quill/src/app.dart';
 import 'package:psito_quill/src/kit/fake/fake_quill_kit.dart';
 import 'package:psito_quill/src/ui/organisms/command_palette.dart';
-import 'package:psito_quill/src/ui/organisms/find_bar.dart';
+import 'package:psito_quill/src/ui/organisms/find_panel.dart';
 
 import '../support/harness.dart';
 
@@ -85,7 +85,38 @@ void main() {
     await typeAndWait(tester, 'estrada');
     await tester.tap(find.text('Localizar e substituir, com opções…'));
     await tester.pumpAndSettle();
-    expect(find.byType(FindBar), findsOneWidget);
+    expect(find.byType(FindPanel), findsOneWidget);
     expect(find.widgetWithText(TextField, 'estrada'), findsWidgets);
+  });
+
+  testWidgets('o painel Localizar lista as ocorrências; o clique leva; editar refaz a cópia (D-062)', (tester) async {
+    await pumpApp(tester);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyU);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.pumpAndSettle();
+    expect(find.byType(FindPanel), findsOneWidget);
+    Future<void> type(String text) async {
+      await tester.enterText(find.descendant(of: find.byType(FindPanel), matching: find.byType(EditableText)).first, text);
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 400)));
+      await tester.pump();
+    }
+
+    await type('estrada');
+    expect(find.text('2 ocorrências'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp(r'Na estrada, o posto.*página 1')), findsOneWidget);
+    final copies = kit.copies.length;
+    await tester.tap(find.textContaining('posto', findRichText: true));
+    await tester.pump();
+    expect(kit.unoArgs.last, contains(r'(?<=Na )estrada(?=, o posto\\.)'));
+    expect(find.byType(FindPanel), findsOneWidget, reason: 'o painel fica aberto');
+
+    // Sem mudar o texto, a mesma cópia; depois de mudar, outra.
+    await type('posto');
+    expect(kit.copies.length, copies);
+    kit.emitState('.uno:StateWordCount', '99 palavras, 500 caracteres');
+    await type('estrada');
+    expect(kit.copies.length, copies + 1);
   });
 }

@@ -17,10 +17,10 @@ import 'package:psito_quill/src/ui/atoms/w_button.dart';
 import 'package:psito_quill/src/ui/atoms/w_color_swatch.dart';
 import 'package:psito_quill/src/ui/organisms/classic_bars.dart';
 import 'package:psito_quill/src/ui/organisms/document_view.dart';
-import 'package:psito_quill/src/ui/organisms/find_bar.dart';
+import 'package:psito_quill/src/ui/organisms/find_panel.dart';
 import 'package:psito_quill/src/ui/organisms/inspector.dart';
+import 'package:psito_quill/src/ui/organisms/nav_rail.dart';
 import 'package:psito_quill/src/ui/organisms/ribbon.dart';
-import 'package:psito_quill/src/ui/atoms/w_segmented.dart';
 import 'package:psito_quill/src/ui/molecules/style_card.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -114,7 +114,7 @@ void main() {
     h.doc.insertText('Um texto e outro texto.');
     // O Ctrl+L abre a busca única (D-050); o painel com as opções é o Ctrl+U.
     await keys(tester, LogicalKeyboardKey.keyU);
-    expect(find.byType(FindBar), findsOneWidget);
+    expect(find.byType(FindPanel), findsOneWidget);
     await tester.enterText(find.byType(TextField).first, 'texto');
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pump();
@@ -128,7 +128,7 @@ void main() {
     expect(find.text('Nada encontrado'), findsOneWidget);
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
-    expect(find.byType(FindBar), findsNothing);
+    expect(find.byType(FindPanel), findsNothing);
   });
 
   testWidgets('Ctrl+U abre substituir; "Substituir todas" diz quantas', (tester) async {
@@ -165,10 +165,10 @@ void main() {
     expect(kit.unoArgs.last, contains('${0xC9211E}'));
 
     // O recuo está na seção Parágrafo: só a seção escolhida é construída.
-    await tester.tap(find.descendant(of: find.byType(WSegmented<InspectorPart>), matching: find.text('Parágrafo')));
+    await tester.tap(find.descendant(of: find.byType(NavRail<InspectorPart>), matching: find.text('Parágrafo')));
     await tester.pump();
     final indent = find.descendant(
-      of: find.ancestor(of: find.text('Recuo à esquerda'), matching: find.byType(Row)).first,
+      of: find.ancestor(of: find.text('Esquerda'), matching: find.byType(Column)).first,
       matching: find.byType(TextField),
     );
     await tester.enterText(indent, '1,5');

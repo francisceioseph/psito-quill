@@ -6,6 +6,7 @@
 // Tudo o que mostra vem do motor (os estados); tudo o que muda vai por um
 // comando.
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../commands/command_registry.dart';
@@ -59,6 +60,31 @@ String pageSizeLabel(AppLocalizations l10n, PageSize s) => switch (s.id) {
 /// As seções do painel Formatar. Imagem e Tabela só aparecem com a seleção.
 enum InspectorPart { text, paragraph, page, image, table }
 
+/// A seção que aparece: Imagem e Tabela voltam para Texto quando a seleção
+/// sai delas.
+InspectorPart shownInspectorPart(InspectorPart part, DocumentController doc) => switch (part) {
+      InspectorPart.image when doc.graphic == null => InspectorPart.text,
+      InspectorPart.table when !doc.inTable => InspectorPart.text,
+      final p => p,
+    };
+
+/// O ícone de cada seção, no trilho da direita (D-062).
+IconData inspectorPartIcon(InspectorPart p) => switch (p) {
+      InspectorPart.text => Symbols.text_fields_rounded,
+      InspectorPart.paragraph => Symbols.format_paragraph_rounded,
+      InspectorPart.page => Symbols.article_rounded,
+      InspectorPart.image => Symbols.image_rounded,
+      InspectorPart.table => Symbols.table_rounded,
+    };
+
+String inspectorPartLabel(AppLocalizations l10n, InspectorPart p) => switch (p) {
+      InspectorPart.text => l10n.sectionText,
+      InspectorPart.paragraph => l10n.sectionParagraph,
+      InspectorPart.page => l10n.sectionPage,
+      InspectorPart.image => l10n.sectionImage,
+      InspectorPart.table => l10n.sectionTable,
+    };
+
 class Inspector extends StatelessWidget {
   const Inspector({
     super.key,
@@ -69,9 +95,14 @@ class Inspector extends StatelessWidget {
     this.onPart,
     this.onClose,
     this.onRan,
+    this.sectionsInRail = false,
   });
 
   final DocumentController doc;
+
+  /// As seções ficam no trilho da direita (D-062): sem o seletor no painel.
+  /// No Clássico 97, sem trilhos, o seletor continua.
+  final bool sectionsInRail;
   final CommandRegistry commands;
 
   /// Mostra a seção "Revelar formatação".
@@ -86,11 +117,7 @@ class Inspector extends StatelessWidget {
 
   /// A seção que aparece: Imagem e Tabela voltam para Texto quando a seleção
   /// sai delas.
-  InspectorPart get shownPart => switch (part) {
-        InspectorPart.image when doc.graphic == null => InspectorPart.text,
-        InspectorPart.table when !doc.inTable => InspectorPart.text,
-        final p => p,
-      };
+  InspectorPart get shownPart => shownInspectorPart(part, doc);
 
   @override
   Widget build(BuildContext context) {
@@ -120,27 +147,42 @@ class Inspector extends StatelessWidget {
             label: l10n.fieldLineSpacing,
             child: row([CommandIds.lineSpacing1, CommandIds.lineSpacing15, CommandIds.lineSpacing2]),
           ),
-          MeasureField(
-            label: l10n.fieldIndentLeft,
-            value: doc.paragraphIndents['left'],
-            unit: unit,
-            onDone: onRan,
-            onChanged: editable ? (v) => doc.setIndents(left: v) : null,
-          ),
-          MeasureField(
-            label: l10n.fieldIndentFirst,
-            value: doc.paragraphIndents['firstline'],
-            unit: unit,
-            onDone: onRan,
-            onChanged: editable ? (v) => doc.setIndents(firstLine: v) : null,
-          ),
-          MeasureField(
-            label: l10n.fieldIndentRight,
-            value: doc.paragraphIndents['right'],
-            unit: unit,
-            onDone: onRan,
-            onChanged: editable ? (v) => doc.setIndents(right: v) : null,
-          ),
+          // Os três recuos lado a lado, cada um com o rótulo em cima (D-062).
+          WLabel(l10n.fieldIndents, small: true, tone: WLabelTone.muted),
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(
+              child: MeasureField(
+                label: l10n.fieldIndentLeft,
+                caption: l10n.fieldIndentLeftShort,
+                value: doc.paragraphIndents['left'],
+                unit: unit,
+                onDone: onRan,
+                onChanged: editable ? (v) => doc.setIndents(left: v) : null,
+              ),
+            ),
+            SizedBox(width: t.space.md),
+            Expanded(
+              child: MeasureField(
+                label: l10n.fieldIndentFirst,
+                caption: l10n.fieldIndentFirstShort,
+                value: doc.paragraphIndents['firstline'],
+                unit: unit,
+                onDone: onRan,
+                onChanged: editable ? (v) => doc.setIndents(firstLine: v) : null,
+              ),
+            ),
+            SizedBox(width: t.space.md),
+            Expanded(
+              child: MeasureField(
+                label: l10n.fieldIndentRight,
+                caption: l10n.fieldIndentRightShort,
+                value: doc.paragraphIndents['right'],
+                unit: unit,
+                onDone: onRan,
+                onChanged: editable ? (v) => doc.setIndents(right: v) : null,
+              ),
+            ),
+          ]),
           LabeledRow(label: l10n.fieldSpacing, child: row([CommandIds.spaceLess, CommandIds.spaceMore])),
         ]),
       InspectorPart.page => InspectorSection(title: l10n.sectionPage, children: [
@@ -174,14 +216,16 @@ class Inspector extends StatelessWidget {
       onClose: onClose ?? () => commands.run(ViewCommandIds.inspector),
       width: 300,
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        WSegmented<InspectorPart>(
-          label: l10n.inspectorSections,
-          segments: segments,
-          selected: shown,
-          onChanged: onPart,
-          expanded: true,
-        ),
-        SizedBox(height: t.space.sm),
+        if (!sectionsInRail) ...[
+          WSegmented<InspectorPart>(
+            label: l10n.inspectorSections,
+            segments: segments,
+            selected: shown,
+            onChanged: onPart,
+            expanded: true,
+          ),
+          SizedBox(height: t.space.sm),
+        ],
         Expanded(
           child: ListView(
             padding: EdgeInsets.only(bottom: t.space.md),

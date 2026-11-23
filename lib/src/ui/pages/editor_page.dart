@@ -23,7 +23,7 @@ import '../organisms/command_palette.dart';
 import '../organisms/doc_tabs.dart';
 import '../organisms/document_view.dart';
 import '../organisms/file_panel.dart';
-import '../organisms/find_bar.dart';
+import '../organisms/find_panel.dart';
 import '../organisms/inspector.dart';
 import '../organisms/nav_rail.dart';
 import '../../document/outline.dart';
@@ -81,7 +81,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
 
   /// A barra de localizar: null fechada; true com a linha de substituir.
   bool? _find;
-  final _findKey = GlobalKey<FindBarState>();
+  final _findKey = GlobalKey<FindPanelState>();
   bool _reveal = false;
 
   /// O painel da esquerda, aberto pelo trilho.
@@ -407,6 +407,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
             _find != null,
             _left,
             _part,
+            widget.settings.inspector, // o trilho da direita marca a seção aberta
             widget.settings.ribbonCollapsed,
             widget.settings.recentFonts,
             widget.settings.pageLayout,
@@ -473,15 +474,6 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
                       ],
                     )),
             ),
-            findBar: _find != null && doc.isOpen && !_fileOpen
-                ? FindBar(
-                    key: _findKey,
-                    doc: doc,
-                    replace: _find!,
-                    initialText: _findSeed ?? doc.search.query?.text ?? '',
-                    onClose: _closeFind,
-                  )
-                : null,
             rail: classic || _fileOpen || !doc.isOpen
                 ? null
                 : _memoized(
@@ -505,7 +497,19 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
                       },
                     ),
                   ),
-            leftPanel: _left == null || _fileOpen || !doc.isOpen
+            leftPanel: _fileOpen || !doc.isOpen
+                ? null
+                // Localizar e substituir (D-062): por cima do painel da
+                // esquerda que estiver aberto, que volta ao fechar.
+                : _find != null
+                ? FindPanel(
+                    key: _findKey,
+                    doc: doc,
+                    closeLabel: l10n.findClose,
+                    initialText: _findSeed ?? doc.search.query?.text ?? '',
+                    onClose: _closeFind,
+                  )
+                : _left == null
                 ? null
                 : _memoized(
                     'left',
@@ -540,9 +544,36 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
                       onPart: (p) => setState(() => _part = p),
                       onClose: toggleInspector,
                       onRan: _backToDocument,
+                      sectionsInRail: !classic,
                     ),
                   )
                 : null,
+            // As seções do Formatar num trilho, como as do OnlyOffice
+            // (D-062): escolher abre o painel nela; a aberta fecha.
+            rightRail: classic || _fileOpen || !doc.isOpen
+                ? null
+                : _memoized(
+                    'rightRail',
+                    key,
+                    () => NavRail<InspectorPart>(
+                      label: l10n.inspectorSections,
+                      items: [
+                        for (final p in InspectorPart.values)
+                          if ((p != InspectorPart.image || doc.graphic != null) && (p != InspectorPart.table || doc.inTable))
+                            NavRailItem(p, inspectorPartIcon(p), inspectorPartLabel(l10n, p),
+                                tooltip: p == InspectorPart.text ? commands.tooltipOf(ViewCommandIds.inspector) : null),
+                      ],
+                      selected: widget.settings.inspector ? shownInspectorPart(_part, doc) : null,
+                      onSelected: (p) {
+                        if (p == null) {
+                          toggleInspector();
+                          return;
+                        }
+                        setState(() => _part = p);
+                        if (!widget.settings.inspector) widget.settings.inspector = true;
+                      },
+                    ),
+                  ),
             banner: doc.readOnly && !_fileOpen
                 ? InfoBanner(
                     icon: Symbols.lock_outline_rounded,

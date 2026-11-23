@@ -602,5 +602,11 @@
   "commandKeepLines": "Manter as linhas juntas",
   "commandSplitLines": "Permitir dividir as linhas",
   "contextStyle": "Estilo",
-  "contextParagraph": "Parágrafo"
+  "contextParagraph": "Parágrafo",
+  "fieldIndents": "Recuos",
+  "fieldIndentLeftShort": "Esquerda",
+  "fieldIndentFirstShort": "1ª linha",
+  "fieldIndentRightShort": "Direita",
+  "findPanelTitle": "Localizar e substituir",
+  "findHitsList": "Ocorrências no documento"
 }

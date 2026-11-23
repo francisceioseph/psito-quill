@@ -145,3 +145,14 @@ O ▾ ao lado dos cartões de estilo do Início desce a galeria inteira, com as 
 - Testes: `fase2_controller_test` (a ordem e os submenus) e `fase2_test` (clique direito › Parágrafo › os dois comandos, com os argumentos).
 - **Para olhar à mão:** o menu abre no ponto do clique, os submenus abrem para o lado sem sair da tela, e Esc fecha e devolve o cursor ao texto.
 
+## Os trilhos e os painéis (passo 5, D-062)
+
+- **O trilho da direita:** um `NavRail<InspectorPart>` no novo lugar `rightRail` do `EditorTemplate` (`editor_page.dart`), com `inspectorPartIcon`, `inspectorPartLabel` e `shownInspectorPart` em `inspector.dart`. O `Inspector(sectionsInRail:)` esconde o seletor.
+- **Os rótulos em cima:** o `LabeledRow` (`inspector_section.dart`) e o `MeasureField(caption:)` (`measure_field.dart`).
+- **O Localizar com a lista:** o `lib/src/ui/organisms/find_panel.dart` substitui o `find_bar.dart`, e o `DocumentController.searchText(fresh:)` renova a cópia.
+- **Testes:**
+  - `fase2b_shell_test`: o trilho abre e fecha o painel, os rótulos curtos e os nomes para o leitor de tela;
+  - `fase2b_search_test`: a lista, o clique e a cópia refeita só depois de mudar o texto;
+  - `fase2_test`: o Ctrl+U e o substituir pelo painel novo.
+- **Para olhar à mão:** os dois trilhos em 1366 px com os dois painéis abertos (a página fica com ~600 px); a lista num capítulo longo; o painel Localizar no Clássico 97.
+

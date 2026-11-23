@@ -8,7 +8,6 @@ import 'package:psito_quill/src/app.dart';
 import 'package:psito_quill/src/kit/fake/fake_quill_kit.dart';
 import 'package:psito_quill/src/ui/atoms/w_button.dart';
 import 'package:psito_quill/src/ui/atoms/w_chip.dart';
-import 'package:psito_quill/src/ui/atoms/w_segmented.dart';
 import 'package:psito_quill/src/ui/atoms/w_slider.dart';
 import 'package:psito_quill/src/ui/molecules/style_card.dart';
 import 'package:psito_quill/src/ui/organisms/command_palette.dart';
@@ -122,7 +121,7 @@ void main() {
     final panel = find.byType(Inspector);
     expect(find.descendant(of: panel, matching: find.text('Recuo à esquerda')), findsNothing);
     expect(find.descendant(of: panel, matching: find.text('Cor da fonte')), findsOneWidget);
-    await tester.tap(find.descendant(of: find.byType(WSegmented<InspectorPart>), matching: find.text('Página')));
+    await tester.tap(find.descendant(of: find.byType(NavRail<InspectorPart>), matching: find.text('Página')));
     await tester.pump();
     expect(find.descendant(of: panel, matching: find.text('Cor da fonte')), findsNothing);
     expect(find.descendant(of: panel, matching: find.widgetWithText(WChip, 'A5')), findsWidgets);
@@ -133,12 +132,30 @@ void main() {
     expect(h.settings.inspector, isFalse);
   });
 
+  testWidgets('o trilho da direita: escolher abre o Formatar na seção; a aberta fecha (D-062)', (tester) async {
+    await pumpApp(tester);
+    final rail = find.byType(NavRail<InspectorPart>);
+    expect(rail, findsOneWidget);
+    expect(find.byType(Inspector), findsNothing);
+    await tester.tap(find.descendant(of: rail, matching: find.text('Parágrafo')));
+    await tester.pump();
+    expect(h.settings.inspector, isTrue);
+    expect(find.descendant(of: find.byType(Inspector), matching: find.text('Recuos')), findsOneWidget);
+    // O rótulo curto em cima, o nome inteiro no campo para o leitor de tela.
+    expect(find.descendant(of: find.byType(Inspector), matching: find.text('Esquerda')), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('Recuo à esquerda')), findsWidgets);
+    await tester.tap(find.descendant(of: rail, matching: find.text('Parágrafo')));
+    await tester.pump();
+    expect(find.byType(Inspector), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('as seções Imagem e Tabela aparecem com a seleção e somem com ela', (tester) async {
     await pumpApp(tester, inspector: true);
-    expect(find.descendant(of: find.byType(WSegmented<InspectorPart>), matching: find.text('Tabela')), findsNothing);
+    expect(find.descendant(of: find.byType(NavRail<InspectorPart>), matching: find.text('Tabela')), findsNothing);
     h.doc.insertTable(2, 2);
     await tester.pump();
-    expect(find.descendant(of: find.byType(WSegmented<InspectorPart>), matching: find.text('Tabela')), findsOneWidget);
+    expect(find.descendant(of: find.byType(NavRail<InspectorPart>), matching: find.text('Tabela')), findsOneWidget);
   });
 
   testWidgets('Aumentar e Diminuir a fonte andam pela lista de tamanhos', (tester) async {

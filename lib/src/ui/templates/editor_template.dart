@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import '../tokens/tokens.dart';
 
 /// A moldura do editor (Fase 2B): em cima, a faixa (ou os menus e as barras
-/// do tema 97); um aviso e a barra de localizar, opcionais; no meio, o
+/// do tema 97); um aviso, opcional; no meio, o
 /// trilho e o painel da esquerda, a página (com a régua, na Etapa 4) e o
-/// painel Formatar à direita; embaixo, a barra de status.
+/// painel Formatar à direita, com o trilho das seções dele na ponta (Etapa
+/// 7, D-062); embaixo, a barra de status.
 class EditorTemplate extends StatelessWidget {
   const EditorTemplate({
     super.key,
@@ -13,15 +14,15 @@ class EditorTemplate extends StatelessWidget {
     required this.body,
     required this.statusBar,
     this.banner,
-    this.findBar,
     this.rail,
     this.leftPanel,
     this.ruler,
     this.sidePanel,
+    this.rightRail,
   });
 
   final Widget top, body, statusBar;
-  final Widget? banner, findBar, rail, leftPanel, ruler, sidePanel;
+  final Widget? banner, rail, leftPanel, ruler, sidePanel, rightRail;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +40,6 @@ class EditorTemplate extends StatelessWidget {
       child: Column(children: [
         top,
         ?banner,
-        ?findBar,
         Expanded(
           child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             ?rail,
@@ -47,7 +47,7 @@ class EditorTemplate extends StatelessWidget {
             Expanded(
               child: modern
                   ? Padding(
-                      padding: EdgeInsets.only(top: t.space.sm, left: rail == null && leftPanel == null ? t.space.sm : 0, right: sidePanel == null ? t.space.sm : 0),
+                      padding: EdgeInsets.only(top: t.space.sm, left: rail == null && leftPanel == null ? t.space.sm : 0, right: sidePanel == null && rightRail == null ? t.space.sm : 0),
                       child: ClipRRect(
                         borderRadius: BorderRadius.vertical(top: Radius.circular(t.radius.panel)),
                         child: ColoredBox(color: c.backdrop, child: page),
@@ -56,6 +56,7 @@ class EditorTemplate extends StatelessWidget {
                   : page,
             ),
             ?sidePanel,
+            ?rightRail,
           ]),
         ),
         statusBar,

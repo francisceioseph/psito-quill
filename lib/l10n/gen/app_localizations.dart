@@ -2269,6 +2269,42 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Parágrafo'**
   String get contextParagraph;
+
+  /// No description provided for @fieldIndents.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recuos'**
+  String get fieldIndents;
+
+  /// No description provided for @fieldIndentLeftShort.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esquerda'**
+  String get fieldIndentLeftShort;
+
+  /// No description provided for @fieldIndentFirstShort.
+  ///
+  /// In pt, this message translates to:
+  /// **'1ª linha'**
+  String get fieldIndentFirstShort;
+
+  /// No description provided for @fieldIndentRightShort.
+  ///
+  /// In pt, this message translates to:
+  /// **'Direita'**
+  String get fieldIndentRightShort;
+
+  /// No description provided for @findPanelTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Localizar e substituir'**
+  String get findPanelTitle;
+
+  /// No description provided for @findHitsList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ocorrências no documento'**
+  String get findHitsList;
 }
 
 class _AppLocalizationsDelegate

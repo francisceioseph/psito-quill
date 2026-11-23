@@ -48,7 +48,8 @@ class InspectorSection extends StatelessWidget {
 /// O rótulo pequeno de um grupo: o que vem embaixo dele é o controle dele.
 bool _isFieldLabel(Widget w) => w is WLabel && w.small;
 
-/// Uma linha rotulada: o nome à esquerda e o controle à direita.
+/// Um controle rotulado: o nome em cima, colado nele (D-062; antes, o nome
+/// à esquerda e o controle espremido à direita).
 class LabeledRow extends StatelessWidget {
   const LabeledRow({super.key, required this.label, required this.child});
 
@@ -56,8 +57,12 @@ class LabeledRow extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => Row(children: [
-        Expanded(child: WLabel(label, small: true, tone: WLabelTone.muted)),
-        child,
-      ]);
+  Widget build(BuildContext context) {
+    final t = QuillTokens.of(context);
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+      WLabel(label, small: true, tone: WLabelTone.muted),
+      SizedBox(height: t.space.xs),
+      child,
+    ]);
+  }
 }
