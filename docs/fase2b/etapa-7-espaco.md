@@ -183,3 +183,19 @@ O ▾ ao lado dos cartões de estilo do Início desce a galeria inteira, com as 
 - `EditorTemplate(statusBar:)` aceita null, e `Settings.statusBar` guarda a escolha.
 - **Testes:** `test/widget/fase2b_view_test.dart` (em 1024, 1366 e 1920 px; as caixas com o estado para o leitor de tela; a disposição e os ajustes).
 - **Para olhar à mão:** a aba Exibir em 1024 px (ela rola de lado, como as outras abas curtas); as caixas no Clássico 97.
+
+## A medida dos passos 4 a 8 (23/11/2026)
+
+`tool/ab.py dfb7498` (A) contra o `6370706` (B), mediana de 3, no mesmo dia, numa worktree à parte:
+
+| etapa do bench | anônima A | anônima B | Δ | RSS A | RSS B | Δ |
+|---|---|---|---|---|---|---|
+| motor ligado | 111,2 | 111,9 | +0,6 | 263,4 | 264,9 | +1,5 |
+| vazio | 180,8 | 181,4 | +0,6 | 375,9 | 377,4 | +1,5 |
+| com o capítulo de 30 páginas | 239,9 | 235,2 | −4,6 | 447,0 | 440,3 | −6,7 |
+| depois de rolar | 243,7 | 237,8 | −5,9 | 451,0 | 443,2 | −7,8 |
+| depois de digitar | 255,1 | 251,2 | −3,9 | 463,0 | 460,0 | −3,0 |
+
+- Rolar 59,5 fps nas duas; tecla → ladrilho p95 9,4 ms nas duas.
+- Abrir: 737 ms (A) e 816 ms (B). A diferença é do tamanho do ruído entre rodadas neste host, mas fica anotada para o fecho conferir.
+- A memória caiu, e a causa não foi investigada: o que importa aqui é que não cresceu.

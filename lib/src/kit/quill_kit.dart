@@ -221,6 +221,25 @@ class SearchResult extends KitEvent {
   int get count => matches.length;
 }
 
+/// O motor começou um trabalho com progresso (callback 9, D-066). Na 24.2,
+/// só abrir um documento grande manda ("Carregando: "); salvar não manda.
+class ProgressStarted extends KitEvent {
+  const ProgressStarted(this.label);
+  final String label;
+}
+
+/// O progresso, de 0 a 100 (callback 10).
+class ProgressValue extends KitEvent {
+  const ProgressValue(this.percent);
+  final int percent;
+}
+
+/// O trabalho terminou (callback 11). Chega também sem o começo, ao abrir um
+/// documento pequeno.
+class ProgressFinished extends KitEvent {
+  const ProgressFinished();
+}
+
 class SearchNotFound extends KitEvent {
   const SearchNotFound(this.text);
   final String text;

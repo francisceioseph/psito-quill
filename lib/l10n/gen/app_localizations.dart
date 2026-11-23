@@ -2539,6 +2539,24 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Modos'**
   String get groupModes;
+
+  /// No description provided for @busyOpening.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrindo…'**
+  String get busyOpening;
+
+  /// No description provided for @busySaving.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvando…'**
+  String get busySaving;
+
+  /// No description provided for @busyWorking.
+  ///
+  /// In pt, this message translates to:
+  /// **'Trabalhando…'**
+  String get busyWorking;
 }
 
 class _AppLocalizationsDelegate

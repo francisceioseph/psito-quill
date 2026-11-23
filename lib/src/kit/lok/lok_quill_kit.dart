@@ -225,6 +225,12 @@ class LokQuillKit implements QuillKit {
         return s == null ? OtherKitEvent(type, payload) : CommandStateChanged(s.$1, s.$2);
       case LibreOfficeKitCallbackType.LOK_CALLBACK_SEARCH_RESULT_SELECTION:
         return parseSearchResult(payload);
+      case LibreOfficeKitCallbackType.LOK_CALLBACK_STATUS_INDICATOR_START:
+        return ProgressStarted(payload.trim());
+      case LibreOfficeKitCallbackType.LOK_CALLBACK_STATUS_INDICATOR_SET_VALUE:
+        return ProgressValue((int.tryParse(payload.trim()) ?? 0).clamp(0, 100));
+      case LibreOfficeKitCallbackType.LOK_CALLBACK_STATUS_INDICATOR_FINISH:
+        return const ProgressFinished();
       case LibreOfficeKitCallbackType.LOK_CALLBACK_SEARCH_NOT_FOUND:
         return SearchNotFound(payload);
       case LibreOfficeKitCallbackType.LOK_CALLBACK_CONTEXT_MENU:

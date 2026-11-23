@@ -23,6 +23,9 @@ import 'text_clipboard.dart';
 export 'doc_tab.dart' show DocStatus, DocTab;
 export '../kit/lok/lok_payloads.dart' show DocLanguage;
 
+/// O que trava a tela (D-066).
+enum BusyKind { opening, saving }
+
 enum KitStatus { starting, ready, failed }
 
 /// Onde a vaga de ladrilho aparece.
@@ -524,7 +527,7 @@ class DocumentController extends ChangeNotifier {
   // ------------------------------------------------------------ edição --
 
   void postKey(int charCode, int keyCode) {
-    if (!isOpen) return;
+    if (!isOpen || busy != null) return;
     kit.postKey(KeyEventType.input, charCode: charCode, keyCode: keyCode);
     kit.postKey(KeyEventType.up, charCode: charCode, keyCode: keyCode);
     _edited();
@@ -532,7 +535,7 @@ class DocumentController extends ChangeNotifier {
 
   /// Texto confirmado pelo teclado ou pelo IME.
   void insertText(String text) {
-    if (canEdit && text.isNotEmpty) {
+    if (canEdit && busy == null && text.isNotEmpty) {
       kit.extTextInput(text, commit: true);
       _edited();
     }
@@ -1074,6 +1077,43 @@ class DocumentController extends ChangeNotifier {
 
   // ------------------------------------------------------------ salvar --
 
+  // ------------------------------------------- ocupado (Etapa 8, D-066) --
+
+  /// Salvando: de pedir até o motor responder (salvo ou falhou).
+  bool _saving = false;
+
+  /// Se o motor nunca responder, a tela não fica travada para sempre.
+  Timer? _savingGuard;
+  static const savingTimeout = Duration(seconds: 90);
+
+  /// O que trava a tela: abrir o documento da tela, ou salvar. null: nada.
+  BusyKind? get busy => docStatus == DocStatus.opening
+      ? BusyKind.opening
+      : _saving
+      ? BusyKind.saving
+      : null;
+
+  /// O progresso que o motor mandou (0 a 100); null: sem número.
+  int? progress;
+
+  /// Um trabalho do motor com progresso que não é abrir nem salvar: só
+  /// aparece no rodapé, sem travar nada.
+  String? backgroundTask;
+
+  void _endSaving() {
+    _saving = false;
+    _savingGuard?.cancel();
+    _savingGuard = null;
+  }
+
+  /// Só a barra de status lê o progresso: não refaz a faixa nem o painel.
+  void _notifyStatus() {
+    statusRevision++;
+    _viewOnly = true;
+    super.notifyListeners();
+    _viewOnly = false;
+  }
+
   /// Salva por cima, no formato do próprio arquivo. false se não há arquivo
   /// (documento novo) ou se está só para leitura: aí é "Salvar como".
   bool save() {
@@ -1087,6 +1127,14 @@ class DocumentController extends ChangeNotifier {
   void saveAs(String target) {
     if (!isOpen) return;
     final dot = target.lastIndexOf('.');
+    _saving = true;
+    _savingGuard?.cancel();
+    _savingGuard = Timer(savingTimeout, () {
+      if (!_saving || _disposed) return;
+      _endSaving();
+      notifyListeners();
+    });
+    notifyListeners();
     kit.saveAs(target, dot < 0 ? 'odt' : target.substring(dot + 1).toLowerCase());
   }
 
@@ -1123,6 +1171,7 @@ class DocumentController extends ChangeNotifier {
         kitStatus = KitStatus.failed;
         this.message = ErrorMessage(message);
       case DocumentOpened(:final size, :final id):
+        progress = null;
         final tab = _pendingOpens.isEmpty ? _current : _pendingOpens.removeAt(0);
         tab?.engineId = id;
         if (tab != null && tab != _current) {
@@ -1153,6 +1202,7 @@ class DocumentController extends ChangeNotifier {
         snapshot = FodtSnapshot.empty;
         refreshSnapshot();
       case DocumentOpenFailed(:final message):
+        progress = null;
         final tab = _pendingOpens.isEmpty ? _current : _pendingOpens.removeAt(0);
         final failed = OpenFailedMessage((tab == _current ? _openingPath : tab?.openingPath) ?? '', message);
         _replaceWhenOpened = null;
@@ -1276,6 +1326,7 @@ class DocumentController extends ChangeNotifier {
         unawaited(clipboard.write(text));
         return;
       case DocumentSaved(:final path):
+        _endSaving();
         this.path = path;
         readOnly = false;
         lockOwner = null;
@@ -1305,11 +1356,27 @@ class DocumentController extends ChangeNotifier {
         }
         return;
       case SaveFailed(:final message):
+        _endSaving();
         this.message = ErrorMessage(message);
       case PluginLog(:final text):
         message = PluginMessage(text);
       case PluginFinished(:final ok, :final error):
         if (!ok) message = ErrorMessage(error);
+      case ProgressStarted(:final label):
+        progress = 0;
+        backgroundTask = busy == null ? label : null;
+        _notifyStatus();
+        return;
+      case ProgressValue(:final percent):
+        progress = percent;
+        _notifyStatus();
+        return;
+      case ProgressFinished():
+        if (progress == null && backgroundTask == null) return;
+        progress = null;
+        backgroundTask = null;
+        _notifyStatus();
+        return;
       case OtherKitEvent():
         return;
     }
@@ -1345,6 +1412,7 @@ class DocumentController extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _outlineTimer?.cancel();
+    _savingGuard?.cancel();
     if (_exporting case final p?) _deleteCopy(p);
     endTextSearch();
     _sub.cancel();

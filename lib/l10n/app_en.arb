@@ -406,5 +406,8 @@
   "commandStatusBar": "Status bar",
   "groupPageLayout": "Pages",
   "groupWindow": "Window",
-  "groupModes": "Modes"
+  "groupModes": "Modes",
+  "busyOpening": "Opening…",
+  "busySaving": "Saving…",
+  "busyWorking": "Working…"
 }

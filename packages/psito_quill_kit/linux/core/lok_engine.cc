@@ -96,6 +96,7 @@ void LokEngine::init(const std::string& installPath, const std::string& profileU
     kit_->pClass->setOptionalFeatures(
         kit_, LOK_FEATURE_DOCUMENT_PASSWORD | LOK_FEATURE_NO_TILED_ANNOTATIONS |
                   LOK_FEATURE_RANGE_HEADERS);
+    kit_->pClass->registerCallback(kit_, &LokEngine::officeCallback, this);
     std::string version = takeLokString(kit_, kit_->pClass->getVersionInfo(kit_));
     sink_->onEvent(kEvReady, version);
   });
@@ -382,6 +383,26 @@ void LokEngine::lokCallback(int type, const char* payload, void* data) {
     }
   }
   d->engine->handleCallback(type, payload ? payload : "");
+}
+
+void LokEngine::officeCallback(int type, const char* payload, void* data) {
+  auto* self = static_cast<LokEngine*>(data);
+  switch (type) {
+    case LOK_CALLBACK_STATUS_INDICATOR_START:
+    case LOK_CALLBACK_STATUS_INDICATOR_SET_VALUE:
+    case LOK_CALLBACK_STATUS_INDICATOR_FINISH:
+      self->sink_->onEvent(type, payload ? payload : "");
+      return;
+    case LOK_CALLBACK_DOCUMENT_PASSWORD:
+    case LOK_CALLBACK_DOCUMENT_PASSWORD_TO_MODIFY:
+      // Com o callback registrado, o motor esperaria a senha para sempre. O
+      // Quill ainda não pede senhas: responde "nenhuma", e abrir falha
+      // como antes (sem o callback).
+      if (self->kit_) self->kit_->pClass->setDocumentPassword(self->kit_, payload, nullptr);
+      return;
+    default:
+      return;
+  }
 }
 
 void LokEngine::handleCallback(int type, const std::string& payload) {

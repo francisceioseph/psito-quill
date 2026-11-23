@@ -205,12 +205,57 @@ class _StatusButtonState extends State<_StatusButton> {
   }
 }
 
+/// O progresso no rodapé (D-066), no lugar das janelas: "Abrindo… 50 %"
+/// com a barra, determinada se o motor manda números. É uma região viva: o
+/// leitor de tela lê quando muda.
+class StatusProgress extends StatelessWidget {
+  const StatusProgress({super.key, required this.label, this.percent, required this.percentLabel});
+
+  final String label;
+
+  /// 0 a 100; null: sem número (a barra corre).
+  final int? percent;
+  final String Function(int percent) percentLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = QuillTokens.of(context);
+    final p = percent;
+    final reduce = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      label: p == null ? label : '$label ${percentLabel(p)}',
+      excludeSemantics: true,
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Flexible(child: WLabel(label, small: true)),
+        SizedBox(width: t.space.sm),
+        SizedBox(
+          width: 120,
+          child: LinearProgressIndicator(
+            // Sem animação pedida, a barra sem número fica parada pela metade.
+            value: p == null ? (reduce ? 0.5 : null) : p / 100,
+            minHeight: 4,
+            color: t.colors.accent,
+            backgroundColor: t.colors.surfaceHigh,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        if (p != null) ...[SizedBox(width: t.space.sm), WLabel(percentLabel(p), small: true)],
+      ]),
+    );
+  }
+}
+
 /// A barra de status: campos de texto e, no fim, controles (o zoom).
 class StatusBar extends StatelessWidget {
-  const StatusBar({super.key, required this.fields, this.trailing = const []});
+  const StatusBar({super.key, required this.fields, this.trailing = const [], this.progress});
 
   final List<StatusField> fields;
   final List<Widget> trailing;
+
+  /// O progresso do motor, no lugar da mensagem.
+  final Widget? progress;
 
   @override
   Widget build(BuildContext context) {
@@ -269,8 +314,12 @@ class StatusBar extends StatelessWidget {
                           ),
                         ),
                       ],
+                      if (progress case final p?) ...[
+                        SizedBox(width: width >= 1050 ? t.space.lg : t.space.sm),
+                        Flexible(flex: 3, child: p),
+                      ]
                       // Depois, a mensagem ("Salvo"), só quando existe.
-                      if (message != null) ...[
+                      else if (message != null) ...[
                         SizedBox(width: width >= 1050 ? t.space.lg : t.space.sm),
                         Flexible(
                           flex: 3,

@@ -12,7 +12,7 @@ O plano está no `docs/PLANO.md` (seção 10). Cada etapa tem um documento aqui:
 | 5. Várias páginas e a Estrutura | [etapa-5-paginas.md](etapa-5-paginas.md) | feita |
 | 6. O modo zen | [etapa-6-zen.md](etapa-6-zen.md) | feita |
 | 7. A interface que respira | [etapa-7-espaco.md](etapa-7-espaco.md) | feita |
-| 8. Ocupado sem janelas | etapa-8-ocupado.md | |
+| 8. Ocupado sem janelas | [etapa-8-ocupado.md](etapa-8-ocupado.md) | feita |
 | 9. Acessibilidade | etapa-9-acessibilidade.md | |
 
 ## Como medir a memória de uma etapa

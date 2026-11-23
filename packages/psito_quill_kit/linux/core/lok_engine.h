@@ -114,6 +114,9 @@ class LokEngine {
   };
 
   static void lokCallback(int type, const char* payload, void* data);
+  // O callback do escritório (sem documento): o progresso de abrir e salvar
+  // (STATUS_INDICATOR, 9 a 11) e o pedido de senha (D-066).
+  static void officeCallback(int type, const char* payload, void* data);
   void makeActive(Doc* d);
   void destroyDoc(int id);
   std::string sizeJson(const Doc& d);

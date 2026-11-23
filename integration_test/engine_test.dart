@@ -84,8 +84,13 @@ void main() {
     expect(doc.kitStatus, KitStatus.ready, reason: '${doc.message}');
     expect(doc.engineVersion, contains('LibreOffice'));
 
-    // 1. Abrir: 30 páginas A4 ≈ 30 × 16838 twips de altura.
+    // 1. Abrir: 30 páginas A4 ≈ 30 × 16838 twips de altura. O motor avisa o
+    //    fim do carregamento pelo callback do escritório (D-066).
+    final beforeOpen = events.length;
     await openAndWait(work);
+    expect(events.skip(beforeOpen).whereType<ProgressFinished>(), isNotEmpty, reason: 'o progresso vem do motor');
+    expect(doc.busy, isNull);
+    expect(doc.progress, isNull);
     expect(doc.documentSize.height, greaterThan(29 * 16838));
     expect(doc.tiles.every((t) => t.textureId >= 0), isTrue, reason: 'cada vaga é uma textura');
     expect(find.byType(Texture), findsWidgets);
@@ -204,7 +209,10 @@ void main() {
 
     // 8. Salvar (DOCX) e conferir no XML: o texto, o acento, o negrito, a
     //    cópia colada, e o desfeito fora.
-    expect(await workspace.save(), isTrue);
+    final saving = workspace.save();
+    expect(doc.busy, BusyKind.saving, reason: 'a tela trava enquanto salva');
+    expect(await saving, isTrue);
+    expect(doc.busy, isNull);
     expect(doc.modified, isFalse);
     final xml = unzip(work, 'word/document.xml');
     final at = xml.indexOf(comAcento);

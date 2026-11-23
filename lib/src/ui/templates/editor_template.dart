@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../organisms/busy_scope.dart';
 import '../tokens/tokens.dart';
 
 /// A moldura do editor (Fase 2B): em cima, a faixa (ou os menus e as barras
@@ -19,7 +20,11 @@ class EditorTemplate extends StatelessWidget {
     this.ruler,
     this.sidePanel,
     this.rightRail,
+    this.busy = false,
   });
+
+  /// O motor abre ou salva: a área de edição fica sob o véu (D-066).
+  final bool busy;
 
   final Widget top, body;
 
@@ -34,36 +39,57 @@ class EditorTemplate extends StatelessWidget {
     final modern = t.component == ComponentStyle.modern;
     // A página fica sobre o tom de trás, num cartão de cantos redondos no
     // desenho moderno; os painéis, sobre a superfície da janela.
-    final page = Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      ?ruler,
-      Expanded(child: body),
-    ]);
+    final page = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ?ruler,
+        Expanded(child: body),
+      ],
+    );
     return ColoredBox(
       color: c.frame,
-      child: Column(children: [
-        top,
-        ?banner,
-        Expanded(
-          child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            ?rail,
-            ?leftPanel,
-            Expanded(
-              child: modern
-                  ? Padding(
-                      padding: EdgeInsets.only(top: t.space.sm, left: rail == null && leftPanel == null ? t.space.sm : 0, right: sidePanel == null && rightRail == null ? t.space.sm : 0),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(t.radius.panel)),
-                        child: ColoredBox(color: c.backdrop, child: page),
-                      ),
-                    )
-                  : page,
+      child: Column(
+        children: [
+          Expanded(
+            child: BusyScope(
+              busy: busy,
+              child: Column(
+                children: [
+                  top,
+                  ?banner,
+                  Expanded(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        ?rail,
+                        ?leftPanel,
+                        Expanded(
+                          child: modern
+                              ? Padding(
+                                  padding: EdgeInsets.only(
+                                    top: t.space.sm,
+                                    left: rail == null && leftPanel == null ? t.space.sm : 0,
+                                    right: sidePanel == null && rightRail == null ? t.space.sm : 0,
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.vertical(top: Radius.circular(t.radius.panel)),
+                                    child: ColoredBox(color: c.backdrop, child: page),
+                                  ),
+                                )
+                              : page,
+                        ),
+                        ?sidePanel,
+                        ?rightRail,
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-            ?sidePanel,
-            ?rightRail,
-          ]),
-        ),
-        ?statusBar,
-      ]),
+          ),
+          ?statusBar,
+        ],
+      ),
     );
   }
 }

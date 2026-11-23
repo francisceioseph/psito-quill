@@ -679,3 +679,21 @@ O passo 8 da Etapa 7, a partir da aba Ver do OnlyOffice e do Word (D-049).
 - **Zoom:** 100 %, Ajustar à página e Ajustar à largura, grandes; + e − pequenos ao lado. Os ajustes são os do D-063.
 - **Modos:** o zen. **Janela:** a paleta e Recolher a faixa.
 - **A chave da memoização da faixa** (D-037) ganhou a régua e a barra de status: as caixas leem preferências que não vêm do motor. Sem isso, a caixa da Régua já ficava velha antes desta etapa.
+
+## D-066 · Ocupado sem janelas: o véu, as teclas paradas e o progresso no rodapé
+
+A Etapa 8 da Fase 2B.
+
+- **A sonda (24.2, `lok_script`):** o progresso vem pelo callback do **escritório** (o `registerCallback` do `LibreOfficeKit`, sem documento), que o kit não registrava.
+  - Abrir um documento grande (391 páginas) manda `STATUS_INDICATOR_START` ("Carregando: "), `SET_VALUE` 0, 25, 50, 75 e `FINISH`, antes do documento aberto.
+  - Um capítulo de 30 páginas manda só o `FINISH`.
+  - Salvar (ODT ou DOCX, pelo `saveAs` do LOK) não manda nada.
+- **O kit registra o callback do escritório** (`LokEngine::officeCallback`) e passa só o 9, o 10 e o 11. Com o callback registrado, um documento com senha faria o motor esperar a senha para sempre: o kit responde "sem senha" na hora, e abrir falha como antes. Pedir a senha fica para depois.
+- **Os eventos** `ProgressStarted`, `ProgressValue` e `ProgressFinished` (`quill_kit.dart`). O controlador guarda o `progress` e refaz só a barra de status (a `statusRevision`), não a faixa.
+- **O que trava (`DocumentController.busy`):** abrir o documento da tela (do pedido até o motor responder) e salvar (do pedido até "salvo" ou "falhou"). Se o motor não responder ao salvar em 90 s, a tela destrava. As cópias de leitura (a Estrutura, a busca) não travam: o usuário não pediu, e elas não mudam o documento.
+- **O `BusyScope`** (no `EditorTemplate`, por cima de tudo menos o rodapé): o `AbsorbPointer`, o cursor de espera e um véu leve na cor da moldura. A árvore é a mesma com e sem o véu, para a página não ser remontada.
+- **As teclas param:** a página e o documento engolem as teclas, também os atalhos; o controlador ignora texto e teclas enquanto está ocupado (o IME poderia confirmar no meio).
+- **O rodapé:** "Abrindo… 50 %" com a barra determinada quando o motor manda números; "Salvando…" com a barra que corre (sem animação pedida, ela fica parada pela metade). É uma região viva para o leitor de tela.
+- **Um trabalho com progresso que não é abrir nem salvar** aparece no rodapé com o nome que o motor dá, sem travar nada.
+- **Sem "Cancelar":** o LOK não cancela um carregamento.
+- **Saem os avisos que piscavam:** o "Abrindo…" no meio da página (o lugar fica vazio, e o progresso vai no rodapé) e o "Abrindo…" como mensagem do rodapé.

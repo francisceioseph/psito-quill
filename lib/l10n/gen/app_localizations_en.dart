@@ -1352,4 +1352,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupModes => 'Modes';
+
+  @override
+  String get busyOpening => 'Opening…';
+
+  @override
+  String get busySaving => 'Saving…';
+
+  @override
+  String get busyWorking => 'Working…';
 }

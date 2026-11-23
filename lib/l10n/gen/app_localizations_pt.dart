@@ -1353,4 +1353,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get groupModes => 'Modos';
+
+  @override
+  String get busyOpening => 'Abrindo…';
+
+  @override
+  String get busySaving => 'Salvando…';
+
+  @override
+  String get busyWorking => 'Trabalhando…';
 }

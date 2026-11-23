@@ -680,5 +680,8 @@
   "commandStatusBar": "Barra de status",
   "groupPageLayout": "Páginas",
   "groupWindow": "Janela",
-  "groupModes": "Modos"
+  "groupModes": "Modos",
+  "busyOpening": "Abrindo…",
+  "busySaving": "Salvando…",
+  "busyWorking": "Trabalhando…"
 }

@@ -421,10 +421,26 @@ class FakeQuillKit implements QuillKit {
     }
   }
 
+  /// Segura a resposta do salvar até o [finishSave] (o "ocupado", D-066).
+  bool holdSaves = false;
+  String? _heldSave;
+
   @override
   void saveAs(String path, String format) {
     saved.add((path, format));
+    if (holdSaves) {
+      _heldSave = path;
+      return;
+    }
     _emit(DocumentSaved(path));
+    _state('.uno:ModifiedStatus', 'false');
+  }
+
+  void finishSave() {
+    final p = _heldSave;
+    if (p == null) return;
+    _heldSave = null;
+    _emit(DocumentSaved(p));
     _state('.uno:ModifiedStatus', 'false');
   }
 

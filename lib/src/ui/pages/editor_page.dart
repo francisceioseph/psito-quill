@@ -410,6 +410,8 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
   /// Os atalhos valem com o foco em qualquer lugar da tela (na faixa, no
   /// painel Arquivo). Com o foco no documento, ele mesmo os trata antes.
   KeyEventResult _onPageKey(FocusNode node, KeyEvent event) {
+    // Ocupado (D-066): as teclas param, também os atalhos.
+    if (doc.busy != null) return KeyEventResult.handled;
     final command = _commands!.match(event, HardwareKeyboard.instance);
     if (command == null) return KeyEventResult.ignored;
     _commands!.run(command.id);
@@ -450,6 +452,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
           // A barra de status e a Estrutura leem também a página e as palavras.
           final statusKey = (key, doc.statusRevision);
           return EditorTemplate(
+            busy: doc.busy != null,
             top: _memoized(
               'top',
               key,
@@ -631,6 +634,8 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
                   )
                 : doc.tabs.isEmpty && doc.docStatus != DocStatus.opening
                 ? StartScreen(workspace: widget.workspace)
+                : doc.busy == BusyKind.opening
+                ? const SizedBox.expand() // o progresso fica no rodapé (D-066)
                 : !doc.isOpen || doc.documentSize.isEmpty
                 ? Center(child: WLabel(_statusText(l10n), tone: WLabelTone.muted))
                 : _withRulers(
@@ -649,6 +654,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
               'status',
               statusKey,
               () => StatusBar(
+                progress: _progress(l10n),
                 fields: [
                   StatusField(_statusText(l10n), tone: _statusTone(), flex: true),
                   if (doc.isOpen) ...[
@@ -727,6 +733,23 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
         },
       ),
     );
+  }
+
+  /// O progresso do motor no rodapé (D-066): abrir (com os números que o
+  /// motor manda), salvar (sem número) ou um trabalho de fundo.
+  Widget? _progress(AppLocalizations l10n) {
+    final label = switch (doc.busy) {
+      BusyKind.opening => l10n.busyOpening,
+      BusyKind.saving => l10n.busySaving,
+      // O nome que o motor dá ("Carregando: "), sem os dois-pontos.
+      null => switch (doc.backgroundTask?.replaceAll(RegExp(r'[:\s]+$'), '')) {
+          null => null,
+          '' => l10n.busyWorking,
+          final task => task,
+        },
+    };
+    if (label == null) return null;
+    return StatusProgress(label: label, percent: doc.progress, percentLabel: l10n.zoomPercent);
   }
 
   // ------------------------------------- os menus da barra de status --

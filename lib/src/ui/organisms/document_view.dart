@@ -439,6 +439,8 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
   }
 
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    // Ocupado (D-066): o motor abre ou salva, e as teclas param.
+    if (widget.doc.busy != null) return KeyEventResult.handled;
     final keyboard = HardwareKeyboard.instance;
     // No meio de uma composição, as teclas são do IME.
     if (_composing) return KeyEventResult.ignored;
