@@ -119,6 +119,17 @@ O `lok_two_docs` (`packages/psito_quill_kit/linux/tools/`, no `build/native`) ab
 
 **O que isso muda:** o D-051 supôs ~50 MB por capítulo aberto (a diferença entre o vazio e o capítulo no bench), mas quase tudo aquilo é o Writer subindo uma vez. Um capítulo só de texto custa ~4 MB a mais no motor. Capítulos com imagens custam mais (o LibreOffice guarda as imagens decodificadas), e isso não foi medido.
 
+## As abas de documentos (passo 9, D-054, D-056)
+
+- **O motor** guarda vários documentos e só um ativo (`LokEngine::Doc`); o que chega de um documento fora da tela é descartado na thread do kit. `pqk_open` abre mais um, `pqk_activate` troca, `pqk_close_document` fecha um só.
+- **O Dart** continua com um `DocumentController` só, a fachada do documento da tela. O estado de cada aba fica num `DocTab`, copiado de e para o controlador na troca. Até o motor confirmar a troca, os eventos do documento anterior são descartados.
+- **A fileira** (`DocTabStrip`, `lib/src/ui/organisms/doc_tabs.dart`) aparece só com duas abas ou mais: o nome, o ponto das alterações, o X, a dica com o caminho. Ctrl+Tab, Ctrl+Shift+Tab, Ctrl+W e o clique do meio.
+- **O limite de 8** abas carregadas; uma aba com alterações nunca sai do motor.
+- **A contagem de palavras (D-056):** o LibreOffice 24.2 às vezes não manda a `.uno:StateWordCount` depois de abrir (uma corrida dele, que a Fase 2 também tem). Até ela chegar, a barra de status usa a contagem da cópia temporária (`meta:document-statistic`).
+- **Não conferido:** o `.uno:ChangeTheme` nas abas fora da tela; o Ctrl+Tab deixou de inserir tabulação numa tabela.
+- **Os testes:** `tabs_test`, `workspace_test`, `fase2b_tabs_test` e o passo 13b da integração (três documentos, o desfazer de cada um, salvar o certo, fechar a do meio). `./test.sh --integracao` passou duas vezes seguidas.
+- **A medida, com uma aba só** (`tool/ab.py ac8a2d6`, mediana de 3): anônima +8,0 MB com o capítulo e +7,0 depois de digitar, mas o `heap` ficou em +1,8 a +2,1; a diferença está no grupo `anon`, o ruído do coletor do Dart (D-052), que em outras rodadas deu de +3,3 a +8,5. O `abrir_ms` subiu (846 contra 333 ms, com uma rodada em 280): era o dicionário da ortografia carregando durante o abrir, investigado no D-068.
+
 ## A galeria que desce (D-055)
 
 O ▾ ao lado dos cartões de estilo do Início desce a galeria inteira, com as prévias e a busca, por cima da galeria da faixa. Escolher aplica e fecha. "Gerenciar estilos…" ganhou um botão com nome na aba Estilos.

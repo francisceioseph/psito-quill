@@ -506,12 +506,10 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
     - Sobrescrito, subscrito, tachado, limpar, realce e o espaçamento de linha ficam nos tamanhos maiores e, quando falta espaço, no menu do grupo.
   - **Acesso rápido:** salvar, desfazer e refazer à esquerda das abas. Na ponta direita, a pesquisa e o Recolher.
   - **Uma busca só** (D-050): "Pesquisar no texto e nos comandos". As ocorrências no documento (com a página e o trecho) e os comandos ficam no mesmo campo, aberto por Ctrl+F/L/K. Substituir fica no painel.
-  - **Abas de documentos, leves** (D-051): as abas ficam acima da faixa e mostram os documentos abertos, mas só o da aba ativa fica carregado no motor.
-    - Trocar de aba guarda a posição (o cursor, a rolagem e o zoom) e reabre o outro documento (~0,3 s num capítulo).
-    - Um documento com alterações não salvas continua carregado até ser salvo ou fechado, e a aba ganha um ponto.
-    - A memória fica perto da de um documento só. Cada documento a mais carregado custa ~50 MB, e só os não salvos ficam.
-    - **O que muda no motor:** o kit passa a guardar mais de um documento (`pqk_doc_*` por documento, um id em cada evento). A sonda confere se a 24.2 aceita dois documentos no mesmo processo e quanto custa o segundo.
-    - **Os fluxos** de Novo, Abrir, Recentes, Fechar e Sair passam pelas abas: sair pergunta por cada documento não salvo.
+  - **Abas de documentos, todas carregadas** (D-054, no lugar das leves do D-051): as abas ficam acima da faixa, só com dois documentos ou mais, e todos ficam carregados no motor, com um ativo.
+    - Trocar de aba é na hora e guarda a posição (o cursor, a rolagem e o zoom); cada documento guarda o próprio desfazer. A aba com alterações não salvas ganha um ponto.
+    - **O limite:** 8 carregadas. Além disso, a aba salva usada há mais tempo sai do motor e reabre ao voltar (~0,3 s). Um capítulo de texto a mais custa ~4 MB no motor (a sonda, D-053).
+    - **Os fluxos** de Novo, Abrir, Recentes, Fechar e Sair passam pelas abas: sair pergunta por cada documento não salvo. Um documento novo e vazio dá lugar ao que se abre.
     - **Teclado:** Ctrl+Tab, Ctrl+Shift+Tab e Ctrl+W; o clique do meio fecha a aba.
     - No modo Livro (Fase 3), os capítulos abertos do Fichário viram abas.
   - **A barra de status clicável** (D-063), **os bastidores do Arquivo e a tela inicial** (D-064) e **a aba Exibir** (D-065): os passos 6 a 8, no `etapa-7-espaco.md`.
