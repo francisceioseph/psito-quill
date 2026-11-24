@@ -6,7 +6,9 @@
 //
 // Compila no Linux com o MinGW (tool/windows-probe/build.sh), sem nada do Quill.
 // Uso, no Windows: lok_win_probe.exe "<pasta program do LO>" <pasta de trabalho> <arquivo.docx>
+#include <algorithm>
 #include <atomic>
+#include <cstdlib>
 #include <chrono>
 #include <cstdio>
 #include <cstring>
@@ -145,6 +147,25 @@ int main(int argc, char** argv) {
   report("primeiro ladrilho", true, std::to_string(ms_since(t)) + " ms, " + std::to_string(ink0) + " px de tinta");
   const int ink1 = paint(doc, 1440, 1440 + 16838 * 2, 3840, work + "\\ladrilho-texto.ppm");
   report("ladrilho com texto", ink1 > 200, std::to_string(ink1) + " px de tinta");
+
+  // O motor só invalida dentro da área já pintada (CallbackFlushHandler::
+  // m_aPaintedTiles). Um ladrilho grande, de baixa resolução, cobre o documento
+  // inteiro, para o fim do documento também contar.
+  if (std::getenv("PROBE_PINTAR_TUDO")) {
+    std::vector<unsigned char> all(256 * 256 * 4);
+    doc->pClass->paintTile(doc, all.data(), 256, 256, 0, 0, (int)std::max(w, h), (int)std::max(w, h));
+    report("pintar o documento inteiro", true);
+  }
+
+  // Teclas no começo do documento, dentro da área pintada.
+  const int inv_start = g_invalidations;
+  doc->pClass->postUnoCommand(doc, ".uno:GoToStartOfDoc", nullptr, false);
+  for (int c : {'A', 'b'}) {
+    doc->pClass->postKeyEvent(doc, LOK_KEYEVENT_KEYINPUT, c, 0);
+    doc->pClass->postKeyEvent(doc, LOK_KEYEVENT_KEYUP, c, 0);
+  }
+  report("digitar no começo: a invalidação", wait_for([&] { return g_invalidations > inv_start; }, 5000),
+         std::to_string(g_invalidations - inv_start) + " invalidações");
 
   // Teclas: o cursor ao fim do documento e três letras, como o Quill digita.
   const int inv_before = g_invalidations;

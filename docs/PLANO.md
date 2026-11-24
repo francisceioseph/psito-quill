@@ -617,7 +617,10 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
 - A medição de memória final (seção 8) e um site.
 
 **Depois:**
-- Windows, com o LOK do instalador do LibreOffice para Windows;
+- Windows, mas **não** com o LibreOffice instalado: no Windows, ele não manda a invalidação dos ladrilhos (D-078). Vai pedir algo mais elaborado, a decidir quando chegar a hora:
+  - um motor headless (svp) no Windows: o nosso, compilado com `--enable-headless`, como o Collabora faz; ou o do Collabora, que já fala o COKit (C++, MSVC) em vez do LOK;
+  - ou redesenhar sem o aviso (pedir de novo os ladrilhos da tela depois de cada mudança);
+  - nos dois casos, uma camada nativa para o Windows (as texturas, a impressão, as fontes, o perfil) e um instalador que leva o motor e o runtime do Visual C++. O ponto de partida é a sonda `tool/windows-probe/` e o D-078;
 - a entrada no Psito OS, se autorizada;
 - e talvez o Psito Calc, sobre o mesmo kit.
 
@@ -640,7 +643,7 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
 ## 12. Perguntas abertas para o Francisco
 
 1. **O formato do livro:** a pasta `.psitobook` com um ODT por capítulo está boa, ou você prefere um arquivo único? **Respondido:** a pasta, com um ODT por capítulo.
-2. **O Windows** entra junto com o Linux desde a fase 1, ou só depois da fase 6? **Respondido:** depois da fase 6.
+2. **O Windows** entra junto com o Linux desde a fase 1, ou só depois da fase 6? **Respondido:** depois da fase 6. **Atualizado em 24/11/2026:** só Linux por enquanto. O Windows fica para depois, com um caminho próprio (D-078).
 3. **O nome:** decidido, é Psito Quill (a pena de escrever, irmã do Plume). App `org.psito.quill`, repositório `psito-quill`.
 4. **Os livros atuais:** em que formato estão hoje *Dustland* e *Silicon Gods* (DOCX, ODT, Google Docs)? A fase 3 precisa de um importador que divida pelos títulos de capítulo. **Respondido:** em DOCX.
 5. **O repositório** no GitHub (`francisceioseph/psito-quill`), público como o Player?
