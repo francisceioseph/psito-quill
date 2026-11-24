@@ -4285,6 +4285,228 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Termos'**
   String get noteKindTerms;
+
+  /// No description provided for @commandGoals.
+  ///
+  /// In pt, this message translates to:
+  /// **'Metas…'**
+  String get commandGoals;
+
+  /// No description provided for @statusGoalToday.
+  ///
+  /// In pt, this message translates to:
+  /// **'meta hoje {done}/{goal}'**
+  String statusGoalToday(String done, String goal);
+
+  /// No description provided for @statusGoalTodayTip.
+  ///
+  /// In pt, this message translates to:
+  /// **'A meta de palavras de hoje'**
+  String get statusGoalTodayTip;
+
+  /// No description provided for @statusGoalSession.
+  ///
+  /// In pt, this message translates to:
+  /// **'sessão {done}/{goal}'**
+  String statusGoalSession(String done, String goal);
+
+  /// No description provided for @zenGoal.
+  ///
+  /// In pt, this message translates to:
+  /// **'meta {done}/{goal}'**
+  String zenGoal(String done, String goal);
+
+  /// No description provided for @goalsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Metas de {book}'**
+  String goalsTitle(String book);
+
+  /// No description provided for @goalsBook.
+  ///
+  /// In pt, this message translates to:
+  /// **'Palavras do livro'**
+  String get goalsBook;
+
+  /// No description provided for @goalsDaily.
+  ///
+  /// In pt, this message translates to:
+  /// **'Palavras por dia'**
+  String get goalsDaily;
+
+  /// No description provided for @goalsSession.
+  ///
+  /// In pt, this message translates to:
+  /// **'Palavras nesta sessão'**
+  String get goalsSession;
+
+  /// No description provided for @goalsEmptyHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Vazio: sem meta'**
+  String get goalsEmptyHint;
+
+  /// No description provided for @goalsSessionHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'A meta da sessão vale até fechar o livro.'**
+  String get goalsSessionHint;
+
+  /// No description provided for @goalsDeadline.
+  ///
+  /// In pt, this message translates to:
+  /// **'Prazo'**
+  String get goalsDeadline;
+
+  /// No description provided for @goalsNoDeadline.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem prazo'**
+  String get goalsNoDeadline;
+
+  /// No description provided for @goalsPickDeadline.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolher o prazo'**
+  String get goalsPickDeadline;
+
+  /// No description provided for @goalsClearDeadline.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tirar o prazo'**
+  String get goalsClearDeadline;
+
+  /// No description provided for @goalsBookProgress.
+  ///
+  /// In pt, this message translates to:
+  /// **'Livro: {words} de {goal} palavras ({percent}%)'**
+  String goalsBookProgress(String words, String goal, int percent);
+
+  /// No description provided for @goalsBookWords.
+  ///
+  /// In pt, this message translates to:
+  /// **'Livro: {words} palavras'**
+  String goalsBookWords(String words);
+
+  /// No description provided for @goalsPace.
+  ///
+  /// In pt, this message translates to:
+  /// **'Faltam {words} palavras: {perDay} por dia'**
+  String goalsPace(String words, String perDay);
+
+  /// No description provided for @goalsDaysLeft.
+  ///
+  /// In pt, this message translates to:
+  /// **'{days, plural, =0{o prazo passou} =1{falta 1 dia} other{faltam {days} dias}}'**
+  String goalsDaysLeft(int days);
+
+  /// No description provided for @goalsReached.
+  ///
+  /// In pt, this message translates to:
+  /// **'A meta do livro foi alcançada.'**
+  String get goalsReached;
+
+  /// No description provided for @goalsToday.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hoje: {words} de {goal}'**
+  String goalsToday(String words, String goal);
+
+  /// No description provided for @goalsTodayWords.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hoje: {words} palavras'**
+  String goalsTodayWords(String words);
+
+  /// No description provided for @goalsSessionProgress.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sessão: {words} de {goal}'**
+  String goalsSessionProgress(String words, String goal);
+
+  /// No description provided for @goalsChartTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os últimos 30 dias'**
+  String get goalsChartTitle;
+
+  /// No description provided for @goalsChartLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os últimos 30 dias: {total} palavras, {best} no melhor dia'**
+  String goalsChartLabel(String total, String best);
+
+  /// No description provided for @goalsSave.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvar'**
+  String get goalsSave;
+
+  /// No description provided for @commandCorkboard.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cortiça'**
+  String get commandCorkboard;
+
+  /// No description provided for @corkTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cortiça de {book}'**
+  String corkTitle(String book);
+
+  /// No description provided for @corkScope.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os cartões de'**
+  String get corkScope;
+
+  /// No description provided for @corkAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todos os capítulos'**
+  String get corkAll;
+
+  /// No description provided for @corkBack.
+  ///
+  /// In pt, this message translates to:
+  /// **'Voltar à página'**
+  String get corkBack;
+
+  /// No description provided for @corkEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum capítulo aqui.'**
+  String get corkEmpty;
+
+  /// No description provided for @corkWords.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} palavras'**
+  String corkWords(String count);
+
+  /// No description provided for @corkSynopsis.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sinopse'**
+  String get corkSynopsis;
+
+  /// No description provided for @corkNoSynopsis.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem sinopse'**
+  String get corkNoSynopsis;
+
+  /// No description provided for @corkEditSynopsis.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar a sinopse'**
+  String get corkEditSynopsis;
+
+  /// No description provided for @corkKeysHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Setas andam, Alt+setas movem, Enter abre, F2 edita a sinopse, Esc volta à página'**
+  String get corkKeysHint;
 }
 
 class _AppLocalizationsDelegate

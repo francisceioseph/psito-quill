@@ -29,10 +29,12 @@ import '../organisms/book_dialogs.dart';
 import '../organisms/snapshots_dialog.dart';
 import '../organisms/classic_bars.dart';
 import '../organisms/command_palette.dart';
+import '../organisms/corkboard.dart';
 import '../organisms/doc_tabs.dart';
 import '../organisms/document_view.dart';
 import '../organisms/file_panel.dart';
 import '../organisms/find_panel.dart';
+import '../organisms/goals_dialog.dart';
 import '../organisms/inspector.dart';
 import '../organisms/nav_rail.dart';
 import '../organisms/notes_panel.dart';
@@ -101,6 +103,9 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
 
   /// O painel da esquerda, aberto pelo trilho.
   _LeftPanel? _left;
+
+  /// A cortiça no lugar da página (D-084).
+  bool _cork = false;
   InspectorPart _part = InspectorPart.text;
 
   DocumentController get doc => widget.workspace.doc;
@@ -195,6 +200,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
   void _onBook() {
     if (books.dir == _bookDir) return;
     _bookDir = books.dir;
+    if (!books.isOpen && _cork) setState(() => _cork = false);
     if (books.isOpen) {
       _setLeft(_LeftPanel.binder);
     } else if (_left == _LeftPanel.binder || _left == _LeftPanel.notes) {
@@ -214,6 +220,24 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
 
   @override
   bool get binderOpen => _left == _LeftPanel.binder;
+
+  @override
+  bool get corkboardOpen => _cork && books.isOpen;
+
+  @override
+  void toggleCorkboard() {
+    if (!books.isOpen && !_cork) return;
+    if (_fileOpen) _fileOpen = false;
+    setState(() => _cork = !_cork);
+    if (!_cork) _backToDocument();
+  }
+
+  /// Abre o capítulo e volta da cortiça para a página.
+  void _openFromCork(BookNode chapter) {
+    widget.workspace.openChapter(chapter);
+    setState(() => _cork = false);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _backToDocument());
+  }
 
   @override
   void toggleBinder() => _setLeft(binderOpen ? null : _LeftPanel.binder);
@@ -379,6 +403,27 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
     final s = await widget.workspace.takeSnapshot(current);
     if (!mounted) return;
     _notice(s == null ? l10n.snapshotFailed : l10n.snapshotTaken(current.title));
+  }
+
+  /// As palavras de hoje (D-083), com o capítulo da tela pelo motor; null
+  /// sem livro ou antes da primeira contagem.
+  int? get _writtenToday {
+    final current = _currentChapter, w = doc.wordCount;
+    return books.writtenToday(liveId: current?.id, liveWords: w == null || w.selection ? null : w.words);
+  }
+
+  /// As palavras do livro, com o capítulo da tela pelo motor.
+  int get _bookWordsNow {
+    final book = books.book, current = _currentChapter, w = doc.wordCount;
+    if (book == null) return 0;
+    if (current == null || w == null || w.selection) return book.words;
+    return book.words - current.words + w.words;
+  }
+
+  @override
+  void showGoals() {
+    if (!books.isOpen) return;
+    unawaited(showGoalsDialog(context, books: books, bookWords: _bookWordsNow, today: _writtenToday ?? 0));
   }
 
   @override
@@ -804,6 +849,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
             t.id, // o tema aplicado (as preferências mudam antes)
             _tab,
             _fileOpen,
+            _cork,
             _reveal,
             _find != null,
             _left,
@@ -933,7 +979,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
                       _LeftPanel.binder => BinderPanel(
                           books: books,
                           currentPath: doc.path,
-                          onOpen: widget.workspace.openChapter,
+                          onOpen: (chapter) => _cork ? _openFromCork(chapter) : widget.workspace.openChapter(chapter),
                           scenes: doc.snapshot.scenes,
                           onOpenScene: (chapter, scene) {
                             widget.workspace.openChapter(chapter, scene: scene);
@@ -942,6 +988,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
                           onNewChapter: newChapter,
                           onNewPart: newPart,
                           onSnapshots: (chapter) => unawaited(_showSnapshots(chapter)),
+                          onCorkboard: toggleCorkboard,
                           onClose: toggleBinder,
                           closeLabel: l10n.binderClose,
                         ),
@@ -1038,6 +1085,13 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
                     onClose: _backToDocument,
                     section: _fileSection,
                   )
+                : corkboardOpen
+                ? Corkboard(
+                    books: books,
+                    currentId: _currentChapter?.id,
+                    onOpen: _openFromCork,
+                    onClose: toggleCorkboard,
+                  )
                 : doc.tabs.isEmpty && doc.docStatus != DocStatus.opening
                 ? StartScreen(workspace: widget.workspace, onNewBook: newBook, onImport: importManuscript)
                 : doc.busy == BusyKind.opening
@@ -1082,14 +1136,14 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
                       ),
                     // O livro inteiro (D-071): o que está no livro.json, com o
                     // capítulo da tela pelo que o motor conta agora.
-                    if (books.book case final book? when _currentChapter != null)
+                    if (books.isOpen && _currentChapter != null)
                       StatusField(
-                        l10n.statusBookWords(MaterialLocalizations.of(context).formatDecimal(
-                            book.words - _currentChapter!.words + (doc.wordCount?.selection == false ? doc.wordCount!.words : _currentChapter!.words))),
+                        l10n.statusBookWords(MaterialLocalizations.of(context).formatDecimal(_bookWordsNow)),
                         tooltip: l10n.statusBookWordsTip,
                         onTap: toggleBinder,
                         priority: 2,
                       ),
+                    ..._goalFields(l10n),
                     if (doc.language case final lang?)
                       StatusField(
                         lang.tag == '-' ? l10n.languageNone : lang.name,
@@ -1171,6 +1225,34 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
     return StatusProgress(label: label, percent: doc.progress, percentLabel: l10n.zoomPercent);
   }
 
+  /// A meta do dia e a da sessão na barra de status (D-083); o clique abre
+  /// as metas.
+  List<StatusField> _goalFields(AppLocalizations l10n) {
+    final book = books.book;
+    if (book == null) return const [];
+    final today = _writtenToday;
+    if (today == null) return const [];
+    final m = MaterialLocalizations.of(context);
+    final session = books.sessionGoal;
+    return [
+      if (book.goals.daily case final goal?)
+        StatusField(
+          l10n.statusGoalToday(m.formatDecimal(today), m.formatDecimal(goal)),
+          tone: today >= goal ? WLabelTone.normal : WLabelTone.muted,
+          tooltip: l10n.statusGoalTodayTip,
+          onTap: showGoals,
+          priority: 2,
+        ),
+      if (session != null)
+        StatusField(
+          l10n.statusGoalSession(m.formatDecimal(books.sessionWritten(today) ?? 0), m.formatDecimal(session)),
+          tooltip: l10n.goalsSession,
+          onTap: showGoals,
+          priority: 3,
+        ),
+    ];
+  }
+
   // ------------------------------------- os menus da barra de status --
 
   /// As estatísticas: páginas, palavras, caracteres.
@@ -1235,7 +1317,14 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
     final s = widget.settings;
     final w = doc.wordCount;
     return ZenView(
-      words: w == null ? null : l10n.statusWords(w.words),
+      words: switch ([
+        if (w != null) l10n.statusWords(w.words),
+        if ((books.book?.goals.daily, _writtenToday) case (final goal?, final today?))
+          l10n.zenGoal(MaterialLocalizations.of(context).formatDecimal(today), MaterialLocalizations.of(context).formatDecimal(goal)),
+      ]) {
+        [] => null,
+        final parts => parts.join(' · '),
+      },
       focus: s.zenFocus,
       typewriter: s.zenTypewriter,
       paper: s.zenPaper,

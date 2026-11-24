@@ -2383,4 +2383,152 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noteKindTerms => 'Terms';
+
+  @override
+  String get commandGoals => 'Goals…';
+
+  @override
+  String statusGoalToday(String done, String goal) {
+    return 'today $done/$goal';
+  }
+
+  @override
+  String get statusGoalTodayTip => 'Today\'s word goal';
+
+  @override
+  String statusGoalSession(String done, String goal) {
+    return 'session $done/$goal';
+  }
+
+  @override
+  String zenGoal(String done, String goal) {
+    return 'goal $done/$goal';
+  }
+
+  @override
+  String goalsTitle(String book) {
+    return 'Goals for $book';
+  }
+
+  @override
+  String get goalsBook => 'Book words';
+
+  @override
+  String get goalsDaily => 'Words per day';
+
+  @override
+  String get goalsSession => 'Words this session';
+
+  @override
+  String get goalsEmptyHint => 'Empty: no goal';
+
+  @override
+  String get goalsSessionHint =>
+      'The session goal lasts until the book is closed.';
+
+  @override
+  String get goalsDeadline => 'Deadline';
+
+  @override
+  String get goalsNoDeadline => 'No deadline';
+
+  @override
+  String get goalsPickDeadline => 'Pick the deadline';
+
+  @override
+  String get goalsClearDeadline => 'Remove the deadline';
+
+  @override
+  String goalsBookProgress(String words, String goal, int percent) {
+    return 'Book: $words of $goal words ($percent%)';
+  }
+
+  @override
+  String goalsBookWords(String words) {
+    return 'Book: $words words';
+  }
+
+  @override
+  String goalsPace(String words, String perDay) {
+    return '$words words to go: $perDay a day';
+  }
+
+  @override
+  String goalsDaysLeft(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days left',
+      one: '1 day left',
+      zero: 'the deadline has passed',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get goalsReached => 'The book goal has been reached.';
+
+  @override
+  String goalsToday(String words, String goal) {
+    return 'Today: $words of $goal';
+  }
+
+  @override
+  String goalsTodayWords(String words) {
+    return 'Today: $words words';
+  }
+
+  @override
+  String goalsSessionProgress(String words, String goal) {
+    return 'Session: $words of $goal';
+  }
+
+  @override
+  String get goalsChartTitle => 'The last 30 days';
+
+  @override
+  String goalsChartLabel(String total, String best) {
+    return 'The last 30 days: $total words, $best on the best day';
+  }
+
+  @override
+  String get goalsSave => 'Save';
+
+  @override
+  String get commandCorkboard => 'Corkboard';
+
+  @override
+  String corkTitle(String book) {
+    return '$book corkboard';
+  }
+
+  @override
+  String get corkScope => 'Cards from';
+
+  @override
+  String get corkAll => 'All chapters';
+
+  @override
+  String get corkBack => 'Back to the page';
+
+  @override
+  String get corkEmpty => 'No chapters here.';
+
+  @override
+  String corkWords(String count) {
+    return '$count words';
+  }
+
+  @override
+  String get corkSynopsis => 'Synopsis';
+
+  @override
+  String get corkNoSynopsis => 'No synopsis';
+
+  @override
+  String get corkEditSynopsis => 'Edit the synopsis';
+
+  @override
+  String get corkKeysHint =>
+      'Arrows move the focus, Alt+arrows move the card, Enter opens, F2 edits the synopsis, Esc goes back to the page';
 }

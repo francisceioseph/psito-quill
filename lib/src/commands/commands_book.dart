@@ -1,7 +1,8 @@
 // Os comandos do livro (Fase 3, Etapa 1, D-071): novo, abrir, importar e
 // fechar o livro, o fichário, e os capítulos e partes novos; e as cenas
 // (Etapa 5, D-079): nova cena, dividir, juntar e converter os separadores;
-// e os instantâneos (Etapa 7, D-081); e as notas (Etapa 8, D-082).
+// e os instantâneos (Etapa 7, D-081); e as notas (Etapa 8, D-082); e as
+// metas (Etapa 9, D-083); e a cortiça (Etapa 10, D-084).
 //
 // Command com receptor, como os de tela: o que pede uma janela (o título do
 // livro, a pasta, o manuscrito) é da página do editor, que implementa
@@ -32,6 +33,10 @@ abstract final class BookCommandIds {
   // As notas (Etapa 8, D-082).
   static const notes = 'livro.notas';
   static const newNote = 'livro.novaNota';
+  // As metas (Etapa 9, D-083).
+  static const goals = 'livro.metas';
+  // A cortiça (Etapa 10, D-084).
+  static const corkboard = 'livro.cortica';
 }
 
 /// O que a página do editor sabe abrir para o livro.
@@ -52,6 +57,9 @@ abstract interface class BookViewActions {
   void toggleNotes();
   bool get notesOpen;
   void newNote();
+  void showGoals();
+  void toggleCorkboard();
+  bool get corkboardOpen;
 }
 
 void registerBookCommands(
@@ -159,6 +167,21 @@ void registerBookCommands(
       label: l10n.commandNewNote,
       icon: Symbols.note_stack_add_rounded,
       run: view.newNote,
+      canRun: inBook,
+    ),
+    Command(
+      id: BookCommandIds.goals,
+      label: l10n.commandGoals,
+      icon: Symbols.flag_rounded,
+      run: view.showGoals,
+      canRun: inBook,
+    ),
+    Command(
+      id: BookCommandIds.corkboard,
+      label: l10n.commandCorkboard,
+      icon: Symbols.dashboard_rounded,
+      run: view.toggleCorkboard,
+      isActive: () => view.corkboardOpen,
       canRun: inBook,
     ),
   ]) {

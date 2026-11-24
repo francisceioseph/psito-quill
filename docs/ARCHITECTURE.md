@@ -76,8 +76,9 @@ Enquanto o ladrilho novo não chega, o velho continua na tela, sem quadro em bra
 | Memoização | A `EditorPage` guarda a faixa, os painéis e a barra de status pela `stateRevision` e pela `statusRevision` (D-037) | A cada tecla, só a vista e o rodapé se refazem |
 | Flyweight de arquivo | As cópias temporárias (D-044): a Estrutura, os estilos e a busca leem uma cópia FODT num isolate | O texto do livro não fica na memória do app |
 | Atomic design + tokens | `lib/src/ui/` (atoms → molecules → organisms → templates → pages) e `QuillTokens` | Nenhuma cor literal fora de `tokens/themes/` (o `tokens_test` confere) |
-| Memento | (Fase 3) instantâneos de capítulo | |
-| Repository | (Fase 3) `BookRepository` | |
+| Facade do livro | `BookController` (no `Workspace.book`) | O fichário, a cortiça, as metas e os comandos mexem no livro por um lugar só, e cada mudança grava o `livro.json` de forma atômica |
+| Memento | Os instantâneos (`snapshots.dart`, D-081): uma cópia do capítulo em `versoes/`, restaurável | Voltar a uma versão sem mudar o documento aberto |
+| Repository de arquivos | As notas (`notes.dart`), os instantâneos (`versoes.json`) e as metas (`metas.json`), cada um lido e gravado pelo seu módulo, de forma atômica | Nada do livro fica na memória por via das dúvidas: lê-se ao abrir o painel ou a janela e solta-se ao fechar |
 
 ## Pastas
 
@@ -88,7 +89,9 @@ lib/
   src/app.dart               MaterialApp, tema das preferências, "salvar?" ao sair
   src/kit/                   quill_kit.dart (a porta), lok/ (adaptador; lo_styles.dart, gerado), fake/
   src/book/                  book.dart (o livro.json), book_io.dart, book_controller.dart, fodt_split.dart e
-                             docx_import.dart (o importador), odt_zip.dart (lê o content.xml; D-071)
+                             docx_import.dart (o importador), odt_zip.dart (lê o content.xml; D-071),
+                             chapter_cut.dart (dividir, D-079), book_search.dart (D-080), snapshots.dart
+                             (D-081), notes.dart (D-082), goals.dart (as metas, D-083)
   src/document/              document_controller.dart, doc_tab.dart (as abas), workspace.dart, fodt.dart
                              (a cópia lida), outline.dart, search.dart, format_origin.dart,
                              text_clipboard.dart, doc_colors.dart

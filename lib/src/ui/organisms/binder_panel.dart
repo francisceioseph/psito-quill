@@ -105,6 +105,7 @@ class BinderPanel extends StatefulWidget {
     required this.onNewChapter,
     required this.onNewPart,
     this.onSnapshots,
+    this.onCorkboard,
     required this.onClose,
     required this.closeLabel,
   });
@@ -124,6 +125,9 @@ class BinderPanel extends StatefulWidget {
 
   /// Os instantâneos do capítulo (D-081), pelo menu do item.
   final ValueChanged<BookNode>? onSnapshots;
+
+  /// Abre a cortiça (D-084).
+  final VoidCallback? onCorkboard;
   final String closeLabel;
 
   @override
@@ -341,6 +345,8 @@ class _BinderPanelState extends State<BinderPanel> {
               Expanded(child: WLabel(l10n.binderWords(book.words), tone: WLabelTone.muted, small: true)),
               WButton(icon: Symbols.note_add_rounded, label: l10n.commandNewChapter, onPressed: widget.onNewChapter),
               WButton(icon: Symbols.create_new_folder_rounded, label: l10n.commandNewPart, onPressed: widget.onNewPart),
+              if (widget.onCorkboard != null)
+                WButton(icon: Symbols.dashboard_rounded, label: l10n.commandCorkboard, onPressed: widget.onCorkboard),
             ],
           ),
           SizedBox(height: t.space.sm),

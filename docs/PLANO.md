@@ -577,10 +577,10 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
 - **Etapa 6: a busca no livro** (feita, D-080). "No livro" no painel Localizar: os fechados pelo `content.xml`, os abertos pelo motor; o clique abre e salta. Substituir no livro todo fica para depois.
 - **Etapa 7: os instantâneos** (feita, D-081). Em `versoes/`, pelo motor, sem mudar o documento. Comparar abre o instantâneo ao lado, só para leitura (o `.uno:CompareDocuments` derruba o motor na 24.2); restaurar guarda um instantâneo antes; e um automático por dia.
 - **Etapa 8: as notas** (feita, D-082). Markdown em `notas/`, editadas no Flutter, sem o motor: Personagens, Lugares, Facções, Termos e a Linha do tempo, com `[[Nome]]`.
-- **Etapa 9: as metas.** Do livro com prazo e do dia, o histórico em `metas.json`, a meta na barra de status e um gráfico dos últimos 30 dias num `CustomPainter`.
-- **Etapa 10: a cortiça.** Os capítulos como cartões, a mesma árvore do fichário, com a sinopse editável no cartão.
+- **Etapa 9: as metas** (feita, D-083). Do livro com prazo, do dia e da sessão, o histórico em `metas.json`, a meta na barra de status e no zen, e um gráfico dos últimos 30 dias num `CustomPainter`.
+- **Etapa 10: a cortiça** (feita, D-084). Os capítulos como cartões no lugar da página, a mesma árvore do fichário, com a sinopse editável no cartão.
 - **Fecho:** o `docs/FASE3-RESULTADOS.md` e a documentação.
-- **Estado em 24/11/2026:** as Etapas 1 (D-071), 2 (D-073), 3 (D-075), 4 (D-076), 5 (D-079), 6 (D-080), 7 (D-081) e 8 (D-082) estão feitas, e o papel escuro passou a ser desenhado pelo Quill (D-074).
+- **Estado em 24/11/2026:** as Etapas 1 a 10 (D-071 a D-084) e o fecho estão feitos, e o papel escuro passou a ser desenhado pelo Quill (D-074). Os resultados, as sondas e o que ficou para conferir à mão estão no `docs/FASE3-RESULTADOS.md`.
   - **O que saiu diferente do plano nas Etapas 3 e 4** (as sondas na 24.2):
     - desligar o cabeçalho, a primeira página e as pares diferentes, a hifenização do documento e a capitular passam pela cópia dos estilos e o `.uno:LoadStyles` (D-075), porque os comandos do motor abrem janelas que travam o LOK. Essas mudanças não entram no Ctrl+Z;
     - editar o cabeçalho é pelo botão (o cursor vai até ele), não pelo clique duplo;
@@ -604,6 +604,12 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
     - não há "Abrir ao lado" dividindo a página: o painel já fica ao lado dela;
     - a linha do tempo fica na ordem em que foi escrita, não na das datas;
     - com o foco num campo de texto, as teclas de editar texto ficam com o campo (Ctrl+Z desfazia o capítulo).
+  - **O que saiu diferente do plano na Etapa 9** (D-083):
+    - o progresso, o ritmo e o gráfico ficam na janela das metas (menu Livro e o clique na barra), não no alto do fichário;
+    - cortar texto num capítulo conta zero no dia, não negativo; a base do dia sai na primeira contagem depois de abrir o livro.
+  - **O que saiu diferente do plano na Etapa 10** (D-084):
+    - os cartões são os capítulos (do livro ou de uma parte), não as cenas: as cenas não têm título nem sinopse no `livro.json`;
+    - a cortiça abre pelo fichário, pelo menu Livro e pela faixa Exibir, além do Exibir do Clássico 97.
 
 **Fase 4: compilar e revisar**
 - Compilar para PDF, EPUB e DOCX com modelos, referências cruzadas, marcadores, sumário e índice. (As notas de rodapé foram para a Fase 3, Etapa 4.)

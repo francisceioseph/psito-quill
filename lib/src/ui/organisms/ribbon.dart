@@ -406,7 +406,7 @@ class _ViewTab extends StatelessWidget {
           secondRow: null,
           leading: Column(mainAxisAlignment: MainAxisAlignment.center, children: [cmd(CommandIds.zoomIn), cmd(CommandIds.zoomOut)]),
         ),
-        RibbonGroup(title: l10n.groupModes, firstRow: [_big(commands, ViewCommandIds.zen, onRan)]),
+        RibbonGroup(title: l10n.groupModes, firstRow: [_big(commands, ViewCommandIds.zen, onRan), _big(commands, BookCommandIds.corkboard, onRan)]),
         RibbonGroup(
           title: l10n.groupWindow,
           last: true,

@@ -9,6 +9,7 @@
 //
 // A ordem é a do `livro.json`; o número no nome do arquivo é só para quem
 // olha a pasta. Só o capítulo da tela (e os das abas) fica no motor.
+import 'goals.dart';
 
 /// Parte ou capítulo.
 enum BookNodeKind { part, chapter }
@@ -94,7 +95,7 @@ class BookNode {
 }
 
 class Book {
-  Book({required this.title, this.author = '', List<BookNode>? nodes}) : nodes = nodes ?? [];
+  Book({required this.title, this.author = '', this.goals = const BookGoals(), List<BookNode>? nodes}) : nodes = nodes ?? [];
 
   /// A versão do formato do `livro.json`. Um livro de versão maior (de um
   /// Quill mais novo) abre só para leitura no fichário.
@@ -102,6 +103,9 @@ class Book {
 
   String title;
   String author;
+
+  /// As metas (D-083): as palavras do livro, o prazo e as do dia.
+  BookGoals goals;
 
   /// A árvore, no primeiro nível: partes e capítulos fora de partes.
   final List<BookNode> nodes;
@@ -143,6 +147,7 @@ class Book {
         'versao': formatVersion,
         'titulo': title,
         if (author.isNotEmpty) 'autor': author,
+        if (!goals.isEmpty) 'metas': goals.toJson(),
         'arvore': [for (final n in nodes) n.toJson()],
       };
 
@@ -152,6 +157,7 @@ class Book {
     return Book(
       title: j['titulo'] as String? ?? '',
       author: j['autor'] as String? ?? '',
+      goals: BookGoals.fromJson(j['metas']),
       nodes: [for (final n in (j['arvore'] as List<Object?>? ?? const [])) BookNode.fromJson(n as Map<String, Object?>)],
     );
   }

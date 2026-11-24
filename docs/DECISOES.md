@@ -1165,3 +1165,46 @@ A Etapa 8 da Fase 3: as fichas do livro (personagens, lugares, facções, termos
   - unidade, `notes_test`: o cabeçalho de ida e volta (e sem cabeçalho), criar e gravar com o nome repetido, a ordem sem acento, a lixeira, as ligações e os trechos, a nota pelo apelido, as menções, a busca e os eventos da linha do tempo;
   - widget, `fase3_notes_test`: pelo trilho, a nota nova com o nome da busca, gravar sozinho, o Ctrl+Z que fica no campo, criar pela ligação, as menções, abrir o capítulo pela ligação, o filtro e a busca pelo apelido; a linha do tempo, mandar para a lixeira e o menu Livro do Clássico 97.
   - A integração não ganhou passo: as notas não passam pelo motor.
+
+## D-083 · As metas do livro
+
+A Etapa 9 da Fase 3: as palavras do livro com prazo, as do dia e as da sessão, o histórico e o gráfico.
+
+- **Onde ficam:**
+  - as metas do livro e do dia ficam no `livro.json`, numa chave `metas` (`livro`, `prazo` como `aaaa-mm-dd` e `dia`), só quando há alguma;
+  - a meta da sessão fica só na memória (o `BookController`). Ela começa quando é posta e acaba ao fechar o livro;
+  - o histórico fica em `metas.json`, ao lado, gravado de forma atômica: as palavras de cada dia (um número por dia) e a base do dia (as palavras de cada capítulo no começo dele). Sem pacote novo (`goals.dart`).
+- **As palavras de hoje** são a soma, por capítulo, do que ele cresceu desde a base do dia:
+  - um capítulo que encolheu conta zero, e não negativo. Cortar 300 palavras numa revisão não apaga as 300 escritas em outro capítulo;
+  - o capítulo da tela conta pelo que o motor diz agora (como as palavras do livro na barra, D-071); os outros, pelo `livro.json`;
+  - a base do dia sai na primeira contagem das palavras depois de abrir o livro (o `refreshWords`), e não antes, senão um capítulo mudado fora do Quill contaria como escrito. Até lá, a barra não mostra a meta;
+  - um capítulo que aparece no meio do dia (dividido, importado) entra na base com o que já tem. Um capítulo novo e vazio entra com zero, então o que se escreve nele conta;
+  - o dia vira quando a data muda, também com o livro aberto: a base passa a ser o que está no `livro.json`. O que foi digitado antes da meia-noite e só salvo depois conta no dia novo;
+  - o dia é gravado no `metas.json` a cada contagem (ao salvar um capítulo, ao abrir o livro), e não a cada tecla.
+- **A barra de status** mostra "meta hoje 640/1.000" (e "sessão 120/500", com a meta da sessão). O clique abre as metas.
+- **A janela das metas** (menu Livro › Metas…, e o clique na barra):
+  - os campos das palavras do livro, por dia e da sessão (vazio: sem meta) e o prazo, pela janela de datas do Flutter;
+  - o progresso do livro, o ritmo até o prazo ("Faltam 32.680 palavras: 884 por dia · faltam 37 dias", contando hoje e pelos dias do calendário) e o de hoje e da sessão, que acompanham o que se digita nos campos;
+  - o gráfico dos últimos 30 dias, num `CustomPainter` (`goals_chart.dart`), sem pacote de gráficos: uma barra por dia, na cor da meta alcançada quando chega lá, e a linha tracejada da meta do dia. O leitor de tela ouve o total e o melhor dia.
+  - **O plano punha o progresso e o gráfico no alto do fichário.** Ficaram na janela: o fichário é estreito para o gráfico, e assim ele não se refaz a cada tecla.
+- **O modo zen** mostra a meta do dia ao lado das palavras ("1.234 palavras · meta 640/1.000").
+- **A memória:** o histórico é um mapa de números (uns 20 bytes por dia) e a base, um número por capítulo. O gráfico só existe com a janela aberta.
+  - **O app com as metas** (`tool/ab.py 2b8cbdd`, o `capitulo-30p.docx` avulso, 3 rodadas, a mediana): −5,9 MB de memória anônima com o capítulo, +1,2 depois de rolar e −2,3 depois de digitar; +2,0 com a janela vazia. É o ruído: o bench abre um capítulo avulso, sem livro, e as metas só existem com um livro aberto. A latência da tecla (p95) ficou em 9,4 ms, o fps de rolar em 59,5 e o abrir em 806 contra 808 ms.
+- **Os testes:**
+  - unidade, `goals_test`: as metas no `livro.json` de ida e volta (e os valores inválidos), as palavras de hoje (cortar não desconta, o capítulo da tela pelo motor, o capítulo que aparece no meio do dia, a virada do dia), o `metas.json` de ida e volta e quebrado, os últimos dias (também na virada do mês) e o ritmo até o prazo;
+  - widget, `fase3_goals_test`: a meta do dia na barra com o capítulo da tela pelo motor, o clique que abre a janela, o gráfico com ontem do `metas.json` e hoje ao vivo, gravar as metas no `livro.json`, a sessão só na memória (e esquecida ao fechar o livro), a base do dia no `metas.json` e o menu Livro do Clássico 97.
+
+## D-084 · A cortiça
+
+A Etapa 10 da Fase 3: os capítulos como cartões, para reorganizar a história.
+
+- **Onde fica:** no lugar da página, pelo botão no alto do fichário, pelo menu Livro e pelo Exibir (Clássico 97), e na faixa Exibir, em Modos. Esc, "Voltar à página" ou o mesmo comando voltam. Ela fecha sozinha quando o livro fecha.
+- **É a mesma árvore do fichário.** Não há um arquivo da cortiça: os cartões são os capítulos do `livro.json`, na ordem dele, e mexer nos cartões mexe no fichário (o `BookController.move`, que grava na hora).
+  - Os cartões são os capítulos do livro inteiro ou, pelo "Os cartões de", só os de uma parte. O plano falava em "as cenas de uma parte"; as cenas não têm título nem sinopse no `livro.json` (só o começo), então os cartões são só os capítulos.
+  - Soltar um cartão no lugar de outro: indo para a frente, ele fica depois do destino; para trás, antes. Ele entra na parte do destino (`corkDrop`), então arrastar entre as partes muda a parte.
+- **O cartão:** a faixa do rótulo de cor, o título, o status e as palavras, e a sinopse. O capítulo da tela tem a borda na cor de destaque.
+- **A sinopse se edita no cartão**, pelo lápis ou F2: sair do campo ou Ctrl+Enter grava, Esc desiste. Enter no campo é uma linha nova, como na sinopse do fichário.
+- **Pelo teclado:** as setas andam pela grade (para cima e para baixo, uma fileira), Home e End vão às pontas, Alt+setas movem o cartão, Enter abre o capítulo e F2 edita a sinopse. O duplo clique também abre, e a página volta à tela.
+- **A memória:** a grade monta só os cartões visíveis (`GridView.builder`, colunas de pelo menos 240 px), e os nós de foco são só dos capítulos da lista. Com a cortiça na tela, a página sai da árvore e nada passa pelo motor; o capítulo continua aberto na aba.
+- **A medida** (o livro de 60 capítulos do `docs/FASE3-RESULTADOS.md`, com as notas, as metas e um ano de histórico; a build de release, 3 rodadas alternadas, a mediana, contra a build da Etapa 8 no mesmo livro): o RSS com o capítulo deu 453,8 contra 446,8 MB, depois de digitar 461,3 contra 459,7, e no fim 457,1 contra 461,4. É o ruído do host (D-038): a cortiça só existe com ela na tela, e o bench não a abre. A tecla (p95) ficou em 8,5 ms. O quadro ao digitar no livro ficou de 4,8 para 5,1 ms (build, p95): é a meta do dia na barra de status, refeita a cada tecla com as palavras do motor, e fica longe dos 16 ms.
+- **Os testes:** widget, `fase3_corkboard_test`: a cortiça pelo fichário no lugar da página, os cartões com a sinopse, arrastar um cartão para outra parte, Alt+→, a ordem gravada no `livro.json`, F2 e Ctrl+Enter na sinopse, o Esc que volta, o escopo de uma parte, o duplo clique que abre o capítulo, o `corkDrop` e o menu Livro do Clássico 97.

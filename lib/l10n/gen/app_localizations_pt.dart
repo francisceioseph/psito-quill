@@ -2384,4 +2384,151 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get noteKindTerms => 'Termos';
+
+  @override
+  String get commandGoals => 'Metas…';
+
+  @override
+  String statusGoalToday(String done, String goal) {
+    return 'meta hoje $done/$goal';
+  }
+
+  @override
+  String get statusGoalTodayTip => 'A meta de palavras de hoje';
+
+  @override
+  String statusGoalSession(String done, String goal) {
+    return 'sessão $done/$goal';
+  }
+
+  @override
+  String zenGoal(String done, String goal) {
+    return 'meta $done/$goal';
+  }
+
+  @override
+  String goalsTitle(String book) {
+    return 'Metas de $book';
+  }
+
+  @override
+  String get goalsBook => 'Palavras do livro';
+
+  @override
+  String get goalsDaily => 'Palavras por dia';
+
+  @override
+  String get goalsSession => 'Palavras nesta sessão';
+
+  @override
+  String get goalsEmptyHint => 'Vazio: sem meta';
+
+  @override
+  String get goalsSessionHint => 'A meta da sessão vale até fechar o livro.';
+
+  @override
+  String get goalsDeadline => 'Prazo';
+
+  @override
+  String get goalsNoDeadline => 'Sem prazo';
+
+  @override
+  String get goalsPickDeadline => 'Escolher o prazo';
+
+  @override
+  String get goalsClearDeadline => 'Tirar o prazo';
+
+  @override
+  String goalsBookProgress(String words, String goal, int percent) {
+    return 'Livro: $words de $goal palavras ($percent%)';
+  }
+
+  @override
+  String goalsBookWords(String words) {
+    return 'Livro: $words palavras';
+  }
+
+  @override
+  String goalsPace(String words, String perDay) {
+    return 'Faltam $words palavras: $perDay por dia';
+  }
+
+  @override
+  String goalsDaysLeft(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'faltam $days dias',
+      one: 'falta 1 dia',
+      zero: 'o prazo passou',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get goalsReached => 'A meta do livro foi alcançada.';
+
+  @override
+  String goalsToday(String words, String goal) {
+    return 'Hoje: $words de $goal';
+  }
+
+  @override
+  String goalsTodayWords(String words) {
+    return 'Hoje: $words palavras';
+  }
+
+  @override
+  String goalsSessionProgress(String words, String goal) {
+    return 'Sessão: $words de $goal';
+  }
+
+  @override
+  String get goalsChartTitle => 'Os últimos 30 dias';
+
+  @override
+  String goalsChartLabel(String total, String best) {
+    return 'Os últimos 30 dias: $total palavras, $best no melhor dia';
+  }
+
+  @override
+  String get goalsSave => 'Salvar';
+
+  @override
+  String get commandCorkboard => 'Cortiça';
+
+  @override
+  String corkTitle(String book) {
+    return 'Cortiça de $book';
+  }
+
+  @override
+  String get corkScope => 'Os cartões de';
+
+  @override
+  String get corkAll => 'Todos os capítulos';
+
+  @override
+  String get corkBack => 'Voltar à página';
+
+  @override
+  String get corkEmpty => 'Nenhum capítulo aqui.';
+
+  @override
+  String corkWords(String count) {
+    return '$count palavras';
+  }
+
+  @override
+  String get corkSynopsis => 'Sinopse';
+
+  @override
+  String get corkNoSynopsis => 'Sem sinopse';
+
+  @override
+  String get corkEditSynopsis => 'Editar a sinopse';
+
+  @override
+  String get corkKeysHint =>
+      'Setas andam, Alt+setas movem, Enter abre, F2 edita a sinopse, Esc volta à página';
 }

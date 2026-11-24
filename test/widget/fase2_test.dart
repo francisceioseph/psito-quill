@@ -61,6 +61,12 @@ class _NoBookView implements BookViewActions {
   bool get notesOpen => false;
   @override
   void newNote() {}
+  @override
+  void showGoals() {}
+  @override
+  void toggleCorkboard() {}
+  @override
+  bool get corkboardOpen => false;
 }
 
 class _NoPageView implements PageViewActions {

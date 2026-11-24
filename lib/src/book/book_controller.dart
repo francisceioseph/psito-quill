@@ -13,6 +13,7 @@ import '../kit/quill_kit.dart';
 import 'book.dart';
 import 'book_io.dart';
 import 'docx_import.dart';
+import 'goals.dart';
 
 /// Por que o livro não abriu.
 enum BookError { missing, invalid, newerFormat, exists, writeFailed }
@@ -33,6 +34,19 @@ class BookController extends ChangeNotifier {
 
   Book? _book;
   String? _dir;
+
+  /// O histórico das metas (D-083), lido ao abrir o livro. Null até a
+  /// primeira contagem das palavras: antes dela, a base do dia sairia velha.
+  GoalLog? _log;
+  GoalLog? _pendingLog;
+
+  /// A meta da sessão (só na memória) e as palavras de hoje quando ela foi
+  /// posta.
+  int? _sessionGoal;
+  int _sessionStart = 0;
+
+  /// O relógio (os testes trocam).
+  DateTime Function() clock = DateTime.now;
 
   Book? get book => _book;
 
@@ -76,11 +90,17 @@ class BookController extends ChangeNotifier {
   }
 
   /// Usa [book], já gravado em [dir] (o importador).
-  void adopt(String dir, Book book) => _attach(dir, book);
+  void adopt(String dir, Book book) {
+    _attach(dir, book);
+    unawaited(refreshWords());
+  }
 
   void _attach(String dir, Book book) {
     _book = book;
     _dir = dir;
+    _log = null;
+    _pendingLog = GoalLog.read(dir);
+    _sessionGoal = null;
     _sub ??= kit.events.listen(_onKit);
     _changed(save: false);
   }
@@ -88,6 +108,8 @@ class BookController extends ChangeNotifier {
   void close() {
     _book = null;
     _dir = null;
+    _log = _pendingLog = null;
+    _sessionGoal = null;
     _changed(save: false);
   }
 
@@ -105,6 +127,7 @@ class BookController extends ChangeNotifier {
     book.nodes.add(BookNode(id: newNodeId(book), kind: BookNodeKind.chapter, title: firstChapter, file: file));
     writeBook(dir, book);
     _attach(dir, book);
+    _recordGoals();
     return book;
   }
 
@@ -126,7 +149,10 @@ class BookController extends ChangeNotifier {
       if (!f.existsSync()) continue;
       if (f.lastModifiedSync().millisecondsSinceEpoch != c.wordsStamp) stale[p] = c;
     }
-    if (stale.isEmpty) return;
+    if (stale.isEmpty) {
+      if (_recordGoals()) _changed(save: false);
+      return;
+    }
     final counts = await countChapterWords(stale.keys.toList());
     if (_disposed || _book != book) return;
     for (final MapEntry(:key, :value) in counts.entries) {
@@ -135,6 +161,69 @@ class BookController extends ChangeNotifier {
         ..wordsStamp = value.stamp
         ..scenes = value.scenes;
     }
+    _recordGoals();
+    _changed();
+  }
+
+  // ------------------------------------------------------------ as metas --
+
+  /// Põe as palavras de hoje (pelo `livro.json`) no histórico e grava o
+  /// `metas.json` se algo mudou. Devolve se o histórico mudou.
+  bool _recordGoals() {
+    final book = _book, dir = _dir;
+    final log = _log ?? _pendingLog;
+    if (book == null || dir == null || log == null) return false;
+    final first = _log == null;
+    _log = log;
+    final now = clock();
+    var changed = log.roll(book, now);
+    changed = log.adopt(book) || changed;
+    final key = dayKey(now), today = log.written(book);
+    if (log.days[key] != today && (today > 0 || log.days.containsKey(key))) {
+      log.days[key] = today;
+      changed = true;
+    }
+    if (changed) {
+      try {
+        log.write(dir);
+      } on FileSystemException {
+        // Fica na memória; a próxima contagem tenta de novo.
+      }
+    }
+    return changed || first;
+  }
+
+  /// O histórico; null antes da primeira contagem do livro aberto.
+  GoalLog? get goalLog => _log;
+
+  /// As palavras escritas hoje, com o capítulo [liveId] pelas [liveWords]
+  /// (o que o motor conta agora). Null antes da primeira contagem.
+  int? writtenToday({String? liveId, int? liveWords}) {
+    final book = _book, log = _log;
+    if (book == null || log == null) return null;
+    // Passou da meia-noite com o livro aberto: um dia novo.
+    if (log.baseDay != dayKey(clock())) _recordGoals();
+    return log.written(book, liveId: liveId, liveWords: liveWords);
+  }
+
+  /// A meta da sessão (só na memória, D-083).
+  int? get sessionGoal => _sessionGoal;
+
+  /// As palavras desta sessão: as de hoje menos as de quando a meta foi posta.
+  int? sessionWritten(int? today) => today == null || _sessionGoal == null
+      ? null
+      : (today - _sessionStart < 0 ? 0 : today - _sessionStart);
+
+  /// Troca as metas do livro e a da sessão. [today] são as palavras de hoje
+  /// agora: a sessão começa nelas quando a meta dela muda.
+  void setGoals(BookGoals goals, {int? session, int today = 0}) {
+    final book = _book;
+    if (book == null) return;
+    if (session != _sessionGoal) {
+      _sessionGoal = session;
+      _sessionStart = today;
+    }
+    book.goals = goals;
     _changed();
   }
 
@@ -151,6 +240,16 @@ class BookController extends ChangeNotifier {
     final file = newChapterFile(dir, title);
     if (!await _convert.convert(source, '$dir/$file', 'odt')) throw const BookException(BookError.writeFailed);
     final node = BookNode(id: newNodeId(book), kind: BookNodeKind.chapter, title: title, file: file);
+    // Vazio, entra na base das metas com zero; com texto (dividido), com o
+    // que tiver na primeira contagem.
+    if (source.isEmpty && _log != null) {
+      _log!.base[node.id] = 0;
+      try {
+        _log!.write(dir);
+      } on FileSystemException {
+        // A base fica na memória.
+      }
+    }
     _insert(node, afterId: afterId, partId: partId);
     return node;
   }
