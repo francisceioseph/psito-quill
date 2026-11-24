@@ -559,12 +559,15 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
   - A cada 60 s com alterações (e numa pausa da digitação), uma cópia de recuperação em ODT, pela cópia temporária do D-044: sem mudar o documento, o caminho nem o "modificado". Fica no perfil do Quill, nunca ao lado do arquivo.
   - Ao abrir depois de uma queda, a tela inicial mostra "Recuperar arquivos", com a data de cada cópia: Recuperar (abre a cópia como um documento novo) ou Descartar. Fechar normalmente apaga as cópias.
   - Uma preferência liga e desliga (ligada por padrão). A sonda mede o tempo da cópia no capítulo de 30 páginas e num livro grande, para a cópia não travar a digitação.
-- **Etapa 3: o cabeçalho, o rodapé e o número de página.**
+- **Etapa 3: a página do livro: o cabeçalho, o rodapé, o número de página, a hifenização e a capitular.**
   - O motor já desenha o cabeçalho e o rodapé do DOCX ("DUSTLAND · FRANCISCO SOUZA · 2025" e o número), mas o Quill não deixa criar nem editar.
   - Inserir › Cabeçalho e Rodapé (ligar e desligar por estilo de página), e editar com o clique duplo, como no Writer. Sonda: `.uno:InsertPageHeader`, `.uno:InsertPageFooter` e o clique no lugar do cabeçalho.
   - Os campos: número de página, total de páginas, título e data (`.uno:InsertPageNumberField` e os outros, sondados).
   - Primeira página diferente e páginas pares e ímpares diferentes, no painel Página.
   - No livro, o cabeçalho e o rodapé vêm do estilo de página de cada capítulo (os do importador continuam).
+  - **A hifenização automática** (Layout › Hifenização, e no painel Parágrafo): o *Dustland* é justificado e hifenizado ("co-memorava", "verde-esme-ralda"). O dicionário `hyphen-pt-br` já está instalado; a sonda confere se o motor hifeniza com o `LOK_ALLOWLIST_LANGUAGES` e o perfil do Quill, e se o DOCX importado mantém a hifenização ligada.
+  - **A letra capitular** (Inserir › Letra capitular: o número de linhas e o afastamento), para a abertura dos capítulos.
+  - **As quebras de seção e de coluna** e a página em branco (Inserir › Quebras), além da quebra de página que já existe.
 - **Etapa 4: exportar, imprimir, notas de rodapé, links e caracteres especiais.**
   - Exportar o capítulo para PDF (com marcadores dos títulos) e imprimir pela janela do sistema (GTK), com a prévia que o GTK mostra. O PDF do livro inteiro é o compilar, na Fase 4.
   - Notas de rodapé e de fim: inserir, e o clique no número leva à nota e volta. Vêm da Fase 4 para cá, porque um romance usa.
@@ -590,13 +593,17 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
   - no parágrafo: a cor de fundo, "Não adicionar intervalo entre parágrafos do mesmo estilo", e uma janela avançada com as bordas e as tabulações;
   - nas Informações: os parágrafos, os caracteres com espaços, e as propriedades editáveis (autor, título, assunto, etiquetas, comentário);
   - nas Preferências: as regras da ortografia (ignorar MAIÚSCULAS e palavras com números), personalizar o acesso rápido e escolher cada atalho;
-  - os modelos: "Novo a partir do modelo", com o `estilos.ott` do livro como o primeiro.
+  - os modelos: "Novo a partir do modelo", com o `estilos.ott` do livro como o primeiro;
+  - na Página Inicial: copiar a formatação (o pincel), mudar maiúsculas e minúsculas (Aa), e as listas de vários níveis;
+  - no Layout: as colunas de texto, os números de linha, a cor da página e a marca d'água, e organizar as imagens (trazer para a frente, alinhar, agrupar);
+  - nas Referências: as legendas, a tabela de figuras, os marcadores (Favorito) e a referência cruzada, junto do sumário do compilar;
+  - no Inserir: a caixa de texto, a data e a hora como campo.
 
 **Fase 5: plugins**
 - A API `psito.*` v1, o gerenciador de plugins com permissões, os 4 plugins de exemplo, e temas vindos de plugins.
 - O assistente de IA local como plugin: desligado por padrão, num processo à parte, sem rede, e o texto só muda quando quem escreve aceita.
 - **Vistos no OnlyOffice** (23/11/2026): os sinônimos pelo dicionário local do LibreOffice (sonda) e a gramática do LanguageTool só com um servidor local, ambos como plugins. Exportar para Markdown pode entrar no compilar.
-- **Ficam de fora, de propósito:** a senha e a assinatura digital (a aba Proteção do OnlyOffice), as macros, as nuvens, a aba Desenhar, e os plugins que dependem da rede (DeepL, Send, Zotero).
+- **Ficam de fora, de propósito:** a senha e a assinatura digital (a aba Proteção do OnlyOffice), as macros, as nuvens, a aba Desenhar, as formas, o SmartArt, os gráficos, as equações, a arte de texto, os controles de conteúdo, e os plugins que dependem da rede (DeepL, Send, Zotero).
 
 **Fase 6: acabamento**
 - As animações com mola no tema moderno. (Foco, Máquina de escrever, Tela cheia, Sépia e Alto contraste entraram na Fase 2B.)
