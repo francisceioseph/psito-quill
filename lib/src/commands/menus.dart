@@ -158,6 +158,9 @@ List<MenuSpec> editorMenus(AppLocalizations l10n) => [
         BookCommandIds.takeSnapshot,
         BookCommandIds.snapshots,
         null,
+        BookCommandIds.notes,
+        BookCommandIds.newNote,
+        null,
         BookCommandIds.closeBook,
       ]),
       MenuSpec(l10n.menuTools, const [

@@ -4087,6 +4087,204 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Fechar o instantâneo'**
   String get snapshotCloseView;
+
+  /// No description provided for @railNotes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Notas'**
+  String get railNotes;
+
+  /// No description provided for @commandNotes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Notas do livro'**
+  String get commandNotes;
+
+  /// No description provided for @commandNewNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nova nota'**
+  String get commandNewNote;
+
+  /// No description provided for @notesTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Notas'**
+  String get notesTitle;
+
+  /// No description provided for @notesClose.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fechar as notas'**
+  String get notesClose;
+
+  /// No description provided for @notesSearch.
+  ///
+  /// In pt, this message translates to:
+  /// **'Buscar nas notas'**
+  String get notesSearch;
+
+  /// No description provided for @notesAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todas'**
+  String get notesAll;
+
+  /// No description provided for @notesEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma nota ainda. Personagens, lugares, facções, termos e a linha do tempo ficam aqui, na pasta \"notas\" do livro.'**
+  String get notesEmpty;
+
+  /// No description provided for @notesNoMatch.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma nota com isso.'**
+  String get notesNoMatch;
+
+  /// No description provided for @notesBack.
+  ///
+  /// In pt, this message translates to:
+  /// **'Voltar às notas'**
+  String get notesBack;
+
+  /// No description provided for @noteNewName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nova nota'**
+  String get noteNewName;
+
+  /// No description provided for @noteDelete.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mandar a nota para a lixeira'**
+  String get noteDelete;
+
+  /// No description provided for @noteDeleteTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mandar a nota para a lixeira?'**
+  String get noteDeleteTitle;
+
+  /// No description provided for @noteDeleteBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'A nota \"{name}\" vai para a lixeira do livro.'**
+  String noteDeleteBody(String name);
+
+  /// No description provided for @noteName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome'**
+  String get noteName;
+
+  /// No description provided for @noteKind.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tipo'**
+  String get noteKind;
+
+  /// No description provided for @noteAliases.
+  ///
+  /// In pt, this message translates to:
+  /// **'Apelidos'**
+  String get noteAliases;
+
+  /// No description provided for @noteAliasesHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Apelidos, separados por vírgula'**
+  String get noteAliasesHint;
+
+  /// No description provided for @noteText.
+  ///
+  /// In pt, this message translates to:
+  /// **'Texto'**
+  String get noteText;
+
+  /// No description provided for @noteTextHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escreva aqui. [[Nome]] liga a outra nota ou a um capítulo.'**
+  String get noteTextHint;
+
+  /// No description provided for @noteLinks.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ligações'**
+  String get noteLinks;
+
+  /// No description provided for @noteMentions.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mencionada em'**
+  String get noteMentions;
+
+  /// No description provided for @noteCreateLink.
+  ///
+  /// In pt, this message translates to:
+  /// **'Criar {name}'**
+  String noteCreateLink(String name);
+
+  /// No description provided for @noteTimelineEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum evento ainda. Escreva um por linha, no Texto: \"- Ano 3: a Poeira chega\".'**
+  String get noteTimelineEmpty;
+
+  /// No description provided for @noteKindCharacter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Personagem'**
+  String get noteKindCharacter;
+
+  /// No description provided for @noteKindPlace.
+  ///
+  /// In pt, this message translates to:
+  /// **'Lugar'**
+  String get noteKindPlace;
+
+  /// No description provided for @noteKindFaction.
+  ///
+  /// In pt, this message translates to:
+  /// **'Facção'**
+  String get noteKindFaction;
+
+  /// No description provided for @noteKindTerm.
+  ///
+  /// In pt, this message translates to:
+  /// **'Termo'**
+  String get noteKindTerm;
+
+  /// No description provided for @noteKindTimeline.
+  ///
+  /// In pt, this message translates to:
+  /// **'Linha do tempo'**
+  String get noteKindTimeline;
+
+  /// No description provided for @noteKindCharacters.
+  ///
+  /// In pt, this message translates to:
+  /// **'Personagens'**
+  String get noteKindCharacters;
+
+  /// No description provided for @noteKindPlaces.
+  ///
+  /// In pt, this message translates to:
+  /// **'Lugares'**
+  String get noteKindPlaces;
+
+  /// No description provided for @noteKindFactions.
+  ///
+  /// In pt, this message translates to:
+  /// **'Facções'**
+  String get noteKindFactions;
+
+  /// No description provided for @noteKindTerms.
+  ///
+  /// In pt, this message translates to:
+  /// **'Termos'**
+  String get noteKindTerms;
 }
 
 class _AppLocalizationsDelegate

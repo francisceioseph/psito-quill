@@ -55,6 +55,12 @@ class _NoBookView implements BookViewActions {
   void takeSnapshot() {}
   @override
   void showSnapshots() {}
+  @override
+  void toggleNotes() {}
+  @override
+  bool get notesOpen => false;
+  @override
+  void newNote() {}
 }
 
 class _NoPageView implements PageViewActions {

@@ -1265,5 +1265,52 @@
       }
     }
   },
-  "snapshotCloseView": "Fechar o instantâneo"
+  "snapshotCloseView": "Fechar o instantâneo",
+  "railNotes": "Notas",
+  "commandNotes": "Notas do livro",
+  "commandNewNote": "Nova nota",
+  "notesTitle": "Notas",
+  "notesClose": "Fechar as notas",
+  "notesSearch": "Buscar nas notas",
+  "notesAll": "Todas",
+  "notesEmpty": "Nenhuma nota ainda. Personagens, lugares, facções, termos e a linha do tempo ficam aqui, na pasta \"notas\" do livro.",
+  "notesNoMatch": "Nenhuma nota com isso.",
+  "notesBack": "Voltar às notas",
+  "noteNewName": "Nova nota",
+  "noteDelete": "Mandar a nota para a lixeira",
+  "noteDeleteTitle": "Mandar a nota para a lixeira?",
+  "noteDeleteBody": "A nota \"{name}\" vai para a lixeira do livro.",
+  "@noteDeleteBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noteName": "Nome",
+  "noteKind": "Tipo",
+  "noteAliases": "Apelidos",
+  "noteAliasesHint": "Apelidos, separados por vírgula",
+  "noteText": "Texto",
+  "noteTextHint": "Escreva aqui. [[Nome]] liga a outra nota ou a um capítulo.",
+  "noteLinks": "Ligações",
+  "noteMentions": "Mencionada em",
+  "noteCreateLink": "Criar {name}",
+  "@noteCreateLink": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noteTimelineEmpty": "Nenhum evento ainda. Escreva um por linha, no Texto: \"- Ano 3: a Poeira chega\".",
+  "noteKindCharacter": "Personagem",
+  "noteKindPlace": "Lugar",
+  "noteKindFaction": "Facção",
+  "noteKindTerm": "Termo",
+  "noteKindTimeline": "Linha do tempo",
+  "noteKindCharacters": "Personagens",
+  "noteKindPlaces": "Lugares",
+  "noteKindFactions": "Facções",
+  "noteKindTerms": "Termos"
 }

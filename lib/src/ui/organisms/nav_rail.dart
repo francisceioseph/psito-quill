@@ -1,6 +1,6 @@
 // O trilho de navegação, à esquerda (Fase 2B, Etapa 2): os painéis que se
-// abrem ao lado da página (Estrutura, Localizar, Estilos). Notas e
-// Assistente entram quando existirem.
+// abrem ao lado da página (o fichário e as Notas do livro, Estrutura,
+// Localizar, Estilos). O Assistente entra quando existir.
 //
 // Cada item é um botão de 56 px com o ícone numa pílula e o nome embaixo,
 // como o NavigationRail do Material 3. O aberto fica com a pílula tonal e o

@@ -1136,3 +1136,32 @@ A Etapa 7 da Fase 3: guardar um capítulo como está, para ver ou voltar a ele d
   - unidade, `snapshots_test`: a ordem, dois no mesmo segundo, o limite dos automáticos, apagar para a lixeira, o automático do dia, e o índice estragado ou o arquivo que sumiu;
   - widget, `fase3_snapshots_test`: guardar com nome e restaurar um capítulo fechado (com o "Antes de restaurar"); abrir ao lado só para leitura, com a aba, a faixa e a volta ao capítulo; e o automático (um por dia, desligável);
   - integração, passo 27: o instantâneo do motor leva o que não foi salvo e não muda o arquivo; a aba ao lado é só leitura e tem o texto de antes; a trava sai ao fechar; e restaurar volta o texto, com o "antes" guardando o que não foi salvo.
+
+## D-082 · As notas do livro
+
+A Etapa 8 da Fase 3: as fichas do livro (personagens, lugares, facções, termos e a linha do tempo), ao lado do capítulo.
+
+- **Onde ficam:** em `notas/` dentro do livro, um Markdown por nota (`notas/ana-ruiz.md`), gravado de forma atômica (escreve ao lado e renomeia). Um cabeçalho simples, uma linha por campo, entre dois `---`: `nome`, `tipo` (`personagem`, `lugar`, `faccao`, `termo`, `linha-do-tempo`) e `apelidos` (separados por vírgula). Não é um leitor de YAML: é o nosso código, em `notes.dart`, sem pacote novo. Um `.md` sem cabeçalho também abre (o nome é o do arquivo), para quem escreve as notas em outro editor.
+- **O nome do arquivo sai do nome na criação e não muda depois.** O nome de verdade é o do cabeçalho, como a ordem dos capítulos é a do `livro.json` (D-071). Dois com o mesmo nome ganham `-2`.
+- **Editadas no Flutter, sem o motor.** O texto é um campo do Flutter com várias linhas (o IME, a seleção, o Ctrl+Z e o leitor de tela de graça), não uma aba do LibreOffice. A nota custa o texto dela, e não a memória de um documento no motor (D-051). O Markdown não é desenhado: é texto puro, com os `[[...]]` em destaque. Notas com formatação ficariam no motor, como outra aba. Não fiz isso.
+- **As ligações `[[Nome]]`:**
+  - ligam a uma nota, pelo nome ou por um apelido, sem acento nem maiúscula; ou a um capítulo, pelo título. O capítulo de um evento da linha do tempo é um `[[Título]]`;
+  - ficam destacadas no texto (um `TextEditingController` que monta os trechos; durante a pré-edição do IME, o desenho normal);
+  - o clique não é dentro do texto: um campo de texto do Flutter não tem trecho clicável, e o clique ali é para pôr o cursor. Embaixo do texto vem "Ligações", um botão para cada uma, com o teclado e o nome para o leitor de tela. A nota abre, o capítulo abre numa aba, e uma ligação que não existe vira "Criar Nome";
+  - "Mencionada em" lista as notas que ligam a esta.
+- **O painel Notas** fica no trilho, depois do fichário, quando há um livro. Ele também abre pelo menu Livro (Notas do livro e Nova nota). São duas vistas no mesmo painel, de 320 px:
+  - **a lista:** a busca (pelo nome, pelos apelidos e pelo texto), os filtros por tipo e as notas, montando só as linhas visíveis. "Nova nota" usa o que está na busca como o nome e o filtro como o tipo;
+  - **a nota:** o nome, o tipo, os apelidos e o texto, com "Voltar às notas" e "Mandar para a lixeira".
+  - O plano falava em "Abrir ao lado", dividindo a área da página. O painel já fica ao lado da página, então não fiz a divisão.
+- **A linha do tempo** é uma nota do tipo "Linha do tempo". Os eventos são as linhas de lista do texto, `- quando: o quê` (ou com um travessão). Com eventos, a nota abre na vista "Linha do tempo", a lista dos eventos; "Texto" volta ao campo. A ordem é a do texto, e não a das datas, porque as datas do mundo do livro não se ordenam sozinhas ("antes da Poeira", "Ano 3").
+- **Gravar** é sozinho: 1 s depois da última tecla, e também ao voltar à lista, ao abrir outra nota ou ao fechar o painel. Apagar manda o `.md` para a `lixeira/` do livro.
+- **As teclas num campo de texto:** os atalhos do Quill valiam com o foco em qualquer lugar, e a página os pegava antes do campo. Ctrl+Z numa nota desfazia o capítulo, e Ctrl+A selecionava o documento. Isso já acontecia na busca e na sinopse. Agora, com o foco num campo de texto, ficam com o campo:
+  - Ctrl com A, C, V, X, Z, Y, Backspace, Delete, as setas, Home e End;
+  - qualquer tecla sem Ctrl, menos as F-teclas e o Esc.
+  - Os outros atalhos (salvar, os painéis, as F-teclas) continuam valendo.
+- **A memória:** com o painel fechado, nada das notas fica na memória. A lista, com o texto das notas (pequeno), é lida quando o painel abre e solta quando ele fecha. A busca e as menções usam essa lista, sem cache à parte.
+  - **O app sem as notas** (`tool/ab.py d8d487e`, o `capitulo-30p.docx` avulso, 3 rodadas, a mediana): +0,3 MB de memória anônima com o capítulo, +1,1 depois de rolar e −0,7 depois de digitar. A latência da tecla (p95) ficou em 9,4 ms, e o fps de rolar, em 59,5. O tempo de abrir deu 353 contra 738 ms, mas as rodadas das duas builds alternam entre ~350 e ~740 ms (A: 743, 353 e 329; B: 356, 738 e 746). É a máquina, não a etapa: nada do abrir mudou.
+- **Os testes:**
+  - unidade, `notes_test`: o cabeçalho de ida e volta (e sem cabeçalho), criar e gravar com o nome repetido, a ordem sem acento, a lixeira, as ligações e os trechos, a nota pelo apelido, as menções, a busca e os eventos da linha do tempo;
+  - widget, `fase3_notes_test`: pelo trilho, a nota nova com o nome da busca, gravar sozinho, o Ctrl+Z que fica no campo, criar pela ligação, as menções, abrir o capítulo pela ligação, o filtro e a busca pelo apelido; a linha do tempo, mandar para a lixeira e o menu Livro do Clássico 97.
+  - A integração não ganhou passo: as notas não passam pelo motor.

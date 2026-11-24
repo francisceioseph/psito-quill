@@ -2277,4 +2277,110 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get snapshotCloseView => 'Close the snapshot';
+
+  @override
+  String get railNotes => 'Notes';
+
+  @override
+  String get commandNotes => 'Book notes';
+
+  @override
+  String get commandNewNote => 'New note';
+
+  @override
+  String get notesTitle => 'Notes';
+
+  @override
+  String get notesClose => 'Close the notes';
+
+  @override
+  String get notesSearch => 'Search the notes';
+
+  @override
+  String get notesAll => 'All';
+
+  @override
+  String get notesEmpty =>
+      'No notes yet. Characters, places, factions, terms and the timeline live here, in the book\'s \"notas\" folder.';
+
+  @override
+  String get notesNoMatch => 'No note matches.';
+
+  @override
+  String get notesBack => 'Back to the notes';
+
+  @override
+  String get noteNewName => 'New note';
+
+  @override
+  String get noteDelete => 'Move the note to the trash';
+
+  @override
+  String get noteDeleteTitle => 'Move the note to the trash?';
+
+  @override
+  String noteDeleteBody(String name) {
+    return 'The note \"$name\" goes to the book\'s trash.';
+  }
+
+  @override
+  String get noteName => 'Name';
+
+  @override
+  String get noteKind => 'Type';
+
+  @override
+  String get noteAliases => 'Aliases';
+
+  @override
+  String get noteAliasesHint => 'Aliases, separated by commas';
+
+  @override
+  String get noteText => 'Text';
+
+  @override
+  String get noteTextHint =>
+      'Write here. [[Name]] links to another note or to a chapter.';
+
+  @override
+  String get noteLinks => 'Links';
+
+  @override
+  String get noteMentions => 'Mentioned in';
+
+  @override
+  String noteCreateLink(String name) {
+    return 'Create $name';
+  }
+
+  @override
+  String get noteTimelineEmpty =>
+      'No events yet. Write one per line, in the Text: \"- Year 3: the Dust arrives\".';
+
+  @override
+  String get noteKindCharacter => 'Character';
+
+  @override
+  String get noteKindPlace => 'Place';
+
+  @override
+  String get noteKindFaction => 'Faction';
+
+  @override
+  String get noteKindTerm => 'Term';
+
+  @override
+  String get noteKindTimeline => 'Timeline';
+
+  @override
+  String get noteKindCharacters => 'Characters';
+
+  @override
+  String get noteKindPlaces => 'Places';
+
+  @override
+  String get noteKindFactions => 'Factions';
+
+  @override
+  String get noteKindTerms => 'Terms';
 }

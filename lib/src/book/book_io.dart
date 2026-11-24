@@ -52,7 +52,8 @@ String bookFolderName(String title) {
   return '${clean.isEmpty ? 'Livro' : clean}$bookExtension';
 }
 
-const _accents = {
+/// As letras com acento e a sem acento de cada uma.
+const accentFold = {
   'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a', 'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e', //
   'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i', 'ó': 'o', 'ò': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o', //
   'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u', 'ç': 'c', 'ñ': 'n',
@@ -62,7 +63,7 @@ const _accents = {
 String slugOf(String title) {
   final s = StringBuffer();
   for (final ch in title.toLowerCase().split('')) {
-    s.write(_accents[ch] ?? ch);
+    s.write(accentFold[ch] ?? ch);
   }
   final slug = s.toString().replaceAll(RegExp(r'[^a-z0-9]+'), '-').replaceAll(RegExp(r'^-+|-+$'), '');
   return slug.length > 40 ? slug.substring(0, 40).replaceAll(RegExp(r'-+$'), '') : slug;

@@ -2278,4 +2278,110 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get snapshotCloseView => 'Fechar o instantâneo';
+
+  @override
+  String get railNotes => 'Notas';
+
+  @override
+  String get commandNotes => 'Notas do livro';
+
+  @override
+  String get commandNewNote => 'Nova nota';
+
+  @override
+  String get notesTitle => 'Notas';
+
+  @override
+  String get notesClose => 'Fechar as notas';
+
+  @override
+  String get notesSearch => 'Buscar nas notas';
+
+  @override
+  String get notesAll => 'Todas';
+
+  @override
+  String get notesEmpty =>
+      'Nenhuma nota ainda. Personagens, lugares, facções, termos e a linha do tempo ficam aqui, na pasta \"notas\" do livro.';
+
+  @override
+  String get notesNoMatch => 'Nenhuma nota com isso.';
+
+  @override
+  String get notesBack => 'Voltar às notas';
+
+  @override
+  String get noteNewName => 'Nova nota';
+
+  @override
+  String get noteDelete => 'Mandar a nota para a lixeira';
+
+  @override
+  String get noteDeleteTitle => 'Mandar a nota para a lixeira?';
+
+  @override
+  String noteDeleteBody(String name) {
+    return 'A nota \"$name\" vai para a lixeira do livro.';
+  }
+
+  @override
+  String get noteName => 'Nome';
+
+  @override
+  String get noteKind => 'Tipo';
+
+  @override
+  String get noteAliases => 'Apelidos';
+
+  @override
+  String get noteAliasesHint => 'Apelidos, separados por vírgula';
+
+  @override
+  String get noteText => 'Texto';
+
+  @override
+  String get noteTextHint =>
+      'Escreva aqui. [[Nome]] liga a outra nota ou a um capítulo.';
+
+  @override
+  String get noteLinks => 'Ligações';
+
+  @override
+  String get noteMentions => 'Mencionada em';
+
+  @override
+  String noteCreateLink(String name) {
+    return 'Criar $name';
+  }
+
+  @override
+  String get noteTimelineEmpty =>
+      'Nenhum evento ainda. Escreva um por linha, no Texto: \"- Ano 3: a Poeira chega\".';
+
+  @override
+  String get noteKindCharacter => 'Personagem';
+
+  @override
+  String get noteKindPlace => 'Lugar';
+
+  @override
+  String get noteKindFaction => 'Facção';
+
+  @override
+  String get noteKindTerm => 'Termo';
+
+  @override
+  String get noteKindTimeline => 'Linha do tempo';
+
+  @override
+  String get noteKindCharacters => 'Personagens';
+
+  @override
+  String get noteKindPlaces => 'Lugares';
+
+  @override
+  String get noteKindFactions => 'Facções';
+
+  @override
+  String get noteKindTerms => 'Termos';
 }

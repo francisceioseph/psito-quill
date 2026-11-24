@@ -576,11 +576,11 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
 - **Etapa 5: as cenas.** O estilo de parágrafo "Cena" (e `* * *` no importador), as cenas no fichário, e Nova cena, Dividir capítulo aqui e Juntar com o próximo (o caminho sai de uma sonda). **Decidido com o Francisco (24/11):** os separadores do manuscrito são convertidos para o estilo "Cena", não só reconhecidos.
 - **Etapa 6: a busca no livro** (feita, D-080). "No livro" no painel Localizar: os fechados pelo `content.xml`, os abertos pelo motor; o clique abre e salta. Substituir no livro todo fica para depois.
 - **Etapa 7: os instantâneos** (feita, D-081). Em `versoes/`, pelo motor, sem mudar o documento. Comparar abre o instantâneo ao lado, só para leitura (o `.uno:CompareDocuments` derruba o motor na 24.2); restaurar guarda um instantâneo antes; e um automático por dia.
-- **Etapa 8: as notas.** Markdown em `notas/`, editadas no Flutter, sem o motor: Personagens, Lugares, Facções, Termos e a Linha do tempo, com `[[Nome]]`.
+- **Etapa 8: as notas** (feita, D-082). Markdown em `notas/`, editadas no Flutter, sem o motor: Personagens, Lugares, Facções, Termos e a Linha do tempo, com `[[Nome]]`.
 - **Etapa 9: as metas.** Do livro com prazo e do dia, o histórico em `metas.json`, a meta na barra de status e um gráfico dos últimos 30 dias num `CustomPainter`.
 - **Etapa 10: a cortiça.** Os capítulos como cartões, a mesma árvore do fichário, com a sinopse editável no cartão.
 - **Fecho:** o `docs/FASE3-RESULTADOS.md` e a documentação.
-- **Estado em 24/11/2026:** as Etapas 1 (D-071), 2 (D-073), 3 (D-075), 4 (D-076), 5 (D-079), 6 (D-080) e 7 (D-081) estão feitas, e o papel escuro passou a ser desenhado pelo Quill (D-074).
+- **Estado em 24/11/2026:** as Etapas 1 (D-071), 2 (D-073), 3 (D-075), 4 (D-076), 5 (D-079), 6 (D-080), 7 (D-081) e 8 (D-082) estão feitas, e o papel escuro passou a ser desenhado pelo Quill (D-074).
   - **O que saiu diferente do plano nas Etapas 3 e 4** (as sondas na 24.2):
     - desligar o cabeçalho, a primeira página e as pares diferentes, a hifenização do documento e a capitular passam pela cópia dos estilos e o `.uno:LoadStyles` (D-075), porque os comandos do motor abrem janelas que travam o LOK. Essas mudanças não entram no Ctrl+Z;
     - editar o cabeçalho é pelo botão (o cursor vai até ele), não pelo clique duplo;
@@ -599,6 +599,11 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
     - comparar abre o instantâneo numa aba ao lado, só para leitura: o `.uno:CompareDocuments` funciona, mas fechar o documento depois dele derruba o LibreOffice 24.2;
     - a lista fica numa janela (o menu Livro e o menu do item no fichário), não no painel do fichário;
     - o automático sai antes do primeiro salvamento do dia, não ao fechar o livro.
+  - **O que saiu diferente do plano na Etapa 8** (D-082):
+    - o clique numa ligação é nos botões de "Ligações", embaixo do texto: o campo de texto do Flutter não tem trecho clicável;
+    - não há "Abrir ao lado" dividindo a página: o painel já fica ao lado dela;
+    - a linha do tempo fica na ordem em que foi escrita, não na das datas;
+    - com o foco num campo de texto, as teclas de editar texto ficam com o campo (Ctrl+Z desfazia o capítulo).
 
 **Fase 4: compilar e revisar**
 - Compilar para PDF, EPUB e DOCX com modelos, referências cruzadas, marcadores, sumário e índice. (As notas de rodapé foram para a Fase 3, Etapa 4.)

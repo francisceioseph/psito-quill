@@ -1,7 +1,7 @@
 // Os comandos do livro (Fase 3, Etapa 1, D-071): novo, abrir, importar e
 // fechar o livro, o fichário, e os capítulos e partes novos; e as cenas
 // (Etapa 5, D-079): nova cena, dividir, juntar e converter os separadores;
-// e os instantâneos (Etapa 7, D-081).
+// e os instantâneos (Etapa 7, D-081); e as notas (Etapa 8, D-082).
 //
 // Command com receptor, como os de tela: o que pede uma janela (o título do
 // livro, a pasta, o manuscrito) é da página do editor, que implementa
@@ -29,6 +29,9 @@ abstract final class BookCommandIds {
   // Os instantâneos (Etapa 7, D-081).
   static const takeSnapshot = 'livro.instantaneo';
   static const snapshots = 'livro.instantaneos';
+  // As notas (Etapa 8, D-082).
+  static const notes = 'livro.notas';
+  static const newNote = 'livro.novaNota';
 }
 
 /// O que a página do editor sabe abrir para o livro.
@@ -46,6 +49,9 @@ abstract interface class BookViewActions {
   void convertScenes();
   void takeSnapshot();
   void showSnapshots();
+  void toggleNotes();
+  bool get notesOpen;
+  void newNote();
 }
 
 void registerBookCommands(
@@ -139,6 +145,21 @@ void registerBookCommands(
       icon: Symbols.history_rounded,
       run: view.showSnapshots,
       canRun: () => ready() && workspace.book.chapterAt(doc.path) != null,
+    ),
+    Command(
+      id: BookCommandIds.notes,
+      label: l10n.commandNotes,
+      icon: Symbols.sticky_note_2_rounded,
+      run: view.toggleNotes,
+      isActive: () => view.notesOpen,
+      canRun: inBook,
+    ),
+    Command(
+      id: BookCommandIds.newNote,
+      label: l10n.commandNewNote,
+      icon: Symbols.note_stack_add_rounded,
+      run: view.newNote,
+      canRun: inBook,
     ),
   ]) {
     registry.register(c);

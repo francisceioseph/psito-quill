@@ -35,6 +35,7 @@ import '../organisms/file_panel.dart';
 import '../organisms/find_panel.dart';
 import '../organisms/inspector.dart';
 import '../organisms/nav_rail.dart';
+import '../organisms/notes_panel.dart';
 import '../../document/outline.dart';
 import '../atoms/w_segmented.dart';
 import '../organisms/outline_panel.dart';
@@ -81,7 +82,7 @@ class EditorPage extends StatefulWidget {
 
 /// Os painéis do trilho, à esquerda. Localizar abre a barra de localizar,
 /// não um painel.
-enum _LeftPanel { binder, outline, find, styles }
+enum _LeftPanel { binder, notes, outline, find, styles }
 
 /// Os temas como comandos (a paleta e o menu Exibir do tema 97 os mostram).
 const themeCommandPrefix = 'tema.';
@@ -95,6 +96,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
   /// A barra de localizar: null fechada; true com a linha de substituir.
   bool? _find;
   final _findKey = GlobalKey<FindPanelState>();
+  final _notesKey = GlobalKey<NotesPanelState>();
   bool _reveal = false;
 
   /// O painel da esquerda, aberto pelo trilho.
@@ -195,7 +197,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
     _bookDir = books.dir;
     if (books.isOpen) {
       _setLeft(_LeftPanel.binder);
-    } else if (_left == _LeftPanel.binder) {
+    } else if (_left == _LeftPanel.binder || _left == _LeftPanel.notes) {
       _setLeft(null);
     }
   }
@@ -215,6 +217,21 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
 
   @override
   void toggleBinder() => _setLeft(binderOpen ? null : _LeftPanel.binder);
+
+  @override
+  bool get notesOpen => _left == _LeftPanel.notes;
+
+  @override
+  void toggleNotes() => _setLeft(notesOpen ? null : _LeftPanel.notes);
+
+  /// Abre as notas, se preciso, e cria uma nota nova nelas (D-082).
+  @override
+  void newNote() {
+    if (!books.isOpen) return;
+    if (_find != null) _closeFind();
+    if (!notesOpen) _setLeft(_LeftPanel.notes);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _notesKey.currentState?.newNote());
+  }
 
   @override
   void newBook() => unawaited(_newBook());
@@ -735,10 +752,35 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
   KeyEventResult _onPageKey(FocusNode node, KeyEvent event) {
     // Ocupado (D-066): as teclas param, também os atalhos.
     if (doc.busy != null) return KeyEventResult.handled;
+    if (_fieldKeeps(event)) return KeyEventResult.ignored;
     final command = _commands!.match(event, HardwareKeyboard.instance);
     if (command == null) return KeyEventResult.ignored;
     _commands!.run(command.id);
     return KeyEventResult.handled;
+  }
+
+  static final _fieldKeys = {
+    LogicalKeyboardKey.keyA, LogicalKeyboardKey.keyC, LogicalKeyboardKey.keyV, LogicalKeyboardKey.keyX, //
+    LogicalKeyboardKey.keyZ, LogicalKeyboardKey.keyY, LogicalKeyboardKey.backspace, LogicalKeyboardKey.delete,
+    LogicalKeyboardKey.arrowLeft, LogicalKeyboardKey.arrowRight, LogicalKeyboardKey.arrowUp, LogicalKeyboardKey.arrowDown,
+    LogicalKeyboardKey.home, LogicalKeyboardKey.end,
+  };
+
+  /// Com o foco num campo de texto (uma nota, a busca, a sinopse), as teclas
+  /// de editar texto são do campo: Ctrl+Z desfaz a nota, não o capítulo
+  /// (D-082). Os outros atalhos (salvar, os painéis, as F-teclas) valem.
+  bool _fieldKeeps(KeyEvent event) {
+    final focus = FocusManager.instance.primaryFocus?.context;
+    if (focus == null || focus.findAncestorWidgetOfExactType<EditableText>() == null) return false;
+    final k = HardwareKeyboard.instance;
+    if (k.isAltPressed) return false;
+    if (!k.isControlPressed && !k.isMetaPressed) {
+      // Sem Ctrl, só as F-teclas e o Esc saem do campo.
+      final key = event.logicalKey;
+      return key != LogicalKeyboardKey.escape &&
+          !(key.keyId >= LogicalKeyboardKey.f1.keyId && key.keyId <= LogicalKeyboardKey.f24.keyId);
+    }
+    return _fieldKeys.contains(event.logicalKey);
   }
 
   @override
@@ -847,7 +889,10 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
                     () => NavRail<_LeftPanel?>(
                       label: l10n.railLabel,
                       items: [
-                        if (books.isOpen) NavRailItem(_LeftPanel.binder, Symbols.account_tree_rounded, l10n.railBinder),
+                        if (books.isOpen) ...[
+                          NavRailItem(_LeftPanel.binder, Symbols.account_tree_rounded, l10n.railBinder),
+                          NavRailItem(_LeftPanel.notes, Symbols.sticky_note_2_rounded, l10n.railNotes),
+                        ],
                         if (doc.isOpen) ...[
                           NavRailItem(_LeftPanel.outline, Symbols.toc_rounded, l10n.outlineTitle),
                           NavRailItem(_LeftPanel.find, Symbols.find_replace_rounded, l10n.railFind,
@@ -865,7 +910,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
                       },
                     ),
                   ),
-            leftPanel: _fileOpen || !(doc.isOpen || (books.isOpen && _left == _LeftPanel.binder))
+            leftPanel: _fileOpen || !(doc.isOpen || (books.isOpen && (_left == _LeftPanel.binder || _left == _LeftPanel.notes)))
                 ? null
                 // Localizar e substituir (D-062): por cima do painel da
                 // esquerda que estiver aberto, que volta ao fechar.
@@ -899,6 +944,14 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
                           onSnapshots: (chapter) => unawaited(_showSnapshots(chapter)),
                           onClose: toggleBinder,
                           closeLabel: l10n.binderClose,
+                        ),
+                      _LeftPanel.notes => NotesPanel(
+                          key: _notesKey,
+                          bookDir: books.dir!,
+                          chapters: () => books.book?.chapters.toList() ?? const [],
+                          onOpenChapter: widget.workspace.openChapter,
+                          onClose: toggleNotes,
+                          closeLabel: l10n.notesClose,
                         ),
                       _LeftPanel.outline => OutlinePanel(
                           entries: doc.snapshot.outline,
