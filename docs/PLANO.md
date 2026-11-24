@@ -553,22 +553,50 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
   - O importador de DOCX: o motor salva uma cópia FODT, o Dart a corta nos títulos do nível escolhido (com a prévia dos capítulos achados), e o motor salva cada pedaço em ODT. Uma sonda confere listas, notas, imagens e marcadores antes.
   - O fichário no trilho: abre o capítulo numa aba, arrasta e move pelo teclado (Alt+setas), F2 renomeia. As palavras de cada capítulo ficam no `livro.json`.
   - Novo livro e Importar na tela inicial, os livros nos recentes, "Livro — Capítulo" no título e as palavras do livro na barra de status.
-- **Etapa 2: as cenas.** O estilo de parágrafo "Cena" (e `* * *` no importador), as cenas no fichário, e Nova cena, Dividir capítulo aqui e Juntar com o próximo (o caminho sai de uma sonda).
-- **Etapa 3: a busca no livro.** "No livro" no painel Localizar: os fechados pelo `content.xml`, os abertos pelo motor; o clique abre e salta. Substituir no livro todo fica para depois.
-- **Etapa 4: os instantâneos.** Em `versoes/`, pelo motor, sem mudar o documento. Comparar pelo `.uno:CompareDocuments` (sonda), restaurar com um instantâneo antes, e um por dia, automático.
-- **Etapa 5: as notas.** Markdown em `notas/`, editadas no Flutter, sem o motor: Personagens, Lugares, Facções, Termos e a Linha do tempo, com `[[Nome]]`.
-- **Etapa 6: as metas.** Do livro com prazo e do dia, o histórico em `metas.json`, a meta na barra de status e um gráfico dos últimos 30 dias num `CustomPainter`.
-- **Etapa 7: a cortiça.** Os capítulos como cartões, a mesma árvore do fichário, com a sinopse editável no cartão.
+- **O que falta para escrever, visto no OnlyOffice (23/11/2026):** o Francisco comparou o Quill com o OnlyOffice abrindo o *Dustland* (20 capturas). As três etapas abaixo entram antes das cenas, nesta ordem, porque o livro precisa delas para ser escrito no Quill de verdade.
+- **Etapa 2: o salvamento automático e a recuperação.**
+  - Hoje, se o LibreOffice cai, perde-se o que não foi salvo. O plano já citava isso nos riscos (seção 11), sem uma etapa.
+  - A cada 60 s com alterações (e numa pausa da digitação), uma cópia de recuperação em ODT, pela cópia temporária do D-044: sem mudar o documento, o caminho nem o "modificado". Fica no perfil do Quill, nunca ao lado do arquivo.
+  - Ao abrir depois de uma queda, a tela inicial mostra "Recuperar arquivos", com a data de cada cópia: Recuperar (abre a cópia como um documento novo) ou Descartar. Fechar normalmente apaga as cópias.
+  - Uma preferência liga e desliga (ligada por padrão). A sonda mede o tempo da cópia no capítulo de 30 páginas e num livro grande, para a cópia não travar a digitação.
+- **Etapa 3: o cabeçalho, o rodapé e o número de página.**
+  - O motor já desenha o cabeçalho e o rodapé do DOCX ("DUSTLAND · FRANCISCO SOUZA · 2025" e o número), mas o Quill não deixa criar nem editar.
+  - Inserir › Cabeçalho e Rodapé (ligar e desligar por estilo de página), e editar com o clique duplo, como no Writer. Sonda: `.uno:InsertPageHeader`, `.uno:InsertPageFooter` e o clique no lugar do cabeçalho.
+  - Os campos: número de página, total de páginas, título e data (`.uno:InsertPageNumberField` e os outros, sondados).
+  - Primeira página diferente e páginas pares e ímpares diferentes, no painel Página.
+  - No livro, o cabeçalho e o rodapé vêm do estilo de página de cada capítulo (os do importador continuam).
+- **Etapa 4: exportar, imprimir, notas de rodapé, links e caracteres especiais.**
+  - Exportar o capítulo para PDF (com marcadores dos títulos) e imprimir pela janela do sistema (GTK), com a prévia que o GTK mostra. O PDF do livro inteiro é o compilar, na Fase 4.
+  - Notas de rodapé e de fim: inserir, e o clique no número leva à nota e volta. Vêm da Fase 4 para cá, porque um romance usa.
+  - Links: inserir e editar (no menu de contexto também) e abrir com Ctrl+clique. Abrir um link pede confirmação: o Quill não abre nada na rede sozinho.
+  - Caracteres especiais: uma grade pequena com os do português e da tipografia (travessão, aspas curvas, reticências, espaço sem quebra), com busca pelo nome. As aspas curvas e o travessão automáticos são o autocorrigir do motor (sonda).
+- **Etapa 5: as cenas.** O estilo de parágrafo "Cena" (e `* * *` no importador), as cenas no fichário, e Nova cena, Dividir capítulo aqui e Juntar com o próximo (o caminho sai de uma sonda).
+- **Etapa 6: a busca no livro.** "No livro" no painel Localizar: os fechados pelo `content.xml`, os abertos pelo motor; o clique abre e salta. Substituir no livro todo fica para depois.
+- **Etapa 7: os instantâneos.** Em `versoes/`, pelo motor, sem mudar o documento. Comparar pelo `.uno:CompareDocuments` (sonda), restaurar com um instantâneo antes, e um por dia, automático.
+- **Etapa 8: as notas.** Markdown em `notas/`, editadas no Flutter, sem o motor: Personagens, Lugares, Facções, Termos e a Linha do tempo, com `[[Nome]]`.
+- **Etapa 9: as metas.** Do livro com prazo e do dia, o histórico em `metas.json`, a meta na barra de status e um gráfico dos últimos 30 dias num `CustomPainter`.
+- **Etapa 10: a cortiça.** Os capítulos como cartões, a mesma árvore do fichário, com a sinopse editável no cartão.
 - **Fecho:** o `docs/FASE3-RESULTADOS.md` e a documentação.
 - **Estado em 23/11/2026:** a Etapa 1 está feita (D-071).
 
 **Fase 4: compilar e revisar**
-- Compilar para PDF, EPUB e DOCX com modelos, notas de rodapé, referências cruzadas, sumário e índice.
-- Comentários e alterações na margem, e o modo Leitura.
+- Compilar para PDF, EPUB e DOCX com modelos, referências cruzadas, marcadores, sumário e índice. (As notas de rodapé foram para a Fase 3, Etapa 4.)
+- Comentários e alterações na margem, e o modo Leitura:
+  - o painel Comentários: adicionar (também pelo menu de contexto), responder, resolver e excluir;
+  - o controle de alterações: os modos Editando, Revisão (sugerir) e Leitura, a alteração anterior e a próxima, aceitar e rejeitar (uma ou todas);
+  - comparar com outro documento e combinar.
+- **Os ajustes vistos no OnlyOffice** (23/11/2026):
+  - a Estrutura com "Início do documento" no topo e o nível até onde mostrar, com recolher e expandir;
+  - no parágrafo: a cor de fundo, "Não adicionar intervalo entre parágrafos do mesmo estilo", e uma janela avançada com as bordas e as tabulações;
+  - nas Informações: os parágrafos, os caracteres com espaços, e as propriedades editáveis (autor, título, assunto, etiquetas, comentário);
+  - nas Preferências: as regras da ortografia (ignorar MAIÚSCULAS e palavras com números), personalizar o acesso rápido e escolher cada atalho;
+  - os modelos: "Novo a partir do modelo", com o `estilos.ott` do livro como o primeiro.
 
 **Fase 5: plugins**
 - A API `psito.*` v1, o gerenciador de plugins com permissões, os 4 plugins de exemplo, e temas vindos de plugins.
 - O assistente de IA local como plugin: desligado por padrão, num processo à parte, sem rede, e o texto só muda quando quem escreve aceita.
+- **Vistos no OnlyOffice** (23/11/2026): os sinônimos pelo dicionário local do LibreOffice (sonda) e a gramática do LanguageTool só com um servidor local, ambos como plugins. Exportar para Markdown pode entrar no compilar.
+- **Ficam de fora, de propósito:** a senha e a assinatura digital (a aba Proteção do OnlyOffice), as macros, as nuvens, a aba Desenhar, e os plugins que dependem da rede (DeepL, Send, Zotero).
 
 **Fase 6: acabamento**
 - As animações com mola no tema moderno. (Foco, Máquina de escrever, Tela cheia, Sépia e Alto contraste entraram na Fase 2B.)
@@ -590,7 +618,7 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
 | Acessibilidade fraca no LOK (o leitor de tela não lê ladrilhos) | Feito na Fase 2B (D-067): o parágrafo do cursor e a posição dele vêm dos callbacks de acessibilidade do LOK e viram um campo de texto no `Semantics`. Não lê o documento inteiro, só o parágrafo; o README diz isso. Falta conferir com o Orca |
 | IME (acentos compostos, `´` + `a`) | `postExtTextInputEvent`, testado com o teclado ABNT2 já na fase 1 |
 | Papel escuro não suportado | Moldura escura com papel claro (seção 4) |
-| Um crash do LibreOffice derruba o app | Salvamento automático a cada 60 s em `.~lock` próprio + recuperação. Se for frequente, o kit vai para um processo à parte (1.2) |
+| Um crash do LibreOffice derruba o app | Salvamento automático a cada 60 s numa cópia de recuperação no perfil do Quill, e a recuperação ao abrir (Fase 3, Etapa 2). Se for frequente, o kit vai para um processo à parte (1.2) |
 | DOCX complexos (de editoras) | Fiel ao que o LibreOffice já faz. O formato do livro é ODT, e o DOCX é exportação |
 | Escopo enorme | Fases com saída usável: a fase 1 já edita um capítulo. Só o necessário para escrever os livros |
 
