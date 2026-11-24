@@ -8,6 +8,9 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <mutex>
+#include <chrono>
+#include <condition_variable>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -348,8 +351,8 @@ void LokEngine::preloadSpelling(const std::string& path) {
 }
 
 void LokEngine::convert(int id, const std::string& src, const std::string& dst,
-                        const std::string& format) {
-  queue_.post([this, id, src, dst, format] {
+                        const std::string& format, const std::string& options, int flags) {
+  queue_.post([this, id, src, dst, format, options, flags] {
     auto reply = [&](bool ok, const std::string& error) {
       std::string e;
       for (char c : error) {
@@ -363,9 +366,41 @@ void LokEngine::convert(int id, const std::string& src, const std::string& dst,
     const std::string url = src.empty() ? "private:factory/swriter" : toFileUrl(src);
     auto* doc = kit_->pClass->documentLoadWithOptions(kit_, url.c_str(), "Language=pt-BR");
     if (!doc) return reply(false, takeLokString(kit_, kit_->pClass->getError(kit_)));
-    int ok = doc->pClass->saveAs(doc, toFileUrl(dst).c_str(), format.c_str(), nullptr);
+    if (flags & 1) {
+      // O sumário e os índices (o compilar, D-086). O LOK despacha o comando
+      // na thread dele: a resposta (UNO_COMMAND_RESULT) chega pelo callback
+      // do documento oculto, e só então se salva.
+      struct Wait {
+        std::mutex m;
+        std::condition_variable cv;
+        bool done = false;
+      } wait;
+      doc->pClass->registerCallback(
+          doc,
+          [](int type, const char* payload, void* data) {
+            if (type != LOK_CALLBACK_UNO_COMMAND_RESULT || !payload ||
+                !std::strstr(payload, "UpdateAllIndexes"))
+              return;
+            auto* w = static_cast<Wait*>(data);
+            std::lock_guard<std::mutex> lock(w->m);
+            w->done = true;
+            w->cv.notify_all();
+          },
+          &wait);
+      int views[4] = {-1, -1, -1, -1};
+      if (doc->pClass->getViewIds(doc, views, 4) && views[0] >= 0) doc->pClass->setView(doc, views[0]);
+      doc->pClass->postUnoCommand(doc, ".uno:UpdateAllIndexes", nullptr, true);
+      {
+        std::unique_lock<std::mutex> lock(wait.m);
+        wait.cv.wait_for(lock, std::chrono::seconds(120), [&] { return wait.done; });
+      }
+      doc->pClass->registerCallback(doc, nullptr, nullptr);
+    }
+    int ok = doc->pClass->saveAs(doc, toFileUrl(dst).c_str(), format.c_str(),
+                                 options.empty() ? nullptr : options.c_str());
     std::string error = ok ? "" : takeLokString(kit_, kit_->pClass->getError(kit_));
     doc->pClass->destroy(doc);
+    focusView();
     reply(ok, error);
   });
 }

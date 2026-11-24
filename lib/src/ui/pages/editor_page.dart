@@ -34,6 +34,7 @@ import '../organisms/doc_tabs.dart';
 import '../organisms/document_view.dart';
 import '../organisms/file_panel.dart';
 import '../organisms/find_panel.dart';
+import '../organisms/compile_dialog.dart';
 import '../organisms/goals_dialog.dart';
 import '../organisms/inspector.dart';
 import '../organisms/nav_rail.dart';
@@ -424,6 +425,12 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
   void showGoals() {
     if (!books.isOpen) return;
     unawaited(showGoalsDialog(context, books: books, bookWords: _bookWordsNow, today: _writtenToday ?? 0));
+  }
+
+  @override
+  void compileBook() {
+    if (!books.isOpen) return;
+    unawaited(showCompileDialog(context, workspace: widget.workspace, onNotice: _notice));
   }
 
   @override

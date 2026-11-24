@@ -78,6 +78,7 @@ Enquanto o ladrilho novo não chega, o velho continua na tela, sem quadro em bra
 | Atomic design + tokens | `lib/src/ui/` (atoms → molecules → organisms → templates → pages) e `QuillTokens` | Nenhuma cor literal fora de `tokens/themes/` (o `tokens_test` confere) |
 | Facade do livro | `BookController` (no `Workspace.book`) | O fichário, a cortiça, as metas e os comandos mexem no livro por um lugar só, e cada mudança grava o `livro.json` de forma atômica |
 | Memento | Os instantâneos (`snapshots.dart`, D-081): uma cópia do capítulo em `versoes/`, restaurável | Voltar a uma versão sem mudar o documento aberto |
+| Pipeline | O compilar (`compile.dart`, D-086): cada capítulo em FODT pelo motor → um isolate junta (`fodt_join.dart`) → o motor grava o formato | Um passo de cada vez, cancelável entre eles; só o último põe o livro inteiro no motor |
 | Repository de arquivos | As notas (`notes.dart`), os instantâneos (`versoes.json`) e as metas (`metas.json`), cada um lido e gravado pelo seu módulo, de forma atômica | Nada do livro fica na memória por via das dúvidas: lê-se ao abrir o painel ou a janela e solta-se ao fechar |
 
 ## Pastas
@@ -91,7 +92,8 @@ lib/
   src/book/                  book.dart (o livro.json), book_io.dart, book_controller.dart, fodt_split.dart e
                              docx_import.dart (o importador), odt_zip.dart (lê o content.xml; D-071),
                              chapter_cut.dart (dividir, D-079), book_search.dart (D-080), snapshots.dart
-                             (D-081), notes.dart (D-082), goals.dart (as metas, D-083)
+                             (D-081), notes.dart (D-082), goals.dart (as metas, D-083), compile.dart e
+                             fodt_join.dart (o compilar, D-086)
   src/document/              document_controller.dart, doc_tab.dart (as abas), workspace.dart, fodt.dart
                              (a cópia lida), outline.dart, search.dart, format_origin.dart,
                              text_clipboard.dart, doc_colors.dart

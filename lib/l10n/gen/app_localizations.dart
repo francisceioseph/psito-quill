@@ -4507,6 +4507,222 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Setas andam, Alt+setas movem, Enter abre, F2 edita a sinopse, Esc volta à página'**
   String get corkKeysHint;
+
+  /// No description provided for @commandCompile.
+  ///
+  /// In pt, this message translates to:
+  /// **'Compilar o livro…'**
+  String get commandCompile;
+
+  /// No description provided for @compileTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Compilar {book}'**
+  String compileTitle(String book);
+
+  /// No description provided for @compileChapters.
+  ///
+  /// In pt, this message translates to:
+  /// **'Capítulos'**
+  String get compileChapters;
+
+  /// No description provided for @compileChapterCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} de {total} capítulos · {words} palavras'**
+  String compileChapterCount(int count, int total, String words);
+
+  /// No description provided for @compileSelectAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todos'**
+  String get compileSelectAll;
+
+  /// No description provided for @compileSelectDone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Só os prontos'**
+  String get compileSelectDone;
+
+  /// No description provided for @compileSelectNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum'**
+  String get compileSelectNone;
+
+  /// No description provided for @compileTitlePage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Folha de rosto'**
+  String get compileTitlePage;
+
+  /// No description provided for @compileBookTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Título'**
+  String get compileBookTitle;
+
+  /// No description provided for @compileSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Subtítulo'**
+  String get compileSubtitle;
+
+  /// No description provided for @compileAuthor.
+  ///
+  /// In pt, this message translates to:
+  /// **'Autor'**
+  String get compileAuthor;
+
+  /// No description provided for @compileToc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sumário'**
+  String get compileToc;
+
+  /// No description provided for @compileTocTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Título do sumário'**
+  String get compileTocTitle;
+
+  /// No description provided for @compileTocDefault.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sumário'**
+  String get compileTocDefault;
+
+  /// No description provided for @compilePageBreaks.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cada capítulo começa numa página nova'**
+  String get compilePageBreaks;
+
+  /// No description provided for @compilePartTitles.
+  ///
+  /// In pt, this message translates to:
+  /// **'O título de cada parte numa página própria'**
+  String get compilePartTitles;
+
+  /// No description provided for @compileChapterTitles.
+  ///
+  /// In pt, this message translates to:
+  /// **'O título do capítulo entra quando ele não começa por um título'**
+  String get compileChapterTitles;
+
+  /// No description provided for @compileScenes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Separador de cena'**
+  String get compileScenes;
+
+  /// No description provided for @compileScenesKeep.
+  ///
+  /// In pt, this message translates to:
+  /// **'Como está (estilo Cena)'**
+  String get compileScenesKeep;
+
+  /// No description provided for @compileScenesStars.
+  ///
+  /// In pt, this message translates to:
+  /// **'* * *'**
+  String get compileScenesStars;
+
+  /// No description provided for @compileScenesHash.
+  ///
+  /// In pt, this message translates to:
+  /// **'#'**
+  String get compileScenesHash;
+
+  /// No description provided for @compileFormat.
+  ///
+  /// In pt, this message translates to:
+  /// **'Formato'**
+  String get compileFormat;
+
+  /// No description provided for @compileFormatPdf.
+  ///
+  /// In pt, this message translates to:
+  /// **'PDF, com marcadores'**
+  String get compileFormatPdf;
+
+  /// No description provided for @compileFormatEpub.
+  ///
+  /// In pt, this message translates to:
+  /// **'EPUB, livro digital'**
+  String get compileFormatEpub;
+
+  /// No description provided for @compileFormatDocx.
+  ///
+  /// In pt, this message translates to:
+  /// **'DOCX, Word'**
+  String get compileFormatDocx;
+
+  /// No description provided for @compileFormatOdt.
+  ///
+  /// In pt, this message translates to:
+  /// **'ODT, LibreOffice'**
+  String get compileFormatOdt;
+
+  /// No description provided for @compileFileFilter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Livro em {format}'**
+  String compileFileFilter(String format);
+
+  /// No description provided for @compileRun.
+  ///
+  /// In pt, this message translates to:
+  /// **'Compilar…'**
+  String get compileRun;
+
+  /// No description provided for @compileProgressChapters.
+  ///
+  /// In pt, this message translates to:
+  /// **'Lendo o capítulo {done} de {total}'**
+  String compileProgressChapters(int done, int total);
+
+  /// No description provided for @compileProgressJoining.
+  ///
+  /// In pt, this message translates to:
+  /// **'Juntando os capítulos'**
+  String get compileProgressJoining;
+
+  /// No description provided for @compileProgressWriting.
+  ///
+  /// In pt, this message translates to:
+  /// **'Gravando o livro (o motor monta todas as páginas)'**
+  String get compileProgressWriting;
+
+  /// No description provided for @compileDone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Livro compilado em {path}'**
+  String compileDone(String path);
+
+  /// No description provided for @compileFailedChapter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não deu para ler o capítulo \"{chapter}\".'**
+  String compileFailedChapter(String chapter);
+
+  /// No description provided for @compileFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não deu para gravar o livro compilado.'**
+  String get compileFailed;
+
+  /// No description provided for @compileNoChapters.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum capítulo escolhido.'**
+  String get compileNoChapters;
+
+  /// No description provided for @compileCancelled.
+  ///
+  /// In pt, this message translates to:
+  /// **'Compilar cancelado.'**
+  String get compileCancelled;
 }
 
 class _AppLocalizationsDelegate

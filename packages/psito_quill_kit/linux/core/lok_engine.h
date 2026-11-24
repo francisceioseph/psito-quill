@@ -106,7 +106,9 @@ class LokEngine {
   // Abre [src] oculto, salva em [dst] no [format] e fecha, sem tocar nos
   // documentos das abas (o importador de livros, D-071). [src] vazio: um
   // documento novo. Responde com kEvConverted e o [id] de quem pediu.
-  void convert(int id, const std::string& src, const std::string& dst, const std::string& format);
+  // [options]: as do filtro; [flags] & 1: atualiza os índices antes (D-086).
+  void convert(int id, const std::string& src, const std::string& dst, const std::string& format,
+               const std::string& options = "", int flags = 0);
   void repaintAll();
 
   /// O papel escuro (D-074): inverte a luminosidade dos ladrilhos, com o tom

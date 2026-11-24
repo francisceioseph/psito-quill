@@ -164,6 +164,8 @@ List<MenuSpec> editorMenus(AppLocalizations l10n) => [
         BookCommandIds.newNote,
         BookCommandIds.goals,
         null,
+        BookCommandIds.compile,
+        null,
         BookCommandIds.closeBook,
       ]),
       MenuSpec(l10n.menuTools, const [

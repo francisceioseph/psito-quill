@@ -181,8 +181,10 @@ void pqk_prepare_environment(void) { pqk::LokEngine::prepareEnvironment(); }
 void pqk_preload_spelling(const char* path) {
   if (g_kit && path) g_kit->engine().preloadSpelling(path);
 }
-void pqk_convert(int32_t id, const char* src, const char* dst, const char* format) {
-  if (g_kit && src && dst && format) g_kit->engine().convert(id, src, dst, format);
+void pqk_convert(int32_t id, const char* src, const char* dst, const char* format,
+                 const char* options, int32_t flags) {
+  if (g_kit && src && dst && format)
+    g_kit->engine().convert(id, src, dst, format, options ? options : "", flags);
 }
 void pqk_post_key(int32_t type, int32_t char_code, int32_t key_code) {
   if (g_kit) g_kit->engine().postKey(type, char_code, key_code);

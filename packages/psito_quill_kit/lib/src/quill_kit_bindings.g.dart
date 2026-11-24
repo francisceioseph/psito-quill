@@ -67,8 +67,10 @@ class QuillKitBindings {
     ffi.Pointer<ffi.Char> src,
     ffi.Pointer<ffi.Char> dst,
     ffi.Pointer<ffi.Char> format,
+    ffi.Pointer<ffi.Char> options,
+    int flags,
   ) {
-    return _pqk_convert(id, src, dst, format);
+    return _pqk_convert(id, src, dst, format, options, flags);
   }
 
   late final _pqk_convertPtr =
@@ -79,6 +81,8 @@ class QuillKitBindings {
             ffi.Pointer<ffi.Char>,
             ffi.Pointer<ffi.Char>,
             ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Char>,
+            ffi.Int32,
           )
         >
       >('pqk_convert');
@@ -89,6 +93,8 @@ class QuillKitBindings {
           ffi.Pointer<ffi.Char>,
           ffi.Pointer<ffi.Char>,
           ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Char>,
+          int,
         )
       >();
 

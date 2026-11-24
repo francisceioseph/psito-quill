@@ -67,6 +67,8 @@ class _NoBookView implements BookViewActions {
   void toggleCorkboard() {}
   @override
   bool get corkboardOpen => false;
+  @override
+  void compileBook() {}
 }
 
 class _NoPageView implements PageViewActions {

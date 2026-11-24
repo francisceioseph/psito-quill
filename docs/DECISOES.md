@@ -1216,3 +1216,40 @@ O Francisco respondeu às três perguntas do `docs/FASE3-RESULTADOS.md` (24/11/2
 - **A cortiça fica com os capítulos.** Não haverá cartões por cena, nem um título e uma sinopse por cena no `livro.json` (D-084).
 - **Cortar texto conta zero na meta do dia,** como está: as palavras de hoje são o que cada capítulo cresceu desde a base do dia, sem o saldo (D-083).
 - **A meta de memória do livro** da seção 8 deixa de ser "≤ 400 MB com um capítulo aberto", escrita antes de medir (o capítulo avulso já passa de 440 MB). Passa a ser: o livro soma ≤ ~10 MB ao capítulo aberto e não cresce com o número de capítulos. O livro de 60 capítulos mediu +3,8 MB.
+
+## D-086 · O compilar do livro
+
+A Etapa 1 da Fase 4: o livro inteiro num PDF, num EPUB, num DOCX ou num ODT.
+
+- **Onde fica:** o menu Livro (o Clássico 97 também) e o Arquivo da faixa, ao lado de "Importar". A janela Compilar tem:
+  - os capítulos, na árvore do fichário com caixas de marcar ("Todos", "Só os prontos", "Nenhum"; a parte marca ou desmarca os dela). Guardam-se os de fora, para um capítulo novo entrar sozinho;
+  - a folha de rosto (o título, o subtítulo e o autor) e o sumário (com o título dele);
+  - as quebras de página antes de cada capítulo, o título de cada parte numa página, e o título do capítulo quando ele não começa por um título (um capítulo novo do Quill é vazio);
+  - o separador de cena: como está (o estilo "Cena"), `* * *` ou `#`;
+  - o formato. "Compilar…" pergunta onde gravar (`FileDialogs.pickExport`), mostra o andamento e o Cancelar para no próximo passo.
+- **O caminho, pelas sondas na 24.2:**
+  1. Cada capítulo sai em FODT pelo motor (o `pqk_convert`, oculto, um de cada vez). O da tela vai pela cópia do Localizar, com o que não foi salvo, e uma aba de fundo com alterações vai pela cópia de recuperação, como na busca no livro (D-080).
+  2. Um isolate junta as cópias (`fodt_join.dart`, o inverso do `fodt_split`):
+     - o cabeçalho, as páginas e as configurações vêm do primeiro capítulo, e os estilos com nome e as fontes que só os outros têm entram junto;
+     - os automáticos dos outros capítulos ganham um prefixo (`q3_P1`), porque o "P1" de um não é o "P1" do outro; os do primeiro ficam como estão, porque os cabeçalhos e rodapés usam os dele. As páginas (`style:page-layout`) dos outros saem;
+     - os ids (as notas, `xml:id`) também ganham o prefixo, para não colidirem;
+     - a quebra de página vai no primeiro parágrafo do capítulo: um automático novo, copiado do dele com o `fo:break-before="page"` (ou filho do estilo dele). Assim, um "Título 1" que já quebra a página não deixa uma página em branco;
+     - a folha de rosto, o sumário (`text:table-of-content`, até o nível do título que abre os capítulos, com os links) e as partes usam automáticos filhos dos estilos que o LibreOffice sempre tem (Título, Subtítulo, Título 1, Título do sumário);
+     - o título e o autor vão no `office:meta`: o PDF e o EPUB os levam (as opções `RVNGTitle` do filtro do EPUB não fazem nada pelo LOK);
+     - o corpo vai para um arquivo ao lado, um capítulo de cada vez, e só os estilos ficam na memória.
+  3. O motor abre o FODT juntado oculto, atualiza o sumário (`.uno:UpdateAllIndexes`), grava no formato (o PDF com o `ExportBookmarks`) e fecha. Depois, o `trimMemory`.
+- **O `pqk_convert` ganhou as opções do filtro e um `PQK_CONVERT_UPDATE_INDEXES`.** O `UpdateAllIndexes` no documento oculto:
+  - só vale na vista dele (`getViewIds`, e `setView` antes);
+  - roda na thread do LOK, depois do `postUnoCommand`: salvar logo em seguida grava o sumário vazio. O convert espera o `UNO_COMMAND_RESULT` pelo callback do documento oculto (até 120 s), e a vista da aba volta depois (`focusView`).
+- **O EPUB não leva o sumário:** o LibreOffice tira o índice e monta o dele (`toc.xhtml`) pelos títulos, um arquivo por capítulo. O DOCX leva o sumário como campo (`TOC`), já com as páginas.
+- **A memória:** compilar é a única hora em que o livro inteiro entra no motor (o plano da Fase 4). Medido com o `lok_script` (60 cópias do `capitulo-30p`, 1.866 páginas, um FODT de 8,3 MB): juntar leva 0,9 s; gravar leva 23 s no PDF, 20 s no EPUB e 19 s no DOCX, e o pico do processo vai a 341, 365 e 351 MB, contra 112 MB do motor parado. É só durante o compilar, e o documento oculto fecha no fim. Fora dele, o compilar não guarda nada: o código só roda com a janela aberta.
+  - **O app** (`tool/ab.py 5f937e8`, o `capitulo-30p.docx` avulso, 3 rodadas, a mediana): −1,2 MB de memória anônima com o capítulo, −0,4 depois de rolar e +2,5 depois de digitar; a janela vazia deu +6,5, como o +7,4 do fecho da Fase 3, sem nada do compilar montado (é a mesma medida que já oscilava, e fica para investigar com o `mapas.py`). A tecla (p95) ficou em 9,6 ms, o rolar em 59,5 fps e o abrir em 734 ms.
+- **Não verificado:**
+  - quanto da memória volta ao sistema depois do `trimMemory`, no app;
+  - o EPUB num leitor de verdade;
+  - o *Dustland* de verdade.
+- **Os testes:**
+  - unidade, `fodt_join_test`: a ordem (o rosto, o sumário, a parte, os capítulos), o título e o autor no `office:meta`, nenhum automático repetido, nenhum estilo sem declaração, os ids das notas sem colisão, o título que falta, as quebras ligadas e desligadas, o automático copiado com a quebra e os separadores de cena;
+  - unidade, `compile_test`: os capítulos na ordem, sem os de fora, as cópias pelo motor, o sumário só quando pedido, o capítulo da tela pela cópia, o cancelar, a falha que diz o capítulo e a limpeza das temporárias;
+  - widget, `fase4_compile_test`: a janela, "Só os prontos", a parte que marca os dela, o leitor de tela das caixas, o livro compilado com o aviso e o menu Livro;
+  - integração (o passo 28): o livro das cenas, com uma palavra só no motor, em PDF (o sumário com as páginas, pelo `pdftotext`), EPUB (o título no `content.opf`), DOCX e ODT, sem tocar nas abas.

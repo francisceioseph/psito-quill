@@ -91,8 +91,13 @@ PQK_EXPORT void pqk_preload_spelling(const char* path);
 // derruba o processo (D-072).
 PQK_EXPORT void pqk_prepare_environment(void);
 // Abre [src] oculto ("" para um documento novo), salva em [dst] no [format]
-// ("odt", "fodt") e fecha, sem tocar nas abas. Responde PQK_EVENT_CONVERTED.
-PQK_EXPORT void pqk_convert(int32_t id, const char* src, const char* dst, const char* format);
+// ("odt", "fodt", "pdf", "epub", "docx") com as [options] do filtro ("" sem
+// opções) e fecha, sem tocar nas abas. Responde PQK_EVENT_CONVERTED.
+// [flags]: PQK_CONVERT_UPDATE_INDEXES atualiza os sumários e os índices antes
+// de salvar (o compilar, D-086).
+#define PQK_CONVERT_UPDATE_INDEXES 1
+PQK_EXPORT void pqk_convert(int32_t id, const char* src, const char* dst, const char* format,
+                            const char* options, int32_t flags);
 PQK_EXPORT void pqk_post_key(int32_t type, int32_t char_code, int32_t key_code);
 PQK_EXPORT void pqk_post_mouse(int32_t type, int32_t x, int32_t y, int32_t count,
                                int32_t buttons, int32_t modifier);

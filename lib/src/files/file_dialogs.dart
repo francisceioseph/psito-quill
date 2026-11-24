@@ -39,6 +39,16 @@ abstract interface class FileDialogs {
 
   /// Onde gravar o PDF exportado (já com o `.pdf`), ou null (D-076).
   Future<String?> pickExportPdf({required String suggestedName, String? initialDirectory, required String label});
+
+  /// Onde gravar um arquivo exportado de [extension] (o livro compilado,
+  /// D-086); a extensão entra se faltar.
+  Future<String?> pickExport({
+    required String suggestedName,
+    String? initialDirectory,
+    required String label,
+    required String extension,
+    required String mime,
+  });
 }
 
 class SystemFileDialogs implements FileDialogs {
@@ -74,15 +84,26 @@ class SystemFileDialogs implements FileDialogs {
   }
 
   @override
-  Future<String?> pickExportPdf({required String suggestedName, String? initialDirectory, required String label}) async {
+  Future<String?> pickExportPdf({required String suggestedName, String? initialDirectory, required String label}) =>
+      pickExport(
+          suggestedName: suggestedName, initialDirectory: initialDirectory, label: label, extension: 'pdf', mime: 'application/pdf');
+
+  @override
+  Future<String?> pickExport({
+    required String suggestedName,
+    String? initialDirectory,
+    required String label,
+    required String extension,
+    required String mime,
+  }) async {
     final location = await getSaveLocation(
-      acceptedTypeGroups: [XTypeGroup(label: label, extensions: const ['pdf'], mimeTypes: const ['application/pdf'])],
+      acceptedTypeGroups: [XTypeGroup(label: label, extensions: [extension], mimeTypes: [mime])],
       suggestedName: suggestedName,
       initialDirectory: initialDirectory,
     );
     if (location == null) return null;
     final path = location.path;
-    return path.toLowerCase().endsWith('.pdf') ? path : '$path.pdf';
+    return path.toLowerCase().endsWith('.$extension') ? path : '$path.$extension';
   }
 
   @override

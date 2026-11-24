@@ -26,12 +26,13 @@ class KitConverter {
   static int _next = 1;
 
   /// true se o motor salvou [target].
-  Future<bool> convert(String source, String target, String format) async {
+  Future<bool> convert(String source, String target, String format,
+      {String options = '', bool updateIndexes = false, Duration timeout = const Duration(seconds: 120)}) async {
     final id = _next++;
     final done = kit.events
         .firstWhere((e) => e is FileConverted && e.id == id)
-        .timeout(const Duration(seconds: 120), onTimeout: () => FileConverted(id, ok: false, error: 'tempo'));
-    kit.convert(id, source, target, format);
+        .timeout(timeout, onTimeout: () => FileConverted(id, ok: false, error: 'tempo'));
+    kit.convert(id, source, target, format, options: options, updateIndexes: updateIndexes);
     return (await done as FileConverted).ok;
   }
 }

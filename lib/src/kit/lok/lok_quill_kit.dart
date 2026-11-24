@@ -104,7 +104,8 @@ class LokQuillKit implements QuillKit {
   void preloadSpelling(String path) => _native.preloadSpelling(path);
 
   @override
-  void convert(int id, String source, String target, String format) => _native.convert(id, source, target, format);
+  void convert(int id, String source, String target, String format, {String options = '', bool updateIndexes = false}) =>
+      _native.convert(id, source, target, format, options: options, flags: updateIndexes ? 1 : 0);
 
   @override
   void printPdf(String pdfPath, String title) => _native.printPdf(pdfPath, title);

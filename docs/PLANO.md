@@ -611,7 +611,23 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
     - os cartões são os capítulos (do livro ou de uma parte), não as cenas: as cenas não têm título nem sinopse no `livro.json`;
     - a cortiça abre pelo fichário, pelo menu Livro e pela faixa Exibir, além do Exibir do Clássico 97.
 
-**Fase 4: compilar e revisar**
+**Fase 4: compilar e revisar** (o plano aprovado em 24/11/2026)
+- **Decidido com o Francisco (24/11/2026):** compilar primeiro, depois a revisão, e os ajustes do OnlyOffice no fim; os modelos de compilação ficam no livro (`compilar.json`); comparar com outro documento e combinar passa antes por uma sonda, e fica para depois se fechar o documento ainda derrubar o motor (D-081).
+- **Em todas as etapas:**
+  - compilar é a única hora em que o livro inteiro entra no motor, num documento oculto que fecha logo depois. O pico é medido e vai na decisão; a meta do D-085 vale fora da compilação;
+  - o Dart nunca escreve ODT: escreve FODT, e o motor converte;
+  - o que trava o LOK passa pela cópia FODT (D-075).
+- **Etapa 1: compilar o livro** (feita, D-086). A janela Compilar (os capítulos, com o filtro por status; a folha de rosto; o sumário; as quebras, as partes e o separador de cena; o formato). Cada capítulo sai em FODT pelo motor, um isolate junta tudo num FODT só (o inverso do importador), e o motor grava em PDF (com marcadores), EPUB, DOCX ou ODT.
+- **Etapa 2: os modelos de compilação.** Manuscrito, Livro 6×9 e E-book, com os estilos de saída, e "Salvar como modelo", no `compilar.json` do livro.
+- **Etapa 3: os comentários.** O painel (adicionar, responder, resolver, excluir), o trecho marcado na página e a contagem por capítulo no fichário.
+- **Etapa 4: o controle de alterações e o modo Leitura.** Editando, Revisão e Leitura; o painel Alterações (a anterior, a próxima, aceitar e rejeitar uma ou todas); a sonda de comparar e combinar.
+- **Etapa 5: as referências.** O sumário no capítulo, as legendas, a tabela de figuras, os marcadores, a referência cruzada e o índice remissivo (também no compilar).
+- **Etapa 6: os ajustes da Estrutura, do parágrafo e das Informações.**
+- **Etapa 7: os ajustes da Página Inicial, do Layout e do Inserir.**
+- **Etapa 8: as Preferências e os modelos.**
+- **Fecho:** o `docs/FASE4-RESULTADOS.md` e a documentação.
+
+O que a fase cobre (a lista de 23/11/2026):
 - Compilar para PDF, EPUB e DOCX com modelos, referências cruzadas, marcadores, sumário e índice. (As notas de rodapé foram para a Fase 3, Etapa 4.)
 - Comentários e alterações na margem, e o modo Leitura:
   - o painel Comentários: adicionar (também pelo menu de contexto), responder, resolver e excluir;

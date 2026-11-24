@@ -2531,4 +2531,126 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get corkKeysHint =>
       'Setas andam, Alt+setas movem, Enter abre, F2 edita a sinopse, Esc volta à página';
+
+  @override
+  String get commandCompile => 'Compilar o livro…';
+
+  @override
+  String compileTitle(String book) {
+    return 'Compilar $book';
+  }
+
+  @override
+  String get compileChapters => 'Capítulos';
+
+  @override
+  String compileChapterCount(int count, int total, String words) {
+    return '$count de $total capítulos · $words palavras';
+  }
+
+  @override
+  String get compileSelectAll => 'Todos';
+
+  @override
+  String get compileSelectDone => 'Só os prontos';
+
+  @override
+  String get compileSelectNone => 'Nenhum';
+
+  @override
+  String get compileTitlePage => 'Folha de rosto';
+
+  @override
+  String get compileBookTitle => 'Título';
+
+  @override
+  String get compileSubtitle => 'Subtítulo';
+
+  @override
+  String get compileAuthor => 'Autor';
+
+  @override
+  String get compileToc => 'Sumário';
+
+  @override
+  String get compileTocTitle => 'Título do sumário';
+
+  @override
+  String get compileTocDefault => 'Sumário';
+
+  @override
+  String get compilePageBreaks => 'Cada capítulo começa numa página nova';
+
+  @override
+  String get compilePartTitles => 'O título de cada parte numa página própria';
+
+  @override
+  String get compileChapterTitles =>
+      'O título do capítulo entra quando ele não começa por um título';
+
+  @override
+  String get compileScenes => 'Separador de cena';
+
+  @override
+  String get compileScenesKeep => 'Como está (estilo Cena)';
+
+  @override
+  String get compileScenesStars => '* * *';
+
+  @override
+  String get compileScenesHash => '#';
+
+  @override
+  String get compileFormat => 'Formato';
+
+  @override
+  String get compileFormatPdf => 'PDF, com marcadores';
+
+  @override
+  String get compileFormatEpub => 'EPUB, livro digital';
+
+  @override
+  String get compileFormatDocx => 'DOCX, Word';
+
+  @override
+  String get compileFormatOdt => 'ODT, LibreOffice';
+
+  @override
+  String compileFileFilter(String format) {
+    return 'Livro em $format';
+  }
+
+  @override
+  String get compileRun => 'Compilar…';
+
+  @override
+  String compileProgressChapters(int done, int total) {
+    return 'Lendo o capítulo $done de $total';
+  }
+
+  @override
+  String get compileProgressJoining => 'Juntando os capítulos';
+
+  @override
+  String get compileProgressWriting =>
+      'Gravando o livro (o motor monta todas as páginas)';
+
+  @override
+  String compileDone(String path) {
+    return 'Livro compilado em $path';
+  }
+
+  @override
+  String compileFailedChapter(String chapter) {
+    return 'Não deu para ler o capítulo \"$chapter\".';
+  }
+
+  @override
+  String get compileFailed => 'Não deu para gravar o livro compilado.';
+
+  @override
+  String get compileNoChapters => 'Nenhum capítulo escolhido.';
+
+  @override
+  String get compileCancelled => 'Compilar cancelado.';
 }

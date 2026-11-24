@@ -104,11 +104,14 @@ class NativeQuillKit {
         title.toNativeUtf8(allocator: a).cast(),
       ));
 
-  void convert(int id, String source, String target, String format) => using((a) => _b.pqk_convert(
-      id,
-      source.toNativeUtf8(allocator: a).cast(),
-      target.toNativeUtf8(allocator: a).cast(),
-      format.toNativeUtf8(allocator: a).cast()));
+  void convert(int id, String source, String target, String format, {String options = '', int flags = 0}) =>
+      using((a) => _b.pqk_convert(
+          id,
+          source.toNativeUtf8(allocator: a).cast(),
+          target.toNativeUtf8(allocator: a).cast(),
+          format.toNativeUtf8(allocator: a).cast(),
+          options.toNativeUtf8(allocator: a).cast(),
+          flags));
 
   void preloadSpelling(String path) => using((a) => _b.pqk_preload_spelling(path.toNativeUtf8(allocator: a).cast()));
 

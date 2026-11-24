@@ -220,6 +220,9 @@ class FakeQuillKit implements QuillKit {
   /// um documento novo). Os testes do livro trocam por um que grava ODTs.
   void Function(String source, String target, String format)? onConvert;
 
+  /// Quantas conversões pediram para atualizar os índices.
+  int indexUpdates = 0;
+
   /// Falha as próximas conversões.
   bool failConversions = false;
 
@@ -234,8 +237,9 @@ class FakeQuillKit implements QuillKit {
   }
 
   @override
-  void convert(int id, String source, String target, String format) {
+  void convert(int id, String source, String target, String format, {String options = '', bool updateIndexes = false}) {
     conversions.add((source, target, format));
+    if (updateIndexes) indexUpdates++;
     if (failConversions) {
       _emit(FileConverted(id, ok: false, error: 'falhou'));
       return;

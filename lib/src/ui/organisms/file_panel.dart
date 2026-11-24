@@ -133,6 +133,7 @@ class _FilePanelState extends State<FilePanel> {
                   command(BookCommandIds.newBook),
                   command(BookCommandIds.openBook),
                   command(BookCommandIds.importManuscript),
+                  command(BookCommandIds.compile),
                   divider(),
                   section(FileSection.recent, Symbols.history_rounded, l10n.recentTitle),
                   divider(),

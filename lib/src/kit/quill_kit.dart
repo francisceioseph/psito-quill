@@ -390,9 +390,13 @@ abstract interface class QuillKit {
   void preloadSpelling(String path);
 
   /// Abre [source] sem mostrar ('' para um documento novo), salva em
-  /// [target] no [format] ("odt", "fodt") e fecha, sem tocar nas abas (o
+  /// [target] no [format] ("odt", "fodt", "pdf", "epub", "docx") e fecha, sem tocar nas abas (o
   /// livro, D-071). Responde com [FileConverted] e o mesmo [id].
-  void convert(int id, String source, String target, String format);
+  ///
+  /// [options] são as do filtro (um JSON do LibreOffice, "" sem opções); com
+  /// [updateIndexes], o motor atualiza os sumários e os índices antes de
+  /// gravar (o compilar, D-086).
+  void convert(int id, String source, String target, String format, {String options = '', bool updateIndexes = false});
 
   /// A janela de impressão do sistema para o PDF [pdfPath], que é apagado
   /// no fim. Responde com [Printed] (D-076).

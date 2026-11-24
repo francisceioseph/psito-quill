@@ -2,7 +2,8 @@
 // fechar o livro, o fichário, e os capítulos e partes novos; e as cenas
 // (Etapa 5, D-079): nova cena, dividir, juntar e converter os separadores;
 // e os instantâneos (Etapa 7, D-081); e as notas (Etapa 8, D-082); e as
-// metas (Etapa 9, D-083); e a cortiça (Etapa 10, D-084).
+// metas (Etapa 9, D-083); e a cortiça (Etapa 10, D-084); e o compilar (Fase
+// 4, Etapa 1, D-086).
 //
 // Command com receptor, como os de tela: o que pede uma janela (o título do
 // livro, a pasta, o manuscrito) é da página do editor, que implementa
@@ -37,6 +38,8 @@ abstract final class BookCommandIds {
   static const goals = 'livro.metas';
   // A cortiça (Etapa 10, D-084).
   static const corkboard = 'livro.cortica';
+  // O compilar (Fase 4, Etapa 1, D-086).
+  static const compile = 'livro.compilar';
 }
 
 /// O que a página do editor sabe abrir para o livro.
@@ -60,6 +63,7 @@ abstract interface class BookViewActions {
   void showGoals();
   void toggleCorkboard();
   bool get corkboardOpen;
+  void compileBook();
 }
 
 void registerBookCommands(
@@ -183,6 +187,13 @@ void registerBookCommands(
       run: view.toggleCorkboard,
       isActive: () => view.corkboardOpen,
       canRun: inBook,
+    ),
+    Command(
+      id: BookCommandIds.compile,
+      label: l10n.commandCompile,
+      icon: Symbols.menu_book_rounded,
+      run: view.compileBook,
+      canRun: () => inBook() && ready() && doc.busy == null,
     ),
   ]) {
     registry.register(c);

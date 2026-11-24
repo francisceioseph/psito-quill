@@ -14,6 +14,7 @@ import '../book/book_controller.dart';
 import '../book/book_io.dart';
 import '../book/book_search.dart';
 import '../book/chapter_cut.dart';
+import '../book/compile.dart';
 import '../book/snapshots.dart';
 import '../files/file_dialogs.dart';
 import '../files/lo_lock.dart';
@@ -198,6 +199,26 @@ class Workspace extends ChangeNotifier {
       sources.add((id: node.id, path: doc.backgroundCopyOf(path) ?? path, flat: false));
     }
     return searchChapters(sources, q, titles: titles);
+  }
+
+  // ------------------------------------------ o compilar (Fase 4) --
+
+  /// Compila o livro em [target] (D-086), pelo [job] (que a janela pode
+  /// cancelar). Cada capítulo sai como na busca no livro: o da tela pela
+  /// cópia do Localizar, uma aba de fundo com alterações pela cópia de
+  /// recuperação, os outros pelo arquivo.
+  Future<CompileResult> compileBook(CompileJob job, CompileSettings s, String target, {CompileProgress? onProgress}) async {
+    final b = book.book;
+    if (b == null) return const CompileResult(CompileOutcome.noChapters);
+    return job.run(b, s, target, onProgress: onProgress, sourceOf: (node) async {
+      final path = book.pathOf(node);
+      if (path == null) return null;
+      if (doc.isOpen && doc.path == path) {
+        final copy = await doc.searchCopy(fresh: true);
+        if (copy != null) return (path: copy, flat: true);
+      }
+      return (path: doc.backgroundCopyOf(path) ?? path, flat: false);
+    });
   }
 
   /// Abre o capítulo [id] (ou lhe dá a tela) e seleciona a ocorrência [hit].

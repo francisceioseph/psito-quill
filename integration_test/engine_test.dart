@@ -16,6 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:psito_quill/src/plugins/plugin_host.dart';
 import 'package:psito_quill/src/book/book_search.dart';
+import 'package:psito_quill/src/book/compile.dart';
 import 'package:psito_quill/src/book/odt_zip.dart';
 import 'package:psito_quill/src/book/docx_import.dart';
 import 'package:psito_quill/src/book/book_io.dart';
@@ -742,6 +743,43 @@ void main() {
     final beforeFile = workspace.snapshotFile(withScenes, kept.firstWhere((s) => s.name == 'Antes de restaurar'))!;
     expect(readOdtContent(beforeFile), contains('Quixeramobim'), reason: 'o "antes" tem o que não foi salvo');
     expect((await doc.searchText(const SearchQuery('quixeramobim'), fresh: true)).total, 0);
+
+    // 28. O compilar (D-086): o livro inteiro, com o capítulo da tela pelo
+    //     motor (o que não foi salvo entra), num FODT só, e o motor grava o
+    //     PDF com o sumário atualizado, o EPUB com o título, o DOCX e o ODT.
+    doc.uno('.uno:GoToEndOfDoc');
+    doc.uno('.uno:InsertText', '{"Text":{"type":"string","value":" Compiladíssimo"}}');
+    await settle();
+    final bookNow = workspace.book.book!;
+    final chapterCount = bookNow.chapters.length;
+    for (final f in CompileFormat.values) {
+      final out = '${tmp.path}/compilado.${f.extension}';
+      final stages = <CompileStage>{};
+      final r = await workspace.compileBook(
+          CompileJob(kit), CompileSettings(title: 'Cenas', author: 'Fulano', format: f), out,
+          onProgress: (s, _, _) => stages.add(s));
+      expect(r.outcome, CompileOutcome.done, reason: 'compilar em ${f.extension}');
+      expect(stages, CompileStage.values.toSet());
+      expect(File(out).lengthSync(), greaterThan(1000));
+    }
+    final compiledPdf = File('${tmp.path}/compilado.pdf').readAsBytesSync();
+    expect(latin1.decode(compiledPdf.sublist(0, 5)), '%PDF-');
+    final pdftotext = await Process.run('pdftotext', ['-layout', '${tmp.path}/compilado.pdf', '-']);
+    if (pdftotext.exitCode == 0) {
+      final text = pdftotext.stdout as String;
+      expect(text, contains('Compiladíssimo'), reason: 'o capítulo da tela vale o do motor');
+      expect(RegExp(r'Sumário[\s\S]*\.{5,}\s*\d').hasMatch(text), isTrue, reason: 'o sumário com as páginas');
+    }
+    final opf = readZipEntry(File('${tmp.path}/compilado.epub').readAsBytesSync(), 'OEBPS/content.opf');
+    expect(opf, isNotNull);
+    expect(utf8.decode(opf!), contains('<dc:title>Cenas</dc:title>'));
+    final odtBody = readOdtContent('${tmp.path}/compilado.odt')!;
+    expect(odtBody, contains('Compiladíssimo'));
+    expect(RegExp('<text:h ').allMatches(odtBody).length, greaterThanOrEqualTo(chapterCount));
+    final docxXml = readZipEntry(File('${tmp.path}/compilado.docx').readAsBytesSync(), 'word/document.xml');
+    expect(utf8.decode(docxXml!), contains('Compiladíssimo'));
+    expect(doc.path, scenePath, reason: 'o compilar não toca nas abas');
+    expect((await doc.searchText(const SearchQuery('compiladíssimo'), fresh: true)).total, 1, reason: 'o capítulo da tela continua com o texto');
 
     workspace.onUnsaved = () async => UnsavedChoice.discard;
     expect(await workspace.closeBook(), isTrue);

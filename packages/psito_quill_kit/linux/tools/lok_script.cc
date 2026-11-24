@@ -19,7 +19,8 @@
 //   save <arquivo> <formato>  salvar como
 //   wait <ms>                 espera os callbacks
 //   preload <arquivo>         carrega o dicionário por um documento oculto
-//   convert <src> <dst> <fmt> abre oculto, salva e fecha ("-": documento novo)
+//   convert <src> <dst> <fmt> [flags] [opções]  abre oculto, salva e fecha
+//                             ("-": documento novo; flags 1: atualiza os índices)
 //   repaint                   redesenha todos os ladrilhos
 //   invert <papel> <tinta> <fonte>  o papel escuro (D-074), em rrggbb; "off" desliga
 //   a11y on|off               setAccessibilityState (callbacks 62 e 63)
@@ -113,9 +114,11 @@ int main(int argc, char** argv) {
       e.uno(rest.substr(0, sp), sp == std::string::npos ? "" : rest.substr(sp + 1));
     } else if (op == "convert") {
       std::istringstream a(rest);
-      std::string src, dst, fmt;
-      a >> src >> dst >> fmt;
-      e.convert(1, src == "-" ? "" : src, dst, fmt);
+      std::string src, dst, fmt, opts;
+      int flags = 0;
+      a >> src >> dst >> fmt >> flags;
+      std::getline(a >> std::ws, opts);
+      e.convert(1, src == "-" ? "" : src, dst, fmt, opts, flags);
     } else if (op == "preload") {
       e.preloadSpelling(rest);
     } else if (op == "invert") {

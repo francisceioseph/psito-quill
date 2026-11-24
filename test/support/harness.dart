@@ -48,6 +48,18 @@ class FakeFileDialogs implements FileDialogs {
   }
 
   @override
+  Future<String?> pickExport({
+    required String suggestedName,
+    String? initialDirectory,
+    required String label,
+    required String extension,
+    required String mime,
+  }) async {
+    exports.add(suggestedName);
+    return exportAnswer;
+  }
+
+  @override
   Future<String?> pickSave({
     required String suggestedName,
     String? initialDirectory,
