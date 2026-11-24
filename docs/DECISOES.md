@@ -943,6 +943,7 @@ A Fase 3, Etapa 4.
 Como no Psito Player (o mesmo modelo de scripts e de workflows).
 
 - **O ícone:** gerado no Gemini (`assets/icon/icon-source.jpg`: uma pena sobre um livro aberto, no azul-marinho do tema claro) e vetorizado em quatro camadas de cor com o potrace (`tool/vectorize_icon.py` → `icon.svg`, 13 KB). Os PNGs de 48 a 512 px saem do SVG (`tool/render_icons.py`) e vão para o `hicolor` de cada tamanho, junto com o SVG.
+  - **Trocado em 24/11:** o Francisco preferiu outra versão: a pena azul-clara sobre o livro aberto creme, num quadrado arredondado azul-marinho com borda escura. O `vectorize_icon.py` agora recorta a margem branca da imagem, faz a borda e o fundo como dois retângulos arredondados medidos nela (a borda de 16 px e o raio de 175 px) e traça o creme e o azul. O `icon.svg` tem 9 KB, e o ícone fica transparente em volta do quadrado.
 - **Os pacotes** (`tool/build-deb.sh`, `build-rpm.sh`, `build-tarball.sh`, com os arquivos montados pelo `stage-package.sh`):
   - o bundle inteiro em `/usr/lib/psito-quill`, o `/usr/bin/psito-quill`, o atalho `org.psito.quill.desktop` (ODT e DOCX) e o ícone;
   - **o motor é o LibreOffice do sistema**, aberto por `dlopen`: o ldd não o mostra, então a dependência vai à mão (`libreoffice-writer >= 24.2`, no Debian `4:` e no Fedora `1:`). O fontconfig, o GTK, a GLib 2.80 (o símbolo do Ubuntu 24.04 do CI), o EGL e o GLES também. O dicionário pt-BR é recomendado, não exigido;
@@ -1021,3 +1022,59 @@ O Francisco perguntou pela versão Windows (24/11). O plugin do motor é só Lin
   - a sonda (`tool/windows-probe/`) e o `build.sh` (MinGW num contêiner), que servem para o LibreOffice oficial;
   - a VM de teste (`~/vms/psito-quill-windows`, uma camada por cima do disco do Player), já com o LibreOffice 25.8.7, o runtime do Visual C++ 14.44 e o snapshot do Collabora em `C:\Users\psito\co`;
   - para o COKit, a sonda precisa ser reescrita em C++ e compilada pelo MSVC.
+
+## D-079 · As cenas: o estilo "Cena", o fichário, nova cena, dividir e juntar
+
+A Etapa 5 da Fase 3. O Francisco decidiu (24/11) que os separadores dos manuscritos ("* * *") viram o estilo "Cena", em vez de só serem reconhecidos.
+
+- **O separador de cena** é um parágrafo no estilo de parágrafo "Cena" (ou num automático filho dele, que é como o LibreOffice grava a formatação direta).
+  - O estilo é centrado, sem recuo, com 0,42 cm em cima e embaixo, e preso ao parágrafo seguinte. Ele é filho do "Padrão", para usar a fonte do livro.
+  - O texto do separador é livre. A cena nova usa "* * *".
+  - O que se reconhece como separador solto: só asteriscos, cerquilhas ou o asterismo, com espaços, até 16 caracteres ("* * *", "***", "#", "⁂").
+- **O importador converte:** no corte do manuscrito (`fodt_split.dart`), cada parágrafo separador passa para o estilo "Cena", e o estilo entra no cabeçalho de todos os capítulos. A janela do importador diz quantos separadores vão virar cena.
+- **"Converter os separadores em cenas"**, para os capítulos que já estão no livro (os da Etapa 1) e para qualquer documento:
+  - a cópia conta os separadores soltos;
+  - o estilo vem pela cópia (D-075), se faltar;
+  - uma busca por expressão regular com "Selecionar tudo" pega todos, e um `StyleApply` vale para todos (sondado na 24.2). Entra no Ctrl+Z.
+- **As cenas** saem da cópia do documento (`odfScenes`, na leitura do D-044) e do `content.xml` dos capítulos fechados, lido com as palavras.
+  - Cada cena tem o começo do primeiro parágrafo de texto (até 80 caracteres) e a chave do salto.
+  - A cena antes do primeiro separador entra se tiver texto. Um capítulo sem nenhum separador não lista cenas.
+  - Um separador vazio não conta, porque a busca não o acharia.
+  - **No `content.xml`, o "Cena" não vem declarado** (os estilos com nome ficam no `styles.xml`). Ele conta pelo nome; achado na integração.
+  - O `livro.json` guarda o começo de cada cena (`cenas`) junto das palavras. O fichário mostra as cenas dos capítulos fechados sem abri-los: uns 80 bytes por cena.
+- **O fichário:**
+  - as cenas ficam embaixo do capítulo, recuadas, com o número e o começo do texto;
+  - as do capítulo da tela vêm da cópia, ao vivo, e começam à mostra. O fichário aberto liga a cópia nas pausas da digitação, como a Estrutura (D-047);
+  - as dos outros capítulos vêm do `livro.json` e começam escondidas. A seta ou → mostra, e ← esconde (numa cena, volta ao capítulo);
+  - o clique (ou Enter) numa cena abre o capítulo e salta. Num capítulo que ainda vai abrir, o salto espera a cópia dele;
+  - arrastar ignora as linhas de cena. Elas vão com o capítulo delas, e soltar entre as cenas de outro cai depois dele.
+- **O salto** vai ao começo e procura o texto do separador, contando as ocorrências antes dele, como a Estrutura (D-072). A primeira cena vai ao começo do documento.
+- **Nova cena** (Inserir e menu Livro): no fim do parágrafo do cursor, um separador "* * *" no estilo "Cena" e um parágrafo vazio embaixo, com o cursor nele. O estilo vem pela cópia, se faltar.
+- **Tudo por comandos, nunca por teclas:**
+  - o LOK põe a tecla numa fila do motor e roda o comando `.uno:` na hora. O Enter mandado antes de um `.uno:GoUp` chegava depois dele, e o estilo caía no parágrafo de texto;
+  - a integração achou isso. O `lok_script` não mostrava, porque espera entre os passos;
+  - agora vão o `.uno:InsertPara`, o `.uno:InsertText` e o `.uno:SwBackspace`, sondados na 24.2.
+- **Juntar com o próximo capítulo** (menu Livro, com confirmação):
+  - o `.uno:InsertDoc` com o arquivo do próximo insere o texto dele no fim, num parágrafo novo, sem janela. Os estilos, as notas (renumeradas) e as imagens vêm junto, e entra no Ctrl+Z;
+  - o capítulo da tela é salvo, e o arquivo do próximo vai para a lixeira do livro;
+  - um próximo aberto numa aba fecha antes; se ele tem alterações, não junta.
+- **Dividir o capítulo aqui** (menu Livro):
+  - um marcador no cursor (o `.uno:InsertBookmark` com o nome não abre janela) e a cópia;
+  - o Dart corta a cópia no marcador (`chapter_cut.dart`): sai o texto antes dele, e os elementos em volta (o parágrafo, um negrito, uma lista) são reabertos no começo. As declarações vão inteiras;
+  - o motor salva o resto como o capítulo novo, logo depois do da tela. O nome é o título que abre o resto, ou "<capítulo> (continuação)";
+  - no capítulo da tela, o motor apaga do cursor ao fim (o `.uno:EndOfDocumentSel` e o `.uno:Delete`), tira o marcador e salva. Se o cursor estava no começo de um parágrafo depois de outro, o vazio que sobra sai pelo `.uno:SwBackspace` (depois de uma tabela, não);
+  - **com texto selecionado** (como depois do salto a uma cena), o marcador vira um intervalo. O corte cai no começo dele, e a seleção sai junto com o resto;
+  - **no separador de uma cena,** o capítulo novo começa na cena, sem o separador. Juntar depois não devolve o separador (as duas cenas viram uma);
+  - sem texto antes ou depois do cursor, não divide, e o marcador sai. Se o motor não grava o capítulo novo, nada muda no da tela;
+  - a tela trava enquanto isso (o `BusyKind.working`, D-066), para uma tecla não cair entre a cópia e o corte;
+  - **o Ctrl+Z** desfaz o corte no capítulo da tela, mas o capítulo novo fica: o texto aparece nos dois.
+- **A medida** (`tool/ab.py afa5d3b`, a build de release, 3 rodadas alternadas, a mediana; o `capitulo-30p.docx` avulso, sem livro nem cenas):
+  - **a primeira rodada deu +5,7 MB de memória anônima depois de digitar.** A leitura das cenas, que roda em toda cópia, percorria o documento inteiro e guardava o texto de cada parágrafo para contar as ocorrências. O isolate do `Isolate.run` é do mesmo grupo e divide o heap com o app;
+  - **agora:** sem "Cena" no XML, nada é lido. Com cenas, uma primeira passada acha os textos dos separadores (poucos), e a segunda conta as ocorrências de cada um no caminho, sem guardar texto;
+  - **a segunda rodada,** com o capítulo: −3,2 MB de anônima (441,3 contra 444,5 MB de RSS). Depois de rolar, −1,2 MB; depois de digitar, +3,8 MB. Tudo dentro do ruído de uma rodada para outra, e abaixo do teto de ~5 MB;
+  - a latência da tecla até o ladrilho (p95) foi de 12,8 para 14,3 ms, e o fps de rolar ficou em 59,5. Abrir variou de 612 para 386 ms, que é ruído do host.
+- **Os testes:**
+  - unidade, `scenes_test`: o separador, as cenas na cópia e no `content.xml`, o estilo, o importador e o corte (o meio do negrito, o começo, o título, a tabela, a nota, a lista, o intervalo, o separador e o capítulo de teste inteiro);
+  - unidade, `scene_flows_test`, com o motor falso: a nova cena, converter, saltar, juntar e dividir;
+  - widget, `fase3_scenes_test`: as cenas no fichário, o teclado, o clique, os menus e o soltar;
+  - integração, passo 25: importar o `capitulo-30p.docx`, as cenas da cópia iguais às do `content.xml`, dividir na segunda cena, juntar de volta e a cena nova.

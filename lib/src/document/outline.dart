@@ -50,3 +50,28 @@ int? currentHeading(List<OutlineEntry> entries, int? page) {
   }
   return found;
 }
+
+/// Uma cena do capítulo (Fase 3, Etapa 5, D-079): o trecho entre dois
+/// separadores (os parágrafos no estilo "Cena").
+@immutable
+class SceneEntry {
+  const SceneEntry({required this.label, this.searchKey, this.occurrence = 0});
+
+  /// O começo do primeiro parágrafo de texto da cena (para o fichário).
+  final String label;
+
+  /// O texto do separador que abre a cena, para o salto pela busca (como o
+  /// da Estrutura, D-072). null: a cena antes do primeiro separador, que
+  /// começa no começo do documento.
+  final String? searchKey;
+
+  /// Quantas vezes o [searchKey] aparece no texto antes do separador.
+  final int occurrence;
+
+  @override
+  bool operator ==(Object other) =>
+      other is SceneEntry && other.label == label && other.searchKey == searchKey && other.occurrence == occurrence;
+
+  @override
+  int get hashCode => Object.hash(label, searchKey, occurrence);
+}

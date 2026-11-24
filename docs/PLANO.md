@@ -573,20 +573,24 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
   - Notas de rodapé e de fim: inserir, e o clique no número leva à nota e volta. Vêm da Fase 4 para cá, porque um romance usa.
   - Links: inserir e editar (no menu de contexto também) e abrir com Ctrl+clique. Abrir um link pede confirmação: o Quill não abre nada na rede sozinho.
   - Caracteres especiais: uma grade pequena com os do português e da tipografia (travessão, aspas curvas, reticências, espaço sem quebra), com busca pelo nome. As aspas curvas e o travessão automáticos são o autocorrigir do motor (sonda).
-- **Etapa 5: as cenas.** O estilo de parágrafo "Cena" (e `* * *` no importador), as cenas no fichário, e Nova cena, Dividir capítulo aqui e Juntar com o próximo (o caminho sai de uma sonda).
+- **Etapa 5: as cenas.** O estilo de parágrafo "Cena" (e `* * *` no importador), as cenas no fichário, e Nova cena, Dividir capítulo aqui e Juntar com o próximo (o caminho sai de uma sonda). **Decidido com o Francisco (24/11):** os separadores do manuscrito são convertidos para o estilo "Cena", não só reconhecidos.
 - **Etapa 6: a busca no livro.** "No livro" no painel Localizar: os fechados pelo `content.xml`, os abertos pelo motor; o clique abre e salta. Substituir no livro todo fica para depois.
 - **Etapa 7: os instantâneos.** Em `versoes/`, pelo motor, sem mudar o documento. Comparar pelo `.uno:CompareDocuments` (sonda), restaurar com um instantâneo antes, e um por dia, automático.
 - **Etapa 8: as notas.** Markdown em `notas/`, editadas no Flutter, sem o motor: Personagens, Lugares, Facções, Termos e a Linha do tempo, com `[[Nome]]`.
 - **Etapa 9: as metas.** Do livro com prazo e do dia, o histórico em `metas.json`, a meta na barra de status e um gráfico dos últimos 30 dias num `CustomPainter`.
 - **Etapa 10: a cortiça.** Os capítulos como cartões, a mesma árvore do fichário, com a sinopse editável no cartão.
 - **Fecho:** o `docs/FASE3-RESULTADOS.md` e a documentação.
-- **Estado em 24/11/2026:** as Etapas 1 (D-071), 2 (D-073), 3 (D-075) e 4 (D-076) estão feitas, e o papel escuro passou a ser desenhado pelo Quill (D-074).
+- **Estado em 24/11/2026:** as Etapas 1 (D-071), 2 (D-073), 3 (D-075), 4 (D-076) e 5 (D-079) estão feitas, e o papel escuro passou a ser desenhado pelo Quill (D-074).
   - **O que saiu diferente do plano nas Etapas 3 e 4** (as sondas na 24.2):
     - desligar o cabeçalho, a primeira página e as pares diferentes, a hifenização do documento e a capitular passam pela cópia dos estilos e o `.uno:LoadStyles` (D-075), porque os comandos do motor abrem janelas que travam o LOK. Essas mudanças não entram no Ctrl+Z;
     - editar o cabeçalho é pelo botão (o cursor vai até ele), não pelo clique duplo;
     - a quebra de seção e o campo do título ficaram de fora: o `InsertSection` e o `InsertTitleField` não fazem nada na 24.2. A página em branco são duas quebras de página;
     - a primeira página e as pares diferentes estão na faixa e no menu, não no painel Página;
     - a impressão não tem prévia: o GTK só a mostra quando ele mesmo desenha as páginas (D-076).
+  - **O que saiu diferente do plano na Etapa 5** (D-079):
+    - juntar é pelo motor (o `.uno:InsertDoc`, com o Ctrl+Z); dividir é pelo motor e pela cópia (um marcador no cursor, o Dart corta o resto, e o motor apaga até o fim);
+    - veio também "Converter os separadores em cenas", para os capítulos já importados;
+    - dividir no separador de uma cena tira o separador do capítulo novo.
 
 **Fase 4: compilar e revisar**
 - Compilar para PDF, EPUB e DOCX com modelos, referências cruzadas, marcadores, sumário e índice. (As notas de rodapé foram para a Fase 3, Etapa 4.)

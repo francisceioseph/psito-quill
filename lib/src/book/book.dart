@@ -27,6 +27,7 @@ class BookNode {
     this.synopsis = '',
     this.words = 0,
     this.wordsStamp = 0,
+    this.scenes = const [],
     List<BookNode>? children,
   }) : children = children ?? [];
 
@@ -48,6 +49,10 @@ class BookNode {
   int words;
   int wordsStamp;
 
+  /// O começo de cada cena do capítulo (D-079), lido com as palavras: o
+  /// fichário mostra as cenas dos capítulos fechados sem abri-los.
+  List<String> scenes;
+
   /// Os capítulos de uma parte (os capítulos não têm filhos na Etapa 1).
   final List<BookNode> children;
 
@@ -63,6 +68,7 @@ class BookNode {
         if (synopsis.isNotEmpty) 'sinopse': synopsis,
         if (!isPart) 'palavras': words,
         if (!isPart) 'palavrasEm': wordsStamp,
+        if (scenes.isNotEmpty) 'cenas': scenes,
         if (isPart) 'filhos': [for (final c in children) c.toJson()],
       };
 
@@ -78,6 +84,7 @@ class BookNode {
       synopsis: j['sinopse'] as String? ?? '',
       words: (j['palavras'] as num?)?.toInt() ?? 0,
       wordsStamp: (j['palavrasEm'] as num?)?.toInt() ?? 0,
+      scenes: [for (final c in (j['cenas'] as List<Object?>? ?? const [])) if (c is String) c],
       children: [
         if (part)
           for (final c in (j['filhos'] as List<Object?>? ?? const [])) fromJson(c as Map<String, Object?>),

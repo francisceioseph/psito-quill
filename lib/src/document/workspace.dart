@@ -5,18 +5,23 @@
 // do CommandRegistry também.
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 
 import '../book/book.dart';
 import '../book/book_controller.dart';
 import '../book/book_io.dart';
+import '../book/chapter_cut.dart';
 import '../files/file_dialogs.dart';
 import '../files/lo_lock.dart';
 import '../files/recent_files.dart';
 import '../kit/quill_kit.dart';
 import 'document_controller.dart';
 import 'recovery.dart';
+
+/// Por que dividir ou juntar capítulos não deu (D-079).
+enum ChapterEditError { notInBook, nothingToSplit, noNext, nextModified, failed }
 
 /// A resposta a "salvar as alterações?".
 enum UnsavedChoice { save, discard, cancel }
@@ -152,10 +157,101 @@ class Workspace extends ChangeNotifier {
     if (first != null) openChapter(first);
   }
 
-  /// Abre o capítulo [node] do livro numa aba (ou só lhe dá a tela).
-  void openChapter(BookNode node) {
+  /// Abre o capítulo [node] do livro numa aba (ou só lhe dá a tela). Com
+  /// [scene], leva o cursor a essa cena (D-079), agora ou quando a cópia do
+  /// capítulo chegar.
+  void openChapter(BookNode node, {int? scene}) {
     final path = book.pathOf(node);
-    if (path != null) _open(path);
+    if (path == null) return;
+    if (scene != null) doc.goToSceneWhenOpen(path, scene);
+    _open(path);
+    // Já aberto: a cópia da aba já está aqui.
+    if (scene != null && doc.isOpen && doc.path == path) doc.takePendingScene();
+  }
+
+  // ---------------------------------- dividir e juntar capítulos (D-079) --
+
+  /// Divide o capítulo da tela no cursor: o resto vira um capítulo novo logo
+  /// depois dele, com o título que abre o resto (ou [fallbackTitle]), e o
+  /// capítulo da tela fica até o cursor e é salvo. Devolve o capítulo novo,
+  /// ou o erro.
+  Future<({ChapterEditError? error, BookNode? created})> splitChapterHere({required String fallbackTitle}) async {
+    final current = book.chapterAt(doc.path);
+    if (current == null || !doc.canEdit || doc.busy != null) return (error: ChapterEditError.notInBook, created: null);
+    return doc.whileWorking(() async {
+      final mark = 'psito-quill-corte-${DateTime.now().microsecondsSinceEpoch}';
+      final copy = doc.tempCopy('dividir', 'fodt');
+      final rest = doc.tempCopy('dividir-resto', 'fodt');
+      try {
+        if (!await doc.markAndCopy(mark, copy)) return (error: ChapterEditError.failed, created: null);
+        final cut = await _cutInIsolate(copy, rest, mark);
+        if (cut == null || cut.empty) {
+          doc.removeBookmark(mark);
+          return (error: ChapterEditError.nothingToSplit, created: null);
+        }
+        final BookNode created;
+        try {
+          created = await book.addChapterFrom(rest, cut.title ?? fallbackTitle, afterId: current.id);
+        } on BookException {
+          doc.removeBookmark(mark);
+          return (error: ChapterEditError.failed, created: null);
+        }
+        doc.deleteToEnd(mark, joinEmpty: cut.joinEmpty);
+        if (!await save()) return (error: ChapterEditError.failed, created: created);
+        return (error: null, created: created);
+      } on Object {
+        doc.removeBookmark(mark);
+        return (error: ChapterEditError.failed, created: null);
+      } finally {
+        SceneOps.deleteTempCopy(copy);
+        SceneOps.deleteTempCopy(rest);
+      }
+    });
+  }
+
+  /// Corta a cópia [copy] no marcador [mark] e grava o resto em [rest], num
+  /// isolate. Fora de um método do Workspace: o fecho só leva os três
+  /// caminhos (um fecho dentro do método levaria o Workspace junto, e ele
+  /// não passa para outro isolate).
+  static Future<({bool joinEmpty, bool empty, String? title})?> _cutInIsolate(String copy, String rest, String mark) =>
+      Isolate.run(() {
+        final c = cutAtBookmark(File(copy).readAsStringSync(), mark);
+        if (c == null) return null;
+        File(rest).writeAsStringSync(c.xml);
+        // Só o pouco que o resto precisa volta do isolate (o texto não).
+        return (joinEmpty: c.atParagraphStart && c.previousIsText, empty: c.wordsBefore == 0 || c.wordsAfter == 0, title: c.title);
+      });
+
+  /// O capítulo depois do da tela, na ordem do livro; null no último.
+  BookNode? get nextChapter {
+    final current = book.chapterAt(doc.path);
+    if (current == null) return null;
+    final chapters = book.book!.chapters.toList();
+    final i = chapters.indexOf(current);
+    return i < 0 || i + 1 >= chapters.length ? null : chapters[i + 1];
+  }
+
+  /// Junta o próximo capítulo ao fim do da tela: o motor insere o arquivo
+  /// dele, o da tela é salvo, e o próximo vai para a lixeira do livro. Um
+  /// próximo aberto numa aba fecha antes; com alterações, não junta.
+  Future<ChapterEditError?> joinWithNext() async {
+    final current = book.chapterAt(doc.path);
+    if (current == null || !doc.canEdit || doc.busy != null) return ChapterEditError.notInBook;
+    final next = nextChapter;
+    final nextPath = next == null ? null : book.pathOf(next);
+    if (next == null || nextPath == null) return ChapterEditError.noNext;
+    for (final t in [...doc.tabs]) {
+      if (doc.tabPath(t) != nextPath) continue;
+      if (doc.tabModified(t)) return ChapterEditError.nextModified;
+      await doc.closeTab(t);
+    }
+    if (!File(nextPath).existsSync()) return ChapterEditError.failed;
+    return doc.whileWorking(() async {
+      doc.appendDocument(nextPath);
+      if (!await save()) return ChapterEditError.failed;
+      book.remove(next.id);
+      return null;
+    });
   }
 
   /// Fecha o livro: as abas dos capítulos dele fecham, perguntando se há

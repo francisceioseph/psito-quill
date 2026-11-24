@@ -89,7 +89,11 @@ class FodtSnapshot {
     this.words,
     this.characters,
     this.page = const PageSetup(),
+    this.scenes = const [],
   });
+
+  /// As cenas do documento (D-079); vazia sem nenhum separador.
+  final List<SceneEntry> scenes;
 
   /// O cabeçalho, o rodapé e a hifenização do documento (D-075).
   final PageSetup page;
@@ -300,6 +304,7 @@ FodtSnapshot parseFodt(String xml) {
     words: int.tryParse(statistic['meta:word-count'] ?? ''),
     characters: int.tryParse(statistic['meta:character-count'] ?? ''),
     page: parsePageSetup(xml),
+    scenes: odfScenes(xml),
   );
 }
 
@@ -460,4 +465,123 @@ int odfWordCount(String bodyXml) {
     inWord = !space;
   }
   return words;
+}
+
+// ------------------------------------------------ as cenas (D-079) --
+// Um separador de cena é um parágrafo no estilo "Cena" (ou num automático
+// filho dele, como o LibreOffice grava a formatação direta). Serve para a
+// cópia (FODT) e para o `content.xml` de um capítulo fechado.
+
+/// O nome do estilo de parágrafo do separador de cena, no documento.
+const sceneStyleName = 'Cena';
+
+/// O que o importador e o "Converter os separadores" reconhecem como
+/// separador de cena: só asteriscos, cerquilhas ou o asterismo, com espaços
+/// ("* * *", "***", "#", "⁂").
+bool isSceneSeparatorText(String text) {
+  final t = text.trim();
+  return t.isNotEmpty && t.length <= 16 && RegExp(r'^[*#⁂](\s*[*#⁂])*$').hasMatch(t);
+}
+
+final _paragraphStyleDecl = RegExp(r'<style:style\s([^>]*?)/?>');
+
+/// Os nomes (como o XML grava) dos estilos de parágrafo que são de cena: o
+/// "Cena" e os automáticos filhos dele. O "Cena" conta mesmo sem estar
+/// declarado: no `content.xml` de um ODT, os estilos com nome ficam no
+/// `styles.xml`, e só os automáticos vêm junto.
+Set<String> sceneStyleNames(String xml) => _sceneStyles(xml);
+
+Set<String> _sceneStyles(String xml) {
+  final out = <String>{sceneStyleName};
+  for (final m in _paragraphStyleDecl.allMatches(xml)) {
+    final a = _attrs(m[1]!);
+    if (a['style:family'] != 'paragraph') continue;
+    final name = a['style:name'];
+    if (name == null) continue;
+    final display = a['style:display-name'] ?? decodeStyleName(name);
+    final parent = a['style:parent-style-name'];
+    if (display == sceneStyleName || (parent != null && decodeStyleName(parent) == sceneStyleName)) out.add(name);
+  }
+  return out;
+}
+
+final _styleNameAttr = RegExp(r'text:style-name="([^"]*)"');
+
+/// O tamanho máximo do rótulo de uma cena.
+const sceneLabelLength = 80;
+
+/// As cenas do corpo de [xml]. Sem nenhum separador, nenhuma. A cena antes
+/// do primeiro separador entra se tiver texto.
+List<SceneEntry> odfScenes(String xml) {
+  // Sem o nome em lugar nenhum, não há cena: nada é lido (a cópia de um
+  // documento sem cenas não paga nada, D-079).
+  if (!xml.contains('"$sceneStyleName"')) return const [];
+  final styles = _sceneStyles(xml);
+  final bodyStart = xml.indexOf('<office:text');
+  if (bodyStart < 0) return const [];
+  final body = _noteRemoved(xml.substring(bodyStart));
+  bool isSeparator(RegExpMatch m, String text) {
+    if ((m[2] ?? m[5]) != 'p' || text.isEmpty) return false;
+    final style = _styleNameAttr.firstMatch(m[3] ?? m[6] ?? '')?[1];
+    // Um separador vazio não tem como ser achado pela busca: não conta.
+    return style != null && styles.contains(style);
+  }
+
+  // Primeira passada: os textos dos separadores (as chaves da busca, poucas).
+  final keys = <String>{};
+  for (final m in _bodyParas.allMatches(body)) {
+    if (m[1] != null) continue;
+    final text = _paragraphText(m[4] ?? '').trim();
+    if (isSeparator(m, text)) keys.add(text);
+  }
+  if (keys.isEmpty) return const [];
+
+  // Segunda: as cenas, com as ocorrências de cada chave contadas no caminho,
+  // sem guardar o texto dos parágrafos.
+  final seen = {for (final k in keys) k: 0};
+  final scenes = <SceneEntry>[];
+  String? key;
+  var occurrence = 0;
+  var label = '';
+  var started = false;
+  void flush() {
+    if (started || label.isNotEmpty) scenes.add(SceneEntry(label: label, searchKey: key, occurrence: occurrence));
+  }
+
+  for (final m in _bodyParas.allMatches(body)) {
+    if (m[1] != null) continue;
+    // Como está no parágrafo (a chave da busca) e com os espaços juntados
+    // (o rótulo).
+    final text = _paragraphText(m[4] ?? '').trim();
+    if (isSeparator(m, text)) {
+      flush();
+      started = true;
+      key = text;
+      occurrence = seen[text]!;
+      label = '';
+    } else if (label.isEmpty && (m[2] ?? m[5]) == 'p' && text.isNotEmpty) {
+      final t = text.replaceAll(RegExp(r'\s+'), ' ');
+      label = t.length <= sceneLabelLength ? t : '${t.substring(0, sceneLabelLength).trimRight()}…';
+    }
+    for (final k in keys) {
+      seen[k] = seen[k]! + _countOf(text, k);
+    }
+  }
+  flush();
+  return scenes;
+}
+
+/// Quantos separadores ("* * *", "#") ainda não estão no estilo "Cena".
+int odfLooseSeparators(String xml) {
+  final styles = _sceneStyles(xml);
+  final bodyStart = xml.indexOf('<office:text');
+  if (bodyStart < 0) return 0;
+  var n = 0;
+  for (final m in _bodyParas.allMatches(_noteRemoved(xml.substring(bodyStart)))) {
+    if (m[2] != 'p') continue;
+    final style = _styleNameAttr.firstMatch(m[3] ?? '')?[1];
+    if (style != null && styles.contains(style)) continue;
+    if (isSceneSeparatorText(_paragraphText(m[4] ?? ''))) n++;
+  }
+  return n;
 }

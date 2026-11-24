@@ -764,7 +764,7 @@
       }
     }
   },
-  "binderKeysHint": "Alt+setas move, F2 renomeia, Delete manda para a lixeira",
+  "binderKeysHint": "Alt+setas move, F2 renomeia, Delete manda para a lixeira, → e ← mostram as cenas",
   "binderEmpty": "O livro não tem capítulos.",
   "statusBookWords": "livro {count}",
   "@statusBookWords": {
@@ -1024,5 +1024,94 @@
   "charArrowLeft": "seta para a esquerda",
   "charStar": "estrela",
   "charPrime": "linha (minuto, pé)",
-  "charDoublePrime": "linha dupla (segundo, polegada)"
+  "charDoublePrime": "linha dupla (segundo, polegada)",
+  "binderScenes": "{count, plural, =1{1 cena} other{{count} cenas}}",
+  "@binderScenes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "binderScene": "Cena {number}",
+  "@binderScene": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "binderSceneHint": "Enter leva à cena; seta para a esquerda volta ao capítulo",
+  "commandNewScene": "Nova cena",
+  "commandSplitChapter": "Dividir o capítulo aqui",
+  "commandJoinChapter": "Juntar com o próximo capítulo",
+  "commandConvertScenes": "Converter os separadores em cenas",
+  "splitContinuationTitle": "{title} (continuação)",
+  "@splitContinuationTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "splitDone": "O resto do capítulo virou “{title}”, logo depois dele",
+  "@splitDone": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "splitNothing": "Não há o que dividir: o cursor está no começo ou no fim do capítulo",
+  "splitFailed": "Não deu para dividir o capítulo. O texto ficou como estava.",
+  "joinConfirmTitle": "Juntar os capítulos?",
+  "joinConfirmBody": "O texto de “{next}” vai para o fim de “{current}”, que é salvo. O arquivo de “{next}” vai para a lixeira do livro.",
+  "@joinConfirmBody": {
+    "placeholders": {
+      "next": {
+        "type": "String"
+      },
+      "current": {
+        "type": "String"
+      }
+    }
+  },
+  "joinConfirm": "Juntar",
+  "joinDone": "“{title}” foi juntado a este capítulo",
+  "@joinDone": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "joinNoNext": "Este é o último capítulo do livro",
+  "joinNextModified": "Salve ou feche “{title}” antes de juntar",
+  "@joinNextModified": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "joinFailed": "Não deu para juntar os capítulos",
+  "scenesConverted": "{count, plural, =1{1 separador virou cena} other{{count} separadores viraram cenas}}",
+  "@scenesConverted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scenesNone": "Nenhum separador solto (* * *, #) neste documento",
+  "scenesFailed": "Não deu para criar o estilo Cena",
+  "importScenes": "{count, plural, =1{1 separador de cena (* * *) vai para o estilo Cena} other{{count} separadores de cena (* * *) vão para o estilo Cena}}",
+  "@importScenes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "busyWorkingChapters": "Reorganizando os capítulos"
 }

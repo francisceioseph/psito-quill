@@ -218,3 +218,25 @@ String _unescape(String s) =>
     s.replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&quot;', '"').replaceAll('&apos;', "'").replaceAll('&amp;', '&');
 
 String _escape(String s) => s.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;');
+
+// ------------------------------------------- o estilo da cena (D-079) --
+
+/// O estilo de parágrafo do separador de cena: centrado, sem recuo, com um
+/// respiro em cima e embaixo, e preso ao parágrafo seguinte (o separador
+/// não fica sozinho no pé da página). Filho do "Padrão", para usar a fonte
+/// do livro.
+const sceneStyleXml = '<style:style style:name="Cena" style:display-name="Cena" style:family="paragraph" '
+    'style:parent-style-name="Standard" style:class="text"><style:paragraph-properties fo:text-align="center" '
+    'fo:margin-left="0cm" fo:margin-right="0cm" fo:margin-top="0.42cm" fo:margin-bottom="0.42cm" '
+    'fo:text-indent="0cm" fo:keep-with-next="always"/></style:style>';
+
+final _sceneStyleDecl = RegExp(r'<style:style\s+style:name="Cena"[\s>/]');
+
+/// [xml] com o estilo "Cena" em `office:styles`, se ainda não tem.
+String addSceneStyle(String xml) {
+  final styles = xml.indexOf('<office:styles>');
+  final at = xml.indexOf('</office:styles>');
+  if (styles < 0 || at < styles) return xml;
+  if (_sceneStyleDecl.hasMatch(xml.substring(styles, at))) return xml;
+  return xml.replaceRange(at, at, sceneStyleXml);
+}

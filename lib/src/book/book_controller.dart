@@ -129,20 +129,27 @@ class BookController extends ChangeNotifier {
     if (stale.isEmpty) return;
     final counts = await countChapterWords(stale.keys.toList());
     if (_disposed || _book != book) return;
-    for (final MapEntry(:key, value: (words, stamp)) in counts.entries) {
+    for (final MapEntry(:key, :value) in counts.entries) {
       stale[key]!
-        ..words = words
-        ..wordsStamp = stamp;
+        ..words = value.words
+        ..wordsStamp = value.stamp
+        ..scenes = value.scenes;
     }
     _changed();
   }
 
   /// Um capítulo novo e vazio [title], depois de [afterId] (na mesma parte),
   /// ou no fim de [partId], ou no fim do livro. Devolve o capítulo.
-  Future<BookNode> addChapter(String title, {String? afterId, String? partId}) async {
+  Future<BookNode> addChapter(String title, {String? afterId, String? partId}) =>
+      addChapterFrom('', title, afterId: afterId, partId: partId);
+
+  /// Um capítulo novo [title] com o texto de [source] (um arquivo que o
+  /// motor abre, como o resto de um capítulo dividido; vazio: um documento
+  /// novo), no lugar de [addChapter].
+  Future<BookNode> addChapterFrom(String source, String title, {String? afterId, String? partId}) async {
     final book = _book!, dir = _dir!;
     final file = newChapterFile(dir, title);
-    if (!await _convert.convert('', '$dir/$file', 'odt')) throw const BookException(BookError.writeFailed);
+    if (!await _convert.convert(source, '$dir/$file', 'odt')) throw const BookException(BookError.writeFailed);
     final node = BookNode(id: newNodeId(book), kind: BookNodeKind.chapter, title: title, file: file);
     _insert(node, afterId: afterId, partId: partId);
     return node;

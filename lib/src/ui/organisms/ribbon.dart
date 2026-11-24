@@ -11,6 +11,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../commands/command_registry.dart';
+import '../../commands/commands_book.dart';
 import '../../commands/commands_document.dart';
 import '../../commands/commands_page.dart';
 import '../../commands/commands_view.dart';
@@ -435,6 +436,7 @@ class _InsertTab extends StatelessWidget {
         children: [
           RibbonGroup(title: l10n.groupPages, firstRow: [
             _big(commands, CommandIds.pageBreak, onRan),
+            _big(commands, BookCommandIds.newScene, onRan),
             menu(l10n.groupBreaks, Symbols.insert_page_break_rounded, const [
               CommandIds.pageBreak,
               PageCommandIds.blankPage,

@@ -2873,7 +2873,7 @@ abstract class AppLocalizations {
   /// No description provided for @binderKeysHint.
   ///
   /// In pt, this message translates to:
-  /// **'Alt+setas move, F2 renomeia, Delete manda para a lixeira'**
+  /// **'Alt+setas move, F2 renomeia, Delete manda para a lixeira, → e ← mostram as cenas'**
   String get binderKeysHint;
 
   /// No description provided for @binderEmpty.
@@ -3715,6 +3715,144 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'linha dupla (segundo, polegada)'**
   String get charDoublePrime;
+
+  /// No description provided for @binderScenes.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{1 cena} other{{count} cenas}}'**
+  String binderScenes(int count);
+
+  /// No description provided for @binderScene.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cena {number}'**
+  String binderScene(int number);
+
+  /// No description provided for @binderSceneHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Enter leva à cena; seta para a esquerda volta ao capítulo'**
+  String get binderSceneHint;
+
+  /// No description provided for @commandNewScene.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nova cena'**
+  String get commandNewScene;
+
+  /// No description provided for @commandSplitChapter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dividir o capítulo aqui'**
+  String get commandSplitChapter;
+
+  /// No description provided for @commandJoinChapter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Juntar com o próximo capítulo'**
+  String get commandJoinChapter;
+
+  /// No description provided for @commandConvertScenes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Converter os separadores em cenas'**
+  String get commandConvertScenes;
+
+  /// No description provided for @splitContinuationTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'{title} (continuação)'**
+  String splitContinuationTitle(String title);
+
+  /// No description provided for @splitDone.
+  ///
+  /// In pt, this message translates to:
+  /// **'O resto do capítulo virou “{title}”, logo depois dele'**
+  String splitDone(String title);
+
+  /// No description provided for @splitNothing.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não há o que dividir: o cursor está no começo ou no fim do capítulo'**
+  String get splitNothing;
+
+  /// No description provided for @splitFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não deu para dividir o capítulo. O texto ficou como estava.'**
+  String get splitFailed;
+
+  /// No description provided for @joinConfirmTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Juntar os capítulos?'**
+  String get joinConfirmTitle;
+
+  /// No description provided for @joinConfirmBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'O texto de “{next}” vai para o fim de “{current}”, que é salvo. O arquivo de “{next}” vai para a lixeira do livro.'**
+  String joinConfirmBody(String next, String current);
+
+  /// No description provided for @joinConfirm.
+  ///
+  /// In pt, this message translates to:
+  /// **'Juntar'**
+  String get joinConfirm;
+
+  /// No description provided for @joinDone.
+  ///
+  /// In pt, this message translates to:
+  /// **'“{title}” foi juntado a este capítulo'**
+  String joinDone(String title);
+
+  /// No description provided for @joinNoNext.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este é o último capítulo do livro'**
+  String get joinNoNext;
+
+  /// No description provided for @joinNextModified.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salve ou feche “{title}” antes de juntar'**
+  String joinNextModified(String title);
+
+  /// No description provided for @joinFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não deu para juntar os capítulos'**
+  String get joinFailed;
+
+  /// No description provided for @scenesConverted.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{1 separador virou cena} other{{count} separadores viraram cenas}}'**
+  String scenesConverted(int count);
+
+  /// No description provided for @scenesNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum separador solto (* * *, #) neste documento'**
+  String get scenesNone;
+
+  /// No description provided for @scenesFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não deu para criar o estilo Cena'**
+  String get scenesFailed;
+
+  /// No description provided for @importScenes.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{1 separador de cena (* * *) vai para o estilo Cena} other{{count} separadores de cena (* * *) vão para o estilo Cena}}'**
+  String importScenes(int count);
+
+  /// No description provided for @busyWorkingChapters.
+  ///
+  /// In pt, this message translates to:
+  /// **'Reorganizando os capítulos'**
+  String get busyWorkingChapters;
 }
 
 class _AppLocalizationsDelegate

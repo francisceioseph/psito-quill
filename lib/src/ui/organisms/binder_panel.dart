@@ -6,6 +6,10 @@
 // Alt+setas movem, Enter abre, F2 renomeia e Delete manda para a lixeira.
 // Embaixo, o item escolhido: o status, o rótulo e a sinopse.
 //
+// As cenas (D-079) aparecem embaixo do capítulo: as do capítulo da tela vêm
+// da cópia dele (ao vivo, abertas), e as dos outros, do `livro.json`
+// (fechadas; a seta ou a tecla → abre). O clique leva à cena.
+//
 // O painel é memoizado pela `revision` do livro (D-037): ele só se refaz
 // quando o livro muda, nunca a cada tecla no capítulo.
 import 'dart:async';
@@ -17,6 +21,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../book/book.dart';
 import '../../book/book_controller.dart';
+import '../../document/outline.dart';
 import '../atoms/w_button.dart';
 import '../atoms/w_color_swatch.dart';
 import '../atoms/w_label.dart';
@@ -35,16 +40,34 @@ String chapterStatusLabel(AppLocalizations l10n, ChapterStatus s) => switch (s) 
       ChapterStatus.done => l10n.chapterStatusDone,
     };
 
-/// Uma linha do fichário: o nó e a parte em que está.
-typedef BinderRow = ({BookNode node, BookNode? part});
+/// Uma linha do fichário: o nó, a parte em que está e, numa linha de cena,
+/// o número dela (de 0) no capítulo [node].
+typedef BinderRow = ({BookNode node, BookNode? part, int? scene});
 
-/// A árvore como lista, na ordem do livro.
-List<BinderRow> binderRows(Book book) => [
-      for (final n in book.nodes) ...[
-        (node: n, part: null),
-        for (final c in n.children) (node: c, part: n),
-      ],
-    ];
+/// A árvore como lista, na ordem do livro. [scenesOf] diz quantas cenas
+/// mostrar embaixo de cada capítulo (0: fechado).
+List<BinderRow> binderRows(Book book, {int Function(BookNode chapter)? scenesOf}) {
+  final rows = <BinderRow>[];
+  void chapter(BookNode c, BookNode? part) {
+    rows.add((node: c, part: part, scene: null));
+    final n = scenesOf?.call(c) ?? 0;
+    for (var i = 0; i < n; i++) {
+      rows.add((node: c, part: part, scene: i));
+    }
+  }
+
+  for (final n in book.nodes) {
+    if (n.isPart) {
+      rows.add((node: n, part: null, scene: null));
+      for (final c in n.children) {
+        chapter(c, n);
+      }
+    } else {
+      chapter(n, null);
+    }
+  }
+  return rows;
+}
 
 /// Onde cai o item [from] solto na posição [to] da lista (a do
 /// `ReorderableListView`, contada antes de tirar o item): a parte (null, o
@@ -53,7 +76,9 @@ List<BinderRow> binderRows(Book book) => [
 /// parte entra nela; uma parte vai sempre para o primeiro nível.
 ({String? partId, int index}) binderDrop(Book book, List<BinderRow> rows, int from, int to) {
   final moving = rows[from].node;
-  bool skip(int i) => i == from || (moving.isPart && rows[i].part == moving);
+  // As cenas do capítulo que se move vão com ele; as de outro contam como
+  // o capítulo delas.
+  bool skip(int i) => i == from || rows[i].node == moving || (moving.isPart && rows[i].part == moving);
   // A linha logo acima de onde o item cai, sem ele (nem os filhos dele).
   BinderRow? above;
   for (var i = to - 1; i >= 0; i--) {
@@ -75,6 +100,8 @@ class BinderPanel extends StatefulWidget {
     required this.books,
     required this.currentPath,
     required this.onOpen,
+    required this.onOpenScene,
+    this.scenes = const [],
     required this.onNewChapter,
     required this.onNewPart,
     required this.onClose,
@@ -86,6 +113,12 @@ class BinderPanel extends StatefulWidget {
   /// O arquivo do documento da tela (o capítulo marcado).
   final String? currentPath;
   final ValueChanged<BookNode> onOpen;
+
+  /// O clique numa cena: o capítulo e o número dela.
+  final void Function(BookNode chapter, int scene) onOpenScene;
+
+  /// As cenas do capítulo da tela, da cópia dele (ao vivo).
+  final List<SceneEntry> scenes;
   final VoidCallback onNewChapter, onNewPart, onClose;
   final String closeLabel;
 
@@ -102,6 +135,20 @@ class _BinderPanelState extends State<BinderPanel> {
   Timer? _synopsisSave;
 
   BookController get books => widget.books;
+
+  /// Os capítulos com as cenas trocadas (abertas ou fechadas) por quem usa:
+  /// o da tela começa aberto, os outros fechados.
+  final _toggled = <String>{};
+
+  bool _isCurrent(BookNode c) => !c.isPart && books.pathOf(c) == widget.currentPath;
+
+  /// Os rótulos das cenas de [c]: as da cópia, no capítulo da tela.
+  List<String> _sceneLabels(BookNode c) =>
+      _isCurrent(c) ? [for (final s in widget.scenes) s.label] : c.scenes;
+
+  bool _expanded(BookNode c) => _toggled.contains(c.id) != _isCurrent(c);
+
+  void _toggle(BookNode c) => setState(() => _toggled.contains(c.id) ? _toggled.remove(c.id) : _toggled.add(c.id));
 
   @override
   void dispose() {
@@ -190,11 +237,36 @@ class _BinderPanelState extends State<BinderPanel> {
     }
   }
 
+  KeyEventResult _onSceneKey(BookNode n, int scene, FocusNode node, KeyEvent e) {
+    if (e is! KeyDownEvent && e is! KeyRepeatEvent) return KeyEventResult.ignored;
+    final key = e.logicalKey;
+    if (key == LogicalKeyboardKey.arrowUp || key == LogicalKeyboardKey.arrowDown) {
+      node.focusInDirection(key == LogicalKeyboardKey.arrowUp ? TraversalDirection.up : TraversalDirection.down);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter) {
+      widget.onOpenScene(n, scene);
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.arrowLeft) {
+      // Volta ao capítulo, e fecha as cenas.
+      _toggle(n);
+      WidgetsBinding.instance.addPostFrameCallback((_) => _focusOf(n.id)?.requestFocus());
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
   KeyEventResult _onRowKey(BookNode n, FocusNode node, KeyEvent e) {
     if (e is! KeyDownEvent && e is! KeyRepeatEvent) return KeyEventResult.ignored;
     if (_renaming == n.id) return KeyEventResult.ignored;
     final alt = HardwareKeyboard.instance.isAltPressed;
     final key = e.logicalKey;
+    if (!alt && !n.isPart && (key == LogicalKeyboardKey.arrowRight || key == LogicalKeyboardKey.arrowLeft)) {
+      final open = key == LogicalKeyboardKey.arrowRight;
+      if (_sceneLabels(n).isNotEmpty && _expanded(n) != open) _toggle(n);
+      return KeyEventResult.handled;
+    }
     if (alt && (key == LogicalKeyboardKey.arrowUp || key == LogicalKeyboardKey.arrowDown)) {
       books.nudge(n.id, up: key == LogicalKeyboardKey.arrowUp);
       // A linha muda de lugar: o foco vai com ela no próximo quadro.
@@ -226,6 +298,7 @@ class _BinderPanelState extends State<BinderPanel> {
   }
 
   final _focusNodes = <String, FocusNode>{};
+  static String _rowId(BinderRow r) => r.scene == null ? r.node.id : '${r.node.id}#${r.scene}';
   FocusNode? _focusOf(String id) => _focusNodes[id];
 
   @override
@@ -234,9 +307,9 @@ class _BinderPanelState extends State<BinderPanel> {
     final t = QuillTokens.of(context);
     final book = books.book;
     if (book == null) return const SizedBox.shrink();
-    final rows = binderRows(book);
+    final rows = binderRows(book, scenesOf: (c) => _expanded(c) ? _sceneLabels(c).length : 0);
     // Os nós de foco só das linhas que existem.
-    final ids = {for (final r in rows) r.node.id};
+    final ids = {for (final r in rows) _rowId(r)};
     _focusNodes.removeWhere((id, f) {
       if (ids.contains(id)) return false;
       f.dispose();
@@ -277,12 +350,26 @@ class _BinderPanelState extends State<BinderPanel> {
                       // O índice novo já desconta o item tirado; o binderDrop
                       // conta antes de tirar.
                       onReorderItem: (from, after) {
+                        if (rows[from].scene != null) return;
                         final drop = binderDrop(book, rows, from, after >= from ? after + 1 : after);
                         books.move(rows[from].node.id, partId: drop.partId, index: drop.index);
                       },
                       itemBuilder: (context, i) {
                         final r = rows[i];
                         final n = r.node;
+                        if (r.scene case final scene?) {
+                          final labels = _sceneLabels(n);
+                          return _SceneRowView(
+                            key: ValueKey(_rowId(r)),
+                            number: scene + 1,
+                            label: scene < labels.length ? labels[scene] : '',
+                            inPart: r.part != null,
+                            focusNode: _focusNodes.putIfAbsent(_rowId(r), () => FocusNode(debugLabel: 'cena ${_rowId(r)}')),
+                            onTap: () => widget.onOpenScene(n, scene),
+                            onKey: (node, e) => _onSceneKey(n, scene, node, e),
+                          );
+                        }
+                        final sceneCount = n.isPart ? 0 : _sceneLabels(n).length;
                         return ReorderableDragStartListener(
                           key: ValueKey(n.id),
                           index: i,
@@ -298,6 +385,9 @@ class _BinderPanelState extends State<BinderPanel> {
                             onMenu: (at) => unawaited(_menu(n, at)),
                             onKey: (node, e) => _onRowKey(n, node, e),
                             onRenamed: (keep) => _endRename(keep: keep),
+                            scenes: sceneCount,
+                            expanded: sceneCount > 0 && _expanded(n),
+                            onToggle: () => _toggle(n),
                           ),
                         );
                       },
@@ -381,7 +471,15 @@ class _BinderRowView extends StatefulWidget {
     required this.onMenu,
     required this.onKey,
     required this.onRenamed,
+    this.scenes = 0,
+    this.expanded = false,
+    this.onToggle,
   });
+
+  /// Quantas cenas o capítulo tem, e se elas estão à mostra.
+  final int scenes;
+  final bool expanded;
+  final VoidCallback? onToggle;
 
   final BookNode node;
   final bool inPart, open, selected;
@@ -409,7 +507,10 @@ class _BinderRowViewState extends State<_BinderRowView> {
     final n = widget.node;
     final modern = t.component == ComponentStyle.modern;
     final label = n.label == null || n.label! >= c.labels.length ? null : c.labels[n.label!];
-    final status = n.isPart ? '' : ', ${chapterStatusLabel(l10n, n.status)}, ${l10n.binderWords(n.words)}';
+    final status = n.isPart
+        ? ''
+        : ', ${chapterStatusLabel(l10n, n.status)}, ${l10n.binderWords(n.words)}'
+            '${widget.scenes > 0 ? ', ${l10n.binderScenes(widget.scenes)}' : ''}';
     final text = TextStyle(
       color: widget.open && modern ? c.onAccentSoft : c.onFrame,
       fontSize: t.font.ui,
@@ -431,6 +532,22 @@ class _BinderRowViewState extends State<_BinderRowView> {
       ),
       child: Row(
         children: [
+          // A seta das cenas: só o mouse a usa; pelo teclado, → e ←.
+          SizedBox(
+            width: 18,
+            child: widget.scenes == 0
+                ? null
+                : ExcludeSemantics(
+                    child: GestureDetector(
+                      onTap: widget.onToggle,
+                      child: Icon(
+                        widget.expanded ? Symbols.expand_more_rounded : Symbols.chevron_right_rounded,
+                        size: 18,
+                        color: c.onFrameMuted,
+                      ),
+                    ),
+                  ),
+          ),
           Icon(n.isPart ? Symbols.folder_rounded : Symbols.description_rounded, size: 18, color: c.onFrameMuted),
           SizedBox(width: t.space.sm),
           Expanded(
@@ -453,6 +570,7 @@ class _BinderRowViewState extends State<_BinderRowView> {
       container: true,
       button: true,
       selected: widget.open,
+      expanded: widget.scenes > 0 ? widget.expanded : null,
       label: '${n.title}$status',
       hint: l10n.binderKeysHint,
       child: Focus(
@@ -534,4 +652,88 @@ class _RenameFieldState extends State<_RenameField> {
           onSubmitted: (_) => _finish(true),
         ),
       );
+}
+
+/// Uma cena embaixo do capítulo: o número e o começo do texto dela.
+class _SceneRowView extends StatefulWidget {
+  const _SceneRowView({
+    super.key,
+    required this.number,
+    required this.label,
+    required this.inPart,
+    required this.focusNode,
+    required this.onTap,
+    required this.onKey,
+  });
+
+  final int number;
+  final String label;
+  final bool inPart;
+  final FocusNode focusNode;
+  final VoidCallback onTap;
+  final FocusOnKeyEventCallback onKey;
+
+  @override
+  State<_SceneRowView> createState() => _SceneRowViewState();
+}
+
+class _SceneRowViewState extends State<_SceneRowView> {
+  bool _hover = false, _focused = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final t = QuillTokens.of(context);
+    final c = t.colors;
+    final modern = t.component == ComponentStyle.modern;
+    final style = TextStyle(color: c.onFrameMuted, fontSize: t.font.small, fontFamily: t.font.family);
+    final name = l10n.binderScene(widget.number);
+    return Semantics(
+      container: true,
+      button: true,
+      label: widget.label.isEmpty ? name : '$name, ${widget.label}',
+      hint: l10n.binderSceneHint,
+      child: Focus(
+        focusNode: widget.focusNode,
+        onKeyEvent: widget.onKey,
+        onFocusChange: (v) => setState(() => _focused = v),
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => setState(() => _hover = true),
+          onExit: (_) => setState(() => _hover = false),
+          child: GestureDetector(
+            onTap: () {
+              widget.focusNode.requestFocus();
+              widget.onTap();
+            },
+            child: ExcludeSemantics(
+              child: Container(
+                margin: EdgeInsets.only(bottom: t.space.xs),
+                padding: EdgeInsets.only(left: t.space.sm + 18 + 26 + (widget.inPart ? 18 : 0), right: t.space.sm),
+                decoration: BoxDecoration(
+                  color: _hover ? c.surfaceHigh : null,
+                  borderRadius: BorderRadius.circular(modern ? 16 : 0),
+                  border: _focused ? Border.all(color: c.focusRing, width: 2) : null,
+                ),
+                child: Row(
+                  children: [
+                    Text('${widget.number}', style: style.copyWith(fontWeight: FontWeight.w600)),
+                    SizedBox(width: t.space.sm),
+                    Expanded(
+                      child: Text(
+                        widget.label.isEmpty ? name : widget.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: style,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

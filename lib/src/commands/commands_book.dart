@@ -1,5 +1,6 @@
 // Os comandos do livro (Fase 3, Etapa 1, D-071): novo, abrir, importar e
-// fechar o livro, o fichário, e os capítulos e partes novos.
+// fechar o livro, o fichário, e os capítulos e partes novos; e as cenas
+// (Etapa 5, D-079): nova cena, dividir, juntar e converter os separadores.
 //
 // Command com receptor, como os de tela: o que pede uma janela (o título do
 // livro, a pasta, o manuscrito) é da página do editor, que implementa
@@ -19,6 +20,11 @@ abstract final class BookCommandIds {
   static const binder = 'livro.fichario';
   static const newChapter = 'livro.novoCapitulo';
   static const newPart = 'livro.novaParte';
+  // As cenas (Etapa 5, D-079).
+  static const newScene = 'livro.novaCena';
+  static const splitChapter = 'livro.dividir';
+  static const joinChapter = 'livro.juntar';
+  static const convertScenes = 'livro.converterCenas';
 }
 
 /// O que a página do editor sabe abrir para o livro.
@@ -30,6 +36,10 @@ abstract interface class BookViewActions {
   bool get binderOpen;
   void newChapter();
   void newPart();
+  void newScene();
+  void splitChapter();
+  void joinChapter();
+  void convertScenes();
 }
 
 void registerBookCommands(
@@ -41,6 +51,8 @@ void registerBookCommands(
 }) {
   bool ready() => doc.kitStatus == KitStatus.ready;
   bool inBook() => workspace.book.isOpen;
+  bool editable() => ready() && doc.canEdit && doc.busy == null;
+  bool inChapter() => editable() && workspace.book.chapterAt(doc.path) != null;
   for (final c in [
     Command(id: BookCommandIds.newBook, label: l10n.commandNewBook, icon: Symbols.library_add_rounded, run: view.newBook, canRun: ready),
     Command(id: BookCommandIds.openBook, label: l10n.commandOpenBook, icon: Symbols.book_rounded, run: view.openBook, canRun: ready),
@@ -79,6 +91,34 @@ void registerBookCommands(
       icon: Symbols.create_new_folder_rounded,
       run: view.newPart,
       canRun: inBook,
+    ),
+    Command(
+      id: BookCommandIds.newScene,
+      label: l10n.commandNewScene,
+      icon: Symbols.more_horiz_rounded,
+      run: view.newScene,
+      canRun: editable,
+    ),
+    Command(
+      id: BookCommandIds.splitChapter,
+      label: l10n.commandSplitChapter,
+      icon: Symbols.call_split_rounded,
+      run: view.splitChapter,
+      canRun: inChapter,
+    ),
+    Command(
+      id: BookCommandIds.joinChapter,
+      label: l10n.commandJoinChapter,
+      icon: Symbols.merge_rounded,
+      run: view.joinChapter,
+      canRun: () => inChapter() && workspace.nextChapter != null,
+    ),
+    Command(
+      id: BookCommandIds.convertScenes,
+      label: l10n.commandConvertScenes,
+      icon: Symbols.auto_fix_high_rounded,
+      run: view.convertScenes,
+      canRun: editable,
     ),
   ]) {
     registry.register(c);

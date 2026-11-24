@@ -14,6 +14,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../document/fodt.dart';
+import '../document/style_patch.dart';
 
 /// Um capítulo achado no manuscrito: os blocos [start] a [end] (exclusivo).
 @immutable
@@ -33,7 +34,10 @@ class ChapterDraft {
 
 /// O manuscrito lido: o que vem antes do corpo, os blocos e o que vem depois.
 class FodtManuscript {
-  FodtManuscript._(this._head, this._prelude, this._blocks, this._tail, this._levels);
+  FodtManuscript._(this._head, this._prelude, this._blocks, this._tail, this._levels, this.sceneSeparators);
+
+  /// Quantos separadores de cena viraram o estilo "Cena" (D-079).
+  final int sceneSeparators;
 
   final String _head, _prelude, _tail;
   final List<String> _blocks;
@@ -86,6 +90,16 @@ class FodtManuscript {
         depth++;
       }
     }
+    // Os separadores de cena ("* * *", "#") viram o estilo "Cena" (D-079).
+    var separators = 0;
+    for (var i = 0; i < blocks.length; i++) {
+      final converted = _asScene(blocks[i]);
+      if (converted != null) {
+        blocks[i] = converted;
+        separators++;
+      }
+    }
+    final head = xml.substring(0, open.end);
     final levels = [
       for (final b in blocks)
         switch (_outline.firstMatch(b)) {
@@ -93,7 +107,20 @@ class FodtManuscript {
           null => null,
         },
     ];
-    return FodtManuscript._(xml.substring(0, open.end), prelude.toString(), blocks, xml.substring(close), levels);
+    return FodtManuscript._(
+        separators > 0 ? addSceneStyle(head) : head, prelude.toString(), blocks, xml.substring(close), levels, separators);
+  }
+
+  static final _paragraphOpen = RegExp(r'^<text:p\b([^>]*?)(/?)>');
+  static final _styleAttr = RegExp(r'\stext:style-name="[^"]*"');
+
+  /// O parágrafo [block] no estilo "Cena", se ele é um separador; null se não.
+  static String? _asScene(String block) {
+    final m = _paragraphOpen.firstMatch(block);
+    if (m == null || m[2] == '/') return null;
+    if (!isSceneSeparatorText(odfHeadingText(block.substring(m.end, block.length - '</text:p>'.length)))) return null;
+    final attrs = m[1]!.replaceAll(_styleAttr, '');
+    return '<text:p text:style-name="$sceneStyleName"$attrs>${block.substring(m.end)}';
   }
 
   /// As declarações (sequências, variáveis) vão para todo capítulo; as

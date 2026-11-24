@@ -273,6 +273,83 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
     }
   }
 
+  // ----------------------------------------------- as cenas (D-079) --
+
+  void _notice(String text) => doc.notice(text);
+
+  @override
+  void newScene() => unawaited(_newScene());
+  Future<void> _newScene() async {
+    final l10n = AppLocalizations.of(context);
+    if (!await doc.insertScene()) {
+      if (mounted && doc.isOpen) _notice(l10n.scenesFailed);
+      return;
+    }
+    _backToDocument();
+  }
+
+  @override
+  void convertScenes() => unawaited(_convertScenes());
+  Future<void> _convertScenes() async {
+    final l10n = AppLocalizations.of(context);
+    final n = await doc.convertSceneSeparators();
+    if (!mounted) return;
+    _notice(switch (n) {
+      < 0 => l10n.scenesFailed,
+      0 => l10n.scenesNone,
+      _ => l10n.scenesConverted(n),
+    });
+  }
+
+  @override
+  void splitChapter() => unawaited(_splitChapter());
+  Future<void> _splitChapter() async {
+    final l10n = AppLocalizations.of(context);
+    final current = _currentChapter;
+    if (current == null) return;
+    final r = await widget.workspace.splitChapterHere(fallbackTitle: l10n.splitContinuationTitle(current.title));
+    if (!mounted) return;
+    _notice(switch (r.error) {
+      null => l10n.splitDone(r.created!.title),
+      ChapterEditError.nothingToSplit => l10n.splitNothing,
+      _ => l10n.splitFailed,
+    });
+    if (r.created != null && !binderOpen) _setLeft(_LeftPanel.binder);
+  }
+
+  @override
+  void joinChapter() => unawaited(_joinChapter());
+  Future<void> _joinChapter() async {
+    final l10n = AppLocalizations.of(context);
+    final current = _currentChapter;
+    final next = widget.workspace.nextChapter;
+    if (current == null) return;
+    if (next == null) {
+      _notice(l10n.joinNoNext);
+      return;
+    }
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.joinConfirmTitle),
+        content: Text(l10n.joinConfirmBody(next.title, current.title)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.dialogCancel)),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.joinConfirm)),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    final error = await widget.workspace.joinWithNext();
+    if (!mounted) return;
+    _notice(switch (error) {
+      null => l10n.joinDone(next.title),
+      ChapterEditError.noNext => l10n.joinNoNext,
+      ChapterEditError.nextModified => l10n.joinNextModified(next.title),
+      _ => l10n.joinFailed,
+    });
+  }
+
   @override
   void newPart() {
     books.addPart(AppLocalizations.of(context).newPartTitle, afterId: _currentChapter?.id);
@@ -437,7 +514,8 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
   /// refaça a cópia nas pausas da digitação (D-047).
   void _setLeft(_LeftPanel? p) {
     setState(() => _left = p);
-    doc.liveOutline = p == _LeftPanel.outline;
+    // O fichário também: as cenas do capítulo da tela vêm da cópia (D-079).
+    doc.liveOutline = p == _LeftPanel.outline || p == _LeftPanel.binder;
   }
 
   @override
@@ -777,6 +855,11 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
                           books: books,
                           currentPath: doc.path,
                           onOpen: widget.workspace.openChapter,
+                          scenes: doc.snapshot.scenes,
+                          onOpenScene: (chapter, scene) {
+                            widget.workspace.openChapter(chapter, scene: scene);
+                            _backToDocument();
+                          },
                           onNewChapter: newChapter,
                           onNewPart: newPart,
                           onClose: toggleBinder,
@@ -979,6 +1062,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
     final label = switch (doc.busy) {
       BusyKind.opening => l10n.busyOpening,
       BusyKind.saving => l10n.busySaving,
+      BusyKind.working => l10n.busyWorkingChapters,
       // O nome que o motor dá ("Carregando: "), sem os dois-pontos.
       null => switch (doc.backgroundTask?.replaceAll(RegExp(r'[:\s]+$'), '')) {
           null => null,

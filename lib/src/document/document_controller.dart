@@ -28,9 +28,10 @@ export '../kit/quill_kit.dart' show DocLink, PrintOutcome, Printed;
 export '../kit/lok/lok_payloads.dart' show DocLanguage;
 
 part 'page_format.dart';
+part 'scene_ops.dart';
 
 /// O que trava a tela (D-066).
-enum BusyKind { opening, saving }
+enum BusyKind { opening, saving, working }
 
 enum KitStatus { starting, ready, failed }
 
@@ -624,13 +625,21 @@ class DocumentController extends ChangeNotifier {
   /// (D-072). A vista rola até o cursor. A busca não acende o Localizar.
   void goToHeading(OutlineEntry e) {
     if (!isOpen || e.searchKey.isEmpty) return;
+    _jumpToText(e.searchKey, e.occurrence);
+  }
+
+  /// Vai ao começo e procura [key] uma vez a mais que [occurrence].
+  void _jumpToText(String key, int occurrence) {
     kit.uno('.uno:GoToStartOfDoc');
-    final args = searchArgs(SearchQuery(e.searchKey, matchCase: true), SearchCommand.next);
-    for (var i = 0; i <= e.occurrence; i++) {
+    final args = searchArgs(SearchQuery(key, matchCase: true), SearchCommand.next);
+    for (var i = 0; i <= occurrence; i++) {
       _headingSearches++;
       kit.uno('.uno:ExecuteSearch', args);
     }
   }
+
+  /// A cena a saltar quando o capítulo que está abrindo tiver a cópia.
+  ({String path, int index})? _pendingScene;
 
   /// As respostas da busca do salto a um título, que não são do Localizar.
   int _headingSearches = 0;
@@ -988,6 +997,7 @@ class DocumentController extends ChangeNotifier {
       return;
     }
     snapshot = snap;
+    _takePendingScene();
     notifyListeners();
   }
 
@@ -1326,7 +1336,24 @@ class DocumentController extends ChangeNotifier {
       ? BusyKind.opening
       : _saving
       ? BusyKind.saving
+      : _working
+      ? BusyKind.working
       : null;
+
+  /// Um trabalho de várias etapas no motor (dividir ou juntar capítulos,
+  /// D-079): a tela trava como ao salvar, para uma tecla no meio não cair
+  /// entre a cópia e o corte.
+  bool _working = false;
+  Future<T> whileWorking<T>(Future<T> Function() work) async {
+    _working = true;
+    notifyListeners();
+    try {
+      return await work();
+    } finally {
+      _working = false;
+      if (!_disposed) notifyListeners();
+    }
+  }
 
   /// O progresso que o motor mandou (0 a 100); null: sem número.
   int? progress;

@@ -12,6 +12,7 @@ import 'dart:io';
 import 'dart:isolate';
 
 import '../document/document_controller.dart';
+import '../document/fodt.dart';
 import '../kit/quill_kit.dart';
 import 'book.dart';
 import 'book_io.dart';
@@ -97,8 +98,10 @@ class DocxImporter {
       final file = newChapterFile(dir, name, taken: taken);
       taken.add(file);
       final tmp = _tmp('capitulo');
+      var scenes = const <String>[];
       try {
         final xml = m.chapterXml(d);
+        scenes = [for (final s in odfScenes(xml)) s.label];
         File(tmp).writeAsStringSync(xml);
         if (!await _convert.convert(tmp, '$dir/$file', 'odt')) throw const ImportException(ImportError.writeFailed);
       } on FileSystemException {
@@ -114,6 +117,7 @@ class DocxImporter {
         file: file,
         words: d.words,
         wordsStamp: stamp,
+        scenes: scenes,
       );
       if (d.part != null && d.part != part?.title) {
         part = BookNode(id: newNodeId(book), kind: BookNodeKind.part, title: d.part!);

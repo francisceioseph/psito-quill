@@ -462,6 +462,12 @@ class FakeQuillKit implements QuillKit {
       case '.uno:StyleApply':
         final style = '${((jsonDecode(argsJson) as Map)['Style'] as Map?)?['value'] ?? ''}';
         _state('.uno:StyleApply', style);
+      case '.uno:InsertBookmark':
+        bookmark = '${((jsonDecode(argsJson) as Map)['Bookmark'] as Map?)?['value'] ?? ''}';
+      case '.uno:DeleteBookmark':
+        bookmark = null;
+      case '.uno:LoadStyles' when loadStylesAdds != null:
+        paragraphStyles = [...paragraphStyles, loadStylesAdds!];
       case '.uno:StyleNewByExample':
         final name = '${((jsonDecode(argsJson) as Map)['Param'] as Map?)?['value'] ?? ''}';
         paragraphStyles = [...paragraphStyles, name];
@@ -509,6 +515,14 @@ class FakeQuillKit implements QuillKit {
   /// Os parágrafos de texto da cópia (a busca no texto, D-050).
   List<String> bodyParagraphs = const [];
 
+  /// O marcador do cursor (D-079): o `.uno:InsertBookmark` o põe, e a cópia
+  /// o grava no começo do parágrafo [bookmarkParagraph] de [bodyParagraphs].
+  String? bookmark;
+  int bookmarkParagraph = 0;
+
+  /// O estilo que o `.uno:LoadStyles` traz (o "Cena"), para a cópia seguinte.
+  String? loadStylesAdds;
+
   /// Não responde às cópias (para testar a fila de pedidos).
   bool holdCopies = false;
   final heldCopies = <String>[];
@@ -547,7 +561,10 @@ class FakeQuillKit implements QuillKit {
     }
     final body = [
       for (final (level, text) in headings) '<text:h text:outline-level="$level">${esc(text)}</text:h>',
-      for (final text in bodyParagraphs) '<text:p text:style-name="Text_20_body">${esc(text)}</text:p>',
+      for (final (i, text) in bodyParagraphs.indexed)
+        '<text:p text:style-name="Text_20_body">'
+            '${bookmark != null && i == bookmarkParagraph ? '<text:bookmark text:name="${esc(bookmark!)}"/>' : ''}'
+            '${esc(text)}</text:p>',
     ].join();
     // As estatísticas, como o LibreOffice grava (as palavras do texto falso).
     final words = text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;

@@ -10,6 +10,9 @@ import '../document/fodt.dart';
 import 'book.dart';
 import 'odt_zip.dart';
 
+/// O que se lê de um capítulo fechado.
+typedef ChapterCount = ({int words, int stamp, List<String> scenes});
+
 const bookExtension = '.psitobook';
 const bookFileName = 'livro.json';
 const chaptersDir = 'capitulos';
@@ -106,13 +109,13 @@ String? moveToTrash(String dir, String relative) {
   return '$trashDir/$name';
 }
 
-/// As palavras dos capítulos [files] (caminhos absolutos), num isolate: o
-/// `content.xml` de cada um é lido, contado e solto. Os que não dão para ler
-/// ficam de fora. Devolve também a data de cada arquivo.
-Future<Map<String, (int words, int stamp)>> countChapterWords(List<String> files) {
+/// As palavras e as cenas dos capítulos [files] (caminhos absolutos), num
+/// isolate: o `content.xml` de cada um é lido, contado e solto. Os que não
+/// dão para ler ficam de fora. Devolve também a data de cada arquivo.
+Future<Map<String, ChapterCount>> countChapterWords(List<String> files) {
   if (files.isEmpty) return Future.value(const {});
   return Isolate.run(() {
-    final out = <String, (int, int)>{};
+    final out = <String, ChapterCount>{};
     for (final path in files) {
       final f = File(path);
       if (!f.existsSync()) continue;
@@ -121,7 +124,11 @@ Future<Map<String, (int words, int stamp)>> countChapterWords(List<String> files
       if (xml == null) continue;
       final open = xml.indexOf('<office:text');
       final close = xml.lastIndexOf('</office:text>');
-      out[path] = (open < 0 || close < open ? 0 : odfWordCount(xml.substring(open, close)), stamp);
+      out[path] = (
+        words: open < 0 || close < open ? 0 : odfWordCount(xml.substring(open, close)),
+        stamp: stamp,
+        scenes: [for (final s in odfScenes(xml)) s.label],
+      );
     }
     return out;
   });

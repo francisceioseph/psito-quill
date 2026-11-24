@@ -603,6 +603,75 @@ void main() {
     await settle(1500);
     expect(kit.debugTilesLuma(), greaterThan(150));
 
+    // 25. As cenas (D-079): o importador converte os "* * *" do capítulo de
+    //     teste para o estilo Cena, e as cenas vêm da cópia. Dividir no
+    //     separador de uma cena (o salto o seleciona) faz um capítulo novo
+    //     que começa nela, sem o separador; juntar devolve o texto. A cena
+    //     nova entra pelo motor.
+    final sceneImporter = DocxImporter(kit);
+    final sceneManuscript = await sceneImporter.read(source.path);
+    expect(sceneManuscript.sceneSeparators, greaterThan(2));
+    final sceneDir = '${tmp.path}/Cenas.psitobook';
+    final sceneBook = await sceneImporter.create(
+      dir: sceneDir,
+      title: 'Cenas',
+      m: sceneManuscript,
+      drafts: sceneManuscript.chapters(sceneManuscript.suggestedLevel),
+      untitled: 'Abertura',
+    );
+    final withScenes = sceneBook.chapters.firstWhere((c) => c.scenes.length == 3);
+    final sceneCount = withScenes.scenes.length;
+    workspace.adoptBook(sceneDir, sceneBook);
+    workspace.openChapter(withScenes);
+    final scenePath = '$sceneDir/${withScenes.file}';
+    await until(() => doc.path == scenePath && doc.docStatus == DocStatus.open, 'abrir o capítulo com cenas');
+    await until(() => doc.snapshot.scenes.length == sceneCount, 'as cenas da cópia',
+        detail: () => '${doc.snapshot.scenes.length} de $sceneCount');
+    expect(doc.hasSceneStyle, isTrue);
+    expect([for (final s in doc.snapshot.scenes) s.label], withScenes.scenes, reason: 'a cópia e o content.xml dizem o mesmo');
+    expect(await doc.convertSceneSeparators(), 0, reason: 'o importador já converteu todos');
+
+    final wordsAll = withScenes.words;
+    // Cada capítulo do arquivo de teste tem três cenas (dois separadores).
+    // O corte no segundo deixa a primeira cena na tela (sem separador, ela
+    // não conta como cena) e as outras duas no capítulo novo.
+    final cutScene = doc.snapshot.scenes[1];
+    doc.goToScene(cutScene);
+    await until(() => doc.hasSelection, 'o salto ao separador da cena 2');
+    final split = await workspace.splitChapterHere(fallbackTitle: 'Continuação');
+    expect(split.error, isNull);
+    final rest = split.created!;
+    await until(() => rest.words > 0 && rest.scenes.isNotEmpty, 'as palavras e as cenas do capítulo novo', seconds: 20);
+    expect(rest.scenes.first, cutScene.label, reason: 'o capítulo novo começa na cena do cursor');
+    expect(rest.scenes.length, sceneCount - 1);
+    await until(() => doc.snapshot.scenes.isEmpty, 'o capítulo da tela fica só com a primeira cena, sem separador',
+        detail: () => '${doc.snapshot.scenes.length}');
+    expect(doc.modified, isFalse, reason: 'dividir salva o capítulo da tela');
+    expect(withScenes.words + rest.words, inInclusiveRange(wordsAll - 6, wordsAll), reason: 'só o separador some');
+    expect([for (final c in workspace.book.book!.chapters) c.id].indexOf(rest.id),
+        [for (final c in workspace.book.book!.chapters) c.id].indexOf(withScenes.id) + 1);
+
+    expect(workspace.nextChapter?.id, rest.id);
+    expect(await workspace.joinWithNext(), isNull);
+    expect(workspace.book.book!.find(rest.id), isNull);
+    expect(File('$sceneDir/lixeira/${rest.file!.split('/').last}').existsSync(), isTrue);
+    // O separador saiu no corte: as cenas 2 e 3 viram uma.
+    await until(() => doc.snapshot.scenes.length == sceneCount - 1, 'o texto de volta, numa cena a menos',
+        detail: () => '${doc.snapshot.scenes.length}');
+    await until(() => withScenes.words >= wordsAll - 6, 'as palavras de volta', seconds: 20);
+
+    // A cena nova num parágrafo de texto (depois do título, a primeira cena
+    // ficaria sem texto antes, e não contaria).
+    doc.postKey(0, VclKey.home | VclKey.mod1);
+    doc.postKey(0, VclKey.down);
+    doc.postKey(0, VclKey.down);
+    await settle();
+    expect(await doc.insertScene(), isTrue);
+    await until(() => doc.snapshot.scenes.length == sceneCount, 'a cena nova', detail: () => '${doc.snapshot.scenes.length}');
+    expect(doc.snapshot.scenes[1].searchKey, sceneSeparatorText);
+    workspace.onUnsaved = () async => UnsavedChoice.discard;
+    expect(await workspace.closeBook(), isTrue);
+
         // Fecha sem salvar (descarta), para não deixar trava.
     workspace.onUnsaved = () async => UnsavedChoice.discard;
     expect(await workspace.requestExit(), isTrue);

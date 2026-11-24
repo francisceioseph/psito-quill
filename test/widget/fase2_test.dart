@@ -43,6 +43,14 @@ class _NoBookView implements BookViewActions {
   void newChapter() {}
   @override
   void newPart() {}
+  @override
+  void newScene() {}
+  @override
+  void splitChapter() {}
+  @override
+  void joinChapter() {}
+  @override
+  void convertScenes() {}
 }
 
 class _NoPageView implements PageViewActions {

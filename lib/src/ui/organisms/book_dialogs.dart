@@ -285,6 +285,8 @@ class _ImportDialogState extends State<_ImportDialog> {
                     SizedBox(height: t.space.md),
                   ],
                   WLabel(l10n.importFound(_drafts.length), small: true, tone: WLabelTone.muted),
+                  if (m.sceneSeparators > 0)
+                    WLabel(l10n.importScenes(m.sceneSeparators), small: true, tone: WLabelTone.muted, maxLines: 2),
                   SizedBox(height: t.space.xs),
                   Expanded(
                     child: DecoratedBox(

@@ -143,7 +143,7 @@ void main() {
     test('as palavras dos capítulos fechados, num isolate', () async {
       final counts = await countChapterWords(['test/fixtures/capitulo-curto.odt', '${tmp.path}/sumiu.odt']);
       expect(counts.keys, ['test/fixtures/capitulo-curto.odt']);
-      expect(counts.values.single.$1, greaterThan(100));
+      expect(counts.values.single.words, greaterThan(100));
     });
   });
 

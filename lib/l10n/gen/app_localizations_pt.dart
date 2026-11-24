@@ -1532,7 +1532,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get binderKeysHint =>
-      'Alt+setas move, F2 renomeia, Delete manda para a lixeira';
+      'Alt+setas move, F2 renomeia, Delete manda para a lixeira, → e ← mostram as cenas';
 
   @override
   String get binderEmpty => 'O livro não tem capítulos.';
@@ -1987,4 +1987,112 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get charDoublePrime => 'linha dupla (segundo, polegada)';
+
+  @override
+  String binderScenes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cenas',
+      one: '1 cena',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String binderScene(int number) {
+    return 'Cena $number';
+  }
+
+  @override
+  String get binderSceneHint =>
+      'Enter leva à cena; seta para a esquerda volta ao capítulo';
+
+  @override
+  String get commandNewScene => 'Nova cena';
+
+  @override
+  String get commandSplitChapter => 'Dividir o capítulo aqui';
+
+  @override
+  String get commandJoinChapter => 'Juntar com o próximo capítulo';
+
+  @override
+  String get commandConvertScenes => 'Converter os separadores em cenas';
+
+  @override
+  String splitContinuationTitle(String title) {
+    return '$title (continuação)';
+  }
+
+  @override
+  String splitDone(String title) {
+    return 'O resto do capítulo virou “$title”, logo depois dele';
+  }
+
+  @override
+  String get splitNothing =>
+      'Não há o que dividir: o cursor está no começo ou no fim do capítulo';
+
+  @override
+  String get splitFailed =>
+      'Não deu para dividir o capítulo. O texto ficou como estava.';
+
+  @override
+  String get joinConfirmTitle => 'Juntar os capítulos?';
+
+  @override
+  String joinConfirmBody(String next, String current) {
+    return 'O texto de “$next” vai para o fim de “$current”, que é salvo. O arquivo de “$next” vai para a lixeira do livro.';
+  }
+
+  @override
+  String get joinConfirm => 'Juntar';
+
+  @override
+  String joinDone(String title) {
+    return '“$title” foi juntado a este capítulo';
+  }
+
+  @override
+  String get joinNoNext => 'Este é o último capítulo do livro';
+
+  @override
+  String joinNextModified(String title) {
+    return 'Salve ou feche “$title” antes de juntar';
+  }
+
+  @override
+  String get joinFailed => 'Não deu para juntar os capítulos';
+
+  @override
+  String scenesConverted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count separadores viraram cenas',
+      one: '1 separador virou cena',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get scenesNone => 'Nenhum separador solto (* * *, #) neste documento';
+
+  @override
+  String get scenesFailed => 'Não deu para criar o estilo Cena';
+
+  @override
+  String importScenes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count separadores de cena (* * *) vão para o estilo Cena',
+      one: '1 separador de cena (* * *) vai para o estilo Cena',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get busyWorkingChapters => 'Reorganizando os capítulos';
 }

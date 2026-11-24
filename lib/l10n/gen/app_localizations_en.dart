@@ -1531,7 +1531,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get binderKeysHint =>
-      'Alt+arrows move, F2 renames, Delete moves to trash';
+      'Alt+arrows move, F2 renames, Delete moves to trash, → and ← show the scenes';
 
   @override
   String get binderEmpty => 'The book has no chapters.';
@@ -1986,4 +1986,112 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get charDoublePrime => 'double prime';
+
+  @override
+  String binderScenes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count scenes',
+      one: '1 scene',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String binderScene(int number) {
+    return 'Scene $number';
+  }
+
+  @override
+  String get binderSceneHint =>
+      'Enter goes to the scene; left arrow returns to the chapter';
+
+  @override
+  String get commandNewScene => 'New scene';
+
+  @override
+  String get commandSplitChapter => 'Split chapter here';
+
+  @override
+  String get commandJoinChapter => 'Join with next chapter';
+
+  @override
+  String get commandConvertScenes => 'Convert separators into scenes';
+
+  @override
+  String splitContinuationTitle(String title) {
+    return '$title (continued)';
+  }
+
+  @override
+  String splitDone(String title) {
+    return 'The rest of the chapter became “$title”, right after it';
+  }
+
+  @override
+  String get splitNothing =>
+      'Nothing to split: the cursor is at the start or end of the chapter';
+
+  @override
+  String get splitFailed =>
+      'Couldn\'t split the chapter. The text is unchanged.';
+
+  @override
+  String get joinConfirmTitle => 'Join the chapters?';
+
+  @override
+  String joinConfirmBody(String next, String current) {
+    return 'The text of “$next” goes to the end of “$current”, which is saved. The file of “$next” goes to the book\'s trash.';
+  }
+
+  @override
+  String get joinConfirm => 'Join';
+
+  @override
+  String joinDone(String title) {
+    return '“$title” was joined to this chapter';
+  }
+
+  @override
+  String get joinNoNext => 'This is the last chapter of the book';
+
+  @override
+  String joinNextModified(String title) {
+    return 'Save or close “$title” before joining';
+  }
+
+  @override
+  String get joinFailed => 'Couldn\'t join the chapters';
+
+  @override
+  String scenesConverted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count separators became scenes',
+      one: '1 separator became a scene',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get scenesNone => 'No loose separators (* * *, #) in this document';
+
+  @override
+  String get scenesFailed => 'Couldn\'t create the Scene style';
+
+  @override
+  String importScenes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count scene separators (* * *) go to the Scene style',
+      one: '1 scene separator (* * *) goes to the Scene style',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get busyWorkingChapters => 'Reorganizing chapters';
 }
