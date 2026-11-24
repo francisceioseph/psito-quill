@@ -96,6 +96,12 @@ class NativeQuillKit {
 
   void setAccessibility(bool on) => _b.pqk_set_accessibility(on);
 
+  void convert(int id, String source, String target, String format) => using((a) => _b.pqk_convert(
+      id,
+      source.toNativeUtf8(allocator: a).cast(),
+      target.toNativeUtf8(allocator: a).cast(),
+      format.toNativeUtf8(allocator: a).cast()));
+
   void preloadSpelling(String path) => using((a) => _b.pqk_preload_spelling(path.toNativeUtf8(allocator: a).cast()));
 
   void postKey(int type, int charCode, int keyCode) => _b.pqk_post_key(type, charCode, keyCode);

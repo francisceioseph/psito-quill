@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:psito_quill/l10n/gen/app_localizations_pt.dart';
 import 'package:psito_quill/src/app.dart';
 import 'package:psito_quill/src/commands/command_registry.dart';
+import 'package:psito_quill/src/commands/commands_book.dart';
 import 'package:psito_quill/src/commands/commands_document.dart';
 import 'package:psito_quill/src/commands/commands_view.dart';
 import 'package:psito_quill/src/commands/menus.dart';
@@ -25,6 +26,23 @@ import 'package:psito_quill/src/ui/molecules/style_card.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../support/harness.dart';
+
+class _NoBookView implements BookViewActions {
+  @override
+  bool binderOpen = false;
+  @override
+  void newBook() {}
+  @override
+  void openBook() {}
+  @override
+  void importManuscript() {}
+  @override
+  void toggleBinder() {}
+  @override
+  void newChapter() {}
+  @override
+  void newPart() {}
+}
 
 class _NoView implements EditorViewActions {
   @override
@@ -110,6 +128,7 @@ void main() {
     final registry = CommandRegistry();
     registerEditorCommands(registry, doc: harness.doc, workspace: harness.workspace, l10n: l10n);
     registerViewCommands(registry, doc: harness.doc, view: _NoView(), l10n: l10n);
+    registerBookCommands(registry, doc: harness.doc, workspace: harness.workspace, view: _NoBookView(), l10n: l10n);
     for (final m in editorMenus(l10n)) {
       for (final id in m.items.whereType<String>()) {
         expect(registry[id], isNotNull, reason: '${m.title}: $id');

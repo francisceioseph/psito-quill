@@ -384,3 +384,27 @@ TextSearchResult searchFodtText(String xml, String query, {int limit = 50, int c
   }
   return TextSearchResult(hits, total);
 }
+
+// ------------------------------------------------- o texto, para o livro --
+// O fichário conta as palavras dos capítulos fechados e o importador dá nome
+// aos capítulos (Fase 3, D-071): os mesmos leitores, públicos.
+
+/// O texto de um título (o miolo do `text:h`), com os espaços resolvidos.
+String odfHeadingText(String inner) => _headingText(inner);
+
+final _wordBreaks = RegExp(r'</text:(p|h)>|<text:(tab|line-break)\s*/>|<text:s(\s[^>]*)?/>');
+
+/// As palavras de um trecho do corpo (ODT ou ODT plano). Os fins de
+/// parágrafo, as tabulações e os espaços do ODF separam palavras; as outras
+/// marcas (negrito, um link) não, para "pa<span>la</span>vra" ser uma só.
+int odfWordCount(String bodyXml) {
+  final text = _unescape(bodyXml.replaceAll(_wordBreaks, ' ').replaceAll(_tag, ''));
+  var words = 0;
+  var inWord = false;
+  for (final c in text.runes) {
+    final space = c == 0x20 || c == 0x0A || c == 0x0D || c == 0x09 || c == 0xA0;
+    if (!space && !inWord) words++;
+    inWord = !space;
+  }
+  return words;
+}

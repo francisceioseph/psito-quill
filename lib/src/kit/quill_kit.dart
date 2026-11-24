@@ -68,6 +68,14 @@ class DocumentActivated extends KitEvent {
   final Size size;
 }
 
+/// A resposta a [QuillKit.convert] de número [id].
+class FileConverted extends KitEvent {
+  const FileConverted(this.id, {required this.ok, this.error = ''});
+  final int id;
+  final bool ok;
+  final String error;
+}
+
 class DocumentOpenFailed extends KitEvent {
   const DocumentOpenFailed(this.message);
   final String message;
@@ -350,6 +358,11 @@ abstract interface class QuillKit {
   /// está aberta (D-069). Só vale sem documento aberto; o motor apaga o
   /// arquivo, e o documento oculto fecha quando outro abre.
   void preloadSpelling(String path);
+
+  /// Abre [source] sem mostrar ('' para um documento novo), salva em
+  /// [target] no [format] ("odt", "fodt") e fecha, sem tocar nas abas (o
+  /// livro, D-071). Responde com [FileConverted] e o mesmo [id].
+  void convert(int id, String source, String target, String format);
 
   void postKey(KeyEventType type, {int charCode = 0, int keyCode = 0});
   void postMouse(MouseEventType type, int x, int y, {int count = 1, int buttons = 1, int modifier = 0});

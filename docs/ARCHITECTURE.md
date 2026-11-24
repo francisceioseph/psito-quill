@@ -87,6 +87,8 @@ lib/
   l10n/                      app_pt.arb (modelo), app_en.arb → gen/
   src/app.dart               MaterialApp, tema das preferências, "salvar?" ao sair
   src/kit/                   quill_kit.dart (a porta), lok/ (adaptador; lo_styles.dart, gerado), fake/
+  src/book/                  book.dart (o livro.json), book_io.dart, book_controller.dart, fodt_split.dart e
+                             docx_import.dart (o importador), odt_zip.dart (lê o content.xml; D-071)
   src/document/              document_controller.dart, doc_tab.dart (as abas), workspace.dart, fodt.dart
                              (a cópia lida), outline.dart, search.dart, format_origin.dart,
                              text_clipboard.dart, doc_colors.dart

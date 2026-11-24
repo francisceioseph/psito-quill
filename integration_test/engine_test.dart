@@ -15,6 +15,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:psito_quill/src/plugins/plugin_host.dart';
+import 'package:psito_quill/src/book/odt_zip.dart';
+import 'package:psito_quill/src/book/docx_import.dart';
+import 'package:psito_quill/src/book/book_io.dart';
 import 'package:psito_quill/src/app.dart';
 import 'package:psito_quill/src/document/document_controller.dart';
 import 'package:psito_quill/src/document/search.dart';
@@ -427,7 +430,39 @@ void main() {
     doc.setAccessibility(false);
     expect(doc.a11yParagraph, isNull);
 
-    // Fecha sem salvar (descarta), para não deixar trava.
+    // 22. O livro (D-071): importar o DOCX de teste pelo motor (oculto, sem
+    //     tocar nas abas), abrir dois capítulos pelo fichário, editar e
+    //     salvar um, e as palavras dele mudam no livro.json.
+    final importer = DocxImporter(kit);
+    final manuscript = await importer.read(File('test/fixtures/livro-teste.docx').absolute.path);
+    expect(manuscript.headingLevels, [1, 2]);
+    final drafts = manuscript.chapters(manuscript.suggestedLevel);
+    expect(drafts.length, 4, reason: 'a dedicatória e os três capítulos');
+    final bookDir = '${tmp.path}/Teste.psitobook';
+    final imported = await importer.create(dir: bookDir, title: 'Teste', m: manuscript, drafts: drafts, untitled: 'Abertura');
+    for (final c in imported.chapters) {
+      final xml = readOdtContent('$bookDir/${c.file}');
+      expect(xml, isNotNull, reason: 'o motor gravou ${c.file} em ODT');
+    }
+    expect(readOdtContent('$bookDir/${imported.chapters.elementAt(1).file}'), contains('<text:note '),
+        reason: 'a nota de rodapé sobrevive ao corte');
+    final tabsBefore = doc.tabs.length;
+    workspace.adoptBook(bookDir, imported);
+    final second = imported.chapters.elementAt(2);
+    workspace.openChapter(second);
+    await until(() => doc.path == '$bookDir/${second.file}' && doc.docStatus == DocStatus.open, 'abrir o capítulo 2');
+    expect(doc.tabs.length, tabsBefore + 1);
+    final wordsBefore = second.words;
+    doc.insertText('Mais quatro palavras aqui. ');
+    await settle();
+    expect(await workspace.save(), isTrue);
+    await until(() => second.words != wordsBefore, 'recontar as palavras do capítulo salvo', seconds: 20);
+    expect(second.words, wordsBefore + 4);
+    expect(readBook(bookDir).find(second.id)!.$1.words, second.words);
+    expect(await workspace.closeBook(), isTrue);
+    expect(doc.tabs.length, tabsBefore, reason: 'fechar o livro fecha as abas dele');
+
+        // Fecha sem salvar (descarta), para não deixar trava.
     workspace.onUnsaved = () async => UnsavedChoice.discard;
     expect(await workspace.requestExit(), isTrue);
     expect(LoLock.fileFor(velho).existsSync(), isFalse);

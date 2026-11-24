@@ -8,6 +8,9 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
+import '../book/book.dart';
+import '../book/book_controller.dart';
+import '../book/book_io.dart';
 import '../files/file_dialogs.dart';
 import '../files/lo_lock.dart';
 import '../files/recent_files.dart';
@@ -25,9 +28,13 @@ class FileDialogLabels {
 }
 
 class Workspace extends ChangeNotifier {
-  Workspace({required this.doc, required this.recents, required this.dialogs, required this.locks}) {
+  Workspace({required this.doc, required this.recents, required this.dialogs, required this.locks})
+      : book = BookController(doc.kit) {
     doc.addListener(_onDoc);
   }
+
+  /// O livro aberto (Fase 3, D-071). Os capítulos abrem como abas.
+  final BookController book;
 
   final DocumentController doc;
   final RecentFiles recents;
@@ -69,8 +76,65 @@ class Workspace extends ChangeNotifier {
     if (path != null) _open(path);
   }
 
-  /// Abre [path] (dos recentes, da linha de comando) numa aba nova.
-  Future<void> openPath(String path) async => _open(path);
+  /// Abre [path] (dos recentes, da linha de comando) numa aba nova. Um livro
+  /// abre no fichário.
+  Future<void> openPath(String path) async {
+    if (isBookPath(path)) {
+      await openBook(path);
+    } else {
+      _open(path);
+    }
+  }
+
+  /// Abre o livro em [path]: fecha o que estava aberto (perguntando pelas
+  /// abas dele), e abre o primeiro capítulo se nenhum documento está aberto.
+  /// Devolve o erro, ou null.
+  Future<BookError?> openBook(String path) async {
+    final dir = bookDirOf(path);
+    if (book.dir == dir) return null;
+    if (book.isOpen && !await closeBook()) return null;
+    try {
+      await book.open(dir);
+    } on BookException catch (e) {
+      if (e.error == BookError.missing) recents.remove(path);
+      return e.error;
+    }
+    recents.add(dir);
+    _openFirstChapter();
+    return null;
+  }
+
+  /// O livro recém-criado ou importado: entra nos recentes e abre o primeiro
+  /// capítulo.
+  void adoptBook(String dir, Book created) {
+    book.adopt(dir, created);
+    recents.add(dir);
+    _openFirstChapter();
+  }
+
+  void _openFirstChapter() {
+    if (doc.isOpen) return;
+    final first = book.book?.chapters.firstOrNull;
+    if (first != null) openChapter(first);
+  }
+
+  /// Abre o capítulo [node] do livro numa aba (ou só lhe dá a tela).
+  void openChapter(BookNode node) {
+    final path = book.pathOf(node);
+    if (path != null) _open(path);
+  }
+
+  /// Fecha o livro: as abas dos capítulos dele fecham, perguntando se há
+  /// alterações. false: o usuário cancelou.
+  Future<bool> closeBook() async {
+    if (!book.isOpen) return true;
+    for (final t in [...doc.tabs]) {
+      if (book.chapterAt(doc.tabPath(t)) == null) continue;
+      if (!await closeTab(t)) return false;
+    }
+    book.close();
+    return true;
+  }
 
   void _open(String path) {
     // Já aberto: só ganha a tela.
@@ -82,7 +146,8 @@ class Workspace extends ChangeNotifier {
       }
     }
     final verdict = locks.inspect(path);
-    _pendingRecent = path;
+    // Os capítulos do livro não entram nos recentes: o livro já está lá.
+    _pendingRecent = book.chapterAt(path) == null ? path : null;
     doc.open(path, lockOwner: verdict is LockedBy ? verdict.lock.owner : null);
   }
 
@@ -165,6 +230,7 @@ class Workspace extends ChangeNotifier {
 
   @override
   void dispose() {
+    book.dispose();
     doc.removeListener(_onDoc);
     super.dispose();
   }

@@ -1421,4 +1421,224 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get prefScreenReaderDocNote =>
       'Liga sozinho quando um leitor de tela está ativo. Ligado, o motor trabalha um pouco mais a cada tecla.';
+
+  @override
+  String get menuBook => 'Livro';
+
+  @override
+  String get railBinder => 'Fichário';
+
+  @override
+  String get binderTitle => 'Fichário';
+
+  @override
+  String get commandBinder => 'Fichário';
+
+  @override
+  String get commandNewBook => 'Novo livro…';
+
+  @override
+  String get commandOpenBook => 'Abrir livro…';
+
+  @override
+  String get commandImportManuscript => 'Importar um manuscrito…';
+
+  @override
+  String get commandCloseBook => 'Fechar o livro';
+
+  @override
+  String get commandNewChapter => 'Novo capítulo';
+
+  @override
+  String get commandNewPart => 'Nova parte';
+
+  @override
+  String get newChapterTitle => 'Capítulo novo';
+
+  @override
+  String get newPartTitle => 'Parte nova';
+
+  @override
+  String get firstChapterTitle => 'Capítulo 1';
+
+  @override
+  String get importUntitled => 'Abertura';
+
+  @override
+  String get chapterStatusDraft => 'Rascunho';
+
+  @override
+  String get chapterStatusRevision => 'Revisão';
+
+  @override
+  String get chapterStatusDone => 'Pronto';
+
+  @override
+  String get binderRename => 'Renomear';
+
+  @override
+  String get binderOpen => 'Abrir';
+
+  @override
+  String get binderDelete => 'Mandar para a lixeira';
+
+  @override
+  String get binderDeleteTitle => 'Mandar para a lixeira?';
+
+  @override
+  String binderDeleteChapter(String title) {
+    return '“$title” sai do livro. O arquivo vai para a pasta lixeira, dentro do livro, e não é apagado.';
+  }
+
+  @override
+  String binderDeletePart(String title) {
+    return 'A parte “$title” sai do livro. Os capítulos dela continuam, no lugar dela.';
+  }
+
+  @override
+  String get binderSynopsis => 'Sinopse';
+
+  @override
+  String get binderSynopsisHint => 'Do que trata este capítulo';
+
+  @override
+  String get binderStatus => 'Status';
+
+  @override
+  String get binderLabel => 'Rótulo';
+
+  @override
+  String get labelNone => 'Sem rótulo';
+
+  @override
+  String get labelRed => 'Vermelho';
+
+  @override
+  String get labelOrange => 'Laranja';
+
+  @override
+  String get labelGreen => 'Verde';
+
+  @override
+  String get labelBlue => 'Azul';
+
+  @override
+  String get labelPurple => 'Roxo';
+
+  @override
+  String binderWords(int count) {
+    return '$count palavras';
+  }
+
+  @override
+  String get binderKeysHint =>
+      'Alt+setas move, F2 renomeia, Delete manda para a lixeira';
+
+  @override
+  String get binderEmpty => 'O livro não tem capítulos.';
+
+  @override
+  String statusBookWords(String count) {
+    return 'livro $count';
+  }
+
+  @override
+  String get statusBookWordsTip => 'Palavras no livro inteiro';
+
+  @override
+  String bookChapterName(String book, String chapter) {
+    return '$book — $chapter';
+  }
+
+  @override
+  String get newBookTitle => 'Novo livro';
+
+  @override
+  String get bookTitleLabel => 'Título do livro';
+
+  @override
+  String get bookLocationLabel => 'Onde guardar';
+
+  @override
+  String bookLocationNote(String folder) {
+    return 'O livro vira a pasta “$folder”, com um arquivo por capítulo.';
+  }
+
+  @override
+  String get chooseFolder => 'Escolher a pasta…';
+
+  @override
+  String get chooseFolderButton => 'Escolher';
+
+  @override
+  String get createButton => 'Criar';
+
+  @override
+  String get importTitle => 'Importar um manuscrito';
+
+  @override
+  String get importReading => 'Lendo o manuscrito…';
+
+  @override
+  String get importLevel => 'Os capítulos começam nos títulos de';
+
+  @override
+  String importLevelN(int level) {
+    return 'Nível $level';
+  }
+
+  @override
+  String importFound(int count) {
+    return '$count capítulos';
+  }
+
+  @override
+  String get importPartsNote => 'Os títulos de nível acima viram partes.';
+
+  @override
+  String get importButton => 'Importar';
+
+  @override
+  String importProgress(int done, int total) {
+    return 'Importando o capítulo $done de $total…';
+  }
+
+  @override
+  String importChapterWords(String title, int count) {
+    return '$title · $count palavras';
+  }
+
+  @override
+  String get fileTypeManuscripts => 'Manuscritos';
+
+  @override
+  String get bookErrorMissing => 'O livro não foi encontrado.';
+
+  @override
+  String get bookErrorInvalid => 'Esta pasta não tem um livro do Quill.';
+
+  @override
+  String get bookErrorExists => 'Já existe um livro nesta pasta.';
+
+  @override
+  String get bookErrorWrite => 'Não deu para gravar o livro.';
+
+  @override
+  String get importErrorUnreadable =>
+      'O LibreOffice não conseguiu ler este manuscrito.';
+
+  @override
+  String get importErrorEmpty => 'O manuscrito não tem texto.';
+
+  @override
+  String get startNewBook => 'Novo livro';
+
+  @override
+  String get startImport => 'Importar um manuscrito';
+
+  @override
+  String get recentBook => 'Livro';
+
+  @override
+  String get binderClose => 'Fechar o fichário';
 }

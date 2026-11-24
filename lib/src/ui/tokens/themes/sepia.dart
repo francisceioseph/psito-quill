@@ -43,5 +43,6 @@ const sepia = QuillTokens(
     danger: Color(0xFFA1301F),
     dangerContainer: Color(0xFFF6D7CC),
     onDangerContainer: Color(0xFF3D0A00),
+    labels: [Color(0xFFB3412F), Color(0xFFB86E1F), Color(0xFF5E7D3A), Color(0xFF3F6A8A), Color(0xFF7A4E7E)],
   ),
 );

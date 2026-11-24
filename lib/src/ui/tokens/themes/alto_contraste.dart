@@ -43,6 +43,7 @@ const altoContrasteEscuro = QuillTokens(
     danger: Color(0xFFFF8A80),
     dangerContainer: Color(0xFF5C0000),
     onDangerContainer: Color(0xFFFFFFFF),
+    labels: [Color(0xFFFF6E6E), Color(0xFFFFB74D), Color(0xFF69F0AE), Color(0xFF82B1FF), Color(0xFFEA80FC)],
   ),
 );
 
@@ -85,5 +86,6 @@ const altoContrasteClaro = QuillTokens(
     danger: Color(0xFFB00000),
     dangerContainer: Color(0xFFFFDAD6),
     onDangerContainer: Color(0xFF000000),
+    labels: [Color(0xFFB00000), Color(0xFF8A4B00), Color(0xFF005A00), Color(0xFF0000B0), Color(0xFF6A006A)],
   ),
 );

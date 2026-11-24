@@ -11,6 +11,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../commands/command_registry.dart';
+import '../../commands/commands_book.dart';
 import '../../commands/commands_document.dart';
 import '../../commands/commands_view.dart';
 import '../../document/workspace.dart';
@@ -128,6 +129,11 @@ class _FilePanelState extends State<FilePanel> {
                   divider(),
                   command(CommandIds.newDocument),
                   command(CommandIds.open),
+                  divider(),
+                  command(BookCommandIds.newBook),
+                  command(BookCommandIds.openBook),
+                  command(BookCommandIds.importManuscript),
+                  divider(),
                   section(FileSection.recent, Symbols.history_rounded, l10n.recentTitle),
                   divider(),
                   section(FileSection.info, Symbols.info_rounded, l10n.fileInfo, enabled: doc.isOpen),

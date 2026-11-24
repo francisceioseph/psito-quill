@@ -6,7 +6,11 @@ import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
+import '../../book/book.dart';
+import '../../book/book_controller.dart';
+import '../../book/docx_import.dart';
 import '../../commands/command_registry.dart';
+import '../../commands/commands_book.dart';
 import '../../commands/commands_document.dart';
 import '../../commands/commands_view.dart';
 import '../../document/document_controller.dart';
@@ -19,6 +23,8 @@ import '../atoms/w_label.dart';
 import '../molecules/command_button.dart';
 import '../molecules/command_menu.dart';
 import '../molecules/info_banner.dart';
+import '../organisms/binder_panel.dart';
+import '../organisms/book_dialogs.dart';
 import '../organisms/classic_bars.dart';
 import '../organisms/command_palette.dart';
 import '../organisms/doc_tabs.dart';
@@ -72,12 +78,12 @@ class EditorPage extends StatefulWidget {
 
 /// Os painéis do trilho, à esquerda. Localizar abre a barra de localizar,
 /// não um painel.
-enum _LeftPanel { outline, find, styles }
+enum _LeftPanel { binder, outline, find, styles }
 
 /// Os temas como comandos (a paleta e o menu Exibir do tema 97 os mostram).
 const themeCommandPrefix = 'tema.';
 
-class _EditorPageState extends State<EditorPage> implements EditorViewActions {
+class _EditorPageState extends State<EditorPage> implements EditorViewActions, BookViewActions {
   CommandRegistry? _commands;
   final _docFocus = FocusNode(debugLabel: 'documento');
   bool _fileOpen = false;
@@ -99,6 +105,101 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
     super.initState();
     widget.settings.addListener(_onSettings);
     _viewport.addListener(_applyLayout);
+    books.addListener(_onBook);
+  }
+
+  BookController get books => widget.workspace.book;
+
+  /// O livro abriu: o fichário aparece; fechou: some (D-071).
+  String? _bookDir;
+  void _onBook() {
+    if (books.dir == _bookDir) return;
+    _bookDir = books.dir;
+    if (books.isOpen) {
+      _setLeft(_LeftPanel.binder);
+    } else if (_left == _LeftPanel.binder) {
+      _setLeft(null);
+    }
+  }
+
+  void _showError(String text) =>
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(text), behavior: SnackBarBehavior.floating));
+
+  String _bookError(AppLocalizations l10n, BookError e) => switch (e) {
+        BookError.missing => l10n.bookErrorMissing,
+        BookError.invalid || BookError.newerFormat => l10n.bookErrorInvalid,
+        BookError.exists => l10n.bookErrorExists,
+        BookError.writeFailed => l10n.bookErrorWrite,
+      };
+
+  @override
+  bool get binderOpen => _left == _LeftPanel.binder;
+
+  @override
+  void toggleBinder() => _setLeft(binderOpen ? null : _LeftPanel.binder);
+
+  @override
+  void newBook() => unawaited(_newBook());
+  Future<void> _newBook() async {
+    final l10n = AppLocalizations.of(context);
+    final answer = await showNewBookDialog(context, widget.workspace.dialogs);
+    if (answer == null || !mounted) return;
+    if (!await widget.workspace.closeBook()) return;
+    try {
+      final book = await books.create(answer.$2, answer.$1, firstChapter: l10n.firstChapterTitle);
+      widget.workspace.adoptBook(answer.$2, book);
+    } on BookException catch (e) {
+      _showError(_bookError(l10n, e.error));
+    }
+  }
+
+  @override
+  void openBook() => unawaited(_openBook());
+  Future<void> _openBook() async {
+    final l10n = AppLocalizations.of(context);
+    final dir = await widget.workspace.dialogs.pickDirectory(label: l10n.commandOpenBook);
+    if (dir == null || !mounted) return;
+    final error = await widget.workspace.openBook(dir);
+    if (error != null) _showError(_bookError(l10n, error));
+  }
+
+  @override
+  void importManuscript() => unawaited(_importManuscript());
+  Future<void> _importManuscript() async {
+    final l10n = AppLocalizations.of(context);
+    final path = await widget.workspace.dialogs.pickManuscript(label: l10n.fileTypeManuscripts);
+    if (path == null || !mounted) return;
+    final result = await showImportDialog(
+      context,
+      manuscript: path,
+      importer: DocxImporter(doc.kit),
+      dialogs: widget.workspace.dialogs,
+    );
+    if (result == null) return;
+    if (!await widget.workspace.closeBook()) return;
+    widget.workspace.adoptBook(result.$1, result.$2);
+  }
+
+  /// O capítulo da tela, se é do livro.
+  BookNode? get _currentChapter => books.chapterAt(doc.path);
+
+  @override
+  void newChapter() => unawaited(_newChapter());
+  Future<void> _newChapter() async {
+    final l10n = AppLocalizations.of(context);
+    try {
+      final node = await books.addChapter(l10n.newChapterTitle, afterId: _currentChapter?.id);
+      widget.workspace.openChapter(node);
+      if (!binderOpen) _setLeft(_LeftPanel.binder);
+    } on BookException catch (e) {
+      _showError(_bookError(l10n, e.error));
+    }
+  }
+
+  @override
+  void newPart() {
+    books.addPart(AppLocalizations.of(context).newPartTitle, afterId: _currentChapter?.id);
+    if (!binderOpen) _setLeft(_LeftPanel.binder);
   }
 
   /// Aplica a disposição das páginas (D-047). Em "Várias", as colunas saem
@@ -373,6 +474,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
       final registry = CommandRegistry(scheme: widget.settings.shortcuts);
       registerEditorCommands(registry, doc: doc, workspace: widget.workspace, l10n: l10n);
       registerViewCommands(registry, doc: doc, view: this, l10n: l10n);
+      registerBookCommands(registry, doc: doc, workspace: widget.workspace, view: this, l10n: l10n);
       for (final (id, label) in themeChoices(l10n)) {
         registry.register(
           Command(
@@ -409,6 +511,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
   @override
   void dispose() {
     widget.settings.removeListener(_onSettings);
+    books.removeListener(_onBook);
     if (widget.workspace.onUnsaved != null) widget.workspace.onUnsaved = null;
     _commands?.dispose();
     _docFocus.dispose();
@@ -420,6 +523,8 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
 
   String _documentName(AppLocalizations l10n) {
     final p = doc.path;
+    final chapter = books.chapterAt(p);
+    if (chapter != null) return l10n.bookChapterName(books.book!.title, chapter.title);
     return p == null ? l10n.untitled : File(p).uri.pathSegments.last;
   }
 
@@ -454,7 +559,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
     return Focus(
       onKeyEvent: _onPageKey,
       child: ListenableBuilder(
-        listenable: Listenable.merge([doc, commands]),
+        listenable: Listenable.merge([doc, commands, books]),
         builder: (context, _) {
           widget.window?.setTitle(_windowTitle(l10n));
           if (widget.settings.zen && doc.isOpen && !doc.documentSize.isEmpty) return _zenView(l10n);
@@ -462,6 +567,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
           // Tudo o que a faixa e o painel leem e não vem do motor.
           final key = (
             doc.stateRevision,
+            books.revision, // o fichário e o título do capítulo
             widget.settings.shortcuts,
             t.id, // o tema aplicado (as preferências mudam antes)
             _tab,
@@ -543,7 +649,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
                       ],
                     )),
             ),
-            rail: classic || _fileOpen || !doc.isOpen
+            rail: classic || _fileOpen || !(doc.isOpen || books.isOpen)
                 ? null
                 : _memoized(
                     'rail',
@@ -551,10 +657,13 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
                     () => NavRail<_LeftPanel?>(
                       label: l10n.railLabel,
                       items: [
-                        NavRailItem(_LeftPanel.outline, Symbols.toc_rounded, l10n.outlineTitle),
-                        NavRailItem(_LeftPanel.find, Symbols.find_replace_rounded, l10n.railFind,
-                            tooltip: commands.tooltipOf(ViewCommandIds.replace)),
-                        NavRailItem(_LeftPanel.styles, Symbols.style_rounded, l10n.ribbonStyles),
+                        if (books.isOpen) NavRailItem(_LeftPanel.binder, Symbols.account_tree_rounded, l10n.railBinder),
+                        if (doc.isOpen) ...[
+                          NavRailItem(_LeftPanel.outline, Symbols.toc_rounded, l10n.outlineTitle),
+                          NavRailItem(_LeftPanel.find, Symbols.find_replace_rounded, l10n.railFind,
+                              tooltip: commands.tooltipOf(ViewCommandIds.replace)),
+                          NavRailItem(_LeftPanel.styles, Symbols.style_rounded, l10n.ribbonStyles),
+                        ],
                       ],
                       selected: _find != null ? _LeftPanel.find : _left,
                       onSelected: (p) {
@@ -566,11 +675,11 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
                       },
                     ),
                   ),
-            leftPanel: _fileOpen || !doc.isOpen
+            leftPanel: _fileOpen || !(doc.isOpen || (books.isOpen && _left == _LeftPanel.binder))
                 ? null
                 // Localizar e substituir (D-062): por cima do painel da
                 // esquerda que estiver aberto, que volta ao fechar.
-                : _find != null
+                : _find != null && doc.isOpen
                 ? FindPanel(
                     key: _findKey,
                     doc: doc,
@@ -584,6 +693,15 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
                     'left',
                     statusKey,
                     () => switch (_left!) {
+                      _LeftPanel.binder => BinderPanel(
+                          books: books,
+                          currentPath: doc.path,
+                          onOpen: widget.workspace.openChapter,
+                          onNewChapter: newChapter,
+                          onNewPart: newPart,
+                          onClose: toggleBinder,
+                          closeLabel: l10n.binderClose,
+                        ),
                       _LeftPanel.outline => OutlinePanel(
                           entries: doc.snapshot.outline,
                           current: currentHeading(doc.snapshot.outline, doc.page?.$1),
@@ -661,7 +779,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
                     section: _fileSection,
                   )
                 : doc.tabs.isEmpty && doc.docStatus != DocStatus.opening
-                ? StartScreen(workspace: widget.workspace)
+                ? StartScreen(workspace: widget.workspace, onNewBook: newBook, onImport: importManuscript)
                 : doc.busy == BusyKind.opening
                 ? const SizedBox.expand() // o progresso fica no rodapé (D-066)
                 : !doc.isOpen || doc.documentSize.isEmpty
@@ -701,6 +819,16 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
                         tooltip: l10n.statusWordsTip,
                         menu: _wordsMenu,
                         priority: 1,
+                      ),
+                    // O livro inteiro (D-071): o que está no livro.json, com o
+                    // capítulo da tela pelo que o motor conta agora.
+                    if (books.book case final book? when _currentChapter != null)
+                      StatusField(
+                        l10n.statusBookWords(MaterialLocalizations.of(context).formatDecimal(
+                            book.words - _currentChapter!.words + (doc.wordCount?.selection == false ? doc.wordCount!.words : _currentChapter!.words))),
+                        tooltip: l10n.statusBookWordsTip,
+                        onTap: toggleBinder,
+                        priority: 2,
                       ),
                     if (doc.language case final lang?)
                       StatusField(

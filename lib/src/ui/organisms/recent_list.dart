@@ -11,6 +11,7 @@ import '../../files/recent_files.dart';
 import '../atoms/w_button.dart';
 import '../atoms/w_label.dart';
 import '../tokens/tokens.dart';
+import '../../book/book_io.dart';
 
 class RecentList extends StatelessWidget {
   const RecentList({super.key, required this.recents, required this.onOpen});
@@ -63,10 +64,13 @@ class _RecentRow extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final loc = MaterialLocalizations.of(context);
     final file = File(path);
-    final name = file.uri.pathSegments.last;
+    // Um livro é uma pasta (D-071): a data é a do livro.json.
+    final book = path.endsWith(bookExtension);
+    final name = Uri.directory(path).pathSegments.where((s) => s.isNotEmpty).last;
     DateTime? modified;
     try {
-      modified = file.statSync().type == FileSystemEntityType.notFound ? null : file.lastModifiedSync();
+      final stat = FileStat.statSync(book ? '$path/$bookFileName' : path);
+      modified = stat.type == FileSystemEntityType.notFound ? null : stat.modified;
     } on FileSystemException {
       modified = null;
     }
@@ -80,9 +84,9 @@ class _RecentRow extends StatelessWidget {
         tooltip: path,
         selected: false,
         onPressed: modified == null ? null : onOpen,
-        semantics: (child) => Semantics(button: true, enabled: modified != null, label: '$name, ${file.parent.path}, $when', excludeSemantics: true, child: child),
+        semantics: (child) => Semantics(button: true, enabled: modified != null, label: '${book ? '${l10n.recentBook}, ' : ''}$name, ${file.parent.path}, $when', excludeSemantics: true, child: child),
         child: Row(children: [
-          Icon(Symbols.description_rounded, size: t.density.icon, color: t.colors.accent),
+          Icon(book ? Symbols.book_rounded : Symbols.description_rounded, size: t.density.icon, color: t.colors.accent),
           SizedBox(width: t.space.md),
           Expanded(flex: 3, child: WLabel(name)),
           Expanded(flex: 4, child: WLabel(file.parent.path, small: true, tone: WLabelTone.muted)),

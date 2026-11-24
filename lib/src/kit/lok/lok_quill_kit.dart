@@ -87,6 +87,9 @@ class LokQuillKit implements QuillKit {
   void preloadSpelling(String path) => _native.preloadSpelling(path);
 
   @override
+  void convert(int id, String source, String target, String format) => _native.convert(id, source, target, format);
+
+  @override
   void postKey(KeyEventType type, {int charCode = 0, int keyCode = 0}) => _native.postKey(
       type == KeyEventType.input
           ? LibreOfficeKitKeyEventType.LOK_KEYEVENT_KEYINPUT
@@ -199,6 +202,8 @@ class LokQuillKit implements QuillKit {
         return DocumentOpened(parseOpened(payload), id: parseDocumentId(payload));
       case PqkEvent.PQK_EVENT_ACTIVATED:
         return DocumentActivated(parseDocumentId(payload), parseOpened(payload));
+      case PqkEvent.PQK_EVENT_CONVERTED:
+        return parseConverted(payload);
       case PqkEvent.PQK_EVENT_OPEN_FAILED:
         return DocumentOpenFailed(payload);
       case PqkEvent.PQK_EVENT_TILE:

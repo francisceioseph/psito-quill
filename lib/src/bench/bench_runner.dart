@@ -17,6 +17,8 @@ import 'package:flutter/widgets.dart';
 import '../app.dart';
 import '../document/document_controller.dart';
 import '../kit/lok/vcl_keys.dart';
+import '../book/book_io.dart';
+import '../document/workspace.dart';
 import '../kit/quill_kit.dart';
 import '../ui/tokens/themes/themes.dart';
 
@@ -28,7 +30,13 @@ class BenchRunner {
     required this.documentPath,
     required this.outputPath,
     required this.rssAtStart,
+    this.workspace,
   });
+
+  /// Para medir um livro (D-071): com uma pasta `.psitobook` no lugar do
+  /// documento, o livro abre pelo Workspace, com o fichário, e o primeiro
+  /// capítulo é o medido.
+  final Workspace? workspace;
 
   final DocumentController doc;
   final ScrollController scroll;
@@ -82,8 +90,17 @@ class BenchRunner {
 
     // As 30 páginas.
     final sw = Stopwatch()..start();
-    doc.open(documentPath);
-    await _until(() => doc.docStatus == DocStatus.open);
+    final ws = workspace;
+    if (ws != null && isBookPath(documentPath)) {
+      final error = await ws.openBook(documentPath);
+      if (error != null) throw StateError('o livro não abriu: $error');
+      _out['livro_capitulos'] = ws.book.book!.chapters.length;
+      ws.openChapter(ws.book.book!.chapters.first);
+      await _until(() => doc.docStatus == DocStatus.open && doc.path != null);
+    } else {
+      doc.open(documentPath);
+      await _until(() => doc.docStatus == DocStatus.open);
+    }
     _out['abrir_ms'] = sw.elapsedMilliseconds;
     await _until(() => doc.tiles.isNotEmpty);
     _out['primeiro_ladrilho_ms'] = sw.elapsedMilliseconds;

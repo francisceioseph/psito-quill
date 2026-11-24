@@ -42,5 +42,6 @@ const claro = QuillTokens(
     danger: Color(0xFFBA1A1A),
     dangerContainer: Color(0xFFFFDAD6),
     onDangerContainer: Color(0xFF410002),
+    labels: [Color(0xFFD32F2F), Color(0xFFE07B00), Color(0xFF2E7D32), Color(0xFF1565C0), Color(0xFF7B1FA2)],
   ),
 );

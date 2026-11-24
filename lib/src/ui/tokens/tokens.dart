@@ -43,6 +43,7 @@ class QuillColors {
     required this.bevelLight,
     required this.bevelDark,
     required this.danger,
+    required this.labels,
   });
 
   // Os nomes do Material 3 estão entre parênteses (D-042). Os nomes antigos
@@ -90,6 +91,10 @@ class QuillColors {
   /// Erro (error, errorContainer e o texto sobre ele).
   final Color danger, dangerContainer, onDangerContainer;
 
+  /// Os rótulos de cor do fichário (D-071): vermelho, laranja, verde, azul e
+  /// roxo, nessa ordem. São marcas pequenas ao lado do nome, nunca fundo.
+  final List<Color> labels;
+
   QuillColors lerp(QuillColors o, double t) => QuillColors(
         frame: Color.lerp(frame, o.frame, t)!,
         frameRaised: Color.lerp(frameRaised, o.frameRaised, t)!,
@@ -121,6 +126,7 @@ class QuillColors {
         bevelLight: Color.lerp(bevelLight, o.bevelLight, t)!,
         bevelDark: Color.lerp(bevelDark, o.bevelDark, t)!,
         danger: Color.lerp(danger, o.danger, t)!,
+        labels: [for (var i = 0; i < labels.length; i++) Color.lerp(labels[i], o.labels[i], t)!],
       );
 }
 

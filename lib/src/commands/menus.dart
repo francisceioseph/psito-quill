@@ -2,6 +2,7 @@
 // (PLANO 5.2: nenhum comando existe num lugar só). A paleta (Ctrl+K) usa os
 // mesmos menus para dizer de onde vem cada comando.
 import '../../l10n/gen/app_localizations.dart';
+import 'commands_book.dart';
 import 'commands_document.dart';
 import 'commands_view.dart';
 
@@ -106,6 +107,17 @@ List<MenuSpec> editorMenus(AppLocalizations l10n) => [
         ViewCommandIds.newStyle,
         ViewCommandIds.updateStyle,
         ViewCommandIds.manageStyles,
+      ]),
+      MenuSpec(l10n.menuBook, const [
+        BookCommandIds.newBook,
+        BookCommandIds.openBook,
+        BookCommandIds.importManuscript,
+        null,
+        BookCommandIds.newChapter,
+        BookCommandIds.newPart,
+        BookCommandIds.binder,
+        null,
+        BookCommandIds.closeBook,
       ]),
       MenuSpec(l10n.menuTools, const [
         CommandIds.spellOnline,

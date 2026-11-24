@@ -62,6 +62,36 @@ class QuillKitBindings {
   late final _pqk_command_values = _pqk_command_valuesPtr
       .asFunction<void Function(ffi.Pointer<ffi.Char>)>();
 
+  void pqk_convert(
+    int id,
+    ffi.Pointer<ffi.Char> src,
+    ffi.Pointer<ffi.Char> dst,
+    ffi.Pointer<ffi.Char> format,
+  ) {
+    return _pqk_convert(id, src, dst, format);
+  }
+
+  late final _pqk_convertPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int32,
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Char>,
+          )
+        >
+      >('pqk_convert');
+  late final _pqk_convert = _pqk_convertPtr
+      .asFunction<
+        void Function(
+          int,
+          ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Char>,
+        )
+      >();
+
   double pqk_debug_tiles_luma() {
     return _pqk_debug_tiles_luma();
   }
@@ -1299,6 +1329,7 @@ sealed class PqkEvent {
   static const PQK_EVENT_COMMAND_VALUES = 10008;
   static const PQK_EVENT_TEXT_SELECTION = 10009;
   static const PQK_EVENT_ACTIVATED = 10010;
+  static const PQK_EVENT_CONVERTED = 10011;
   static const PQK_EVENT_LUA_LOG = 10100;
   static const PQK_EVENT_LUA_DONE = 10101;
 }

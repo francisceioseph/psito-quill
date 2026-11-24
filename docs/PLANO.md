@@ -541,8 +541,26 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
 
 **Fica para a Fase 5:** a IA local (llama.cpp em outro processo, desligada por padrão, como plugin com permissões). Na Fase 2B, só o lugar dela no trilho.
 
-**Fase 3: o modo Livro**
+**Fase 3: o modo Livro** (o plano aprovado em 23/11/2026)
 - O `.psitobook`, o fichário, as cenas, as notas, as metas, a cortiça, a busca no livro e os instantâneos.
+- **Decidido com o Francisco:** a pasta `.psitobook` com um ODT por capítulo; os livros de hoje estão em DOCX, e a fase começa pelo importador; o núcleo primeiro, uma etapa usável de cada vez.
+- **Em todas as etapas:**
+  - só o capítulo da tela (e os das abas, até o limite do D-054) fica no motor;
+  - o que se lê dos capítulos fechados (as palavras, a busca, as cenas) sai do `content.xml`, num isolate, por um leitor de zip nosso (`ZLibDecoder(raw: true)`), sem pacote novo. O Dart nunca escreve ODT: quem escreve é o motor;
+  - um livro de 60 capítulos com um aberto fica ≤ 400 MB e não cresce com o livro (seção 8).
+- **Etapa 1: o livro, o importador e o fichário.**
+  - O `livro.json` (a árvore de partes e capítulos, o status, o rótulo e a sinopse), gravado de forma atômica, e os capítulos em `capitulos/`. Apagar vai para a `lixeira/` do livro.
+  - O importador de DOCX: o motor salva uma cópia FODT, o Dart a corta nos títulos do nível escolhido (com a prévia dos capítulos achados), e o motor salva cada pedaço em ODT. Uma sonda confere listas, notas, imagens e marcadores antes.
+  - O fichário no trilho: abre o capítulo numa aba, arrasta e move pelo teclado (Alt+setas), F2 renomeia. As palavras de cada capítulo ficam no `livro.json`.
+  - Novo livro e Importar na tela inicial, os livros nos recentes, "Livro — Capítulo" no título e as palavras do livro na barra de status.
+- **Etapa 2: as cenas.** O estilo de parágrafo "Cena" (e `* * *` no importador), as cenas no fichário, e Nova cena, Dividir capítulo aqui e Juntar com o próximo (o caminho sai de uma sonda).
+- **Etapa 3: a busca no livro.** "No livro" no painel Localizar: os fechados pelo `content.xml`, os abertos pelo motor; o clique abre e salta. Substituir no livro todo fica para depois.
+- **Etapa 4: os instantâneos.** Em `versoes/`, pelo motor, sem mudar o documento. Comparar pelo `.uno:CompareDocuments` (sonda), restaurar com um instantâneo antes, e um por dia, automático.
+- **Etapa 5: as notas.** Markdown em `notas/`, editadas no Flutter, sem o motor: Personagens, Lugares, Facções, Termos e a Linha do tempo, com `[[Nome]]`.
+- **Etapa 6: as metas.** Do livro com prazo e do dia, o histórico em `metas.json`, a meta na barra de status e um gráfico dos últimos 30 dias num `CustomPainter`.
+- **Etapa 7: a cortiça.** Os capítulos como cartões, a mesma árvore do fichário, com a sinopse editável no cartão.
+- **Fecho:** o `docs/FASE3-RESULTADOS.md` e a documentação.
+- **Estado em 23/11/2026:** a Etapa 1 está feita (D-071).
 
 **Fase 4: compilar e revisar**
 - Compilar para PDF, EPUB e DOCX com modelos, notas de rodapé, referências cruzadas, sumário e índice.
@@ -580,8 +598,8 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
 
 ## 12. Perguntas abertas para o Francisco
 
-1. **O formato do livro:** a pasta `.psitobook` com um ODT por capítulo está boa, ou você prefere um arquivo único?
+1. **O formato do livro:** a pasta `.psitobook` com um ODT por capítulo está boa, ou você prefere um arquivo único? **Respondido:** a pasta, com um ODT por capítulo.
 2. **O Windows** entra junto com o Linux desde a fase 1, ou só depois da fase 6? **Respondido:** depois da fase 6.
 3. **O nome:** decidido, é Psito Quill (a pena de escrever, irmã do Plume). App `org.psito.quill`, repositório `psito-quill`.
-4. **Os livros atuais:** em que formato estão hoje *Dustland* e *Silicon Gods* (DOCX, ODT, Google Docs)? A fase 3 precisa de um importador que divida pelos títulos de capítulo.
+4. **Os livros atuais:** em que formato estão hoje *Dustland* e *Silicon Gods* (DOCX, ODT, Google Docs)? A fase 3 precisa de um importador que divida pelos títulos de capítulo. **Respondido:** em DOCX.
 5. **O repositório** no GitHub (`francisceioseph/psito-quill`), público como o Player?

@@ -1480,6 +1480,9 @@ class DocumentController extends ChangeNotifier {
         return;
       case OtherKitEvent():
         return;
+      // As conversões são do livro (D-071), não do documento.
+      case FileConverted():
+        return;
     }
     // Ladrilhos, cursor e seleção mudam só a vista (D-037).
     _viewOnly = e is TilePlaced || e is CursorMoved || e is CursorVisibility || e is SelectionChanged;

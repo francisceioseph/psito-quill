@@ -1,5 +1,6 @@
-// A tela inicial (D-064): o editor sem documento. Dois cartões grandes
-// (Documento em branco e Abrir) e os recentes numa tabela.
+// A tela inicial (D-064): o editor sem documento. Os cartões grandes
+// (Documento em branco, Abrir, e o livro novo ou importado, D-071) e os
+// recentes numa tabela.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -13,9 +14,12 @@ import '../tokens/tokens.dart';
 import 'recent_list.dart';
 
 class StartScreen extends StatelessWidget {
-  const StartScreen({super.key, required this.workspace});
+  const StartScreen({super.key, required this.workspace, this.onNewBook, this.onImport});
 
   final Workspace workspace;
+
+  /// O livro novo e a importação (D-071) pedem janelas: são da página.
+  final VoidCallback? onNewBook, onImport;
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +49,10 @@ class StartScreen extends StatelessWidget {
                       label: l10n.startOpen,
                       onPressed: () => unawaited(workspace.openWithDialog()),
                     ),
+                    if (onNewBook != null)
+                      _StartCard(icon: Symbols.library_add_rounded, label: l10n.startNewBook, onPressed: onNewBook!),
+                    if (onImport != null)
+                      _StartCard(icon: Symbols.upload_file_rounded, label: l10n.startImport, onPressed: onImport!),
                   ]),
                   SizedBox(height: t.space.xl * 2),
                   Semantics(header: true, child: WLabel(l10n.recentHeading, heading: true)),

@@ -20,6 +20,7 @@ class WTextField extends StatelessWidget {
     this.onEditingComplete,
     this.error = false,
     this.textAlign = TextAlign.start,
+    this.lines = 1,
   });
 
   /// O nome para o leitor de tela ("Localizar").
@@ -39,6 +40,9 @@ class WTextField extends StatelessWidget {
   final bool error;
   final TextAlign textAlign;
 
+  /// Mais de uma linha (a sinopse do fichário): o campo cresce na altura.
+  final int lines;
+
   @override
   Widget build(BuildContext context) {
     final t = QuillTokens.of(context);
@@ -54,8 +58,11 @@ class WTextField extends StatelessWidget {
           );
     return SizedBox(
       width: width,
-      height: t.density.control,
+      height: lines == 1 ? t.density.control : null,
       child: TextField(
+        minLines: lines,
+        maxLines: lines == 1 ? 1 : lines + 4,
+        keyboardType: lines == 1 ? null : TextInputType.multiline,
         controller: controller,
         focusNode: focusNode,
         autofocus: autofocus,

@@ -43,5 +43,6 @@ const classico97 = QuillTokens(
     danger: Color(0xFF800000),
     dangerContainer: Color(0xFFFFFFFF),
     onDangerContainer: Color(0xFF800000),
+    labels: [Color(0xFFFF0000), Color(0xFFFF8000), Color(0xFF008000), Color(0xFF0000FF), Color(0xFF800080)],
   ),
 );

@@ -43,5 +43,6 @@ const escuro = QuillTokens(
     danger: Color(0xFFFFB4AB),
     dangerContainer: Color(0xFF93000A),
     onDangerContainer: Color(0xFFFFDAD6),
+    labels: [Color(0xFFEF9A9A), Color(0xFFFFCC80), Color(0xFFA5D6A7), Color(0xFF90CAF9), Color(0xFFCE93D8)],
   ),
 );

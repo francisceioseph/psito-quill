@@ -38,6 +38,7 @@ enum EngineEvent : int32_t {
   kEvCommandValues = 10008,  // payload: "comando\n" + JSON
   kEvTextSelection = 10009,  // payload: "mime\n" + texto selecionado
   kEvActivated = 10010,  // payload: {"id":n,"width":tw,"height":tw,"parts":n}
+  kEvConverted = 10011,  // payload: {"id":n,"ok":bool,"error":"..."}
   kEvLuaLog = 10100,     // payload: texto do psito.log
   kEvLuaDone = 10101,    // payload: {"ok":bool,"error":"..."}
 };
@@ -97,6 +98,10 @@ class LokEngine {
   // primeiro capítulo aberto depois não espera por ele (D-069). O documento
   // oculto fecha quando outro abre. Apaga o arquivo logo depois de abrir.
   void preloadSpelling(const std::string& path);
+  // Abre [src] oculto, salva em [dst] no [format] e fecha, sem tocar nos
+  // documentos das abas (o importador de livros, D-071). [src] vazio: um
+  // documento novo. Responde com kEvConverted e o [id] de quem pediu.
+  void convert(int id, const std::string& src, const std::string& dst, const std::string& format);
   void repaintAll();
 
   // Para o encerramento: espera a fila esvaziar e destrói o LOK.

@@ -55,6 +55,7 @@ void main(List<String> args) {
       documentPath: args[1],
       outputPath: args[2],
       rssAtStart: rssAtStart,
+      workspace: workspace,
     ).run();
   } else {
     final path = args.isEmpty ? null : File(args.first).absolute.path;

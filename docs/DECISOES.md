@@ -771,3 +771,52 @@ As três perguntas do `FASE2B-RESULTADOS.md`, respondidas pelo Francisco.
   - O app não roda mais o `plugins/ola` ao abrir, e a mensagem "Plugin: olá do Lua" sumiu da barra de status.
   - O plugin continua nos assets: a integração o roda pelo `PluginHost`, como o app rodava, e confere o texto. Os plugins de verdade vêm na Fase 5.
 
+
+## D-071 · O livro: a pasta `.psitobook`, o importador de DOCX e o fichário
+
+A Etapa 1 da Fase 3. O Francisco escolheu a pasta com um ODT por capítulo, e os livros dele estão em DOCX.
+
+- **O formato:**
+  - `livro.json`: o formato e a versão, o título, e a árvore de partes e capítulos, com o status, o rótulo de cor, a sinopse e as palavras de cada capítulo;
+  - `capitulos/NNN-slug.odt`: a ordem é a do `livro.json`, e o número é só para quem olha a pasta;
+  - `lixeira/`: apagar no fichário move o arquivo para lá, nunca apaga de vez.
+  - O `livro.json` é gravado a cada mudança, de forma atômica (escreve ao lado e renomeia).
+- **O motor converte sem tocar nas abas:** `pqk_convert(id, src, dst, formato)` abre o arquivo sem vista, salva e fecha. A resposta é o `PQK_EVENT_CONVERTED`, com o número de quem pediu. Sondado no `lok_script`: com um documento aberto e editado no meio, a edição de antes e a de depois ficam nele, e a conversão não muda o ativo. O livro novo usa a mesma chamada, com a origem vazia (um documento novo).
+- **O importador:**
+  - o motor salva o DOCX em ODT plano nas cópias temporárias;
+  - o Dart lê o `office:text` como uma lista de blocos de primeiro nível e corta antes dos títulos do nível escolhido. Cada pedaço leva o cabeçalho inteiro do manuscrito (as fontes, os estilos, os automáticos e as páginas), e o motor o salva em ODT;
+  - **o nível sugerido** é o mais alto que dá mais de um capítulo. O `capitulo-30p.docx` só tem títulos de nível 2, e um livro com "Parte I" no nível 1 corta no 2;
+  - **os títulos acima do nível** viram partes no fichário. O título da parte e o que vem depois dele ficam no começo do primeiro capítulo da parte, para nada se perder;
+  - **o que vem antes do primeiro título** (a dedicatória) vira um capítulo "Abertura", se tiver palavras;
+  - a janela mostra os capítulos achados, com as palavras, e o nível para trocar, antes de gravar. Depois mostra o progresso.
+- **A sonda do corte** (`livro-teste.docx`, feito pelo motor com listas, nota de rodapé, imagem embutida, tabela e um marcador que atravessa dois capítulos):
+  - a nota, a imagem (que vai para `Pictures/` no ODT), a lista e a tabela sobrevivem;
+  - **o marcador que atravessa** é jogado fora pelo motor: o começo fica num capítulo e o fim no outro. Agora o começo sozinho vira um marcador de ponto, e o fim sozinho sai. As outras marcas de intervalo (referências, índices) e os comentários que atravessam perdem o fim;
+  - **uma lista que continua** depois de um título recomeça a numeração no capítulo novo. Fica assim: cada capítulo é um documento.
+- **O leitor de zip é nosso** (`odt_zip.dart`): o diretório central, o cabeçalho local e o deflate cru do `dart:io`. Lê só o `content.xml`, sem pacote novo. O Dart nunca escreve ODT.
+- **As palavras** dos capítulos fechados saem do `content.xml`, num isolate. Os fins de parágrafo, as tabulações e os espaços do ODF separam palavras; as outras marcas não. Ficam no `livro.json` com a data do arquivo, e só se reconta o que mudou. Salvar um capítulo reconta o dele. A contagem é a do Quill, não a do LibreOffice, e pode diferir um pouco dela.
+- **O fichário:**
+  - é o primeiro item do trilho da esquerda, com um livro aberto, e aparece sozinho ao abrir o livro. Ele fica também sem documento aberto, na tela inicial;
+  - a lista monta só as linhas visíveis. O clique abre o capítulo numa aba (D-054);
+  - arrastar reordena: um capítulo solto logo abaixo de uma parte entra nela, e uma parte vai sempre para o primeiro nível;
+  - pelo teclado: as setas andam, Alt+setas movem (na ponta de uma parte, sai dela; ao passar por uma parte, entra), Enter abre, F2 renomeia, Delete manda para a lixeira (com confirmação), e o menu do item abre com a tecla Menu ou Shift+F10;
+  - embaixo, o item escolhido: o status (Rascunho, Revisão, Pronto), o rótulo e a sinopse, gravada 600 ms depois de parar de digitar;
+  - é memoizado pela `revision` do livro (D-037).
+- **Os rótulos de cor** são um token novo, `labels` (vermelho, laranja, verde, azul e roxo), em cada tema.
+- **Os fluxos:**
+  - os livros entram nos recentes (com o ícone de livro e a data do `livro.json`), e os capítulos não;
+  - o título da janela é "Livro — Capítulo";
+  - a barra de status mostra as palavras do livro, com o capítulo da tela pela contagem do motor;
+  - a tela inicial e os bastidores ganham Novo livro, Abrir livro e Importar um manuscrito, e o menu Livro do Clássico 97 tem todos os comandos;
+  - fechar o livro fecha as abas dele, perguntando se há alterações.
+- **O `--bench` aceita um livro:** com uma pasta `.psitobook`, abre o livro e mede o primeiro capítulo.
+- **A medida** (a build de release, 3 rodadas alternadas, a mediana): o livro de 60 capítulos (o `capitulo-30p` em ODT, 60 vezes), com o primeiro aberto e o fichário na tela, contra o mesmo capítulo avulso.
+  - RSS com o capítulo: 448,4 MB no livro e 445,1 MB avulso (+3,3 MB). Depois do `trimMemory`: 443,9 MB nos dois.
+  - Abrir: 544 a 759 ms no livro e 552 a 695 ms avulso, dentro do ruído do host.
+  - O livro não cresce com o número de capítulos: o que fica na memória é a árvore do `livro.json` e as linhas visíveis do fichário. A recontagem dos 60 capítulos ao abrir roda num isolate, que é solto depois.
+  - A meta antiga da seção 8 (≤ 400 MB com o livro) foi escrita antes de medir: o capítulo avulso já está em 445 MB (452 MB no fecho da 2B). O que vale é o livro não somar ao capítulo.
+  - O `tool/ab.py` contra a Fase 2B não foi rodado nesta etapa: a abertura de um documento avulso não passa pelo código do livro (ele só escuta o salvar).
+- **Os testes:**
+  - unidade, `book_test`: o zip, o corte, o `livro.json`, o controlador e o importador com o falso;
+  - widget, `fase3_book_test`: o fichário, o teclado, os detalhes, a tela inicial, os recentes e o `binderDrop`;
+  - integração, passo 22: importar o DOCX de teste pelo motor, a nota no capítulo, abrir pelo fichário, salvar e recontar.

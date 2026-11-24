@@ -74,6 +74,12 @@ Size parseOpened(String payload) {
   return Size((json['width'] as num).toDouble(), (json['height'] as num).toDouble());
 }
 
+/// Convertido: {"id":n,"ok":bool,"error":"..."}.
+FileConverted parseConverted(String payload) {
+  final j = jsonDecode(payload) as Map<String, dynamic>;
+  return FileConverted((j['id'] as num).toInt(), ok: j['ok'] == true, error: j['error'] as String? ?? '');
+}
+
 /// O número do documento no PQK_EVENT_OPENED e no PQK_EVENT_ACTIVATED.
 int parseDocumentId(String payload) => ((jsonDecode(payload) as Map<String, dynamic>)['id'] as num?)?.toInt() ?? 1;
 

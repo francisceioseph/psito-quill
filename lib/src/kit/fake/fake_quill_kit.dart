@@ -207,6 +207,34 @@ class FakeQuillKit implements QuillKit {
   @override
   void preloadSpelling(String path) => preloads.add(path);
 
+  /// As conversões pedidas (de onde, para onde, o formato).
+  final conversions = <(String, String, String)>[];
+
+  /// Como o falso converte: o padrão copia o arquivo (ou grava vazio, para
+  /// um documento novo). Os testes do livro trocam por um que grava ODTs.
+  void Function(String source, String target, String format)? onConvert;
+
+  /// Falha as próximas conversões.
+  bool failConversions = false;
+
+  @override
+  void convert(int id, String source, String target, String format) {
+    conversions.add((source, target, format));
+    if (failConversions) {
+      _emit(FileConverted(id, ok: false, error: 'falhou'));
+      return;
+    }
+    final handler = onConvert;
+    if (handler != null) {
+      handler(source, target, format);
+    } else if (source.isEmpty) {
+      File(target).writeAsBytesSync(const []);
+    } else {
+      File(source).copySync(target);
+    }
+    _emit(FileConverted(id, ok: true));
+  }
+
   @override
   void postKey(KeyEventType type, {int charCode = 0, int keyCode = 0}) {
     keys.add((type, charCode, keyCode));

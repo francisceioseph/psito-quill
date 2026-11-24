@@ -28,6 +28,12 @@ abstract interface class FileDialogs {
   /// Uma imagem para inserir, ou null.
   Future<String?> pickImage({required String label});
 
+  /// Uma pasta (onde criar um livro, ou um livro para abrir), ou null.
+  Future<String?> pickDirectory({required String label, String? initialDirectory});
+
+  /// Um manuscrito para importar como livro (DOCX ou ODT), ou null.
+  Future<String?> pickManuscript({required String label});
+
   /// O caminho escolhido (já com a extensão do formato), ou null.
   Future<String?> pickSave({required String suggestedName, String? initialDirectory, required Map<DocFormat, String> labels});
 }
@@ -49,6 +55,18 @@ class SystemFileDialogs implements FileDialogs {
   @override
   Future<String?> pickImage({required String label}) async {
     final file = await openFile(acceptedTypeGroups: [XTypeGroup(label: label, extensions: imageExtensions)]);
+    return file?.path;
+  }
+
+  @override
+  Future<String?> pickDirectory({required String label, String? initialDirectory}) =>
+      getDirectoryPath(confirmButtonText: label, initialDirectory: initialDirectory);
+
+  @override
+  Future<String?> pickManuscript({required String label}) async {
+    final file = await openFile(acceptedTypeGroups: [
+      XTypeGroup(label: label, extensions: [for (final f in DocFormat.values) f.extension]),
+    ]);
     return file?.path;
   }
 

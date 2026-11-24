@@ -41,6 +41,7 @@ enum PqkEvent {
   PQK_EVENT_COMMAND_VALUES = 10008, // payload: "comando\n" + JSON
   PQK_EVENT_TEXT_SELECTION = 10009, // payload: "mime\n" + texto
   PQK_EVENT_ACTIVATED = 10010,     // payload: {"id":n,"width":tw,"height":tw,"parts":n}
+  PQK_EVENT_CONVERTED = 10011,     // payload: {"id":n,"ok":bool,"error":"..."}
   PQK_EVENT_LUA_LOG = 10100,
   PQK_EVENT_LUA_DONE = 10101,      // payload: {"ok":true} ou {"ok":false,"error":"..."}
 };
@@ -75,6 +76,9 @@ PQK_EXPORT void pqk_set_accessibility(bool on);
 // Abre o documento em [path] oculto, para carregar o dicionário antes do
 // primeiro capítulo (D-069). Só sem documento aberto; apaga o arquivo.
 PQK_EXPORT void pqk_preload_spelling(const char* path);
+// Abre [src] oculto ("" para um documento novo), salva em [dst] no [format]
+// ("odt", "fodt") e fecha, sem tocar nas abas. Responde PQK_EVENT_CONVERTED.
+PQK_EXPORT void pqk_convert(int32_t id, const char* src, const char* dst, const char* format);
 PQK_EXPORT void pqk_post_key(int32_t type, int32_t char_code, int32_t key_code);
 PQK_EXPORT void pqk_post_mouse(int32_t type, int32_t x, int32_t y, int32_t count,
                                int32_t buttons, int32_t modifier);

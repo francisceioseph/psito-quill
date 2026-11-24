@@ -334,6 +334,29 @@ void LokEngine::preloadSpelling(const std::string& path) {
   });
 }
 
+void LokEngine::convert(int id, const std::string& src, const std::string& dst,
+                        const std::string& format) {
+  queue_.post([this, id, src, dst, format] {
+    auto reply = [&](bool ok, const std::string& error) {
+      std::string e;
+      for (char c : error) {
+        if (c == '"' || c == '\\') e += '\\';
+        if (static_cast<unsigned char>(c) >= 0x20) e += c;
+      }
+      sink_->onEvent(kEvConverted, "{\"id\":" + std::to_string(id) + ",\"ok\":" +
+                                       (ok ? "true" : "false") + ",\"error\":\"" + e + "\"}");
+    };
+    if (!kit_) return reply(false, "motor não iniciado");
+    const std::string url = src.empty() ? "private:factory/swriter" : toFileUrl(src);
+    auto* doc = kit_->pClass->documentLoadWithOptions(kit_, url.c_str(), "Language=pt-BR");
+    if (!doc) return reply(false, takeLokString(kit_, kit_->pClass->getError(kit_)));
+    int ok = doc->pClass->saveAs(doc, toFileUrl(dst).c_str(), format.c_str(), nullptr);
+    std::string error = ok ? "" : takeLokString(kit_, kit_->pClass->getError(kit_));
+    doc->pClass->destroy(doc);
+    reply(ok, error);
+  });
+}
+
 void LokEngine::repaintAll() {
   queue_.post([this] {
     cache_.invalidateAll();

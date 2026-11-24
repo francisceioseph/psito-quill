@@ -2665,6 +2665,402 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Liga sozinho quando um leitor de tela está ativo. Ligado, o motor trabalha um pouco mais a cada tecla.'**
   String get prefScreenReaderDocNote;
+
+  /// No description provided for @menuBook.
+  ///
+  /// In pt, this message translates to:
+  /// **'Livro'**
+  String get menuBook;
+
+  /// No description provided for @railBinder.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fichário'**
+  String get railBinder;
+
+  /// No description provided for @binderTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fichário'**
+  String get binderTitle;
+
+  /// No description provided for @commandBinder.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fichário'**
+  String get commandBinder;
+
+  /// No description provided for @commandNewBook.
+  ///
+  /// In pt, this message translates to:
+  /// **'Novo livro…'**
+  String get commandNewBook;
+
+  /// No description provided for @commandOpenBook.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir livro…'**
+  String get commandOpenBook;
+
+  /// No description provided for @commandImportManuscript.
+  ///
+  /// In pt, this message translates to:
+  /// **'Importar um manuscrito…'**
+  String get commandImportManuscript;
+
+  /// No description provided for @commandCloseBook.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fechar o livro'**
+  String get commandCloseBook;
+
+  /// No description provided for @commandNewChapter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Novo capítulo'**
+  String get commandNewChapter;
+
+  /// No description provided for @commandNewPart.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nova parte'**
+  String get commandNewPart;
+
+  /// No description provided for @newChapterTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Capítulo novo'**
+  String get newChapterTitle;
+
+  /// No description provided for @newPartTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Parte nova'**
+  String get newPartTitle;
+
+  /// No description provided for @firstChapterTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Capítulo 1'**
+  String get firstChapterTitle;
+
+  /// No description provided for @importUntitled.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abertura'**
+  String get importUntitled;
+
+  /// No description provided for @chapterStatusDraft.
+  ///
+  /// In pt, this message translates to:
+  /// **'Rascunho'**
+  String get chapterStatusDraft;
+
+  /// No description provided for @chapterStatusRevision.
+  ///
+  /// In pt, this message translates to:
+  /// **'Revisão'**
+  String get chapterStatusRevision;
+
+  /// No description provided for @chapterStatusDone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pronto'**
+  String get chapterStatusDone;
+
+  /// No description provided for @binderRename.
+  ///
+  /// In pt, this message translates to:
+  /// **'Renomear'**
+  String get binderRename;
+
+  /// No description provided for @binderOpen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir'**
+  String get binderOpen;
+
+  /// No description provided for @binderDelete.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mandar para a lixeira'**
+  String get binderDelete;
+
+  /// No description provided for @binderDeleteTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mandar para a lixeira?'**
+  String get binderDeleteTitle;
+
+  /// No description provided for @binderDeleteChapter.
+  ///
+  /// In pt, this message translates to:
+  /// **'“{title}” sai do livro. O arquivo vai para a pasta lixeira, dentro do livro, e não é apagado.'**
+  String binderDeleteChapter(String title);
+
+  /// No description provided for @binderDeletePart.
+  ///
+  /// In pt, this message translates to:
+  /// **'A parte “{title}” sai do livro. Os capítulos dela continuam, no lugar dela.'**
+  String binderDeletePart(String title);
+
+  /// No description provided for @binderSynopsis.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sinopse'**
+  String get binderSynopsis;
+
+  /// No description provided for @binderSynopsisHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Do que trata este capítulo'**
+  String get binderSynopsisHint;
+
+  /// No description provided for @binderStatus.
+  ///
+  /// In pt, this message translates to:
+  /// **'Status'**
+  String get binderStatus;
+
+  /// No description provided for @binderLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Rótulo'**
+  String get binderLabel;
+
+  /// No description provided for @labelNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem rótulo'**
+  String get labelNone;
+
+  /// No description provided for @labelRed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Vermelho'**
+  String get labelRed;
+
+  /// No description provided for @labelOrange.
+  ///
+  /// In pt, this message translates to:
+  /// **'Laranja'**
+  String get labelOrange;
+
+  /// No description provided for @labelGreen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Verde'**
+  String get labelGreen;
+
+  /// No description provided for @labelBlue.
+  ///
+  /// In pt, this message translates to:
+  /// **'Azul'**
+  String get labelBlue;
+
+  /// No description provided for @labelPurple.
+  ///
+  /// In pt, this message translates to:
+  /// **'Roxo'**
+  String get labelPurple;
+
+  /// No description provided for @binderWords.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} palavras'**
+  String binderWords(int count);
+
+  /// No description provided for @binderKeysHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alt+setas move, F2 renomeia, Delete manda para a lixeira'**
+  String get binderKeysHint;
+
+  /// No description provided for @binderEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'O livro não tem capítulos.'**
+  String get binderEmpty;
+
+  /// No description provided for @statusBookWords.
+  ///
+  /// In pt, this message translates to:
+  /// **'livro {count}'**
+  String statusBookWords(String count);
+
+  /// No description provided for @statusBookWordsTip.
+  ///
+  /// In pt, this message translates to:
+  /// **'Palavras no livro inteiro'**
+  String get statusBookWordsTip;
+
+  /// No description provided for @bookChapterName.
+  ///
+  /// In pt, this message translates to:
+  /// **'{book} — {chapter}'**
+  String bookChapterName(String book, String chapter);
+
+  /// No description provided for @newBookTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Novo livro'**
+  String get newBookTitle;
+
+  /// No description provided for @bookTitleLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Título do livro'**
+  String get bookTitleLabel;
+
+  /// No description provided for @bookLocationLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Onde guardar'**
+  String get bookLocationLabel;
+
+  /// No description provided for @bookLocationNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'O livro vira a pasta “{folder}”, com um arquivo por capítulo.'**
+  String bookLocationNote(String folder);
+
+  /// No description provided for @chooseFolder.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolher a pasta…'**
+  String get chooseFolder;
+
+  /// No description provided for @chooseFolderButton.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolher'**
+  String get chooseFolderButton;
+
+  /// No description provided for @createButton.
+  ///
+  /// In pt, this message translates to:
+  /// **'Criar'**
+  String get createButton;
+
+  /// No description provided for @importTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Importar um manuscrito'**
+  String get importTitle;
+
+  /// No description provided for @importReading.
+  ///
+  /// In pt, this message translates to:
+  /// **'Lendo o manuscrito…'**
+  String get importReading;
+
+  /// No description provided for @importLevel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os capítulos começam nos títulos de'**
+  String get importLevel;
+
+  /// No description provided for @importLevelN.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nível {level}'**
+  String importLevelN(int level);
+
+  /// No description provided for @importFound.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} capítulos'**
+  String importFound(int count);
+
+  /// No description provided for @importPartsNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os títulos de nível acima viram partes.'**
+  String get importPartsNote;
+
+  /// No description provided for @importButton.
+  ///
+  /// In pt, this message translates to:
+  /// **'Importar'**
+  String get importButton;
+
+  /// No description provided for @importProgress.
+  ///
+  /// In pt, this message translates to:
+  /// **'Importando o capítulo {done} de {total}…'**
+  String importProgress(int done, int total);
+
+  /// No description provided for @importChapterWords.
+  ///
+  /// In pt, this message translates to:
+  /// **'{title} · {count} palavras'**
+  String importChapterWords(String title, int count);
+
+  /// No description provided for @fileTypeManuscripts.
+  ///
+  /// In pt, this message translates to:
+  /// **'Manuscritos'**
+  String get fileTypeManuscripts;
+
+  /// No description provided for @bookErrorMissing.
+  ///
+  /// In pt, this message translates to:
+  /// **'O livro não foi encontrado.'**
+  String get bookErrorMissing;
+
+  /// No description provided for @bookErrorInvalid.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta pasta não tem um livro do Quill.'**
+  String get bookErrorInvalid;
+
+  /// No description provided for @bookErrorExists.
+  ///
+  /// In pt, this message translates to:
+  /// **'Já existe um livro nesta pasta.'**
+  String get bookErrorExists;
+
+  /// No description provided for @bookErrorWrite.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não deu para gravar o livro.'**
+  String get bookErrorWrite;
+
+  /// No description provided for @importErrorUnreadable.
+  ///
+  /// In pt, this message translates to:
+  /// **'O LibreOffice não conseguiu ler este manuscrito.'**
+  String get importErrorUnreadable;
+
+  /// No description provided for @importErrorEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'O manuscrito não tem texto.'**
+  String get importErrorEmpty;
+
+  /// No description provided for @startNewBook.
+  ///
+  /// In pt, this message translates to:
+  /// **'Novo livro'**
+  String get startNewBook;
+
+  /// No description provided for @startImport.
+  ///
+  /// In pt, this message translates to:
+  /// **'Importar um manuscrito'**
+  String get startImport;
+
+  /// No description provided for @recentBook.
+  ///
+  /// In pt, this message translates to:
+  /// **'Livro'**
+  String get recentBook;
+
+  /// No description provided for @binderClose.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fechar o fichário'**
+  String get binderClose;
 }
 
 class _AppLocalizationsDelegate

@@ -708,5 +708,150 @@
   "prefSpellColor": "Cor da marca de ortografia",
   "prefSpellColorNote": "Vale na próxima vez que o Quill abrir.",
   "prefScreenReaderDoc": "Texto do documento para o leitor de tela",
-  "prefScreenReaderDocNote": "Liga sozinho quando um leitor de tela está ativo. Ligado, o motor trabalha um pouco mais a cada tecla."
+  "prefScreenReaderDocNote": "Liga sozinho quando um leitor de tela está ativo. Ligado, o motor trabalha um pouco mais a cada tecla.",
+  "menuBook": "Livro",
+  "railBinder": "Fichário",
+  "binderTitle": "Fichário",
+  "commandBinder": "Fichário",
+  "commandNewBook": "Novo livro…",
+  "commandOpenBook": "Abrir livro…",
+  "commandImportManuscript": "Importar um manuscrito…",
+  "commandCloseBook": "Fechar o livro",
+  "commandNewChapter": "Novo capítulo",
+  "commandNewPart": "Nova parte",
+  "newChapterTitle": "Capítulo novo",
+  "newPartTitle": "Parte nova",
+  "firstChapterTitle": "Capítulo 1",
+  "importUntitled": "Abertura",
+  "chapterStatusDraft": "Rascunho",
+  "chapterStatusRevision": "Revisão",
+  "chapterStatusDone": "Pronto",
+  "binderRename": "Renomear",
+  "binderOpen": "Abrir",
+  "binderDelete": "Mandar para a lixeira",
+  "binderDeleteTitle": "Mandar para a lixeira?",
+  "binderDeleteChapter": "“{title}” sai do livro. O arquivo vai para a pasta lixeira, dentro do livro, e não é apagado.",
+  "@binderDeleteChapter": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "binderDeletePart": "A parte “{title}” sai do livro. Os capítulos dela continuam, no lugar dela.",
+  "@binderDeletePart": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "binderSynopsis": "Sinopse",
+  "binderSynopsisHint": "Do que trata este capítulo",
+  "binderStatus": "Status",
+  "binderLabel": "Rótulo",
+  "labelNone": "Sem rótulo",
+  "labelRed": "Vermelho",
+  "labelOrange": "Laranja",
+  "labelGreen": "Verde",
+  "labelBlue": "Azul",
+  "labelPurple": "Roxo",
+  "binderWords": "{count} palavras",
+  "@binderWords": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "binderKeysHint": "Alt+setas move, F2 renomeia, Delete manda para a lixeira",
+  "binderEmpty": "O livro não tem capítulos.",
+  "statusBookWords": "livro {count}",
+  "@statusBookWords": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "statusBookWordsTip": "Palavras no livro inteiro",
+  "bookChapterName": "{book} — {chapter}",
+  "@bookChapterName": {
+    "placeholders": {
+      "book": {
+        "type": "String"
+      },
+      "chapter": {
+        "type": "String"
+      }
+    }
+  },
+  "newBookTitle": "Novo livro",
+  "bookTitleLabel": "Título do livro",
+  "bookLocationLabel": "Onde guardar",
+  "bookLocationNote": "O livro vira a pasta “{folder}”, com um arquivo por capítulo.",
+  "@bookLocationNote": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "chooseFolder": "Escolher a pasta…",
+  "chooseFolderButton": "Escolher",
+  "createButton": "Criar",
+  "importTitle": "Importar um manuscrito",
+  "importReading": "Lendo o manuscrito…",
+  "importLevel": "Os capítulos começam nos títulos de",
+  "importLevelN": "Nível {level}",
+  "@importLevelN": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "importFound": "{count} capítulos",
+  "@importFound": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importPartsNote": "Os títulos de nível acima viram partes.",
+  "importButton": "Importar",
+  "importProgress": "Importando o capítulo {done} de {total}…",
+  "@importProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "importChapterWords": "{title} · {count} palavras",
+  "@importChapterWords": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fileTypeManuscripts": "Manuscritos",
+  "bookErrorMissing": "O livro não foi encontrado.",
+  "bookErrorInvalid": "Esta pasta não tem um livro do Quill.",
+  "bookErrorExists": "Já existe um livro nesta pasta.",
+  "bookErrorWrite": "Não deu para gravar o livro.",
+  "importErrorUnreadable": "O LibreOffice não conseguiu ler este manuscrito.",
+  "importErrorEmpty": "O manuscrito não tem texto.",
+  "startNewBook": "Novo livro",
+  "startImport": "Importar um manuscrito",
+  "recentBook": "Livro",
+  "binderClose": "Fechar o fichário"
 }
