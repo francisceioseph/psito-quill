@@ -1640,4 +1640,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get binderClose => 'Close the binder';
+
+  @override
+  String get prefAutosave => 'Autosave';
+
+  @override
+  String get prefAutosaveNote =>
+      'Every minute with changes, a recovery copy is kept on your computer, in Quill\'s folder. If Quill closes unexpectedly, it shows up on the start screen.';
+
+  @override
+  String get recoverHeading => 'Recover files';
+
+  @override
+  String get recoverNote =>
+      'Quill closed without saving these documents. Recover opens the copy as a new document; save it to keep it.';
+
+  @override
+  String recoverRow(String name, String when) {
+    return '$name, copy from $when';
+  }
+
+  @override
+  String get recoverOpen => 'Recover';
+
+  @override
+  String get recoverDiscard => 'Discard';
+
+  @override
+  String get recoverDiscardTitle => 'Discard the copy?';
+
+  @override
+  String recoverDiscardBody(String name) {
+    return 'The recovery copy of “$name” will be deleted. The saved file, if any, does not change.';
+  }
+
+  @override
+  String recoveredName(String name) {
+    return '$name (recovered)';
+  }
 }

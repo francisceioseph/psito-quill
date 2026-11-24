@@ -839,3 +839,26 @@ O Francisco viu que, num DOCX, clicar num título da Estrutura não levava até 
   - `fodt_test`: a chave, as ocorrências (com "Cena 10", um título repetido, a tabulação e a nota);
   - `fase2b_pages_test`: o salto manda o começo e a busca sem acender o Localizar, e a vista rola até o cursor longe, sem puxar de volta depois da roda;
   - integração, passo 2d: o título com mais ocorrências antes dele fica selecionado, exatamente ele.
+
+## D-073 · O salvamento automático numa cópia de recuperação
+
+Fase 3, Etapa 2. O motor roda dentro do processo: se o LibreOffice cai, o Quill cai junto, e perde-se o que não foi salvo.
+
+- **A cópia é a do D-044:** o `exportCopy` em ODT, que não muda o documento, o caminho nem o "modificado". O motor grava, e o Dart só troca o nome do arquivo e escreve um JSON pequeno ao lado.
+- **Onde:** `~/.config/psito-quill/recuperacao/`, uma pasta só do usuário (700), nunca ao lado do arquivo. Por aba: `<sessão>-<aba>.odt` e `<sessão>-<aba>.json`, com o arquivo de onde veio, o nome que a aba mostrava ("Dustland — A poeira", no livro) e a hora.
+  - A sessão é um carimbo da hora de abrir o Quill, não o pid: o pid se repete depois de reiniciar o computador.
+  - O motor grava ao lado (`.gravando.odt`), e só o `rename` troca a cópia. Uma queda no meio não estraga a cópia anterior, e uma gravação pela metade some ao listar.
+- **Quando:** depois de uma alteração, conta 60 s. Se a pessoa digitou nos últimos 2 s, espera uma pausa de 2 s, porque a cópia ocupa a fila do motor e a tecla espera atrás dela. Sem alteração, não grava nada. O cronômetro é um `Timer` só, que não refaz a interface.
+  - A sonda no `lok_script` (24/11): a cópia leva ~0,27 s no capítulo de 30 páginas e ~0,65 s num documento de 300 páginas (a primeira, ~1,6 s).
+  - Sair de uma aba com alterações (trocar, ou abrir outra) grava a cópia dela na hora. Ela vai para a fila antes da troca, então é do documento certo.
+  - "Alteração" é a digitação, um comando do motor pelo `uno` ou o "modificado" ligando. Se o "modificado" desligou (desfez tudo), a cópia sai: o arquivo já é o documento.
+- **Quando sai:** salvar a aba, fechar a aba e sair do Quill apagam as cópias da sessão. Uma aba que fecha no meio de uma gravação não deixa cópia. Desligar a preferência também apaga as da sessão.
+- **Recuperar:** o que sobra na pasta é de uma sessão que caiu. A tela inicial mostra "Recuperar arquivos" antes dos cartões, com o nome, a pasta e a hora de cada cópia. Mesmo com a preferência "documento em branco", o Quill abre na tela inicial quando há cópias.
+  - **Recuperar** abre a cópia como um documento novo: sem arquivo, "(recuperado)" no nome e modificado até ser salvo, para fechar perguntar. Salvar sugere o nome e a pasta de onde veio, sem sobrescrever sozinho. A cópia abre no lugar e fica até a aba ser salva ou fechada, ou até a primeira cópia nova dela (que tem tudo).
+  - **Descartar** pergunta antes e apaga. As cópias que a pessoa não escolheu ficam para a próxima vez: nenhuma sai sem ela decidir.
+- **A preferência:** Preferências › Geral › Salvamento automático, ligada por padrão. O `--bench` não grava cópias.
+- **A memória:** nada novo fica na memória além de um `Timer` e de um mapa das gravações na fila (uma por aba, no máximo). O texto vai do motor para o disco sem passar pelo Dart. O `tool/ab.py` não foi rodado: o `--bench` não liga a recuperação, e a cópia em si é o mesmo `saveAs` das cópias do D-044, que o motor solta ao terminar.
+- **Os testes:**
+  - unidade, `recovery_test`: a pasta (as sessões, a gravação pela metade), o intervalo e a pausa, salvar e fechar, trocar de aba, desfazer tudo, desligar, a aba que fecha no meio, recuperar (o documento novo, o nome sugerido, a cópia que sai), descartar e sair;
+  - widget, `fase3_recovery_test`: a lista na tela inicial, o nome para o leitor de tela, Recuperar e o "(recuperado)" no título, e Descartar com a pergunta;
+  - integração, passo 23: a cópia do motor é um ODT com o texto novo, o documento segue no mesmo arquivo e modificado, e a cópia recuperada abre editável, sem arquivo.

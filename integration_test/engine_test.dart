@@ -20,6 +20,7 @@ import 'package:psito_quill/src/book/docx_import.dart';
 import 'package:psito_quill/src/book/book_io.dart';
 import 'package:psito_quill/src/app.dart';
 import 'package:psito_quill/src/document/document_controller.dart';
+import 'package:psito_quill/src/document/recovery.dart';
 import 'package:psito_quill/src/document/search.dart';
 import 'package:psito_quill/src/document/text_clipboard.dart';
 import 'package:psito_quill/src/document/workspace.dart';
@@ -472,6 +473,38 @@ void main() {
     expect(readBook(bookDir).find(second.id)!.$1.words, second.words);
     expect(await workspace.closeBook(), isTrue);
     expect(doc.tabs.length, tabsBefore, reason: 'fechar o livro fecha as abas dele');
+
+    // 23. O salvamento automático (D-073): a cópia de recuperação é um ODT
+    //     com o texto novo, e o documento continua o mesmo arquivo,
+    //     modificado. Depois de "cair" (outra sessão lê a pasta), a cópia
+    //     abre como um documento novo, e fechar a apaga.
+    final recDir = Directory('${tmp.path}/recuperacao');
+    doc.recovery = RecoveryStore(recDir, session: 'integracao');
+    DocumentController.autosaveEvery = const Duration(milliseconds: 400);
+    DocumentController.autosavePause = const Duration(milliseconds: 200);
+    final recSource = source.copySync('${tmp.path}/recuperavel.docx').path;
+    await openAndWait(recSource);
+    doc.insertText('Recuperavel ');
+    final recTab = doc.currentTab!;
+    final recCopy = '${recDir.path}/${doc.recovery!.idFor(recTab.serial)}.odt';
+    await until(() => File(recCopy).existsSync(), 'a cópia de recuperação', seconds: 20);
+    expect(readOdtContent(recCopy), contains('Recuperavel'));
+    expect(doc.path, recSource, reason: 'a cópia não muda o arquivo do documento');
+    expect(doc.modified, isTrue, reason: 'nem o "modificado"');
+    expect(recDir.listSync().where((f) => f.path.contains('gravando')), isEmpty);
+    final crash = RecoveryStore(recDir, session: 'depois').pending().single;
+    expect(crash.original, recSource);
+    workspace.recover(crash);
+    await until(() => doc.docStatus == DocStatus.open && doc.recovered == crash, 'abrir a cópia');
+    await until(() => doc.tiles.isNotEmpty, 'os ladrilhos da cópia');
+    expect(doc.path, isNull, reason: 'um documento novo');
+    expect(doc.modified, isTrue);
+    expect(doc.readOnly, isFalse);
+    workspace.onUnsaved = () async => UnsavedChoice.discard;
+    expect(await workspace.closeTab(), isTrue);
+    expect(await workspace.closeTab(recTab), isTrue);
+    expect(recDir.listSync().whereType<File>(), isEmpty, reason: 'fechar apaga as cópias');
+    doc.recovery = null;
 
         // Fecha sem salvar (descarta), para não deixar trava.
     workspace.onUnsaved = () async => UnsavedChoice.discard;

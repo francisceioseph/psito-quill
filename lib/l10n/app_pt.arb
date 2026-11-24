@@ -853,5 +853,39 @@
   "startNewBook": "Novo livro",
   "startImport": "Importar um manuscrito",
   "recentBook": "Livro",
-  "binderClose": "Fechar o fichário"
+  "binderClose": "Fechar o fichário",
+  "prefAutosave": "Salvamento automático",
+  "prefAutosaveNote": "A cada minuto com alterações, uma cópia de recuperação fica no seu computador, na pasta do Quill. Se o Quill fechar sem querer, ela aparece na tela inicial.",
+  "recoverHeading": "Recuperar arquivos",
+  "recoverNote": "O Quill fechou sem salvar estes documentos. Recuperar abre a cópia como um documento novo; salve-o para ficar com ele.",
+  "recoverRow": "{name}, cópia de {when}",
+  "@recoverRow": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "recoverOpen": "Recuperar",
+  "recoverDiscard": "Descartar",
+  "recoverDiscardTitle": "Descartar a cópia?",
+  "recoverDiscardBody": "A cópia de recuperação de “{name}” será apagada. O arquivo salvo, se houver, não muda.",
+  "@recoverDiscardBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "recoveredName": "{name} (recuperado)",
+  "@recoveredName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

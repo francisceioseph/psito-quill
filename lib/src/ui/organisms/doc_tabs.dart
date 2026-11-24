@@ -24,6 +24,8 @@ class DocTabStrip extends StatelessWidget {
 
   /// O nome que a aba mostra: o do arquivo, sem a pasta.
   static String titleOf(DocumentController doc, DocTab t, AppLocalizations l10n) {
+    final rec = t == doc.currentTab ? doc.recovered : t.recovered;
+    if (rec != null) return l10n.recoveredName(rec.name ?? l10n.untitled);
     final p = doc.tabPath(t);
     if (p == null || p.isEmpty) return l10n.untitled;
     final slash = p.lastIndexOf('/');

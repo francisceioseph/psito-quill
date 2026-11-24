@@ -72,6 +72,7 @@ class _PreferencesViewState extends State<PreferencesView> {
               [('100', l10n.zoomPercent(100)), ('largura', l10n.commandFitWidth), ('pagina', l10n.commandFitPage)],
               s.zoomOnOpen, (v) => s.zoomOnOpen = v),
         ),
+        _switch(l10n.prefAutosave, s.autosave, (v) => s.autosave = v, note: l10n.prefAutosaveNote),
       ];
 
   List<Widget> _appearance(AppLocalizations l10n, Settings s) => [

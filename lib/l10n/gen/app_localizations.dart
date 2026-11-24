@@ -3061,6 +3061,66 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Fechar o fichário'**
   String get binderClose;
+
+  /// No description provided for @prefAutosave.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvamento automático'**
+  String get prefAutosave;
+
+  /// No description provided for @prefAutosaveNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'A cada minuto com alterações, uma cópia de recuperação fica no seu computador, na pasta do Quill. Se o Quill fechar sem querer, ela aparece na tela inicial.'**
+  String get prefAutosaveNote;
+
+  /// No description provided for @recoverHeading.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recuperar arquivos'**
+  String get recoverHeading;
+
+  /// No description provided for @recoverNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'O Quill fechou sem salvar estes documentos. Recuperar abre a cópia como um documento novo; salve-o para ficar com ele.'**
+  String get recoverNote;
+
+  /// No description provided for @recoverRow.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name}, cópia de {when}'**
+  String recoverRow(String name, String when);
+
+  /// No description provided for @recoverOpen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recuperar'**
+  String get recoverOpen;
+
+  /// No description provided for @recoverDiscard.
+  ///
+  /// In pt, this message translates to:
+  /// **'Descartar'**
+  String get recoverDiscard;
+
+  /// No description provided for @recoverDiscardTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Descartar a cópia?'**
+  String get recoverDiscardTitle;
+
+  /// No description provided for @recoverDiscardBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'A cópia de recuperação de “{name}” será apagada. O arquivo salvo, se houver, não muda.'**
+  String recoverDiscardBody(String name);
+
+  /// No description provided for @recoveredName.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} (recuperado)'**
+  String recoveredName(String name);
 }
 
 class _AppLocalizationsDelegate

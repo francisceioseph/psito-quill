@@ -522,6 +522,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
   }
 
   String _documentName(AppLocalizations l10n) {
+    if (doc.recovered case final r?) return l10n.recoveredName(r.name ?? l10n.untitled);
     final p = doc.path;
     final chapter = books.chapterAt(p);
     if (chapter != null) return l10n.bookChapterName(books.book!.title, chapter.title);

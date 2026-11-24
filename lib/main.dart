@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'src/app.dart';
 import 'src/bench/bench_runner.dart';
 import 'src/document/document_controller.dart';
+import 'src/document/recovery.dart';
 import 'src/document/workspace.dart';
 import 'src/files/app_window.dart';
 import 'src/files/file_dialogs.dart';
@@ -36,6 +37,13 @@ void main(List<String> args) {
   DocumentController.cleanStaleCopies();
   final kit = LokQuillKit(profile: profile, tileSlots: tileSlotsFor(_largestDisplay()));
   final doc = DocumentController(kit, deferOpenWork: true);
+  // As cópias de recuperação (D-073). O --bench não grava nenhuma.
+  if (!bench) {
+    doc
+      ..recovery = RecoveryStore.standard()
+      ..autosave = settings.autosave;
+    settings.addListener(() => doc.autosave = settings.autosave);
+  }
   final recents = RecentFiles(File('${config.path}/recentes.json'), keep: settings.keepRecents);
   settings.addListener(() => recents.keep = settings.keepRecents);
   final workspace = Workspace(
@@ -44,6 +52,7 @@ void main(List<String> args) {
     dialogs: const SystemFileDialogs(),
     locks: LockInspector(profileUrl: profile.url),
   );
+  if (!bench) workspace.loadRecoverable();
   final scroll = ScrollController();
   final app = GlobalKey<QuillAppState>();
 
@@ -69,7 +78,8 @@ void main(List<String> args) {
         // A tela inicial (D-064) é o editor sem documento.
         // Na tela inicial, o dicionário carrega enquanto se escolhe o
         // capítulo (D-069). O documento em branco não precisa dele.
-        if (settings.startScreen) {
+        // Com cópias de uma queda, a tela inicial, para oferecê-las.
+        if (settings.startScreen || workspace.recoverable.isNotEmpty) {
           doc.preloadSpelling();
         } else {
           doc.open('');

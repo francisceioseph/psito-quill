@@ -16,6 +16,7 @@ import '../files/lo_lock.dart';
 import '../files/recent_files.dart';
 import '../kit/quill_kit.dart';
 import 'document_controller.dart';
+import 'recovery.dart';
 
 /// A resposta a "salvar as alterações?".
 enum UnsavedChoice { save, discard, cancel }
@@ -31,6 +32,39 @@ class Workspace extends ChangeNotifier {
   Workspace({required this.doc, required this.recents, required this.dialogs, required this.locks})
       : book = BookController(doc.kit) {
     doc.addListener(_onDoc);
+    // A cópia de recuperação de um capítulo guarda "Livro — Capítulo".
+    doc.recoveryTitle = (path) {
+      final c = book.chapterAt(path);
+      return c == null ? null : '${book.book!.title} — ${c.title}';
+    };
+  }
+
+  // ------------------------------------------- a recuperação (D-073) --
+
+  /// As cópias de uma sessão que caiu, para a tela inicial oferecer.
+  List<RecoveryEntry> recoverable = const [];
+
+  /// Lê as cópias que sobraram (ao abrir o Quill).
+  void loadRecoverable() {
+    recoverable = doc.recovery?.pending() ?? const [];
+    notifyListeners();
+  }
+
+  /// Abre a cópia [e] como um documento novo (sem arquivo, modificado). Ela
+  /// fica no disco até a aba ser salva ou fechada.
+  void recover(RecoveryEntry e) {
+    recoverable = [for (final r in recoverable) if (r != e) r];
+    notifyListeners();
+    // Uma trava velha ao lado da cópia (a sessão caiu com ela aberta).
+    final verdict = locks.inspect(e.copy);
+    doc.open(e.copy, recovered: e, lockOwner: verdict is LockedBy ? verdict.lock.owner : null);
+  }
+
+  /// Apaga a cópia [e] de vez (a tela inicial pergunta antes).
+  void discardRecovery(RecoveryEntry e) {
+    doc.recovery?.delete(e.id);
+    recoverable = [for (final r in recoverable) if (r != e) r];
+    notifyListeners();
   }
 
   /// O livro aberto (Fase 3, D-071). Os capítulos abrem como abas.
@@ -162,7 +196,8 @@ class Workspace extends ChangeNotifier {
 
   Future<bool> saveAs() async {
     if (!doc.isOpen) return false;
-    final current = doc.path;
+    // Uma cópia recuperada sugere o arquivo de onde veio.
+    final current = doc.path ?? doc.recovered?.original;
     final target = await dialogs.pickSave(
       suggestedName: current == null ? '${labels.untitled}.odt' : File(current).uri.pathSegments.last,
       initialDirectory: current == null ? null : File(current).parent.path,
@@ -213,6 +248,9 @@ class Workspace extends ChangeNotifier {
     }
     if (doc.tabs.isEmpty && !await _confirmDiscard()) return false;
     await doc.close();
+    // Saiu direito: as cópias desta sessão não servem (as de uma sessão que
+    // caiu e não foram escolhidas ficam).
+    doc.recovery?.deleteSession();
     return true;
   }
 

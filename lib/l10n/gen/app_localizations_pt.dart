@@ -1641,4 +1641,42 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get binderClose => 'Fechar o fichário';
+
+  @override
+  String get prefAutosave => 'Salvamento automático';
+
+  @override
+  String get prefAutosaveNote =>
+      'A cada minuto com alterações, uma cópia de recuperação fica no seu computador, na pasta do Quill. Se o Quill fechar sem querer, ela aparece na tela inicial.';
+
+  @override
+  String get recoverHeading => 'Recuperar arquivos';
+
+  @override
+  String get recoverNote =>
+      'O Quill fechou sem salvar estes documentos. Recuperar abre a cópia como um documento novo; salve-o para ficar com ele.';
+
+  @override
+  String recoverRow(String name, String when) {
+    return '$name, cópia de $when';
+  }
+
+  @override
+  String get recoverOpen => 'Recuperar';
+
+  @override
+  String get recoverDiscard => 'Descartar';
+
+  @override
+  String get recoverDiscardTitle => 'Descartar a cópia?';
+
+  @override
+  String recoverDiscardBody(String name) {
+    return 'A cópia de recuperação de “$name” será apagada. O arquivo salvo, se houver, não muda.';
+  }
+
+  @override
+  String recoveredName(String name) {
+    return '$name (recuperado)';
+  }
 }

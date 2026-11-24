@@ -37,6 +37,7 @@ class Settings extends ChangeNotifier {
   String _spellColor = 'vermelho';
   String _zoomOnOpen = '100';
   bool _screenReaderDoc = false;
+  bool _autosave = true;
 
   /// O id do tema (os de `builtInThemes`).
   String get theme => _theme;
@@ -99,6 +100,10 @@ class Settings extends ChangeNotifier {
   /// Exibir › Barra de status.
   bool get statusBar => _statusBar;
   set statusBar(bool v) => _set(() => _statusBar = v);
+
+  /// O salvamento automático numa cópia de recuperação (D-073).
+  bool get autosave => _autosave;
+  set autosave(bool v) => _set(() => _autosave = v);
 
   // ------------------------------------------ acessibilidade (D-067) --
 
@@ -166,6 +171,7 @@ class Settings extends ChangeNotifier {
       _spellColor = json['corOrtografia'] as String? ?? _spellColor;
       _zoomOnOpen = json['zoomAoAbrir'] as String? ?? _zoomOnOpen;
       _screenReaderDoc = json['documentoLeitorTela'] as bool? ?? _screenReaderDoc;
+      _autosave = json['salvamentoAutomatico'] as bool? ?? _autosave;
       _recentFonts = (json['fontesRecentes'] as List?)?.whereType<String>().take(5).toList() ?? _recentFonts;
     } on Object {
       // Sem arquivo ou estragado: os padrões.
@@ -200,6 +206,7 @@ class Settings extends ChangeNotifier {
             'corOrtografia': _spellColor,
             'zoomAoAbrir': _zoomOnOpen,
             'documentoLeitorTela': _screenReaderDoc,
+            'salvamentoAutomatico': _autosave,
           }));
     } on FileSystemException {
       // Sem onde gravar: vale só para esta sessão.

@@ -580,7 +580,7 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
 - **Etapa 9: as metas.** Do livro com prazo e do dia, o histórico em `metas.json`, a meta na barra de status e um gráfico dos últimos 30 dias num `CustomPainter`.
 - **Etapa 10: a cortiça.** Os capítulos como cartões, a mesma árvore do fichário, com a sinopse editável no cartão.
 - **Fecho:** o `docs/FASE3-RESULTADOS.md` e a documentação.
-- **Estado em 23/11/2026:** a Etapa 1 está feita (D-071).
+- **Estado em 24/11/2026:** as Etapas 1 (D-071) e 2 (D-073) estão feitas.
 
 **Fase 4: compilar e revisar**
 - Compilar para PDF, EPUB e DOCX com modelos, referências cruzadas, marcadores, sumário e índice. (As notas de rodapé foram para a Fase 3, Etapa 4.)
@@ -625,7 +625,7 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
 | Acessibilidade fraca no LOK (o leitor de tela não lê ladrilhos) | Feito na Fase 2B (D-067): o parágrafo do cursor e a posição dele vêm dos callbacks de acessibilidade do LOK e viram um campo de texto no `Semantics`. Não lê o documento inteiro, só o parágrafo; o README diz isso. Falta conferir com o Orca |
 | IME (acentos compostos, `´` + `a`) | `postExtTextInputEvent`, testado com o teclado ABNT2 já na fase 1 |
 | Papel escuro não suportado | Moldura escura com papel claro (seção 4) |
-| Um crash do LibreOffice derruba o app | Salvamento automático a cada 60 s numa cópia de recuperação no perfil do Quill, e a recuperação ao abrir (Fase 3, Etapa 2). Se for frequente, o kit vai para um processo à parte (1.2) |
+| Um crash do LibreOffice derruba o app | Salvamento automático a cada 60 s numa cópia de recuperação no perfil do Quill, e a recuperação ao abrir (Fase 3, Etapa 2, feita: D-073). Se for frequente, o kit vai para um processo à parte (1.2) |
 | DOCX complexos (de editoras) | Fiel ao que o LibreOffice já faz. O formato do livro é ODT, e o DOCX é exportação |
 | Escopo enorme | Fases com saída usável: a fase 1 já edita um capítulo. Só o necessário para escrever os livros |
 

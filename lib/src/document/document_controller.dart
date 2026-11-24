@@ -17,6 +17,7 @@ import '../kit/quill_kit.dart';
 import 'doc_tab.dart';
 import 'fodt.dart';
 import 'outline.dart';
+import 'recovery.dart';
 import 'search.dart';
 import 'text_clipboard.dart';
 
@@ -185,7 +186,9 @@ class DocumentController extends ChangeNotifier {
 
   bool get isOpen => docStatus == DocStatus.open;
   bool get canEdit => isOpen && !readOnly;
-  bool get modified => isOn('.uno:ModifiedStatus');
+  /// Uma cópia recuperada (D-073) conta como modificada até ser salva: ela
+  /// não é o arquivo de ninguém.
+  bool get modified => isOn('.uno:ModifiedStatus') || recovered != null;
   bool get canUndo => canEdit && _enabled('.uno:Undo');
   bool get canRedo => canEdit && _enabled('.uno:Redo');
   bool get hasSelection => selection.isNotEmpty;
@@ -316,6 +319,8 @@ class DocumentController extends ChangeNotifier {
       ..bookMode = bookMode
       ..snapshot = snapshot
       ..editedSinceCopy = _editedSinceCopy || _exporting != null
+      ..recoveryDirty = _recoveryDirty
+      ..recovered = recovered
       ..scroll = scrollPosition;
   }
 
@@ -342,6 +347,8 @@ class DocumentController extends ChangeNotifier {
     bookMode = t.bookMode;
     snapshot = t.snapshot;
     _editedSinceCopy = t.editedSinceCopy;
+    _recoveryDirty = t.recoveryDirty;
+    recovered = t.recovered;
     scrollPosition = t.scroll;
     t.commandStates = const {};
   }
@@ -361,6 +368,8 @@ class DocumentController extends ChangeNotifier {
     _exporting = null;
     _exportAgain = false;
     _outlineTimer?.cancel();
+    _autosaveTimer?.cancel();
+    _autosaveTimer = null;
     endTextSearch();
   }
 
@@ -371,12 +380,14 @@ class DocumentController extends ChangeNotifier {
     // Durante uma troca pode trocar de novo (o motor faz na ordem); durante
     // uma abertura, não (o DocumentOpened é da aba que está abrindo).
     if (t == _current || !tabs.contains(t) || _pendingOpens.isNotEmpty) return;
+    _flushRecovery();
     if (_current case final c?) _stash(c);
     _current = t;
     tabRevision++;
     t.lastUsed = ++_useClock;
     _clearTransient();
     _restore(t);
+    if (_recoveryDirty) _scheduleAutosave();
     if (t.engineId case final id?) {
       _switching = true;
       kit.activate(id);
@@ -422,6 +433,8 @@ class DocumentController extends ChangeNotifier {
     final i = tabs.indexOf(t);
     if (i < 0) return;
     tabs.removeAt(i);
+    _forgetRecovery(t, t == _current ? recovered : t.recovered);
+    if (t == _current) recovered = null;
     _pendingOpens.remove(t);
     if (t != _current) return;
     _current = null;
@@ -452,7 +465,8 @@ class DocumentController extends ChangeNotifier {
   /// Abre numa aba nova. [path] vazio abre um documento novo. [lockOwner]: o
   /// arquivo está com outro, e abre só para leitura. Um documento novo e
   /// vazio na tela dá lugar a este quando ele abrir.
-  void open(String path, {String? lockOwner}) {
+  void open(String path, {String? lockOwner, RecoveryEntry? recovered}) {
+    _flushRecovery();
     final previous = _current;
     _replaceWhenOpened = previous != null && _pristine ? previous : null;
     _cameFrom = previous;
@@ -471,6 +485,9 @@ class DocumentController extends ChangeNotifier {
     ruler = null;
     snapshot = FodtSnapshot.empty;
     _editedSinceCopy = false;
+    _recoveryDirty = false;
+    this.recovered = recovered;
+    t.recovered = recovered;
     this.path = null;
     documentSize = Size.zero;
     cursor = Rect.zero;
@@ -567,6 +584,7 @@ class DocumentController extends ChangeNotifier {
 
   void _edited() {
     _editedSinceCopy = true;
+    _markRecovery();
     if (!_liveOutline) return;
     _outlineTimer?.cancel();
     _outlineTimer = Timer(outlinePause, refreshSnapshot);
@@ -689,7 +707,9 @@ class DocumentController extends ChangeNotifier {
 
   /// Um comando do motor que muda o documento. No modo só leitura, nada.
   void uno(String command, [String args = '']) {
-    if (canEdit) kit.uno(command, args);
+    if (!canEdit) return;
+    kit.uno(command, args);
+    _markRecovery();
   }
 
   void undo() => uno('.uno:Undo');
@@ -744,6 +764,126 @@ class DocumentController extends ChangeNotifier {
       '{"StyleName":{"type":"string","value":${_json(name)}},"Family":{"type":"short","value":2}}',
     );
     refreshSnapshot();
+  }
+
+  // ------------------------------- o salvamento automático (D-073) --
+
+  /// Onde ficam as cópias de recuperação; null: nenhuma (os testes que não
+  /// pedem, o `--bench`).
+  RecoveryStore? recovery;
+
+  /// A preferência (ligada por padrão). Desligar apaga as cópias da sessão.
+  bool get autosave => _autosave;
+  set autosave(bool v) {
+    if (v == _autosave) return;
+    _autosave = v;
+    if (v) {
+      if (_recoveryDirty) _scheduleAutosave();
+    } else {
+      _autosaveTimer?.cancel();
+      _autosaveTimer = null;
+      recovery?.deleteSession();
+    }
+  }
+
+  bool _autosave = true;
+
+  /// De quanto em quanto tempo, com alterações, e a pausa da digitação que
+  /// a cópia espera (ela ocupa a fila do motor: ~0,3 s num capítulo de 30
+  /// páginas, ~0,65 s num documento de 300).
+  static Duration autosaveEvery = const Duration(seconds: 60);
+  static Duration autosavePause = const Duration(seconds: 2);
+
+  /// O nome que a cópia guarda ("Dustland — A poeira"): o Workspace põe,
+  /// porque sabe do livro. null: o nome do arquivo.
+  String? Function(String? path)? recoveryTitle;
+
+  /// A cópia recuperada que esta aba abriu (até ser salva ou fechada).
+  RecoveryEntry? recovered;
+
+  /// Mudou desde a última cópia de recuperação.
+  bool _recoveryDirty = false;
+  DateTime _lastEdit = DateTime.fromMillisecondsSinceEpoch(0);
+  Timer? _autosaveTimer;
+
+  /// As cópias que o motor está gravando: o caminho e de que aba.
+  final _recoveryWrites = <String, ({DocTab tab, String id, String? original, String? title})>{};
+
+  void _markRecovery() {
+    _recoveryDirty = true;
+    _lastEdit = DateTime.now();
+    _scheduleAutosave();
+  }
+
+  void _scheduleAutosave([Duration? after]) {
+    if (!_autosave || recovery == null) return;
+    if (after == null && _autosaveTimer != null) return;
+    _autosaveTimer?.cancel();
+    _autosaveTimer = Timer(after ?? autosaveEvery, _autosaveTick);
+  }
+
+  void _autosaveTick() {
+    _autosaveTimer = null;
+    if (_disposed || !_recoveryDirty) return;
+    // Abrindo, salvando ou trocando de aba: tenta depois da pausa.
+    if (busy != null || _switching || !isOpen) return _scheduleAutosave(autosavePause);
+    final quiet = DateTime.now().difference(_lastEdit);
+    if (quiet < autosavePause) return _scheduleAutosave(autosavePause - quiet);
+    _writeRecovery();
+  }
+
+  /// Sair da aba da tela (outra aba, ou abrir uma nova) é uma pausa: a cópia
+  /// sai agora, antes da troca na fila do motor.
+  void _flushRecovery() {
+    _autosaveTimer?.cancel();
+    _autosaveTimer = null;
+    if (_recoveryDirty && !_switching && isOpen && busy == null) _writeRecovery();
+  }
+
+  void _writeRecovery() {
+    final store = recovery, tab = _current;
+    if (store == null || tab == null || !_autosave || readOnly) return;
+    _recoveryDirty = false;
+    final id = store.idFor(tab.serial);
+    if (!isOn('.uno:ModifiedStatus')) {
+      // Desfez tudo: o arquivo já é o documento.
+      store.delete(id);
+      return;
+    }
+    if (!store.ensureDir()) return;
+    final at = store.writingPath(id);
+    if (_recoveryWrites.containsKey(at)) {
+      // A anterior ainda está na fila do motor: esta vai depois dela.
+      _recoveryDirty = true;
+      return _scheduleAutosave(autosavePause);
+    }
+    // Uma gravação desta aba ainda na fila: a nova a substitui.
+    _recoveryWrites[at] = (tab: tab, id: id, original: path ?? recovered?.original, title: recoveryTitle?.call(path) ?? recovered?.title);
+    kit.exportCopy(at, 'odt');
+  }
+
+  void _recoveryWritten(({DocTab tab, String id, String? original, String? title}) w, {required bool ok}) {
+    final store = recovery;
+    if (store == null) return;
+    if (!ok || !tabs.contains(w.tab)) {
+      // Falhou, ou a aba fechou no meio (fechar já apagou a cópia).
+      store.dropWriting(w.id);
+      return;
+    }
+    store.commit(w.id, original: w.original, title: w.title);
+    // A cópia nova tem tudo: a recuperada que a aba abriu sai (no Linux, o
+    // motor continua lendo o arquivo aberto mesmo apagado).
+    final adopted = w.tab == _current ? recovered : w.tab.recovered;
+    if (adopted != null && adopted.id != w.id) store.delete(adopted.id);
+  }
+
+  /// A aba salvou ou fechou: as cópias dela (e a recuperada que ela abriu)
+  /// não servem mais.
+  void _forgetRecovery(DocTab t, RecoveryEntry? adopted) {
+    final store = recovery;
+    if (store == null) return;
+    store.delete(store.idFor(t.serial));
+    if (adopted != null) store.delete(adopted.id);
   }
 
   // --------------------------------------------------- a cópia (D-044) --
@@ -1282,8 +1422,9 @@ class DocumentController extends ChangeNotifier {
           // Abriu, mas outra aba já está na tela (dois pedidos seguidos).
           tab
             ..status = DocStatus.open
-            ..path = tab.openingPath
+            ..path = tab.recovered == null ? tab.openingPath : null
             ..documentSize = size;
+          if (tab.recovered != null) tab.openingPath = null;
           return;
         }
         _switching = false;
@@ -1294,7 +1435,9 @@ class DocumentController extends ChangeNotifier {
         _cameFrom = null;
         _enforceLimit();
         docStatus = DocStatus.open;
-        path = _openingPath;
+        // A cópia recuperada abre como um documento novo, sem arquivo.
+        path = recovered == null ? _openingPath : null;
+        if (recovered != null) _openingPath = null;
         documentSize = size;
         // O LOK manda a posição do cursor ao abrir, mas o "cursor visível"
         // só depois da primeira tecla. O cursor começa visível; só some se o
@@ -1339,6 +1482,7 @@ class DocumentController extends ChangeNotifier {
         final tab = [for (final t in tabs) if (t.engineId == id) t].firstOrNull;
         if (tab != null && tab != _current) {
           tabs.remove(tab);
+          _forgetRecovery(tab, tab.recovered);
           break;
         }
         docStatus = DocStatus.none;
@@ -1371,6 +1515,7 @@ class DocumentController extends ChangeNotifier {
       case CommandStateChanged(:final command, :final value):
         if (commandStates[command] == value) return;
         commandStates[command] = value;
+        if (command == '.uno:ModifiedStatus' && value == 'true') _markRecovery();
         if (statusOnlyStates.contains(command)) {
           // A página e as palavras mudam ao rolar e a cada tecla, e só a barra
           // de status e a Estrutura as leem: não refazem a faixa nem o painel.
@@ -1439,9 +1584,18 @@ class DocumentController extends ChangeNotifier {
         readOnly = false;
         lockOwner = null;
         commandStates['.uno:ModifiedStatus'] = 'false';
+        if (_current case final t?) _forgetRecovery(t, recovered);
+        recovered = null;
+        _recoveryDirty = false;
+        _autosaveTimer?.cancel();
+        _autosaveTimer = null;
         message = SavedMessage(path);
         refreshSnapshot();
       case CopyExported(:final path, :final ok):
+        if (_recoveryWrites.remove(path) case final w?) {
+          _recoveryWritten(w, ok: ok);
+          return;
+        }
         if (path == _searchCopyPath) {
           if (!ok) _searchCopyPath = null;
           _searchCopyReady?.complete(ok);
@@ -1534,6 +1688,7 @@ class DocumentController extends ChangeNotifier {
     _outlineTimer?.cancel();
     _savingGuard?.cancel();
     _openWork?.cancel();
+    _autosaveTimer?.cancel();
     if (_exporting case final p?) _deleteCopy(p);
     endTextSearch();
     _sub.cancel();

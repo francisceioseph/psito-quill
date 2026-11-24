@@ -8,6 +8,7 @@ import 'dart:ui' show Offset, Rect, Size;
 
 import '../kit/quill_kit.dart';
 import 'fodt.dart';
+import 'recovery.dart';
 
 /// O estado de um documento, na ordem em que o controlador o lê.
 enum DocStatus { none, opening, open, failed }
@@ -43,8 +44,15 @@ class DocTab {
   FodtSnapshot snapshot = FodtSnapshot.empty;
   bool editedSinceCopy = false;
 
+  /// Mudou desde a última cópia de recuperação (D-073).
+  bool recoveryDirty = false;
+
+  /// A cópia recuperada que esta aba abriu: sem arquivo, e modificada até
+  /// ser salva.
+  RecoveryEntry? recovered;
+
   /// A rolagem da página (pixels lógicos), que a vista devolve ao voltar.
   Offset scroll = Offset.zero;
 
-  bool get modified => commandStates['.uno:ModifiedStatus'] == 'true';
+  bool get modified => commandStates['.uno:ModifiedStatus'] == 'true' || recovered != null;
 }
