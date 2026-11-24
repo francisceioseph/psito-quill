@@ -26,7 +26,7 @@ A interface nova (seção 10 do `PLANO.md`), em 23/11/2026. O detalhe de cada et
 | 1. A fundação Material 3 | Os tokens da semente #415F91, a densidade, os ícones (com tree-shaking) e os átomos novos (`WSegmented`, `WSwitch`, `WSlider`, `WChip`) | D-042 |
 | 2. A casca do editor | A fileira de abas com o Arquivo e a pesquisa, a faixa num cartão, o trilho e o painel Formatar com só a seção visível, a barra de status, a aba Imagem | D-043 |
 | 3. As prévias | A lista de fontes desenhada nelas mesmas, com os filtros do fontconfig; os cartões de estilo com as propriedades lidas de uma cópia do documento; "Revelar formatação" com a origem | D-044, D-045 |
-| 4. A régua | As margens, os recuos e as tabulações do callback do motor; arrastar e o teclado; a régua vertical. Criar tabulações ficou de fora | D-046, D-058, D-060 |
+| 4. A régua | As margens, os recuos e as tabulações do callback do motor; arrastar e o teclado; a régua vertical. Criar tabulações ficou de fora | D-046, D-058b, D-060 |
 | 5. Várias páginas e a Estrutura | Uma, Várias e Livro pelo `.uno:ViewLayout`; a Estrutura lida da cópia, com o salto ao título pela busca | D-047, D-059 |
 | 6. O modo zen | A tela cheia do GTK, a máquina de escrever só com a rolagem do Flutter, o foco por faixa de linhas, o papel sépia | D-048 |
 | 7. A interface que respira | A escala maior, a faixa adaptável, a busca única, as abas de documentos (todas carregadas, com limite), o menu de contexto, os trilhos, a barra de status clicável, os bastidores, a tela inicial, a aba Exibir | D-049 a D-065 |
@@ -110,10 +110,12 @@ Cada `docs/fase2b/etapa-*.md` tem a sua lista "Para olhar à mão".
 
 ## Pendências da documentação
 
-- **Os números D-057 e D-058 aparecem duas vezes** no `DECISOES.md` (decisões diferentes, escritas em sessões diferentes). Não foram renumeradas, para não quebrar as referências nos documentos das etapas.
+- **Os números D-057 e D-058 apareciam duas vezes** no `DECISOES.md` (decisões diferentes, escritas em sessões diferentes). As segundas viraram D-057b (o respiro dos painéis) e D-058b (a régua segue a página do cursor); as referências foram corrigidas.
 
 ## Perguntas para o Francisco
 
-1. **A tela inicial ao abrir sem arquivo** é o que você quer? Antes, o Quill abria num documento em branco. A preferência Geral › "Ao abrir o Quill sem um arquivo" volta ao de antes.
-2. **O tamanho da interface faz a página crescer também.** Assim nada vaza, mas a 200 % a página fica duas vezes maior com o mesmo zoom. Prefere que o zoom da página compense?
-3. **A mensagem "Plugin: olá do Lua"** ao abrir continua. Tiro?
+Respondidas no D-070:
+
+1. **A tela inicial ao abrir sem arquivo:** continua o padrão.
+2. **O tamanho da interface e a página:** o zoom da página compensa; a página não cresce com a interface.
+3. **A mensagem "Plugin: olá do Lua":** o plugin fica só para os testes, e o app não o roda ao abrir.

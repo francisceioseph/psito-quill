@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:psito_quill/src/plugins/plugin_host.dart';
 import 'package:psito_quill/src/app.dart';
 import 'package:psito_quill/src/document/document_controller.dart';
 import 'package:psito_quill/src/document/search.dart';
@@ -276,10 +277,11 @@ void main() {
     await until(() => clipboard.text != null, 'copiar o parágrafo');
     expect(clipboard.text!.split('. ').length, greaterThan(3), reason: 'várias frases: o parágrafo, não uma frase');
 
-    // 13. Lua: o "olá" e um laço infinito interrompido.
-    kit.runLua('psito.log("olá, " .. _VERSION)', 'ola.lua');
+    // 13. Lua: o plugin "olá" (só para os testes desde o D-070; o app não o
+    //     roda ao abrir) e um laço infinito interrompido.
+    await PluginHost(kit).runBundled('ola');
     await until(() => events.whereType<PluginLog>().isNotEmpty, 'o log do Lua');
-    expect(events.whereType<PluginLog>().first.text, 'olá, Lua 5.4');
+    expect(events.whereType<PluginLog>().first.text, 'olá do Lua (Lua 5.4)');
     kit.runLua('while true do end', 'laco.lua', instructionLimit: 1000000);
     await until(() => events.whereType<PluginFinished>().length >= 2, 'o laço parar', seconds: 10);
     final laco = events.whereType<PluginFinished>().last;

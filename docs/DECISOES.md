@@ -589,7 +589,7 @@ O `lok_two_docs` (D-051, passo 9 da Etapa 7) abriu dois capítulos de 30 página
 
 **Os testes:** `fase2b_space_test` (testes de rodapé em 800×600, 1024×768, 1366×768, 1920×1080 e 2560×1440, mais cliques nos campos) e `fase2b_panels_test` (largura de 280 px dos painéis e alinhamento de ações e dropdown).
 
-## D-057 · O respiro dos painéis
+## D-057b · O respiro dos painéis
 
 **O retorno.** O Francisco achou que o maior problema dos painéis (Formatar, Estilos) era a falta de respiro entre os elementos: 4 px entre um controle e o seguinte, 2 px entre os ícones e as cores, 8 px de margem. O rótulo de um grupo ("Cor da fonte") ficava tão perto do controle de cima quanto do seu.
 
@@ -599,7 +599,7 @@ O `lok_two_docs` (D-051, passo 9 da Etapa 7) abriu dois capítulos de 30 página
 - **Os ícones, os chips e as cores:** 4 px entre eles.
 - **No painel Estilos:** a lista com 4 px entre os itens, e as ações com 12 px em cima e 20 px embaixo.
 
-## D-058 · A régua segue a página do cursor; a vista da barra de status colada à direita
+## D-058b · A régua segue a página do cursor; a vista da barra de status colada à direita
 
 - **A régua no modo Livro e no Várias:** o callback 35 manda o `pageOffset`, onde começa a página do cursor, em centésimos de mm (sondado na 24.2: 501 com uma página por linha, que é o vão entre as páginas, e 21502 no Livro, com a primeira página na coluna da direita). A régua horizontal fica em "área da página + (`pageOffset` − vão)": com uma página por linha não muda nada, e no Livro e no Várias ela acompanha a página do cursor. Antes, ela ficava sempre na primeira coluna, longe da página.
 - **A barra de status:** os campos do documento e a mensagem ficam numa fileira que ocupa toda a sobra, e a vista (memória, disposição, zoom) fica colada à direita. Com os campos flexíveis direto na fileira de fora, a parte que eles não usavam ficava vazia no fim da barra.
@@ -607,7 +607,7 @@ O `lok_two_docs` (D-051, passo 9 da Etapa 7) abriu dois capítulos de 30 página
 
 ## D-059 · A régua no modo Livro: a página inteira e a régua vertical por fileira
 
-- **O `pageOffset` é a posição da página no documento, e o vão não se desconta.** Os dois valores sondados na 24.2 batem assim: 501 (o vão de 284 twips) com uma página por linha, e 21502 (o vão mais a largura de uma página) no Livro, em que as duas páginas de um par se encostam. O D-058 descontava o vão, e a régua ficava 284 twips à esquerda da página em todas as disposições (19 px a 100 %); a margem da régua não batia com a do papel.
+- **O `pageOffset` é a posição da página no documento, e o vão não se desconta.** Os dois valores sondados na 24.2 batem assim: 501 (o vão de 284 twips) com uma página por linha, e 21502 (o vão mais a largura de uma página) no Livro, em que as duas páginas de um par se encostam. O D-058b descontava o vão, e a régua ficava 284 twips à esquerda da página em todas as disposições (19 px a 100 %); a margem da régua não batia com a do papel.
 - **A borda direita da régua sai da esquerda** (`pageLeft + largura`). Antes, ela ficava na primeira coluna: com o cursor numa página da direita, a faixa se fechava, e a régua sumia.
 - **A régua vertical mede fileiras, não páginas** (`pageRows`): uma coluna, uma página por fileira; várias, `colunas` por fileira; no Livro, a primeira sozinha e depois os pares. Antes, ela se desligava com mais de uma coluna. A altura sai de `(altura − vão) / fileiras − vão`, a mesma pilha do D-036.
 - **O `pageSizeMm100` (o paisagem) segue as fileiras,** e, com mais de uma coluna, tira a largura da régua do motor. Sem isso, virar a página no Livro mandaria a largura de duas páginas.
@@ -703,7 +703,7 @@ A Etapa 8 da Fase 2B.
 A Etapa 9 da Fase 2B.
 
 - **Dois temas de alto contraste,** escuro (preto, branco e amarelo) e claro (branco, preto e azul-escuro), com bordas fortes e o papel no mesmo contraste. O `tokens_test` exige 7:1 no texto, nos pares do Material 3, nas bordas e no papel, e 4,5:1 no anel de foco. Cada um tem o seu esquema de papel no perfil do LibreOffice. O Sépia já existia (D-048).
-- **O tamanho da interface faz tudo crescer junto,** e não só o texto. O plano pedia o `MediaQuery.textScaler`, mas, a 200 %, o texto vazava dos controles de altura fixa da faixa e do painel (o teste mostrou: cinco estouros em 1366 px). Agora o `UiZoom` (`lib/src/ui/templates/ui_zoom.dart`) monta a interface numa área menor (a janela dividida pelo zoom) e a desenha ampliada, com a densidade de pixels multiplicada: a faixa se adapta como numa tela menor, e os ladrilhos do motor continuam nítidos. O tamanho de texto do sistema entra no mesmo zoom. A página também cresce; o zoom da página continua à parte. As opções são 100, 125, 150 e 200 %.
+- **O tamanho da interface faz tudo crescer junto,** e não só o texto. O plano pedia o `MediaQuery.textScaler`, mas, a 200 %, o texto vazava dos controles de altura fixa da faixa e do painel (o teste mostrou: cinco estouros em 1366 px). Agora o `UiZoom` (`lib/src/ui/templates/ui_zoom.dart`) monta a interface numa área menor (a janela dividida pelo zoom) e a desenha ampliada, com a densidade de pixels multiplicada: a faixa se adapta como numa tela menor, e os ladrilhos do motor continuam nítidos. O tamanho de texto do sistema entra no mesmo zoom. A página também crescia; desde o D-070, o zoom da página compensa. As opções são 100, 125, 150 e 200 %.
 - **Botões maiores:** a densidade confortável (44 px) da Etapa 1.
 - **O cursor do texto:** a espessura (1, 2 ou 3 px; o padrão passou de 1,5 para 2) e se pisca. Sem piscar, não há relógio nenhum.
 - **Reduzir movimento:** as durações dos tokens vão a zero e o `disableAnimations` liga (também segue o pedido do sistema). A barra de progresso sem número fica parada pela metade.
@@ -755,4 +755,19 @@ O que sobrou do D-068: o primeiro capítulo aberto esperava ~800 ms pelo dicion�
 - **Testes:**
   - o `preload_spelling_test` confere o arquivo (o prefixo das cópias e o idioma) e que nada é pedido com documento aberto;
   - a integração pede o dicionário antes do primeiro capítulo, espera o arquivo sumir e abre por cima.
+
+## D-070 · As respostas do fecho da Fase 2B: a tela inicial, a página que não cresce e o plugin "olá"
+
+As três perguntas do `FASE2B-RESULTADOS.md`, respondidas pelo Francisco.
+
+- **A tela inicial continua o padrão** ao abrir o Quill sem um arquivo (D-064). A preferência Geral › "Ao abrir o Quill sem um arquivo" continua para quem quer o documento em branco.
+- **O zoom da página sempre compensa o tamanho da interface:**
+  - Com a interface a 200 % (D-067), a página continua do tamanho que o zoom diz: 100 % é a folha no tamanho real, como antes de aumentar a interface.
+  - O `UiZoom` passa o fator para baixo (`UiZoom.of`), e o `DocumentView` divide o zoom da página por ele. A escala pedida ao motor fica igual (a densidade subiu na mesma proporção), e os ladrilhos continuam nítidos.
+  - As réguas leem a mesma geometria e acompanham.
+  - Os ajustes à largura e à página medem nos pixels da vista e multiplicam o resultado pelo fator.
+  - O `fase2b_a11y_test` confere a 100 e a 200 %: a mesma escala no motor e o mesmo tamanho do ladrilho na tela.
+- **O plugin "olá" fica só para os testes:**
+  - O app não roda mais o `plugins/ola` ao abrir, e a mensagem "Plugin: olá do Lua" sumiu da barra de status.
+  - O plugin continua nos assets: a integração o roda pelo `PluginHost`, como o app rodava, e confere o texto. Os plugins de verdade vêm na Fase 5.
 

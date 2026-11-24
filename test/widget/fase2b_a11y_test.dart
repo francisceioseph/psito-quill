@@ -63,6 +63,32 @@ void main() {
     });
   }
 
+  testWidgets('a interface a 200 %: a página continua do mesmo tamanho (D-070)', (tester) async {
+    Future<(int, double)> measure(double scale) async {
+      final h = await pumpApp(tester, before: (h) => h.settings.uiScale = scale);
+      await tester.pumpAndSettle();
+      final scaleMilli = h.kit.viewports.last.$1;
+      // O primeiro ladrilho (sem textura no motor falso), na tela.
+      final paper = QuillTokens.of(tester.element(find.byType(DocumentView))).colors.paper;
+      final tile = find
+          .descendant(
+            of: find.byType(DocumentView),
+            matching: find.byWidgetPredicate((w) => w is ColoredBox && w.color == paper),
+          )
+          .first;
+      final pageWidth = tester.getRect(tile).width;
+      current?.dispose();
+      current = null;
+      await tester.pumpWidget(const SizedBox());
+      return (scaleMilli, pageWidth);
+    }
+
+    final (normal, tile1) = await measure(1);
+    final (big, tile2) = await measure(2);
+    expect(big, normal, reason: 'o motor desenha na mesma escala da tela');
+    expect(tile2, closeTo(tile1, 0.5), reason: 'o mesmo tamanho na tela');
+  });
+
   testWidgets('botões maiores: a densidade confortável', (tester) async {
     await pumpApp(tester, before: (h) => h.settings.comfortable = true);
     expect(QuillTokens.of(tester.element(find.byType(Ribbon))).density.control, 44);

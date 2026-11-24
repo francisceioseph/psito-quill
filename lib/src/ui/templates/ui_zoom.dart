@@ -5,6 +5,10 @@
 // O filho é montado numa área menor (o tamanho da janela dividido pelo
 // zoom) e desenhado ampliado. A densidade de pixels sobe junto: os
 // ladrilhos do motor são pedidos na resolução da tela, nítidos.
+//
+// A página não cresce junto: o zoom da página compensa (D-070). O
+// `DocumentView` divide o zoom dela pelo [UiZoom.of], e 100 % continua o
+// tamanho real da folha.
 import 'package:flutter/widgets.dart';
 
 class UiZoom extends StatelessWidget {
@@ -12,6 +16,9 @@ class UiZoom extends StatelessWidget {
 
   final double zoom;
   final Widget child;
+
+  /// O zoom da interface acima de [context] (1 sem ele).
+  static double of(BuildContext context) => context.dependOnInheritedWidgetOfExactType<_UiZoomScope>()?.zoom ?? 1;
 
   @override
   Widget build(BuildContext context) {
@@ -33,11 +40,20 @@ class UiZoom extends StatelessWidget {
                 viewPadding: mq.viewPadding / zoom,
                 viewInsets: mq.viewInsets / zoom,
               ),
-              child: child,
+              child: _UiZoomScope(zoom: zoom, child: child),
             ),
           ),
         );
       },
     );
   }
+}
+
+class _UiZoomScope extends InheritedWidget {
+  const _UiZoomScope({required this.zoom, required super.child});
+
+  final double zoom;
+
+  @override
+  bool updateShouldNotify(_UiZoomScope old) => old.zoom != zoom;
 }

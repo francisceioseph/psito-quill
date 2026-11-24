@@ -31,7 +31,7 @@ Editor de texto para livros longos (*Dustland*, *Silicon Gods*), em Flutter, par
 - **Ocupado:** abrir e salvar travam a tela pelo `DocumentController.busy` e pelo `BusyScope` (D-066). Entrada nova de teclado ou texto precisa respeitar o `busy`.
 - **O dicionário carrega na tela inicial:** o motor abre um documento oculto de uma frase (`preloadSpelling`), que fecha quando outro abre (D-069). O `--bench` não faz isso, para medir o pior caso.
 - **O leitor de tela** recebe o parágrafo do cursor pelos callbacks 62 e 63, só com a acessibilidade ligada (`pqk_set_accessibility`, D-067). O `DocumentSemantics` é o nó do documento.
-- **O tamanho da interface** é o `UiZoom` (D-067): a interface inteira é montada menor e desenhada ampliada, com a densidade de pixels multiplicada. O `textScaler` fica em 1; não use o tamanho do texto para crescer controles.
+- **O tamanho da interface** é o `UiZoom` (D-067): a interface inteira é montada menor e desenhada ampliada, com a densidade de pixels multiplicada. O `textScaler` fica em 1; não use o tamanho do texto para crescer controles. A página não cresce junto: o `DocumentView` divide o zoom pelo `UiZoom.of` (D-070).
 
 ## Regras
 

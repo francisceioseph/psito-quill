@@ -14,7 +14,6 @@ import 'src/files/recent_files.dart';
 import 'src/kit/lok/lo_profile.dart';
 import 'src/kit/lok/lok_quill_kit.dart';
 import 'src/kit/quill_kit.dart';
-import 'src/plugins/plugin_host.dart';
 import 'src/settings/config_dir.dart';
 import 'src/settings/settings.dart';
 import 'src/ui/tokens/themes/themes.dart';
@@ -77,7 +76,6 @@ void main(List<String> args) {
       } else {
         workspace.openPath(path);
       }
-      PluginHost(kit).runBundled('ola');
     };
   }
 

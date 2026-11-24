@@ -42,6 +42,7 @@ import '../organisms/zen_view.dart';
 import '../style_labels.dart';
 import '../theme_labels.dart';
 import '../templates/editor_template.dart';
+import '../templates/ui_zoom.dart';
 import '../tokens/tokens.dart';
 
 /// A tela do editor: a faixa (ou os menus do tema 97), a barra de
@@ -318,7 +319,9 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions {
       (_, final h) => h * 1440 / 2540 + pageGapTwips,
       null => 0.0,
     };
-    doc.setZoom(fitZoom(v.viewSize, rowTwips: doc.documentSize.width, pageHeightTwips: h, whole: page));
+    // O ajuste é medido nos pixels da vista; o zoom da página é na tela (D-070).
+    final fit = fitZoom(v.viewSize, rowTwips: doc.documentSize.width, pageHeightTwips: h, whole: page);
+    doc.setZoom(fit * UiZoom.of(context));
   }
 
   /// Onde a página está na tela, para as réguas (D-046).

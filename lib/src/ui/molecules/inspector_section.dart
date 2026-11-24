@@ -1,7 +1,7 @@
 // Uma seção do painel Formatar: o título e os controles embaixo. O título
 // agrupa os controles para o leitor de tela.
 //
-// O respiro (D-057): 12 px entre um controle e o seguinte, e só 4 px entre o
+// O respiro (D-057b): 12 px entre um controle e o seguinte, e só 4 px entre o
 // rótulo de um grupo ("Cor da fonte") e o controle dele, para o rótulo ficar
 // colado no que nomeia e longe do grupo de cima.
 import 'package:flutter/material.dart';

@@ -27,6 +27,7 @@ import '../../kit/quill_kit.dart';
 import '../tokens/tokens.dart';
 import 'click_counter.dart';
 import 'engine_context_menu.dart';
+import '../templates/ui_zoom.dart';
 
 /// As 8 alças de uma imagem selecionada, em twips: os cantos e os meios dos
 /// lados, como o LibreOffice as numera (1 a 8, da esquerda para a direita e
@@ -591,11 +592,14 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
     final t = QuillTokens.of(context);
     final doc = widget.doc;
     final dpr = MediaQuery.devicePixelRatioOf(context);
+    // A interface maior não aumenta a página (D-070): aqui dentro, um pixel
+    // lógico vale [UiZoom.of] pixels da tela, e o zoom compensa.
+    final zoom = doc.zoom / UiZoom.of(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final g = PageGeometry(zoom: doc.zoom, viewSize: constraints.biggest, documentTwips: doc.documentSize);
-        final scaleMilli = (dpr * doc.zoom * 1000).round();
+        final g = PageGeometry(zoom: zoom, viewSize: constraints.biggest, documentTwips: doc.documentSize);
+        final scaleMilli = (dpr * zoom * 1000).round();
         final before = _geometry;
         if (before != null && before.zoom != g.zoom && !before.documentTwips.isEmpty) _keepAnchor(before, g);
         final changed =
