@@ -4,6 +4,15 @@ Um editor de texto para escrever livros longos. O motor é o LibreOffice (pelo L
 
 Em construção. A Fase 2B (a interface nova: Material 3, a faixa que se adapta à largura, os trilhos, a régua, várias páginas, a Estrutura, o modo zen, as abas de documentos, os bastidores, o progresso sem janelas e a acessibilidade) está em `docs/FASE2B-RESULTADOS.md`. A Fase 2 (estilos, o painel Formatar, localizar e substituir, ortografia, tabelas, imagens, página, a paleta de comandos e o tema Clássico 97) está em `docs/FASE2-RESULTADOS.md`. A Fase 1 (o editor básico: digitar com acentos, desfazer, copiar e colar, a faixa Início, abrir e salvar ODT e DOCX, os recentes) está em `docs/FASE1-RESULTADOS.md`; a prova do motor, em `docs/FASE0-RESULTADOS.md`; o plano completo, em `docs/PLANO.md`.
 
+## Para instalar
+
+Os pacotes de cada versão estão nas [releases](https://github.com/francisceioseph/psito-quill/releases). O Quill usa o LibreOffice Writer do sistema (24.2 ou mais novo), que o gerenciador de pacotes instala junto.
+
+```bash
+sudo apt install ./psito-quill_*_amd64.deb      # Ubuntu 24.04 ou mais novo, Debian 13
+sudo dnf install ./psito-quill-*.x86_64.rpm     # Fedora
+```
+
 ## Para compilar (Ubuntu 24.04)
 
 ```bash

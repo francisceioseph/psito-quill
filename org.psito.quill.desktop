@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Name=Psito Quill
+GenericName=Book Editor
+GenericName[pt]=Editor de livros
+Comment=Write long books, chapter by chapter
+Comment[pt]=Escreva livros longos, capítulo por capítulo
+Exec=psito-quill %f
+Icon=org.psito.quill
+Terminal=false
+Categories=Office;WordProcessor;
+Keywords=book;novel;writing;odt;docx;
+Keywords[pt]=livro;romance;escrita;odt;docx;
+StartupWMClass=org.psito.quill
+MimeType=application/vnd.oasis.opendocument.text;application/vnd.openxmlformats-officedocument.wordprocessingml.document;

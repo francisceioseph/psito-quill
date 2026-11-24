@@ -102,4 +102,12 @@ void main() {
     expect(tileSlotsFor(const Size(7680, 4320)), 256, reason: 'máximo');
     expect(tileSlotsFor(Size.zero), 128, reason: 'sem saber a tela');
   });
+
+  test('o LibreOffice do sistema: /usr/lib no Debian, /usr/lib64 no Fedora', () {
+    expect(libreOfficeProgramDir(exists: (p) => p == '/usr/lib/libreoffice/program/libmergedlo.so'),
+        '/usr/lib/libreoffice/program');
+    expect(libreOfficeProgramDir(exists: (p) => p == '/usr/lib64/libreoffice/program/libsofficeapp.so'),
+        '/usr/lib64/libreoffice/program');
+    expect(libreOfficeProgramDir(exists: (_) => false), '/usr/lib/libreoffice/program', reason: 'sem nenhum');
+  });
 }

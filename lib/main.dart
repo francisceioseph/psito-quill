@@ -61,8 +61,8 @@ void main(List<String> args) {
       doc: doc,
       scroll: scroll,
       app: app,
-      documentPath: args[1],
-      outputPath: args[2],
+      documentPath: File(args[1]).absolute.path,
+      outputPath: File(args[2]).absolute.path,
       rssAtStart: rssAtStart,
       workspace: workspace,
     ).run();

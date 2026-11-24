@@ -1,6 +1,7 @@
 // O adaptador da porta QuillKit para o LibreOfficeKit (pelo plugin nativo).
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show File;
 import 'dart:ui' show Rect, Size;
 
 import 'package:psito_quill_kit/psito_quill_kit.dart';
@@ -19,13 +20,25 @@ int tileSlotsFor(Size physical, {int tileSize = 256, int min = 48, int max = 256
   return (cols * rows).clamp(min, max);
 }
 
+/// Onde está o `program/` do LibreOffice do sistema: `/usr/lib` no Debian e
+/// no Ubuntu, `/usr/lib64` no Fedora. Sem nenhum, fica o primeiro (o motor
+/// falha ao abrir, como antes).
+String libreOfficeProgramDir({bool Function(String path) exists = _exists}) {
+  const candidates = ['/usr/lib/libreoffice/program', '/usr/lib64/libreoffice/program'];
+  return candidates.firstWhere((p) => exists('$p/libmergedlo.so') || exists('$p/libsofficeapp.so'),
+      orElse: () => candidates.first);
+}
+
+bool _exists(String path) => File(path).existsSync();
+
 class LokQuillKit implements QuillKit {
   LokQuillKit({
     required this.profile,
-    this.installPath = '/usr/lib/libreoffice/program',
+    String? installPath,
     this.tileSlots = 128,
     NativeQuillKit? native,
-  }) : _native = native ?? NativeQuillKit.open();
+  }) : installPath = installPath ?? libreOfficeProgramDir(),
+       _native = native ?? NativeQuillKit.open();
 
   final LoProfile profile;
   final String installPath;

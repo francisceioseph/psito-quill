@@ -937,3 +937,46 @@ A Fase 3, Etapa 4.
 - **As aspas curvas e o travessão automáticos:** o autocorrigir do LibreOffice só age nas teclas, e o texto do IME chegava como `LOK_EXT_TEXTINPUT`, que ele não vê. Agora um caractere confirmado sozinho, sem pré-edição, vai ao motor como tecla (`postKey`). A composição do IME (`´` + `a`) continua pelo `TextInput`. Com uma imagem selecionada, a letra continua como texto: o Writer ignora a tecla nesse caso, e o texto tira a seleção e digita (o passo 21 da integração pegou isso). O "completar palavras" do LibreOffice ficou desligado no perfil, porque com as teclas ele passaria a sugerir no meio do texto.
   - **A memória** (`tool/ab.py f546027`, mediana de 3, 24/11): abrir, rolar e a latência da tecla ficaram iguais, mas **depois de digitar a memória anônima subiu +8,9 MB**. É o autocorrigir do motor, que só acorda com as teclas e carrega as regras dele: no `lok_script`, 60 palavras digitadas como teclas custam +2,6 MB de memória anônima (+5,7 MB de RSS) a mais que como texto. O resto deve ser ruído (só rolar variou +3,4 MB). **Aceito:** a outra saída seria o Quill fazer as aspas e o travessão sozinho, sem o custo, mas ele não sabe a letra antes do cursor depois de um clique no meio do texto, e a aspa de abrir e a de fechar sairiam trocadas.
 - **Os testes:** `fase3_page_test.dart` (a impressão, a nota, o caractere especial, a janela do link, a pergunta e o `file:` recusado), o `document_view_test` (a letra vai como tecla) e o passo 24 da integração (a nota, o link no cursor, o ODT e o PDF).
+
+## D-077 · O ícone, os pacotes, o CI e as versões
+
+Como no Psito Player (o mesmo modelo de scripts e de workflows).
+
+- **O ícone:** gerado no Gemini (`assets/icon/icon-source.jpg`: uma pena sobre um livro aberto, no azul-marinho do tema claro) e vetorizado em quatro camadas de cor com o potrace (`tool/vectorize_icon.py` → `icon.svg`, 13 KB). Os PNGs de 48 a 512 px saem do SVG (`tool/render_icons.py`) e vão para o `hicolor` de cada tamanho, junto com o SVG.
+- **Os pacotes** (`tool/build-deb.sh`, `build-rpm.sh`, `build-tarball.sh`, com os arquivos montados pelo `stage-package.sh`):
+  - o bundle inteiro em `/usr/lib/psito-quill`, o `/usr/bin/psito-quill`, o atalho `org.psito.quill.desktop` (ODT e DOCX) e o ícone;
+  - **o motor é o LibreOffice do sistema**, aberto por `dlopen`: o ldd não o mostra, então a dependência vai à mão (`libreoffice-writer >= 24.2`, no Debian `4:` e no Fedora `1:`). O fontconfig, o GTK, a GLib 2.80 (o símbolo do Ubuntu 24.04 do CI), o EGL e o GLES também. O dicionário pt-BR é recomendado, não exigido;
+  - **o Fedora** põe o LibreOffice em `/usr/lib64/libreoffice/program`. O `libreOfficeProgramDir()` procura os dois lugares;
+  - **o Lua vai no bundle:** a VM do Fedora mostrou que o plugin não carregava lá, porque ele pedia a `liblua5.4.so.0` (o nome do Debian), e o Fedora tem a `liblua-5.4.so`. Agora a `liblua5.4.so.0` da build (265 KB, só libc e libm) vai em `lib/` ao lado do plugin (`psito_quill_kit_bundled_libraries`, com o rpath `$ORIGIN` no plugin), e os pacotes não dependem do Lua da distribuição. A memória é a mesma: a biblioteca já era carregada. A licença (MIT) vai em `LUA-LICENSE`;
+  - **sem Windows:** o plugin do motor é só Linux (o LibreOfficeKit do sistema, o GTK e a impressão do GTK). O Player tem o instalador do Inno Setup porque o Flutter dele não depende de nada do sistema.
+- **O teste nas VMs** (`tool/vm-test.sh <imagem-de-nuvem> <pacote>`): uma cópia descartável da imagem de nuvem, com o cloud-init e uma chave só da VM. O apt ou o dnf instalam o pacote e resolvem as dependências, o atalho passa no `desktop-file-validate`, o ldd não acha biblioteca faltando, e o `psito-quill --bench` abre o `capitulo-30p.docx` num Xvfb pelo motor do sistema (abrir, rolar, digitar, negrito, salvar, o papel escuro e o Lua). Depois, remove.
+  - **Os resultados** (24/11, o pacote 0.11.0): o Ubuntu 24.04 (LibreOffice 24.2.7), o Debian 13 (25.2.3) e o Fedora 43 (25.8.7) instalaram, abriram o capítulo (~400 ms para abrir, ~500 ms até o primeiro ladrilho, num Xvfb sem GPU) e removeram. O motor mais novo que o 24.2 das medições passou no `--bench` inteiro, mas a interface não foi conferida à mão nele.
+  - O `--bench` passou a tornar absolutos os caminhos que recebe: com um caminho relativo, o motor não abria nem salvava.
+- **O CI** (`.github/workflows/ci.yml`, Ubuntu 24.04, com o LibreOffice 24.2 do próprio Ubuntu):
+  - `check`: o `flutter analyze`, as traduções geradas iguais aos `.arb`, a unidade e o widget, o GoogleTest e a build de release;
+  - `integration`: o `integration_test` com o motor real e o `fechar-test.sh`, num Xvfb com o Openbox (o teste fecha a janela pelo gerenciador de janelas);
+  - `release`: o semantic-release, só no push da `main`, depois dos dois;
+  - `packages` (`packages.yml`, também à mão por `workflow_dispatch`): o .deb, o .rpm e o tar.gz anexados à release.
+- **As versões** são do semantic-release (`.releaserc.json`): os commits seguem o **Conventional Commits** (`feat:` sobe o minor, `fix:` e `perf:` o patch, `BREAKING CHANGE` o major; `docs:`, `ci:`, `chore:`, `test:` e `refactor:` não geram versão). A descrição continua em português. O commit da versão (`chore(release): x.y.z [skip ci]`) volta para a `main` com o `pubspec.yaml`.
+- **As tags retroativas:** os commits de antes não seguiam a convenção, então as tags foram postas à mão, como o semantic-release teria feito se cada um tivesse o tipo certo (as datas das tags são as dos commits):
+
+  | tag | commit | tipo |
+  |---|---|---|
+  | v0.1.0 | c526f52 | feat: a prova do motor (Fase 0) |
+  | v0.2.0 | 1413dbb | feat: o editor básico (Fase 1) |
+  | v0.3.0 | 39f468d | feat: a formatação (Fase 2) |
+  | v0.4.0 | dfb7498 | feat: a nova interface, Etapas 0 a 7 (Fase 2B) |
+  | v0.5.0 | c513a6b | feat: os trilhos e o Localizar com a lista |
+  | v0.6.0 | 6370706 | feat: a barra de status, os bastidores e a aba Exibir |
+  | v0.7.0 | 595937f | feat: ocupado sem janelas |
+  | v0.8.0 | cd31c5f | feat: a acessibilidade |
+  | v0.8.1 | c0508ea | perf: o primeiro ladrilho antes da cópia (D-068) |
+  | v0.8.2 | 6c15c87 | perf: o dicionário na tela inicial (D-069) |
+  | v0.8.3 | fa3e6da | fix: a página não cresce com a interface (D-070) |
+  | v0.9.0 | 59e1262 | feat: o livro, o importador e o fichário (D-071) |
+  | v0.9.1 | 2b92b41 | fix: a Estrutura leva ao título; o ambiente antes das threads (D-072) |
+  | v0.10.0 | f546027 | feat: o salvamento automático (D-073) |
+  | v0.11.0 | 970e8ad | feat: a página do livro, o PDF, a impressão, as notas e os links (D-074 a D-076) |
+
+  Os commits só de documentação (a licença, os planos, o fecho da Fase 2B) não ganharam versão. O `pubspec.yaml` passa a 0.11.0, e o primeiro `feat:` depois disso sai como 0.12.0, já com os pacotes.
+- **Ainda não:** o repositório APT e DNF no GitHub Pages, como o do Player. Ele precisa de uma chave de assinatura própria do Quill (o segredo `APT_SIGNING_KEY`), que é do Francisco criar.

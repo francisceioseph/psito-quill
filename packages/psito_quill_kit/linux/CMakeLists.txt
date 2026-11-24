@@ -40,4 +40,24 @@ target_include_directories(${PLUGIN_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}
 target_include_directories(${PLUGIN_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}" "${LOK_INCLUDE_DIR}")
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter PkgConfig::GTK PkgConfig::LUA PkgConfig::FONTCONFIG PkgConfig::GTK_PRINT ${CMAKE_DL_LIBS})
 
-set(psito_quill_kit_bundled_libraries "" PARENT_SCOPE)
+# O Lua vai junto no bundle, ao lado do plugin (o rpath $ORIGIN o acha): o nome
+# da biblioteca muda de uma distribuição para outra (liblua5.4.so.0 no Debian,
+# liblua-5.4.so no Fedora), e o pacote não pode depender do nome de uma só (D-077).
+# A cópia leva o nome do SONAME, que é o que o carregador procura.
+find_library(LUA_SHARED_LIB NAMES ${LUA_LIBRARIES} HINTS ${LUA_LIBRARY_DIRS} REQUIRED)
+execute_process(COMMAND objdump -p "${LUA_SHARED_LIB}" OUTPUT_VARIABLE LUA_OBJDUMP)
+string(REGEX MATCH "SONAME +([^ \n]+)" _ "${LUA_OBJDUMP}")
+set(LUA_SONAME "${CMAKE_MATCH_1}")
+get_filename_component(LUA_LIB_DIR "${LUA_SHARED_LIB}" DIRECTORY)
+set(LUA_SONAME_LIB "${LUA_LIB_DIR}/${LUA_SONAME}")
+if(NOT LUA_SONAME OR NOT EXISTS "${LUA_SONAME_LIB}")
+  message(FATAL_ERROR "não achei o SONAME do Lua em ${LUA_SHARED_LIB}")
+endif()
+# O SONAME é um link simbólico, e o install(FILES) do Flutter copiaria o link:
+# a cópia aqui é o arquivo de verdade, já com o nome do SONAME.
+file(REAL_PATH "${LUA_SONAME_LIB}" LUA_REAL_LIB)
+set(LUA_BUNDLED_LIB "${CMAKE_CURRENT_BINARY_DIR}/${LUA_SONAME}")
+configure_file("${LUA_REAL_LIB}" "${LUA_BUNDLED_LIB}" COPYONLY)
+set_target_properties(${PLUGIN_NAME} PROPERTIES BUILD_RPATH "$ORIGIN")
+
+set(psito_quill_kit_bundled_libraries "${LUA_BUNDLED_LIB}" PARENT_SCOPE)
