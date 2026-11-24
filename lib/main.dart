@@ -31,7 +31,7 @@ void main(List<String> args) {
   final profile = LoProfile.standard()
     ..ensureSettings(
       paperSchemes(builtInThemes, spell: spellMarkColors[settings.spellColor]),
-      current: themeById(settings.theme).paperScheme,
+      current: enginePaper(themeById(settings.theme)).scheme,
     );
   // Cópias temporárias de uma sessão que caiu (D-044): têm o texto do livro.
   DocumentController.cleanStaleCopies();

@@ -94,7 +94,15 @@ class NativeQuillKit {
 
   void repaintAll() => _b.pqk_repaint_all();
 
+  /// O papel escuro (D-074): 0xRRGGBB.
+  void setPaperInvert(bool on, int paper, int ink, int srcPaper) => _b.pqk_set_paper_invert(on, paper, ink, srcPaper);
+
   void setAccessibility(bool on) => _b.pqk_set_accessibility(on);
+
+  void printPdf(String path, String title) => using((a) => _b.pqk_print_pdf(
+        path.toNativeUtf8(allocator: a).cast(),
+        title.toNativeUtf8(allocator: a).cast(),
+      ));
 
   void convert(int id, String source, String target, String format) => using((a) => _b.pqk_convert(
       id,

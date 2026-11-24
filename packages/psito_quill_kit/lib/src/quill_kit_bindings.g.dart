@@ -308,6 +308,24 @@ class QuillKitBindings {
   late final _pqk_prepare_environment = _pqk_prepare_environmentPtr
       .asFunction<void Function()>();
 
+  void pqk_print_pdf(
+    ffi.Pointer<ffi.Char> pdf_path,
+    ffi.Pointer<ffi.Char> title,
+  ) {
+    return _pqk_print_pdf(pdf_path, title);
+  }
+
+  late final _pqk_print_pdfPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>)
+        >
+      >('pqk_print_pdf');
+  late final _pqk_print_pdf = _pqk_print_pdfPtr
+      .asFunction<
+        void Function(ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>)
+      >();
+
   void pqk_repaint_all() {
     return _pqk_repaint_all();
   }
@@ -394,6 +412,19 @@ class QuillKitBindings {
       >('pqk_set_graphic_selection');
   late final _pqk_set_graphic_selection = _pqk_set_graphic_selectionPtr
       .asFunction<void Function(int, int, int)>();
+
+  void pqk_set_paper_invert(bool on, int paper, int ink, int src_paper) {
+    return _pqk_set_paper_invert(on, paper, ink, src_paper);
+  }
+
+  late final _pqk_set_paper_invertPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(ffi.Bool, ffi.Uint32, ffi.Uint32, ffi.Uint32)
+        >
+      >('pqk_set_paper_invert');
+  late final _pqk_set_paper_invert = _pqk_set_paper_invertPtr
+      .asFunction<void Function(bool, int, int, int)>();
 
   void pqk_set_viewport(int scale_milli, int x, int y, int w, int h) {
     return _pqk_set_viewport(scale_milli, x, y, w, h);
@@ -1341,6 +1372,7 @@ sealed class PqkEvent {
   static const PQK_EVENT_TEXT_SELECTION = 10009;
   static const PQK_EVENT_ACTIVATED = 10010;
   static const PQK_EVENT_CONVERTED = 10011;
+  static const PQK_EVENT_PRINTED = 10012;
   static const PQK_EVENT_LUA_LOG = 10100;
   static const PQK_EVENT_LUA_DONE = 10101;
 }

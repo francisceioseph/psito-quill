@@ -41,7 +41,11 @@ void main() {
       final h = await pumpApp(tester, before: (h) => h.settings.theme = id);
       final theme = themeById(id);
       expect(Theme.of(tester.element(find.byType(Scaffold))).scaffoldBackgroundColor, theme.colors.frame);
-      expect(h.kit.unoArgs.any((a) => a.contains(theme.paperScheme)), isTrue);
+      // O escuro pede o papel claro irmão e inverte os ladrilhos (D-074).
+      final paper = enginePaper(theme);
+      expect(h.kit.unoArgs.any((a) => a.contains(paper.scheme)), isTrue);
+      expect(h.kit.paperInverts.last, paper.invert);
+      expect(paper.invert == null, theme.brightness == Brightness.light);
       expect(tester.takeException(), isNull);
     });
   }

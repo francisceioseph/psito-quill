@@ -37,6 +37,16 @@ class FakeFileDialogs implements FileDialogs {
     return openAnswer;
   }
 
+  /// A resposta de "Exportar PDF" (null: cancelou), e os nomes sugeridos.
+  String? exportAnswer;
+  final exports = <String>[];
+
+  @override
+  Future<String?> pickExportPdf({required String suggestedName, String? initialDirectory, required String label}) async {
+    exports.add(suggestedName);
+    return exportAnswer;
+  }
+
   @override
   Future<String?> pickSave({
     required String suggestedName,

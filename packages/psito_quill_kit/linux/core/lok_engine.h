@@ -109,6 +109,15 @@ class LokEngine {
   void convert(int id, const std::string& src, const std::string& dst, const std::string& format);
   void repaintAll();
 
+  /// O papel escuro (D-074): inverte a luminosidade dos ladrilhos, com o tom
+  /// mantido. Na fila do kit, antes do próximo repaintAll.
+  void setPaperInvert(bool on, uint32_t paper, uint32_t ink, uint32_t srcPaper);
+
+  /// Inverte [n] pixels RGBA (pré-multiplicados) pela tabela. Público para
+  /// o teste.
+  static void invertPixels(uint8_t* rgba, int n, const uint8_t lut[3][256]);
+  static void buildInvertLut(uint8_t lut[3][256], uint32_t paper, uint32_t ink, uint32_t srcPaper);
+
   // Para o encerramento: espera a fila esvaziar e destrói o LOK.
   void shutdown();
 
@@ -125,6 +134,8 @@ class LokEngine {
     int id = 0;
     _LibreOfficeKitDocument* doc = nullptr;
     int tileMode = 0;
+    // A vista do documento (getView logo depois de abrir).
+    int view = -1;
     // Os callbacks que chegam antes do OPENED, guardados até ele sair.
     std::mutex mutex;
     bool announced = false;
@@ -157,6 +168,14 @@ class LokEngine {
   // O documento oculto do preloadSpelling, até o próximo abrir.
   _LibreOfficeKitDocument* spellDoc_ = nullptr;
   int tileMode_ = 0;
+  int view_ = -1;
+  // O postUnoCommand vai ao quadro "atual" do LibreOffice, que é global: com
+  // outro documento aberto e fechado no meio (uma conversão, o dicionário),
+  // ou com abas, ele deixa de ser o do ativo. Chamar antes de cada comando.
+  void focusView();
+  // Só a thread do kit lê e escreve (setPaperInvert e paintSlot).
+  bool invert_ = false;
+  uint8_t invertLut_[3][256] = {};
   int32_t scaleMilli_ = 1000;
   TwipRect viewport_;
   std::vector<bool> announced_;

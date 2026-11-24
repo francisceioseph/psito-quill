@@ -12,6 +12,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../commands/command_registry.dart';
 import '../../commands/commands_document.dart';
+import '../../commands/commands_page.dart';
 import '../../commands/commands_view.dart';
 import '../../document/doc_colors.dart';
 import '../../document/document_controller.dart';
@@ -423,17 +424,71 @@ class _InsertTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        RibbonGroup(title: l10n.groupPages, firstRow: [_big(commands, CommandIds.pageBreak, onRan)]),
-        RibbonGroup(title: l10n.groupTables, firstRow: [_big(commands, ViewCommandIds.insertTable, onRan)]),
-        RibbonGroup(
-          title: l10n.groupIllustrations,
-          last: true,
-          firstRow: [_big(commands, ViewCommandIds.insertImage, onRan)],
-        ),
-      ],
+    Widget menu(String label, IconData icon, List<String> ids) =>
+        CommandMenuButton(commands: commands, ids: ids, icon: icon, label: label, big: true, onRan: onRan);
+    // A Etapa 3 e a 4 da Fase 3 (D-075, D-076): o cabeçalho e o rodapé, as
+    // notas, os links e os símbolos, como no OnlyOffice.
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          RibbonGroup(title: l10n.groupPages, firstRow: [
+            _big(commands, CommandIds.pageBreak, onRan),
+            menu(l10n.groupBreaks, Symbols.insert_page_break_rounded, const [
+              CommandIds.pageBreak,
+              PageCommandIds.blankPage,
+              PageCommandIds.columnBreak,
+            ]),
+          ]),
+          RibbonGroup(title: l10n.groupTables, firstRow: [_big(commands, ViewCommandIds.insertTable, onRan)]),
+          RibbonGroup(title: l10n.groupIllustrations, firstRow: [_big(commands, ViewCommandIds.insertImage, onRan)]),
+          RibbonGroup(title: l10n.groupHeaderFooter, firstRow: [
+            menu(l10n.commandHeader, Symbols.vertical_align_top_rounded, const [
+              PageCommandIds.header,
+              PageCommandIds.removeHeader,
+              commandMenuDivider,
+              PageCommandIds.firstPageDifferent,
+              PageCommandIds.leftRightDifferent,
+            ]),
+            menu(l10n.commandFooter, Symbols.vertical_align_bottom_rounded, const [
+              PageCommandIds.footer,
+              PageCommandIds.removeFooter,
+              commandMenuDivider,
+              PageCommandIds.firstPageDifferent,
+              PageCommandIds.leftRightDifferent,
+            ]),
+            menu(l10n.groupFields, Symbols.tag_rounded, const [
+              PageCommandIds.pageNumber,
+              PageCommandIds.pageCount,
+              PageCommandIds.date,
+              PageCommandIds.time,
+            ]),
+          ]),
+          RibbonGroup(title: l10n.groupNotes, firstRow: [
+            _big(commands, PageCommandIds.footnote, onRan),
+            menu(l10n.groupNotes, Symbols.more_horiz_rounded, const [
+              PageCommandIds.footnote,
+              PageCommandIds.endnote,
+              commandMenuDivider,
+              PageCommandIds.jumpFootnote,
+            ]),
+          ]),
+          RibbonGroup(title: l10n.groupLinks, firstRow: [_big(commands, PageCommandIds.link, onRan)]),
+          RibbonGroup(
+            title: l10n.groupTypography,
+            last: true,
+            firstRow: [
+              _big(commands, PageCommandIds.specialCharacter, onRan),
+              menu(l10n.commandDropCap(3), Symbols.format_size_rounded, const [
+                PageCommandIds.dropCap2,
+                PageCommandIds.dropCap3,
+                PageCommandIds.removeDropCap,
+              ]),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -474,6 +529,11 @@ class _LayoutTab extends StatelessWidget {
             ),
           ],
           secondRow: [cmd(CommandIds.portrait), cmd(CommandIds.landscape)],
+        ),
+        RibbonGroup(
+          title: l10n.groupHyphenation,
+          firstRow: [CommandCheck(commands: commands, id: PageCommandIds.hyphenation, onRan: onRan)],
+          secondRow: [cmd(PageCommandIds.hyphenateParagraph), cmd(PageCommandIds.noHyphenateParagraph)],
         ),
         RibbonGroup(
           title: l10n.groupSpacing,

@@ -598,6 +598,9 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
     }
   }
 
+  /// O clique com Ctrl está procurando um link.
+  bool _linkProbe = false;
+
   void _pointer(PointerEvent e, MouseEventType type) {
     final g = _geometry;
     if (g == null || widget.doc.docStatus != DocStatus.open) return;
@@ -615,13 +618,24 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
     if (_graphicPointer(e, type, g)) return;
     if (type == MouseEventType.down) {
       _focus.requestFocus();
-      _clicks = lokClickCount(
-        _clickCounter.down(DateTime.now(), e.localPosition),
-        control: HardwareKeyboard.instance.isControlPressed,
-      );
+      final clicks = _clickCounter.down(DateTime.now(), e.localPosition);
+      _clicks = lokClickCount(clicks, control: HardwareKeyboard.instance.isControlPressed);
+      // Ctrl+clique (D-076): primeiro um clique simples; se o cursor parar
+      // num link, a página pergunta se abre; senão, seleciona a frase, como
+      // antes.
+      _linkProbe = clicks == 1 && HardwareKeyboard.instance.isControlPressed;
+      if (_linkProbe) _clicks = 1;
     }
     if (type == MouseEventType.move && e.buttons == 0) return;
-    widget.doc.postMouse(type, g.toTwips(e.localPosition), count: type == MouseEventType.move ? 1 : _clicks);
+    final at = g.toTwips(e.localPosition);
+    widget.doc.postMouse(type, at, count: type == MouseEventType.move ? 1 : _clicks);
+    if (type == MouseEventType.up && _linkProbe) {
+      _linkProbe = false;
+      widget.doc.expectLinkClick(otherwise: () {
+        widget.doc.postMouse(MouseEventType.down, at, count: 3);
+        widget.doc.postMouse(MouseEventType.up, at, count: 3);
+      });
+    }
     _restartBlink();
   }
 

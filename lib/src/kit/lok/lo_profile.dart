@@ -50,6 +50,9 @@ class LoProfile {
     ('/org.openoffice.Office.Common/History', 'PickListSize', '0'),
     ('/org.openoffice.Office.Common/History', 'RecentDocsThumbnail', 'false'),
     ('/org.openoffice.Office.Common/Save/Document', 'GenerateThumbnail', 'false'),
+    // Sem o "completar palavras": ele junta as palavras do documento numa
+    // lista e, com o texto indo como tecla (D-076), inseriria sugestões.
+    ('/org.openoffice.Office.Writer/AutoFunction/Completion', 'Enable', 'false'),
   ];
 
   /// Garante os esquemas e as travas de privacidade no perfil. Chamar antes

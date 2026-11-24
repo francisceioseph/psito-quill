@@ -12,6 +12,7 @@ import '../../book/docx_import.dart';
 import '../../commands/command_registry.dart';
 import '../../commands/commands_book.dart';
 import '../../commands/commands_document.dart';
+import '../../commands/commands_page.dart';
 import '../../commands/commands_view.dart';
 import '../../document/document_controller.dart';
 import '../../document/workspace.dart';
@@ -36,6 +37,7 @@ import '../organisms/nav_rail.dart';
 import '../../document/outline.dart';
 import '../atoms/w_segmented.dart';
 import '../organisms/outline_panel.dart';
+import '../organisms/page_dialogs.dart';
 import '../organisms/ruler.dart';
 import '../organisms/start_screen.dart';
 import '../organisms/ribbon.dart';
@@ -83,7 +85,7 @@ enum _LeftPanel { binder, outline, find, styles }
 /// Os temas como comandos (a paleta e o menu Exibir do tema 97 os mostram).
 const themeCommandPrefix = 'tema.';
 
-class _EditorPageState extends State<EditorPage> implements EditorViewActions, BookViewActions {
+class _EditorPageState extends State<EditorPage> implements EditorViewActions, BookViewActions, PageViewActions {
   CommandRegistry? _commands;
   final _docFocus = FocusNode(debugLabel: 'documento');
   bool _fileOpen = false;
@@ -106,6 +108,81 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
     widget.settings.addListener(_onSettings);
     _viewport.addListener(_applyLayout);
     books.addListener(_onBook);
+    // O Ctrl+clique num link (D-076): pergunta antes de abrir.
+    doc.onLinkClicked = openLink;
+  }
+
+  // ------------------------------------------ a Etapa 4 (D-076) --
+
+  @override
+  void exportPdf() => unawaited(_exportPdf());
+  Future<void> _exportPdf() async {
+    final l10n = AppLocalizations.of(context);
+    final current = doc.path;
+    final name = current == null ? l10n.untitled : File(current).uri.pathSegments.last.replaceFirst(RegExp(r'\.[^.]*$'), '');
+    final target = await widget.workspace.dialogs.pickExportPdf(
+      suggestedName: '$name.pdf',
+      initialDirectory: current == null ? null : File(current).parent.path,
+      label: l10n.exportPdfFilter,
+    );
+    if (target == null || !mounted) return;
+    final ok = await doc.exportPdf(target);
+    if (!mounted) return;
+    doc.notice(ok ? l10n.noticeExported(target) : l10n.noticeExportFailed);
+  }
+
+  @override
+  void printDocument() => unawaited(_print());
+  Future<void> _print() async {
+    final l10n = AppLocalizations.of(context);
+    final result = await doc.printDocument(_documentName(l10n));
+    if (!mounted) return;
+    switch (result.outcome) {
+      case PrintOutcome.sent:
+        doc.notice(l10n.noticePrinted);
+      case PrintOutcome.cancelled:
+        break;
+      case PrintOutcome.failed:
+        doc.notice(result.error == 'sem-pdf' ? l10n.noticePrintNoPdf : l10n.noticePrintFailed(result.error));
+    }
+  }
+
+  @override
+  void editLink() => unawaited(_editLink());
+  Future<void> _editLink() async {
+    final current = doc.link;
+    final answer = await showLinkDialog(context, text: current?.text ?? '', url: current?.url ?? '');
+    if (answer == null || !mounted) return;
+    doc.insertLink(answer.$1, answer.$2);
+    _docFocus.requestFocus();
+  }
+
+  @override
+  void openLink(DocLink link) => unawaited(_openLink(link));
+  Future<void> _openLink(DocLink link) async {
+    // Só a web e o e-mail: um `file:` levaria o xdg-open a rodar um script
+    // ou um .desktop do disco.
+    final scheme = Uri.tryParse(link.url.trim())?.scheme.toLowerCase();
+    if (!const {'http', 'https', 'mailto'}.contains(scheme)) {
+      doc.notice(AppLocalizations.of(context).noticeLinkScheme);
+      return;
+    }
+    if (!mounted || !await confirmOpenLink(context, link.url)) return;
+    // O sistema abre (o navegador, o leitor de e-mail): só depois do "Abrir".
+    try {
+      await Process.start('xdg-open', [link.url], mode: ProcessStartMode.detached);
+    } on ProcessException {
+      // Sem o xdg-open: nada a fazer.
+    }
+  }
+
+  @override
+  void specialCharacter() => unawaited(_specialCharacter());
+  Future<void> _specialCharacter() async {
+    final char = await showSpecialCharacters(context);
+    if (char == null || !mounted) return;
+    doc.insertText(char);
+    _docFocus.requestFocus();
   }
 
   BookController get books => widget.workspace.book;
@@ -475,6 +552,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
       registerEditorCommands(registry, doc: doc, workspace: widget.workspace, l10n: l10n);
       registerViewCommands(registry, doc: doc, view: this, l10n: l10n);
       registerBookCommands(registry, doc: doc, workspace: widget.workspace, view: this, l10n: l10n);
+      registerPageCommands(registry, doc: doc, view: this, l10n: l10n);
       for (final (id, label) in themeChoices(l10n)) {
         registry.register(
           Command(
@@ -510,6 +588,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
 
   @override
   void dispose() {
+    if (doc.onLinkClicked == openLink) doc.onLinkClicked = null;
     widget.settings.removeListener(_onSettings);
     books.removeListener(_onBook);
     if (widget.workspace.onUnsaved != null) widget.workspace.onUnsaved = null;
@@ -1063,6 +1142,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
         detail,
       ),
       PluginMessage(:final text) => l10n.statusPlugin(text),
+      NoticeMessage(:final text) => text,
       null => switch (doc.docStatus) {
         DocStatus.opening => l10n.statusOpening,
         DocStatus.none || DocStatus.failed => l10n.statusNoDocument,

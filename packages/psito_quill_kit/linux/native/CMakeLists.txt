@@ -30,6 +30,7 @@ add_executable(pqk_tests
   ${KIT}/test/tile_cache_test.cc
   ${KIT}/test/lua_sandbox_test.cc
   ${KIT}/test/font_info_test.cc
+  ${KIT}/test/paper_invert_test.cc
 )
 target_link_libraries(pqk_tests PRIVATE pqk_core GTest::gtest_main)
 

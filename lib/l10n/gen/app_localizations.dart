@@ -3121,6 +3121,600 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'{name} (recuperado)'**
   String recoveredName(String name);
+
+  /// No description provided for @commandHeader.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cabeçalho'**
+  String get commandHeader;
+
+  /// No description provided for @commandFooter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Rodapé'**
+  String get commandFooter;
+
+  /// No description provided for @commandRemoveHeader.
+  ///
+  /// In pt, this message translates to:
+  /// **'Remover o cabeçalho'**
+  String get commandRemoveHeader;
+
+  /// No description provided for @commandRemoveFooter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Remover o rodapé'**
+  String get commandRemoveFooter;
+
+  /// No description provided for @commandFirstPageDifferent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Primeira página diferente'**
+  String get commandFirstPageDifferent;
+
+  /// No description provided for @commandLeftRightDifferent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Páginas pares diferentes'**
+  String get commandLeftRightDifferent;
+
+  /// No description provided for @commandPageNumber.
+  ///
+  /// In pt, this message translates to:
+  /// **'Número de página'**
+  String get commandPageNumber;
+
+  /// No description provided for @commandPageCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'Total de páginas'**
+  String get commandPageCount;
+
+  /// No description provided for @commandDateField.
+  ///
+  /// In pt, this message translates to:
+  /// **'Data'**
+  String get commandDateField;
+
+  /// No description provided for @commandTimeField.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hora'**
+  String get commandTimeField;
+
+  /// No description provided for @commandHyphenation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hifenização automática'**
+  String get commandHyphenation;
+
+  /// No description provided for @commandHyphenateParagraph.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hifenizar este parágrafo'**
+  String get commandHyphenateParagraph;
+
+  /// No description provided for @commandNoHyphenateParagraph.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não hifenizar este parágrafo'**
+  String get commandNoHyphenateParagraph;
+
+  /// No description provided for @commandDropCap.
+  ///
+  /// In pt, this message translates to:
+  /// **'Letra capitular ({n} linhas)'**
+  String commandDropCap(int n);
+
+  /// No description provided for @commandRemoveDropCap.
+  ///
+  /// In pt, this message translates to:
+  /// **'Remover a capitular'**
+  String get commandRemoveDropCap;
+
+  /// No description provided for @commandColumnBreak.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quebra de coluna'**
+  String get commandColumnBreak;
+
+  /// No description provided for @commandBlankPage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Página em branco'**
+  String get commandBlankPage;
+
+  /// No description provided for @commandExportPdf.
+  ///
+  /// In pt, this message translates to:
+  /// **'Exportar como PDF…'**
+  String get commandExportPdf;
+
+  /// No description provided for @commandPrint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Imprimir…'**
+  String get commandPrint;
+
+  /// No description provided for @commandFootnote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nota de rodapé'**
+  String get commandFootnote;
+
+  /// No description provided for @commandEndnote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nota de fim'**
+  String get commandEndnote;
+
+  /// No description provided for @commandJumpFootnote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ir para a nota e voltar'**
+  String get commandJumpFootnote;
+
+  /// No description provided for @commandLink.
+  ///
+  /// In pt, this message translates to:
+  /// **'Link…'**
+  String get commandLink;
+
+  /// No description provided for @commandOpenLink.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir o link'**
+  String get commandOpenLink;
+
+  /// No description provided for @commandRemoveLink.
+  ///
+  /// In pt, this message translates to:
+  /// **'Remover o link'**
+  String get commandRemoveLink;
+
+  /// No description provided for @commandSpecialCharacter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Caractere especial…'**
+  String get commandSpecialCharacter;
+
+  /// No description provided for @groupHeaderFooter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cabeçalho e rodapé'**
+  String get groupHeaderFooter;
+
+  /// No description provided for @groupNotes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Notas'**
+  String get groupNotes;
+
+  /// No description provided for @groupLinks.
+  ///
+  /// In pt, this message translates to:
+  /// **'Links'**
+  String get groupLinks;
+
+  /// No description provided for @groupSymbols.
+  ///
+  /// In pt, this message translates to:
+  /// **'Símbolos'**
+  String get groupSymbols;
+
+  /// No description provided for @groupBreaks.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quebras'**
+  String get groupBreaks;
+
+  /// No description provided for @groupHyphenation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hifenização'**
+  String get groupHyphenation;
+
+  /// No description provided for @groupFields.
+  ///
+  /// In pt, this message translates to:
+  /// **'Campos'**
+  String get groupFields;
+
+  /// No description provided for @groupTypography.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tipografia'**
+  String get groupTypography;
+
+  /// No description provided for @exportPdfFilter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Documento PDF'**
+  String get exportPdfFilter;
+
+  /// No description provided for @noticeExported.
+  ///
+  /// In pt, this message translates to:
+  /// **'Exportado: {path}'**
+  String noticeExported(String path);
+
+  /// No description provided for @noticeExportFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível exportar o PDF.'**
+  String get noticeExportFailed;
+
+  /// No description provided for @noticePrinted.
+  ///
+  /// In pt, this message translates to:
+  /// **'Enviado à impressora.'**
+  String get noticePrinted;
+
+  /// No description provided for @noticePrintFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível imprimir: {detail}'**
+  String noticePrintFailed(String detail);
+
+  /// No description provided for @noticePrintNoPdf.
+  ///
+  /// In pt, this message translates to:
+  /// **'A impressora escolhida não aceita PDF.'**
+  String get noticePrintNoPdf;
+
+  /// No description provided for @noticeStyleFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'O motor não aplicou a mudança na página.'**
+  String get noticeStyleFailed;
+
+  /// No description provided for @linkDialogTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Link'**
+  String get linkDialogTitle;
+
+  /// No description provided for @linkText.
+  ///
+  /// In pt, this message translates to:
+  /// **'Texto'**
+  String get linkText;
+
+  /// No description provided for @linkUrl.
+  ///
+  /// In pt, this message translates to:
+  /// **'Endereço'**
+  String get linkUrl;
+
+  /// No description provided for @linkApply.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aplicar'**
+  String get linkApply;
+
+  /// No description provided for @openLinkTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir o link?'**
+  String get openLinkTitle;
+
+  /// No description provided for @openLinkBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'O Quill vai pedir ao sistema para abrir este endereço. Se for um site, isso acessa a internet:\n{url}'**
+  String openLinkBody(String url);
+
+  /// No description provided for @noticeLinkScheme.
+  ///
+  /// In pt, this message translates to:
+  /// **'O Quill só abre endereços da web (http, https) e de e-mail (mailto).'**
+  String get noticeLinkScheme;
+
+  /// No description provided for @openLinkButton.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir'**
+  String get openLinkButton;
+
+  /// No description provided for @specialCharsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Caracteres especiais'**
+  String get specialCharsTitle;
+
+  /// No description provided for @specialCharsSearch.
+  ///
+  /// In pt, this message translates to:
+  /// **'Buscar pelo nome'**
+  String get specialCharsSearch;
+
+  /// No description provided for @specialCharsEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum caractere com esse nome.'**
+  String get specialCharsEmpty;
+
+  /// No description provided for @specialCharInsert.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} ({char})'**
+  String specialCharInsert(String name, String char);
+
+  /// No description provided for @pageSectionHeaderFooter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cabeçalho e rodapé'**
+  String get pageSectionHeaderFooter;
+
+  /// No description provided for @charEmDash.
+  ///
+  /// In pt, this message translates to:
+  /// **'travessão'**
+  String get charEmDash;
+
+  /// No description provided for @charEnDash.
+  ///
+  /// In pt, this message translates to:
+  /// **'meia-risca'**
+  String get charEnDash;
+
+  /// No description provided for @charEllipsis.
+  ///
+  /// In pt, this message translates to:
+  /// **'reticências'**
+  String get charEllipsis;
+
+  /// No description provided for @charLeftDoubleQuote.
+  ///
+  /// In pt, this message translates to:
+  /// **'aspas curvas de abrir'**
+  String get charLeftDoubleQuote;
+
+  /// No description provided for @charRightDoubleQuote.
+  ///
+  /// In pt, this message translates to:
+  /// **'aspas curvas de fechar'**
+  String get charRightDoubleQuote;
+
+  /// No description provided for @charLeftSingleQuote.
+  ///
+  /// In pt, this message translates to:
+  /// **'aspa simples de abrir'**
+  String get charLeftSingleQuote;
+
+  /// No description provided for @charRightSingleQuote.
+  ///
+  /// In pt, this message translates to:
+  /// **'aspa simples de fechar, apóstrofo'**
+  String get charRightSingleQuote;
+
+  /// No description provided for @charLeftGuillemet.
+  ///
+  /// In pt, this message translates to:
+  /// **'aspas angulares de abrir'**
+  String get charLeftGuillemet;
+
+  /// No description provided for @charRightGuillemet.
+  ///
+  /// In pt, this message translates to:
+  /// **'aspas angulares de fechar'**
+  String get charRightGuillemet;
+
+  /// No description provided for @charNoBreakSpace.
+  ///
+  /// In pt, this message translates to:
+  /// **'espaço sem quebra'**
+  String get charNoBreakSpace;
+
+  /// No description provided for @charNarrowNoBreakSpace.
+  ///
+  /// In pt, this message translates to:
+  /// **'espaço fino sem quebra'**
+  String get charNarrowNoBreakSpace;
+
+  /// No description provided for @charSoftHyphen.
+  ///
+  /// In pt, this message translates to:
+  /// **'hífen opcional'**
+  String get charSoftHyphen;
+
+  /// No description provided for @charNoBreakHyphen.
+  ///
+  /// In pt, this message translates to:
+  /// **'hífen sem quebra'**
+  String get charNoBreakHyphen;
+
+  /// No description provided for @charAsterism.
+  ///
+  /// In pt, this message translates to:
+  /// **'asterismo (separador de cena)'**
+  String get charAsterism;
+
+  /// No description provided for @charFleuron.
+  ///
+  /// In pt, this message translates to:
+  /// **'florão'**
+  String get charFleuron;
+
+  /// No description provided for @charSection.
+  ///
+  /// In pt, this message translates to:
+  /// **'parágrafo (seção)'**
+  String get charSection;
+
+  /// No description provided for @charPilcrow.
+  ///
+  /// In pt, this message translates to:
+  /// **'pé-de-mosca'**
+  String get charPilcrow;
+
+  /// No description provided for @charDagger.
+  ///
+  /// In pt, this message translates to:
+  /// **'adaga'**
+  String get charDagger;
+
+  /// No description provided for @charDoubleDagger.
+  ///
+  /// In pt, this message translates to:
+  /// **'adaga dupla'**
+  String get charDoubleDagger;
+
+  /// No description provided for @charBullet.
+  ///
+  /// In pt, this message translates to:
+  /// **'marcador'**
+  String get charBullet;
+
+  /// No description provided for @charMiddleDot.
+  ///
+  /// In pt, this message translates to:
+  /// **'ponto médio'**
+  String get charMiddleDot;
+
+  /// No description provided for @charDegree.
+  ///
+  /// In pt, this message translates to:
+  /// **'grau'**
+  String get charDegree;
+
+  /// No description provided for @charOrdinalA.
+  ///
+  /// In pt, this message translates to:
+  /// **'ordinal feminino'**
+  String get charOrdinalA;
+
+  /// No description provided for @charOrdinalO.
+  ///
+  /// In pt, this message translates to:
+  /// **'ordinal masculino'**
+  String get charOrdinalO;
+
+  /// No description provided for @charCopyright.
+  ///
+  /// In pt, this message translates to:
+  /// **'direitos autorais'**
+  String get charCopyright;
+
+  /// No description provided for @charRegistered.
+  ///
+  /// In pt, this message translates to:
+  /// **'marca registrada'**
+  String get charRegistered;
+
+  /// No description provided for @charTrademark.
+  ///
+  /// In pt, this message translates to:
+  /// **'marca'**
+  String get charTrademark;
+
+  /// No description provided for @charTimes.
+  ///
+  /// In pt, this message translates to:
+  /// **'vezes'**
+  String get charTimes;
+
+  /// No description provided for @charDivide.
+  ///
+  /// In pt, this message translates to:
+  /// **'dividido'**
+  String get charDivide;
+
+  /// No description provided for @charPlusMinus.
+  ///
+  /// In pt, this message translates to:
+  /// **'mais ou menos'**
+  String get charPlusMinus;
+
+  /// No description provided for @charApprox.
+  ///
+  /// In pt, this message translates to:
+  /// **'aproximadamente'**
+  String get charApprox;
+
+  /// No description provided for @charNotEqual.
+  ///
+  /// In pt, this message translates to:
+  /// **'diferente'**
+  String get charNotEqual;
+
+  /// No description provided for @charLessEqual.
+  ///
+  /// In pt, this message translates to:
+  /// **'menor ou igual'**
+  String get charLessEqual;
+
+  /// No description provided for @charGreaterEqual.
+  ///
+  /// In pt, this message translates to:
+  /// **'maior ou igual'**
+  String get charGreaterEqual;
+
+  /// No description provided for @charHalf.
+  ///
+  /// In pt, this message translates to:
+  /// **'meio'**
+  String get charHalf;
+
+  /// No description provided for @charQuarter.
+  ///
+  /// In pt, this message translates to:
+  /// **'um quarto'**
+  String get charQuarter;
+
+  /// No description provided for @charThreeQuarters.
+  ///
+  /// In pt, this message translates to:
+  /// **'três quartos'**
+  String get charThreeQuarters;
+
+  /// No description provided for @charEuro.
+  ///
+  /// In pt, this message translates to:
+  /// **'euro'**
+  String get charEuro;
+
+  /// No description provided for @charPound.
+  ///
+  /// In pt, this message translates to:
+  /// **'libra'**
+  String get charPound;
+
+  /// No description provided for @charYen.
+  ///
+  /// In pt, this message translates to:
+  /// **'iene'**
+  String get charYen;
+
+  /// No description provided for @charArrowRight.
+  ///
+  /// In pt, this message translates to:
+  /// **'seta para a direita'**
+  String get charArrowRight;
+
+  /// No description provided for @charArrowLeft.
+  ///
+  /// In pt, this message translates to:
+  /// **'seta para a esquerda'**
+  String get charArrowLeft;
+
+  /// No description provided for @charStar.
+  ///
+  /// In pt, this message translates to:
+  /// **'estrela'**
+  String get charStar;
+
+  /// No description provided for @charPrime.
+  ///
+  /// In pt, this message translates to:
+  /// **'linha (minuto, pé)'**
+  String get charPrime;
+
+  /// No description provided for @charDoublePrime.
+  ///
+  /// In pt, this message translates to:
+  /// **'linha dupla (segundo, polegada)'**
+  String get charDoublePrime;
 }
 
 class _AppLocalizationsDelegate

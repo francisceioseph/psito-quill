@@ -22,6 +22,7 @@ import 'package:psito_quill/src/app.dart';
 import 'package:psito_quill/src/document/document_controller.dart';
 import 'package:psito_quill/src/document/recovery.dart';
 import 'package:psito_quill/src/document/search.dart';
+import 'package:psito_quill/src/document/style_patch.dart';
 import 'package:psito_quill/src/document/text_clipboard.dart';
 import 'package:psito_quill/src/document/workspace.dart';
 import 'package:psito_quill/src/files/lo_lock.dart';
@@ -505,6 +506,102 @@ void main() {
     expect(await workspace.closeTab(recTab), isTrue);
     expect(recDir.listSync().whereType<File>(), isEmpty, reason: 'fechar apaga as cópias');
     doc.recovery = null;
+
+    // 24. A página do livro (D-075) e as notas, os links e o PDF (D-076), num
+    //     DOCX novo. O cabeçalho liga pelo comando do motor; desligar, a
+    //     primeira página e as pares diferentes, a hifenização e a capitular
+    //     vão pela cópia dos estilos e o LoadStyles.
+    final pageSource = source.copySync('${tmp.path}/pagina.docx').path;
+    await openAndWait(pageSource);
+    Future<void> pageIs(bool Function(PageSetup p) test, String what) async {
+      doc.refreshSnapshot();
+      await until(() => test(doc.snapshot.page), what, seconds: 30, detail: () => '${doc.snapshot.page.header}');
+    }
+
+    doc.insertHeaderFooter(footer: false);
+    await pageIs((p) => p.header, 'o cabeçalho ligado');
+    doc.insertField(DocField.pageNumber);
+    await settle();
+    expect(await doc.setFirstPageDifferent(true), isTrue);
+    await pageIs((p) => p.firstDifferent, 'a primeira página diferente');
+    expect(await doc.setLeftRightDifferent(true), isTrue);
+    await pageIs((p) => p.leftDifferent, 'as pares diferentes');
+    expect(await doc.setDocumentHyphenation(true), isTrue);
+    await pageIs((p) => p.hyphenation, 'a hifenização do documento');
+    expect(doc.snapshot.page.header, isTrue, reason: 'os outros estilos voltam iguais');
+    expect(await doc.removeHeaderFooter(footer: false), isTrue);
+    await pageIs((p) => !p.header, 'o cabeçalho desligado');
+    expect(doc.snapshot.page.hyphenation, isTrue);
+    expect(doc.docStatus, DocStatus.open, reason: 'nada travou o motor');
+
+    // A capitular, no parágrafo do corpo (o cursor sai do cabeçalho).
+    doc.uno('.uno:GoToStartOfDoc');
+    for (var i = 0; i < 3; i++) {
+      doc.postKey(0, VclKey.down);
+    }
+    await until(() => doc.paragraphStyle != null, 'o estilo do parágrafo');
+    final bodyStyle = doc.paragraphStyle!;
+    expect(await doc.setDropCap(2), isTrue);
+    await until(() => doc.paragraphStyle == '$bodyStyle$dropCapSuffix 2', 'o estilo da capitular',
+        detail: () => '${doc.paragraphStyle}');
+    expect(await doc.setDropCap(0), isTrue);
+    await until(() => doc.paragraphStyle == bodyStyle, 'tirar a capitular');
+
+    // O link e a nota de rodapé. As teclas e o texto vão ao motor de forma
+    // assíncrona, e o pump não espera o tempo real: pausas de verdade.
+    Future<void> pause(int ms) {
+      final end = DateTime.now().add(Duration(milliseconds: ms));
+      return until(() => DateTime.now().isAfter(end), 'a pausa');
+    }
+
+    doc.uno('.uno:GoToEndOfPara');
+    doc.insertText(' ');
+    await pause(400);
+    doc.insertLink('o site', 'https://exemplo.org');
+    await pause(400);
+    doc.postKey(0, VclKey.left);
+    doc.postKey(0, VclKey.left);
+    await until(() => doc.link?.url == 'https://exemplo.org', 'o link no cursor', detail: () => '${doc.link?.url}');
+    doc.uno('.uno:GoToEndOfPara');
+    await pause(300);
+    doc.insertFootnote();
+    await pause(400);
+    doc.insertText('Nota da integracao');
+    await pause(400);
+    doc.jumpFootnote();
+    await pause(300);
+    doc.postKey(0, VclKey.end);
+    final pageOdt = '${tmp.path}/pagina.odt';
+    dialogs.saveAnswer = pageOdt;
+    expect(await workspace.saveAs(), isTrue);
+    final pageStyles = unzip(pageOdt, 'styles.xml'), pageContent = unzip(pageOdt, 'content.xml');
+    expect(pageContent, contains('Nota da integracao'));
+    expect(pageContent, contains('<text:note '));
+    expect(pageContent, contains('xlink:href="https://exemplo.org'));
+    // O cabeçalho foi tirado (com a primeira página dele).
+    expect(pageStyles, isNot(contains('<style:header>')));
+    expect(pageStyles, isNot(contains('style:header-first')));
+    expect(pageStyles, contains('fo:hyphenate="true"'));
+    expect(pageStyles, contains('capitular 2'), reason: 'o estilo da capitular fica no documento');
+
+    // O PDF.
+    final pdf = '${tmp.path}/pagina.pdf';
+    expect(await doc.exportPdf(pdf), isTrue);
+    expect(String.fromCharCodes(File(pdf).readAsBytesSync().take(5)), '%PDF-');
+
+    // O papel escuro (D-074): o motor desenha o claro, e o kit inverte.
+    final lumaLight = kit.debugTilesLuma();
+    final dark = builtInThemes.firstWhere((t) => t.brightness == Brightness.dark);
+    final paper = enginePaper(dark);
+    doc.setPaperScheme(paper.scheme, invert: paper.invert);
+    await settle(1500);
+    final lumaDark = kit.debugTilesLuma();
+    expect(lumaLight, greaterThan(150));
+    expect(lumaDark, lessThan(100), reason: 'claro $lumaLight, escuro $lumaDark');
+    final light = enginePaper(builtInThemes.firstWhere((t) => t.brightness == Brightness.light));
+    doc.setPaperScheme(light.scheme, invert: light.invert);
+    await settle(1500);
+    expect(kit.debugTilesLuma(), greaterThan(150));
 
         // Fecha sem salvar (descarta), para não deixar trava.
     workspace.onUnsaved = () async => UnsavedChoice.discard;

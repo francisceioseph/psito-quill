@@ -15,6 +15,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../commands/command_registry.dart';
 import '../../commands/commands_document.dart';
+import '../../commands/commands_page.dart';
 import '../../commands/commands_view.dart';
 import '../../document/document_controller.dart';
 import '../../kit/quill_kit.dart';
@@ -109,6 +110,13 @@ List<ContextEntry> contextEntries(
       commandMenuDivider,
       CommandIds.pageBreak,
     ]),
+    // Os links e as notas (D-076): abrir e remover só aparecem no link.
+    SubmenuEntry(l10n.groupLinks, Symbols.link_rounded, const [
+      PageCommandIds.link,
+      PageCommandIds.openLink,
+      PageCommandIds.removeLink,
+    ]),
+    const CommandEntry(PageCommandIds.jumpFootnote),
     const CommandEntry(CommandIds.clearFormatting),
     const SeparatorEntry(),
     const CommandEntry(CommandIds.selectAll),

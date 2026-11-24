@@ -1678,4 +1678,312 @@ class AppLocalizationsEn extends AppLocalizations {
   String recoveredName(String name) {
     return '$name (recovered)';
   }
+
+  @override
+  String get commandHeader => 'Header';
+
+  @override
+  String get commandFooter => 'Footer';
+
+  @override
+  String get commandRemoveHeader => 'Remove header';
+
+  @override
+  String get commandRemoveFooter => 'Remove footer';
+
+  @override
+  String get commandFirstPageDifferent => 'Different first page';
+
+  @override
+  String get commandLeftRightDifferent => 'Different even pages';
+
+  @override
+  String get commandPageNumber => 'Page number';
+
+  @override
+  String get commandPageCount => 'Page count';
+
+  @override
+  String get commandDateField => 'Date';
+
+  @override
+  String get commandTimeField => 'Time';
+
+  @override
+  String get commandHyphenation => 'Automatic hyphenation';
+
+  @override
+  String get commandHyphenateParagraph => 'Hyphenate this paragraph';
+
+  @override
+  String get commandNoHyphenateParagraph => 'Don\'t hyphenate this paragraph';
+
+  @override
+  String commandDropCap(int n) {
+    return 'Drop cap ($n lines)';
+  }
+
+  @override
+  String get commandRemoveDropCap => 'Remove drop cap';
+
+  @override
+  String get commandColumnBreak => 'Column break';
+
+  @override
+  String get commandBlankPage => 'Blank page';
+
+  @override
+  String get commandExportPdf => 'Export as PDF…';
+
+  @override
+  String get commandPrint => 'Print…';
+
+  @override
+  String get commandFootnote => 'Footnote';
+
+  @override
+  String get commandEndnote => 'Endnote';
+
+  @override
+  String get commandJumpFootnote => 'Go to note and back';
+
+  @override
+  String get commandLink => 'Link…';
+
+  @override
+  String get commandOpenLink => 'Open link';
+
+  @override
+  String get commandRemoveLink => 'Remove link';
+
+  @override
+  String get commandSpecialCharacter => 'Special character…';
+
+  @override
+  String get groupHeaderFooter => 'Header & footer';
+
+  @override
+  String get groupNotes => 'Notes';
+
+  @override
+  String get groupLinks => 'Links';
+
+  @override
+  String get groupSymbols => 'Symbols';
+
+  @override
+  String get groupBreaks => 'Breaks';
+
+  @override
+  String get groupHyphenation => 'Hyphenation';
+
+  @override
+  String get groupFields => 'Fields';
+
+  @override
+  String get groupTypography => 'Typography';
+
+  @override
+  String get exportPdfFilter => 'PDF document';
+
+  @override
+  String noticeExported(String path) {
+    return 'Exported: $path';
+  }
+
+  @override
+  String get noticeExportFailed => 'Couldn\'t export the PDF.';
+
+  @override
+  String get noticePrinted => 'Sent to the printer.';
+
+  @override
+  String noticePrintFailed(String detail) {
+    return 'Couldn\'t print: $detail';
+  }
+
+  @override
+  String get noticePrintNoPdf => 'The chosen printer doesn\'t accept PDF.';
+
+  @override
+  String get noticeStyleFailed => 'The engine didn\'t apply the page change.';
+
+  @override
+  String get linkDialogTitle => 'Link';
+
+  @override
+  String get linkText => 'Text';
+
+  @override
+  String get linkUrl => 'Address';
+
+  @override
+  String get linkApply => 'Apply';
+
+  @override
+  String get openLinkTitle => 'Open the link?';
+
+  @override
+  String openLinkBody(String url) {
+    return 'Quill will ask the system to open this address. If it is a website, that goes to the internet:\n$url';
+  }
+
+  @override
+  String get noticeLinkScheme =>
+      'Quill only opens web (http, https) and e-mail (mailto) addresses.';
+
+  @override
+  String get openLinkButton => 'Open';
+
+  @override
+  String get specialCharsTitle => 'Special characters';
+
+  @override
+  String get specialCharsSearch => 'Search by name';
+
+  @override
+  String get specialCharsEmpty => 'No character with that name.';
+
+  @override
+  String specialCharInsert(String name, String char) {
+    return '$name ($char)';
+  }
+
+  @override
+  String get pageSectionHeaderFooter => 'Header and footer';
+
+  @override
+  String get charEmDash => 'em dash';
+
+  @override
+  String get charEnDash => 'en dash';
+
+  @override
+  String get charEllipsis => 'ellipsis';
+
+  @override
+  String get charLeftDoubleQuote => 'left double quote';
+
+  @override
+  String get charRightDoubleQuote => 'right double quote';
+
+  @override
+  String get charLeftSingleQuote => 'left single quote';
+
+  @override
+  String get charRightSingleQuote => 'right single quote, apostrophe';
+
+  @override
+  String get charLeftGuillemet => 'left guillemet';
+
+  @override
+  String get charRightGuillemet => 'right guillemet';
+
+  @override
+  String get charNoBreakSpace => 'no-break space';
+
+  @override
+  String get charNarrowNoBreakSpace => 'narrow no-break space';
+
+  @override
+  String get charSoftHyphen => 'soft hyphen';
+
+  @override
+  String get charNoBreakHyphen => 'non-breaking hyphen';
+
+  @override
+  String get charAsterism => 'asterism (scene break)';
+
+  @override
+  String get charFleuron => 'fleuron';
+
+  @override
+  String get charSection => 'section sign';
+
+  @override
+  String get charPilcrow => 'pilcrow';
+
+  @override
+  String get charDagger => 'dagger';
+
+  @override
+  String get charDoubleDagger => 'double dagger';
+
+  @override
+  String get charBullet => 'bullet';
+
+  @override
+  String get charMiddleDot => 'middle dot';
+
+  @override
+  String get charDegree => 'degree';
+
+  @override
+  String get charOrdinalA => 'feminine ordinal';
+
+  @override
+  String get charOrdinalO => 'masculine ordinal';
+
+  @override
+  String get charCopyright => 'copyright';
+
+  @override
+  String get charRegistered => 'registered';
+
+  @override
+  String get charTrademark => 'trademark';
+
+  @override
+  String get charTimes => 'multiplication';
+
+  @override
+  String get charDivide => 'division';
+
+  @override
+  String get charPlusMinus => 'plus-minus';
+
+  @override
+  String get charApprox => 'approximately';
+
+  @override
+  String get charNotEqual => 'not equal';
+
+  @override
+  String get charLessEqual => 'less or equal';
+
+  @override
+  String get charGreaterEqual => 'greater or equal';
+
+  @override
+  String get charHalf => 'one half';
+
+  @override
+  String get charQuarter => 'one quarter';
+
+  @override
+  String get charThreeQuarters => 'three quarters';
+
+  @override
+  String get charEuro => 'euro';
+
+  @override
+  String get charPound => 'pound';
+
+  @override
+  String get charYen => 'yen';
+
+  @override
+  String get charArrowRight => 'right arrow';
+
+  @override
+  String get charArrowLeft => 'left arrow';
+
+  @override
+  String get charStar => 'star';
+
+  @override
+  String get charPrime => 'prime';
+
+  @override
+  String get charDoublePrime => 'double prime';
 }

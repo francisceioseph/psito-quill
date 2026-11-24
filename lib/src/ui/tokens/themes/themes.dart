@@ -1,4 +1,7 @@
+import 'package:flutter/material.dart' show Brightness;
+
 import '../../../kit/lok/lo_profile.dart';
+import '../../../kit/quill_kit.dart' show PaperInvert;
 import '../tokens.dart';
 import 'alto_contraste.dart';
 import 'classico97.dart';
@@ -37,3 +40,20 @@ List<PaperScheme> paperSchemes(Iterable<QuillTokens> themes, {int? spell}) => [
           spell: spell,
         ),
     ];
+
+/// O papel que o motor desenha para o tema [t] (D-074). Um tema escuro pede
+/// o papel claro irmão e inverte os ladrilhos para o papel e a tinta dele:
+/// o esquema escuro do LibreOffice só clareia o texto de cor automática, e o
+/// texto com cor fixa escura (o cinza de muitos DOCX) sumia no papel escuro.
+({String scheme, PaperInvert? invert}) enginePaper(QuillTokens t) {
+  if (t.brightness == Brightness.light) return (scheme: t.paperScheme, invert: null);
+  final light = isHighContrast(t) ? altoContrasteClaro : claro;
+  return (
+    scheme: light.paperScheme,
+    invert: PaperInvert(
+      paper: t.colors.paper.toARGB32() & 0xFFFFFF,
+      ink: t.colors.paperInk.toARGB32() & 0xFFFFFF,
+      source: light.colors.paper.toARGB32() & 0xFFFFFF,
+    ),
+  );
+}

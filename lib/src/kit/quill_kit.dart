@@ -69,6 +69,17 @@ class DocumentActivated extends KitEvent {
 }
 
 /// A resposta a [QuillKit.convert] de número [id].
+/// A impressão terminou (D-076): enviada, cancelada na janela, ou com erro.
+enum PrintOutcome { sent, cancelled, failed }
+
+class Printed extends KitEvent {
+  const Printed(this.outcome, {this.error = ''});
+  final PrintOutcome outcome;
+
+  /// "sem-pdf": a impressora não aceita PDF.
+  final String error;
+}
+
 class FileConverted extends KitEvent {
   const FileConverted(this.id, {required this.ok, this.error = ''});
   final int id;
@@ -103,8 +114,22 @@ class TilePlaced extends KitEvent {
 
 /// Cursor de texto, em twips. [Rect.zero] quando não há.
 class CursorMoved extends KitEvent {
-  const CursorMoved(this.rect);
+  const CursorMoved(this.rect, {this.link});
   final Rect rect;
+
+  /// O link em que o cursor está (D-076); null fora de um link.
+  final DocLink? link;
+}
+
+/// Um link do documento: o texto e o endereço.
+class DocLink {
+  const DocLink(this.text, this.url);
+  final String text, url;
+
+  @override
+  bool operator ==(Object other) => other is DocLink && other.text == text && other.url == url;
+  @override
+  int get hashCode => Object.hash(text, url);
 }
 
 class CursorVisibility extends KitEvent {
@@ -348,6 +373,11 @@ abstract interface class QuillKit {
   void setViewport(int scaleMilli, Rect visibleTwips);
   void repaintAll();
 
+  /// O papel escuro (D-074): os ladrilhos pintados depois vêm com a
+  /// luminosidade invertida e o tom mantido; null desliga. Chame o
+  /// [repaintAll] em seguida.
+  void setPaperInvert(PaperInvert? invert);
+
   /// Os callbacks de acessibilidade do documento ativo (D-067): o parágrafo
   /// do cursor ([A11yParagraph]) e a posição do cursor nele ([A11yCaret]).
   /// Custam trabalho a cada tecla: só para quem usa leitor de tela.
@@ -363,6 +393,10 @@ abstract interface class QuillKit {
   /// [target] no [format] ("odt", "fodt") e fecha, sem tocar nas abas (o
   /// livro, D-071). Responde com [FileConverted] e o mesmo [id].
   void convert(int id, String source, String target, String format);
+
+  /// A janela de impressão do sistema para o PDF [pdfPath], que é apagado
+  /// no fim. Responde com [Printed] (D-076).
+  void printPdf(String pdfPath, String title);
 
   void postKey(KeyEventType type, {int charCode = 0, int keyCode = 0});
   void postMouse(MouseEventType type, int x, int y, {int count = 1, int buttons = 1, int modifier = 0});
@@ -416,4 +450,34 @@ abstract interface class QuillKit {
 /// As classes de fonte de [QuillKit.fontClasses].
 abstract final class FontClass {
   static const mono = 1, serif = 2, sans = 4;
+}
+
+/// O papel escuro desenhado pelo Quill (D-074), em 0xRRGGBB: o [source] (o
+/// papel claro que o motor pinta) vira o [paper], e o preto vira o [ink].
+class PaperInvert {
+  const PaperInvert({required this.paper, required this.ink, required this.source});
+  final int paper, ink, source;
+
+  /// A cor [rgb] como o motor a mostra no papel escuro: a mesma conta do
+  /// `LokEngine::invertPixels` (os cartões de estilo da faixa usam).
+  int apply(int rgb) {
+    int ch(int v, int shift) => (v >> shift) & 255;
+    final top = (77 * ch(source, 16) + 150 * ch(source, 8) + 29 * ch(source, 0)) >> 8;
+    final r = ch(rgb, 16), g = ch(rgb, 8), b = ch(rgb, 0);
+    final y = (77 * r + 150 * g + 29 * b) >> 8;
+    final t = top < 1 || y >= top ? 255 : y * 255 ~/ top;
+    var out = 0;
+    for (final (shift, v) in [(16, r), (8, g), (0, b)]) {
+      final k = ch(ink, shift), p = ch(paper, shift);
+      final n = k + (p - k) * t ~/ 255;
+      out |= (n + v - y).clamp(0, 255) << shift;
+    }
+    return out;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is PaperInvert && other.paper == paper && other.ink == ink && other.source == source;
+  @override
+  int get hashCode => Object.hash(paper, ink, source);
 }

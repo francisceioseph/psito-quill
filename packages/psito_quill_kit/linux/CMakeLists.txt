@@ -13,6 +13,8 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(LUA REQUIRED IMPORTED_TARGET lua5.4)
 # O fontconfig classifica as fontes para os filtros da lista (o GTK já o traz).
 pkg_check_modules(FONTCONFIG REQUIRED IMPORTED_TARGET fontconfig)
+# A janela de impressão do GTK (D-076).
+pkg_check_modules(GTK_PRINT REQUIRED IMPORTED_TARGET gtk+-unix-print-3.0)
 # O LibreOfficeKit.h vem do libreofficekit-dev. A biblioteca do LO é aberta em
 # tempo de execução (lok_init faz dlopen), então não há link com ela.
 find_path(LOK_INCLUDE_DIR LibreOfficeKit/LibreOfficeKit.h REQUIRED)
@@ -36,6 +38,6 @@ target_compile_definitions(${PLUGIN_NAME} PRIVATE FLUTTER_PLUGIN_IMPL)
 
 target_include_directories(${PLUGIN_NAME} INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_include_directories(${PLUGIN_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}" "${LOK_INCLUDE_DIR}")
-target_link_libraries(${PLUGIN_NAME} PRIVATE flutter PkgConfig::GTK PkgConfig::LUA PkgConfig::FONTCONFIG ${CMAKE_DL_LIBS})
+target_link_libraries(${PLUGIN_NAME} PRIVATE flutter PkgConfig::GTK PkgConfig::LUA PkgConfig::FONTCONFIG PkgConfig::GTK_PRINT ${CMAKE_DL_LIBS})
 
 set(psito_quill_kit_bundled_libraries "" PARENT_SCOPE)

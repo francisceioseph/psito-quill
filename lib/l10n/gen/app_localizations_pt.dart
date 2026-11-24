@@ -1679,4 +1679,312 @@ class AppLocalizationsPt extends AppLocalizations {
   String recoveredName(String name) {
     return '$name (recuperado)';
   }
+
+  @override
+  String get commandHeader => 'Cabeçalho';
+
+  @override
+  String get commandFooter => 'Rodapé';
+
+  @override
+  String get commandRemoveHeader => 'Remover o cabeçalho';
+
+  @override
+  String get commandRemoveFooter => 'Remover o rodapé';
+
+  @override
+  String get commandFirstPageDifferent => 'Primeira página diferente';
+
+  @override
+  String get commandLeftRightDifferent => 'Páginas pares diferentes';
+
+  @override
+  String get commandPageNumber => 'Número de página';
+
+  @override
+  String get commandPageCount => 'Total de páginas';
+
+  @override
+  String get commandDateField => 'Data';
+
+  @override
+  String get commandTimeField => 'Hora';
+
+  @override
+  String get commandHyphenation => 'Hifenização automática';
+
+  @override
+  String get commandHyphenateParagraph => 'Hifenizar este parágrafo';
+
+  @override
+  String get commandNoHyphenateParagraph => 'Não hifenizar este parágrafo';
+
+  @override
+  String commandDropCap(int n) {
+    return 'Letra capitular ($n linhas)';
+  }
+
+  @override
+  String get commandRemoveDropCap => 'Remover a capitular';
+
+  @override
+  String get commandColumnBreak => 'Quebra de coluna';
+
+  @override
+  String get commandBlankPage => 'Página em branco';
+
+  @override
+  String get commandExportPdf => 'Exportar como PDF…';
+
+  @override
+  String get commandPrint => 'Imprimir…';
+
+  @override
+  String get commandFootnote => 'Nota de rodapé';
+
+  @override
+  String get commandEndnote => 'Nota de fim';
+
+  @override
+  String get commandJumpFootnote => 'Ir para a nota e voltar';
+
+  @override
+  String get commandLink => 'Link…';
+
+  @override
+  String get commandOpenLink => 'Abrir o link';
+
+  @override
+  String get commandRemoveLink => 'Remover o link';
+
+  @override
+  String get commandSpecialCharacter => 'Caractere especial…';
+
+  @override
+  String get groupHeaderFooter => 'Cabeçalho e rodapé';
+
+  @override
+  String get groupNotes => 'Notas';
+
+  @override
+  String get groupLinks => 'Links';
+
+  @override
+  String get groupSymbols => 'Símbolos';
+
+  @override
+  String get groupBreaks => 'Quebras';
+
+  @override
+  String get groupHyphenation => 'Hifenização';
+
+  @override
+  String get groupFields => 'Campos';
+
+  @override
+  String get groupTypography => 'Tipografia';
+
+  @override
+  String get exportPdfFilter => 'Documento PDF';
+
+  @override
+  String noticeExported(String path) {
+    return 'Exportado: $path';
+  }
+
+  @override
+  String get noticeExportFailed => 'Não foi possível exportar o PDF.';
+
+  @override
+  String get noticePrinted => 'Enviado à impressora.';
+
+  @override
+  String noticePrintFailed(String detail) {
+    return 'Não foi possível imprimir: $detail';
+  }
+
+  @override
+  String get noticePrintNoPdf => 'A impressora escolhida não aceita PDF.';
+
+  @override
+  String get noticeStyleFailed => 'O motor não aplicou a mudança na página.';
+
+  @override
+  String get linkDialogTitle => 'Link';
+
+  @override
+  String get linkText => 'Texto';
+
+  @override
+  String get linkUrl => 'Endereço';
+
+  @override
+  String get linkApply => 'Aplicar';
+
+  @override
+  String get openLinkTitle => 'Abrir o link?';
+
+  @override
+  String openLinkBody(String url) {
+    return 'O Quill vai pedir ao sistema para abrir este endereço. Se for um site, isso acessa a internet:\n$url';
+  }
+
+  @override
+  String get noticeLinkScheme =>
+      'O Quill só abre endereços da web (http, https) e de e-mail (mailto).';
+
+  @override
+  String get openLinkButton => 'Abrir';
+
+  @override
+  String get specialCharsTitle => 'Caracteres especiais';
+
+  @override
+  String get specialCharsSearch => 'Buscar pelo nome';
+
+  @override
+  String get specialCharsEmpty => 'Nenhum caractere com esse nome.';
+
+  @override
+  String specialCharInsert(String name, String char) {
+    return '$name ($char)';
+  }
+
+  @override
+  String get pageSectionHeaderFooter => 'Cabeçalho e rodapé';
+
+  @override
+  String get charEmDash => 'travessão';
+
+  @override
+  String get charEnDash => 'meia-risca';
+
+  @override
+  String get charEllipsis => 'reticências';
+
+  @override
+  String get charLeftDoubleQuote => 'aspas curvas de abrir';
+
+  @override
+  String get charRightDoubleQuote => 'aspas curvas de fechar';
+
+  @override
+  String get charLeftSingleQuote => 'aspa simples de abrir';
+
+  @override
+  String get charRightSingleQuote => 'aspa simples de fechar, apóstrofo';
+
+  @override
+  String get charLeftGuillemet => 'aspas angulares de abrir';
+
+  @override
+  String get charRightGuillemet => 'aspas angulares de fechar';
+
+  @override
+  String get charNoBreakSpace => 'espaço sem quebra';
+
+  @override
+  String get charNarrowNoBreakSpace => 'espaço fino sem quebra';
+
+  @override
+  String get charSoftHyphen => 'hífen opcional';
+
+  @override
+  String get charNoBreakHyphen => 'hífen sem quebra';
+
+  @override
+  String get charAsterism => 'asterismo (separador de cena)';
+
+  @override
+  String get charFleuron => 'florão';
+
+  @override
+  String get charSection => 'parágrafo (seção)';
+
+  @override
+  String get charPilcrow => 'pé-de-mosca';
+
+  @override
+  String get charDagger => 'adaga';
+
+  @override
+  String get charDoubleDagger => 'adaga dupla';
+
+  @override
+  String get charBullet => 'marcador';
+
+  @override
+  String get charMiddleDot => 'ponto médio';
+
+  @override
+  String get charDegree => 'grau';
+
+  @override
+  String get charOrdinalA => 'ordinal feminino';
+
+  @override
+  String get charOrdinalO => 'ordinal masculino';
+
+  @override
+  String get charCopyright => 'direitos autorais';
+
+  @override
+  String get charRegistered => 'marca registrada';
+
+  @override
+  String get charTrademark => 'marca';
+
+  @override
+  String get charTimes => 'vezes';
+
+  @override
+  String get charDivide => 'dividido';
+
+  @override
+  String get charPlusMinus => 'mais ou menos';
+
+  @override
+  String get charApprox => 'aproximadamente';
+
+  @override
+  String get charNotEqual => 'diferente';
+
+  @override
+  String get charLessEqual => 'menor ou igual';
+
+  @override
+  String get charGreaterEqual => 'maior ou igual';
+
+  @override
+  String get charHalf => 'meio';
+
+  @override
+  String get charQuarter => 'um quarto';
+
+  @override
+  String get charThreeQuarters => 'três quartos';
+
+  @override
+  String get charEuro => 'euro';
+
+  @override
+  String get charPound => 'libra';
+
+  @override
+  String get charYen => 'iene';
+
+  @override
+  String get charArrowRight => 'seta para a direita';
+
+  @override
+  String get charArrowLeft => 'seta para a esquerda';
+
+  @override
+  String get charStar => 'estrela';
+
+  @override
+  String get charPrime => 'linha (minuto, pé)';
+
+  @override
+  String get charDoublePrime => 'linha dupla (segundo, polegada)';
 }

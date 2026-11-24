@@ -42,6 +42,7 @@ enum PqkEvent {
   PQK_EVENT_TEXT_SELECTION = 10009, // payload: "mime\n" + texto
   PQK_EVENT_ACTIVATED = 10010,     // payload: {"id":n,"width":tw,"height":tw,"parts":n}
   PQK_EVENT_CONVERTED = 10011,     // payload: {"id":n,"ok":bool,"error":"..."}
+  PQK_EVENT_PRINTED = 10012,       // payload: "ok", "cancelado" ou "erro\n<mensagem>"
   PQK_EVENT_LUA_LOG = 10100,
   PQK_EVENT_LUA_DONE = 10101,      // payload: {"ok":true} ou {"ok":false,"error":"..."}
 };
@@ -71,6 +72,15 @@ PQK_EXPORT void pqk_close_document(int32_t id);
 PQK_EXPORT void pqk_set_viewport(int32_t scale_milli, int64_t x, int64_t y, int64_t w,
                                  int64_t h);
 PQK_EXPORT void pqk_repaint_all(void);
+// O papel escuro (D-074): com `on`, cada ladrilho tem a luminosidade
+// invertida, com o tom mantido. O papel claro do motor (`src_paper`, 0xRRGGBB)
+// vira `paper`, e o preto vira `ink`. Vale para os ladrilhos pintados depois:
+// chame o pqk_repaint_all em seguida.
+// Imprimir (D-076): a janela de impressão do GTK, e o PDF [pdf_path] vai à
+// impressora escolhida. Volta logo; a resposta vem em PQK_EVENT_PRINTED, e o
+// arquivo é apagado no fim (ele tem o texto do livro).
+PQK_EXPORT void pqk_print_pdf(const char* pdf_path, const char* title);
+PQK_EXPORT void pqk_set_paper_invert(bool on, uint32_t paper, uint32_t ink, uint32_t src_paper);
 // Os callbacks de acessibilidade do documento ativo (o parágrafo e o cursor).
 PQK_EXPORT void pqk_set_accessibility(bool on);
 // Abre o documento em [path] oculto, para carregar o dicionário antes do

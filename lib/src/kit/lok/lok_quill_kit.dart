@@ -81,6 +81,10 @@ class LokQuillKit implements QuillKit {
   void repaintAll() => _native.repaintAll();
 
   @override
+  void setPaperInvert(PaperInvert? invert) =>
+      _native.setPaperInvert(invert != null, invert?.paper ?? 0, invert?.ink ?? 0, invert?.source ?? 0);
+
+  @override
   void setAccessibility(bool on) => _native.setAccessibility(on);
 
   @override
@@ -88,6 +92,9 @@ class LokQuillKit implements QuillKit {
 
   @override
   void convert(int id, String source, String target, String format) => _native.convert(id, source, target, format);
+
+  @override
+  void printPdf(String pdfPath, String title) => _native.printPdf(pdfPath, title);
 
   @override
   void postKey(KeyEventType type, {int charCode = 0, int keyCode = 0}) => _native.postKey(
@@ -204,6 +211,12 @@ class LokQuillKit implements QuillKit {
         return DocumentActivated(parseDocumentId(payload), parseOpened(payload));
       case PqkEvent.PQK_EVENT_CONVERTED:
         return parseConverted(payload);
+      case PqkEvent.PQK_EVENT_PRINTED:
+        return switch (payload) {
+          'ok' => const Printed(PrintOutcome.sent),
+          'cancelado' => const Printed(PrintOutcome.cancelled),
+          _ => Printed(PrintOutcome.failed, error: payload.split('\n').skip(1).join('\n')),
+        };
       case PqkEvent.PQK_EVENT_OPEN_FAILED:
         return DocumentOpenFailed(payload);
       case PqkEvent.PQK_EVENT_TILE:
@@ -226,7 +239,7 @@ class LokQuillKit implements QuillKit {
         final json = jsonDecode(payload) as Map<String, dynamic>;
         return PluginFinished(ok: json['ok'] == true, error: '${json['error'] ?? ''}');
       case LibreOfficeKitCallbackType.LOK_CALLBACK_INVALIDATE_VISIBLE_CURSOR:
-        return CursorMoved(parseCursor(payload));
+        return CursorMoved(parseCursor(payload), link: parseCursorLink(payload));
       case LibreOfficeKitCallbackType.LOK_CALLBACK_CURSOR_VISIBLE:
         return CursorVisibility(payload.trim() == 'true');
       case LibreOfficeKitCallbackType.LOK_CALLBACK_TEXT_SELECTION:

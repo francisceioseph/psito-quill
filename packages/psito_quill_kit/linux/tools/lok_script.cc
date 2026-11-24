@@ -12,7 +12,7 @@
 //   values <.uno:Cmd>         getCommandValues
 //   type <texto>              digita (como o IME confirmado)
 //   key <charCode> <keyCode>  uma tecla (entrada e soltura)
-//   click <x> <y> [n] [botão] clique em twips (botão 1 esquerdo, 4 direito)
+//   click <x> <y> [n] [botão] [mod]  clique em twips (botão 1 esquerdo, 4 direito; mod 8192 = Ctrl)
 //   gsel <tipo> <x> <y>       setGraphicSelection (0 início, 1 fim), em twips
 //   sel                       a seleção como texto
 //   save <arquivo> <formato>  salvar como
@@ -20,6 +20,7 @@
 //   preload <arquivo>         carrega o dicionário por um documento oculto
 //   convert <src> <dst> <fmt> abre oculto, salva e fecha ("-": documento novo)
 //   repaint                   redesenha todos os ladrilhos
+//   invert <papel> <tinta> <fonte>  o papel escuro (D-074), em rrggbb; "off" desliga
 //   a11y on|off               setAccessibilityState (callbacks 62 e 63)
 //   color <rrggbb> [tol]      conta os pixels perto da cor nos ladrilhos
 //   # ...                     comentário
@@ -114,6 +115,15 @@ int main(int argc, char** argv) {
       e.convert(1, src == "-" ? "" : src, dst, fmt);
     } else if (op == "preload") {
       e.preloadSpelling(rest);
+    } else if (op == "invert") {
+      if (rest == "off") {
+        e.setPaperInvert(false, 0, 0, 0);
+      } else {
+        unsigned p = 0, k = 0, f = 0;
+        std::istringstream(rest) >> std::hex >> p >> k >> f;
+        e.setPaperInvert(true, p, k, f);
+      }
+      e.repaintAll();
     } else if (op == "repaint") {
       e.repaintAll();
     } else if (op == "a11y") {
@@ -148,10 +158,10 @@ int main(int argc, char** argv) {
       e.postKey(LOK_KEYEVENT_KEYINPUT, c, k);
       e.postKey(LOK_KEYEVENT_KEYUP, c, k);
     } else if (op == "click") {
-      int x = 0, y = 0, n = 1, b = 1;
-      std::istringstream(rest) >> x >> y >> n >> b;
-      e.postMouse(LOK_MOUSEEVENT_MOUSEBUTTONDOWN, x, y, n, b, 0);
-      e.postMouse(LOK_MOUSEEVENT_MOUSEBUTTONUP, x, y, n, b, 0);
+      int x = 0, y = 0, n = 1, b = 1, m = 0;
+      std::istringstream(rest) >> x >> y >> n >> b >> m;
+      e.postMouse(LOK_MOUSEEVENT_MOUSEBUTTONDOWN, x, y, n, b, m);
+      e.postMouse(LOK_MOUSEEVENT_MOUSEBUTTONUP, x, y, n, b, m);
     } else if (op == "gsel") {
       int t = 0, x = 0, y = 0;
       std::istringstream(rest) >> t >> x >> y;

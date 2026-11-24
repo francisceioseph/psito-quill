@@ -195,6 +195,12 @@ class FakeQuillKit implements QuillKit {
   @override
   void repaintAll() {}
 
+  /// Os pedidos de papel invertido (D-074), em ordem.
+  final paperInverts = <PaperInvert?>[];
+
+  @override
+  void setPaperInvert(PaperInvert? invert) => paperInverts.add(invert);
+
   /// Os pedidos de acessibilidade (ligar e desligar).
   final accessibility = <bool>[];
 
@@ -216,6 +222,16 @@ class FakeQuillKit implements QuillKit {
 
   /// Falha as próximas conversões.
   bool failConversions = false;
+
+  /// As impressões pedidas (o PDF e o título); [printOutcome] é a resposta.
+  final prints = <(String, String)>[];
+  PrintOutcome printOutcome = PrintOutcome.sent;
+
+  @override
+  void printPdf(String pdfPath, String title) {
+    prints.add((pdfPath, title));
+    _emit(Printed(printOutcome));
+  }
 
   @override
   void convert(int id, String source, String target, String format) {

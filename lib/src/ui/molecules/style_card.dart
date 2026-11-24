@@ -6,6 +6,7 @@
 // cor. Sem a cópia ainda, uma amostra genérica pelo tipo do estilo.
 import 'package:flutter/material.dart';
 
+import '../tokens/themes/themes.dart' show enginePaper;
 import '../tokens/tokens.dart';
 
 /// Como a amostra é desenhada: o tamanho relativo, o peso e o itálico.
@@ -93,8 +94,11 @@ class _StyleCardState extends State<StyleCard> {
           softWrap: false,
           textAlign: s.center ? TextAlign.center : TextAlign.start,
           style: TextStyle(
-            // A cor do documento, menos o preto (some no papel escuro).
-            color: s.rgb == null || s.rgb == 0 ? c.paperInk : Color(s.rgb! | _opaque),
+            // A cor do documento, menos o preto; no papel escuro, como o motor
+            // a mostra (invertida, D-074).
+            color: s.rgb == null || s.rgb == 0
+                ? c.paperInk
+                : Color((enginePaper(t).invert?.apply(s.rgb!) ?? s.rgb!) | _opaque),
             fontSize: 13 * s.scale,
             height: 1.1,
             fontWeight: s.bold ? FontWeight.w700 : FontWeight.w400,

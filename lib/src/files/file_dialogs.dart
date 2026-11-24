@@ -36,6 +36,9 @@ abstract interface class FileDialogs {
 
   /// O caminho escolhido (já com a extensão do formato), ou null.
   Future<String?> pickSave({required String suggestedName, String? initialDirectory, required Map<DocFormat, String> labels});
+
+  /// Onde gravar o PDF exportado (já com o `.pdf`), ou null (D-076).
+  Future<String?> pickExportPdf({required String suggestedName, String? initialDirectory, required String label});
 }
 
 class SystemFileDialogs implements FileDialogs {
@@ -68,6 +71,18 @@ class SystemFileDialogs implements FileDialogs {
       XTypeGroup(label: label, extensions: [for (final f in DocFormat.values) f.extension]),
     ]);
     return file?.path;
+  }
+
+  @override
+  Future<String?> pickExportPdf({required String suggestedName, String? initialDirectory, required String label}) async {
+    final location = await getSaveLocation(
+      acceptedTypeGroups: [XTypeGroup(label: label, extensions: const ['pdf'], mimeTypes: const ['application/pdf'])],
+      suggestedName: suggestedName,
+      initialDirectory: initialDirectory,
+    );
+    if (location == null) return null;
+    final path = location.path;
+    return path.toLowerCase().endsWith('.pdf') ? path : '$path.pdf';
   }
 
   @override

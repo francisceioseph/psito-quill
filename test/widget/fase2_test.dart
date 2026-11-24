@@ -10,6 +10,7 @@ import 'package:psito_quill/src/app.dart';
 import 'package:psito_quill/src/commands/command_registry.dart';
 import 'package:psito_quill/src/commands/commands_book.dart';
 import 'package:psito_quill/src/commands/commands_document.dart';
+import 'package:psito_quill/src/commands/commands_page.dart';
 import 'package:psito_quill/src/commands/commands_view.dart';
 import 'package:psito_quill/src/commands/menus.dart';
 import 'package:psito_quill/src/kit/fake/fake_quill_kit.dart';
@@ -42,6 +43,19 @@ class _NoBookView implements BookViewActions {
   void newChapter() {}
   @override
   void newPart() {}
+}
+
+class _NoPageView implements PageViewActions {
+  @override
+  void exportPdf() {}
+  @override
+  void printDocument() {}
+  @override
+  void editLink() {}
+  @override
+  void openLink(DocLink link) {}
+  @override
+  void specialCharacter() {}
 }
 
 class _NoView implements EditorViewActions {
@@ -129,6 +143,7 @@ void main() {
     registerEditorCommands(registry, doc: harness.doc, workspace: harness.workspace, l10n: l10n);
     registerViewCommands(registry, doc: harness.doc, view: _NoView(), l10n: l10n);
     registerBookCommands(registry, doc: harness.doc, workspace: harness.workspace, view: _NoBookView(), l10n: l10n);
+    registerPageCommands(registry, doc: harness.doc, view: _NoPageView(), l10n: l10n);
     for (final m in editorMenus(l10n)) {
       for (final id in m.items.whereType<String>()) {
         expect(registry[id], isNotNull, reason: '${m.title}: $id');

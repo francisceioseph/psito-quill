@@ -29,6 +29,23 @@ Rect parseCursor(String payload) {
   return parseLokRect(text) ?? Rect.zero;
 }
 
+/// O link do cursor, no JSON do callback 1 (com o
+/// `LOK_FEATURE_VIEWID_IN_VISCURSOR_INVALIDATION_CALLBACK`, D-076):
+/// `"hyperlink": {"text": "...", "link": "..."}`, ou `{}` fora de um link.
+DocLink? parseCursorLink(String payload) {
+  final text = payload.trim();
+  if (!text.startsWith('{')) return null;
+  try {
+    final h = (jsonDecode(text) as Map<String, dynamic>)['hyperlink'];
+    if (h is! Map) return null;
+    final url = h['link'];
+    if (url is! String || url.isEmpty) return null;
+    return DocLink('${h['text'] ?? ''}', url);
+  } on FormatException {
+    return null;
+  }
+}
+
 /// Seleção: "x, y, w, h; x, y, w, h; ...", vazio quando não há.
 List<Rect> parseSelection(String payload) => payload
     .split(';')

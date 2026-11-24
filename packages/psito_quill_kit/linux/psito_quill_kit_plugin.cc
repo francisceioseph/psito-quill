@@ -11,6 +11,8 @@
 
 #include <flutter_linux/flutter_linux.h>
 #include <gtk/gtk.h>
+#include <gtk/gtkunixprint.h>
+#include <unistd.h>
 
 #include <cstdlib>
 #include <cstring>
@@ -169,6 +171,9 @@ void pqk_set_viewport(int32_t scale_milli, int64_t x, int64_t y, int64_t w, int6
 void pqk_repaint_all(void) {
   if (g_kit) g_kit->engine().repaintAll();
 }
+void pqk_set_paper_invert(bool on, uint32_t paper, uint32_t ink, uint32_t src_paper) {
+  if (g_kit) g_kit->engine().setPaperInvert(on, paper, ink, src_paper);
+}
 void pqk_set_accessibility(bool on) {
   if (g_kit) g_kit->engine().setAccessibility(on);
 }
@@ -273,6 +278,83 @@ double pqk_debug_tiles_luma(void) {
     }
   }
   return n ? sum / n : -1;
+}
+
+namespace {
+
+struct PrintJob {
+  std::string path, title;
+};
+
+void printed(const char* result, PrintJob* job) {
+  unlink(job->path.c_str());
+  if (g_kit) g_kit->onEvent(PQK_EVENT_PRINTED, result);
+  delete job;
+}
+
+void onPrintSent(GtkPrintJob*, gpointer data, const GError* error) {
+  auto* job = static_cast<PrintJob*>(data);
+  printed(error ? (std::string("erro\n") + error->message).c_str() : "ok", job);
+}
+
+void onPrintResponse(GtkDialog* dialog, gint response, gpointer data) {
+  auto* job = static_cast<PrintJob*>(data);
+  auto* unix_dialog = GTK_PRINT_UNIX_DIALOG(dialog);
+  if (response != GTK_RESPONSE_OK) {
+    gtk_widget_destroy(GTK_WIDGET(dialog));
+    printed("cancelado", job);
+    return;
+  }
+  GtkPrinter* printer = gtk_print_unix_dialog_get_selected_printer(unix_dialog);
+  GtkPrintSettings* settings = gtk_print_unix_dialog_get_settings(unix_dialog);
+  GtkPageSetup* setup = gtk_print_unix_dialog_get_page_setup(unix_dialog);
+  if (!printer || !gtk_printer_accepts_pdf(printer)) {
+    g_object_unref(settings);
+    gtk_widget_destroy(GTK_WIDGET(dialog));
+    printed("erro\nsem-pdf", job);
+    return;
+  }
+  GtkPrintJob* pj = gtk_print_job_new(job->title.c_str(), printer, settings, setup);
+  g_object_unref(settings);
+  gtk_widget_destroy(GTK_WIDGET(dialog));
+  GError* error = nullptr;
+  if (!gtk_print_job_set_source_file(pj, job->path.c_str(), &error)) {
+    std::string msg = std::string("erro\n") + (error ? error->message : "");
+    if (error) g_error_free(error);
+    g_object_unref(pj);
+    printed(msg.c_str(), job);
+    return;
+  }
+  // O GTK guarda uma referência até o fim do envio.
+  gtk_print_job_send(pj, onPrintSent, job, nullptr);
+  g_object_unref(pj);
+}
+
+}  // namespace
+
+void pqk_print_pdf(const char* pdf_path, const char* title) {
+  auto* job = new PrintJob{str(pdf_path), str(title)};
+  if (!g_view) {
+    printed("erro\nsem-janela", job);
+    return;
+  }
+  // O GTK só na thread principal; a janela não bloqueia (a resposta é um sinal).
+  g_idle_add_full(G_PRIORITY_DEFAULT_IDLE,
+                  [](gpointer data) -> gboolean {
+                    auto* job = static_cast<PrintJob*>(data);
+                    GtkWidget* top = gtk_widget_get_toplevel(GTK_WIDGET(g_view));
+                    GtkWidget* dialog =
+                        gtk_print_unix_dialog_new(job->title.c_str(), GTK_IS_WINDOW(top) ? GTK_WINDOW(top) : nullptr);
+                    gtk_print_unix_dialog_set_manual_capabilities(
+                        GTK_PRINT_UNIX_DIALOG(dialog),
+                        static_cast<GtkPrintCapabilities>(GTK_PRINT_CAPABILITY_COPIES | GTK_PRINT_CAPABILITY_COLLATE |
+                                                          GTK_PRINT_CAPABILITY_REVERSE | GTK_PRINT_CAPABILITY_PAGE_SET));
+                    gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
+                    g_signal_connect(dialog, "response", G_CALLBACK(onPrintResponse), job);
+                    gtk_widget_show(dialog);
+                    return G_SOURCE_REMOVE;
+                  },
+                  job, nullptr);
 }
 
 void pqk_set_fullscreen(int32_t on) {

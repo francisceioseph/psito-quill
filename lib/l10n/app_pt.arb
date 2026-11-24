@@ -887,5 +887,142 @@
         "type": "String"
       }
     }
-  }
+  },
+  "commandHeader": "Cabeçalho",
+  "commandFooter": "Rodapé",
+  "commandRemoveHeader": "Remover o cabeçalho",
+  "commandRemoveFooter": "Remover o rodapé",
+  "commandFirstPageDifferent": "Primeira página diferente",
+  "commandLeftRightDifferent": "Páginas pares diferentes",
+  "commandPageNumber": "Número de página",
+  "commandPageCount": "Total de páginas",
+  "commandDateField": "Data",
+  "commandTimeField": "Hora",
+  "commandHyphenation": "Hifenização automática",
+  "commandHyphenateParagraph": "Hifenizar este parágrafo",
+  "commandNoHyphenateParagraph": "Não hifenizar este parágrafo",
+  "commandDropCap": "Letra capitular ({n} linhas)",
+  "@commandDropCap": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "commandRemoveDropCap": "Remover a capitular",
+  "commandColumnBreak": "Quebra de coluna",
+  "commandBlankPage": "Página em branco",
+  "commandExportPdf": "Exportar como PDF…",
+  "commandPrint": "Imprimir…",
+  "commandFootnote": "Nota de rodapé",
+  "commandEndnote": "Nota de fim",
+  "commandJumpFootnote": "Ir para a nota e voltar",
+  "commandLink": "Link…",
+  "commandOpenLink": "Abrir o link",
+  "commandRemoveLink": "Remover o link",
+  "commandSpecialCharacter": "Caractere especial…",
+  "groupHeaderFooter": "Cabeçalho e rodapé",
+  "groupNotes": "Notas",
+  "groupLinks": "Links",
+  "groupSymbols": "Símbolos",
+  "groupBreaks": "Quebras",
+  "groupHyphenation": "Hifenização",
+  "groupFields": "Campos",
+  "groupTypography": "Tipografia",
+  "exportPdfFilter": "Documento PDF",
+  "noticeExported": "Exportado: {path}",
+  "@noticeExported": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "noticeExportFailed": "Não foi possível exportar o PDF.",
+  "noticePrinted": "Enviado à impressora.",
+  "noticePrintFailed": "Não foi possível imprimir: {detail}",
+  "@noticePrintFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "noticePrintNoPdf": "A impressora escolhida não aceita PDF.",
+  "noticeStyleFailed": "O motor não aplicou a mudança na página.",
+  "linkDialogTitle": "Link",
+  "linkText": "Texto",
+  "linkUrl": "Endereço",
+  "linkApply": "Aplicar",
+  "openLinkTitle": "Abrir o link?",
+  "openLinkBody": "O Quill vai pedir ao sistema para abrir este endereço. Se for um site, isso acessa a internet:\n{url}",
+  "@openLinkBody": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "noticeLinkScheme": "O Quill só abre endereços da web (http, https) e de e-mail (mailto).",
+  "openLinkButton": "Abrir",
+  "specialCharsTitle": "Caracteres especiais",
+  "specialCharsSearch": "Buscar pelo nome",
+  "specialCharsEmpty": "Nenhum caractere com esse nome.",
+  "specialCharInsert": "{name} ({char})",
+  "@specialCharInsert": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "char": {
+        "type": "String"
+      }
+    }
+  },
+  "pageSectionHeaderFooter": "Cabeçalho e rodapé",
+  "charEmDash": "travessão",
+  "charEnDash": "meia-risca",
+  "charEllipsis": "reticências",
+  "charLeftDoubleQuote": "aspas curvas de abrir",
+  "charRightDoubleQuote": "aspas curvas de fechar",
+  "charLeftSingleQuote": "aspa simples de abrir",
+  "charRightSingleQuote": "aspa simples de fechar, apóstrofo",
+  "charLeftGuillemet": "aspas angulares de abrir",
+  "charRightGuillemet": "aspas angulares de fechar",
+  "charNoBreakSpace": "espaço sem quebra",
+  "charNarrowNoBreakSpace": "espaço fino sem quebra",
+  "charSoftHyphen": "hífen opcional",
+  "charNoBreakHyphen": "hífen sem quebra",
+  "charAsterism": "asterismo (separador de cena)",
+  "charFleuron": "florão",
+  "charSection": "parágrafo (seção)",
+  "charPilcrow": "pé-de-mosca",
+  "charDagger": "adaga",
+  "charDoubleDagger": "adaga dupla",
+  "charBullet": "marcador",
+  "charMiddleDot": "ponto médio",
+  "charDegree": "grau",
+  "charOrdinalA": "ordinal feminino",
+  "charOrdinalO": "ordinal masculino",
+  "charCopyright": "direitos autorais",
+  "charRegistered": "marca registrada",
+  "charTrademark": "marca",
+  "charTimes": "vezes",
+  "charDivide": "dividido",
+  "charPlusMinus": "mais ou menos",
+  "charApprox": "aproximadamente",
+  "charNotEqual": "diferente",
+  "charLessEqual": "menor ou igual",
+  "charGreaterEqual": "maior ou igual",
+  "charHalf": "meio",
+  "charQuarter": "um quarto",
+  "charThreeQuarters": "três quartos",
+  "charEuro": "euro",
+  "charPound": "libra",
+  "charYen": "iene",
+  "charArrowRight": "seta para a direita",
+  "charArrowLeft": "seta para a esquerda",
+  "charStar": "estrela",
+  "charPrime": "linha (minuto, pé)",
+  "charDoublePrime": "linha dupla (segundo, polegada)"
 }

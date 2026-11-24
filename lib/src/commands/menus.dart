@@ -4,6 +4,7 @@
 import '../../l10n/gen/app_localizations.dart';
 import 'commands_book.dart';
 import 'commands_document.dart';
+import 'commands_page.dart';
 import 'commands_view.dart';
 
 /// Um menu: o título e os ids, com null para o separador.
@@ -20,6 +21,8 @@ List<MenuSpec> editorMenus(AppLocalizations l10n) => [
         null,
         CommandIds.save,
         CommandIds.saveAs,
+        PageCommandIds.exportPdf,
+        PageCommandIds.print,
         null,
         CommandIds.closeTab,
         CommandIds.nextTab,
@@ -56,6 +59,29 @@ List<MenuSpec> editorMenus(AppLocalizations l10n) => [
       ]),
       MenuSpec(l10n.menuInsert, const [
         CommandIds.pageBreak,
+        PageCommandIds.columnBreak,
+        PageCommandIds.blankPage,
+        null,
+        PageCommandIds.header,
+        PageCommandIds.footer,
+        PageCommandIds.removeHeader,
+        PageCommandIds.removeFooter,
+        PageCommandIds.pageNumber,
+        PageCommandIds.pageCount,
+        PageCommandIds.date,
+        PageCommandIds.time,
+        null,
+        PageCommandIds.footnote,
+        PageCommandIds.endnote,
+        PageCommandIds.jumpFootnote,
+        null,
+        PageCommandIds.link,
+        PageCommandIds.openLink,
+        PageCommandIds.removeLink,
+        PageCommandIds.specialCharacter,
+        PageCommandIds.dropCap2,
+        PageCommandIds.dropCap3,
+        PageCommandIds.removeDropCap,
         null,
         ViewCommandIds.insertImage,
         ViewCommandIds.insertTable,
@@ -89,8 +115,14 @@ List<MenuSpec> editorMenus(AppLocalizations l10n) => [
         CommandIds.keepLines,
         CommandIds.splitLines,
         null,
+        PageCommandIds.hyphenation,
+        PageCommandIds.hyphenateParagraph,
+        PageCommandIds.noHyphenateParagraph,
+        null,
         CommandIds.portrait,
         CommandIds.landscape,
+        PageCommandIds.firstPageDifferent,
+        PageCommandIds.leftRightDifferent,
         null,
         CommandIds.wrapOff,
         CommandIds.wrapIdeal,

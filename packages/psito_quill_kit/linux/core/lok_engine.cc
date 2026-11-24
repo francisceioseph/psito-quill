@@ -101,7 +101,7 @@ void LokEngine::init(const std::string& installPath, const std::string& profileU
     // O app desenha comentários, cursor e seleção; o motor só o papel.
     kit_->pClass->setOptionalFeatures(
         kit_, LOK_FEATURE_DOCUMENT_PASSWORD | LOK_FEATURE_NO_TILED_ANNOTATIONS |
-                  LOK_FEATURE_RANGE_HEADERS);
+                  LOK_FEATURE_RANGE_HEADERS | LOK_FEATURE_VIEWID_IN_VISCURSOR_INVALIDATION_CALLBACK);
     kit_->pClass->registerCallback(kit_, &LokEngine::officeCallback, this);
     std::string version = takeLokString(kit_, kit_->pClass->getVersionInfo(kit_));
     sink_->onEvent(kEvReady, version);
@@ -130,6 +130,7 @@ void LokEngine::open(const std::string& path) {
     d->id = nextId_++;
     d->doc = doc;
     d->tileMode = LOK_TILEMODE_RGBA;
+    d->view = doc->pClass->getView(doc);
     // O novo vira o ativo. O callback entra antes de tudo (o getDocumentSize
     // monta as páginas e manda a contagem de palavras nessa hora; sem o
     // callback, ela se perde), mas o que chegar antes do OPENED fica guardado
@@ -157,10 +158,16 @@ void LokEngine::makeActive(Doc* d) {
   activeId_ = d ? d->id : 0;
   doc_ = d ? d->doc : nullptr;
   tileMode_ = d ? d->tileMode : 0;
+  view_ = d ? d->view : -1;
+  focusView();
   cache_.clear();
   std::fill(announced_.begin(), announced_.end(), false);
   // A área visível é a do Dart, que manda a do documento novo logo depois.
   viewport_ = {};
+}
+
+void LokEngine::focusView() {
+  if (doc_ && view_ >= 0) doc_->pClass->setView(doc_, view_);
 }
 
 std::string LokEngine::sizeJson(const Doc& d) {
@@ -247,10 +254,9 @@ void LokEngine::setGraphicSelection(int type, int x, int y) {
 
 void LokEngine::uno(const std::string& command, const std::string& argsJson) {
   queue_.post([this, command, argsJson] {
-    if (doc_)
-      doc_->pClass->postUnoCommand(doc_, command.c_str(),
-                                   argsJson.empty() ? nullptr : argsJson.c_str(),
-                                   true);
+    if (!doc_) return;
+    focusView();
+    doc_->pClass->postUnoCommand(doc_, command.c_str(), argsJson.empty() ? nullptr : argsJson.c_str(), true);
   });
 }
 
@@ -275,6 +281,7 @@ void LokEngine::saveAs(const std::string& path, const std::string& format,
 void LokEngine::commandValues(const std::string& command) {
   queue_.post([this, command] {
     if (!doc_) return;
+    focusView();
     char* v = doc_->pClass->getCommandValues(doc_, command.c_str());
     std::string json = v ? v : "";
     free(v);
@@ -367,6 +374,50 @@ void LokEngine::repaintAll() {
   queue_.post([this] {
     cache_.invalidateAll();
     scheduleRender();
+  });
+}
+
+void LokEngine::buildInvertLut(uint8_t lut[3][256], uint32_t paper, uint32_t ink, uint32_t srcPaper) {
+  // A luminosidade do papel claro do motor vai ao papel escuro; o preto, à
+  // tinta. No meio, uma reta (o cinza-escuro de um DOCX vira um cinza-claro).
+  const int sr = (srcPaper >> 16) & 255, sg = (srcPaper >> 8) & 255, sb = srcPaper & 255;
+  int top = (77 * sr + 150 * sg + 29 * sb) >> 8;
+  if (top < 1) top = 255;
+  for (int c = 0; c < 3; ++c) {
+    const int shift = 16 - 8 * c;
+    const int p = (paper >> shift) & 255, k = (ink >> shift) & 255;
+    for (int y = 0; y < 256; ++y) {
+      const int t = y >= top ? 255 : y * 255 / top;
+      lut[c][y] = static_cast<uint8_t>(k + (p - k) * t / 255);
+    }
+  }
+}
+
+void LokEngine::invertPixels(uint8_t* px, int n, const uint8_t lut[3][256]) {
+  for (int i = 0; i < n; ++i, px += 4) {
+    const int a = px[3];
+    if (a == 0) continue;
+    int r = px[0], g = px[1], b = px[2];
+    if (a < 255) {  // pré-multiplicado: tira o alfa, inverte, põe de volta
+      r = r * 255 / a;
+      g = g * 255 / a;
+      b = b * 255 / a;
+    }
+    const int y = (77 * r + 150 * g + 29 * b) >> 8;
+    // O tom fica: a diferença de cada canal para a luminosidade é somada à
+    // luminosidade invertida.
+    int out[3] = {lut[0][y] + r - y, lut[1][y] + g - y, lut[2][y] + b - y};
+    for (int c = 0; c < 3; ++c) {
+      int v = out[c] < 0 ? 0 : out[c] > 255 ? 255 : out[c];
+      px[c] = static_cast<uint8_t>(a < 255 ? v * a / 255 : v);
+    }
+  }
+}
+
+void LokEngine::setPaperInvert(bool on, uint32_t paper, uint32_t ink, uint32_t srcPaper) {
+  queue_.post([this, on, paper, ink, srcPaper] {
+    invert_ = on;
+    if (on) buildInvertLut(invertLut_, paper, ink, srcPaper);
   });
 }
 
@@ -567,6 +618,7 @@ void LokEngine::paintSlot(int index) {
     } else {
       memcpy(dst, src, kTileBytes);
     }
+    if (invert_) invertPixels(dst, kTileSize * kTileSize, invertLut_);
     slot.dirty = false;
   }
   sink_->onTileUpdated(index);

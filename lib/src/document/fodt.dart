@@ -8,6 +8,9 @@
 import 'package:flutter/foundation.dart';
 
 import 'outline.dart';
+import 'style_patch.dart';
+
+export 'style_patch.dart' show PageSetup;
 
 /// O que a galeria e o "Revelar formatação" precisam de um estilo, já com o
 /// que vem dos pais (`style:parent-style-name`) resolvido.
@@ -85,7 +88,11 @@ class FodtSnapshot {
     this.pageMargins,
     this.words,
     this.characters,
+    this.page = const PageSetup(),
   });
+
+  /// O cabeçalho, o rodapé e a hifenização do documento (D-075).
+  final PageSetup page;
 
   /// As palavras e os caracteres do `meta:document-statistic` da cópia (o
   /// LibreOffice conta ao gravar). null: a cópia não disse.
@@ -292,6 +299,7 @@ FodtSnapshot parseFodt(String xml) {
     pageMargins: _pageMargins(xml),
     words: int.tryParse(statistic['meta:word-count'] ?? ''),
     characters: int.tryParse(statistic['meta:character-count'] ?? ''),
+    page: parsePageSetup(xml),
   );
 }
 

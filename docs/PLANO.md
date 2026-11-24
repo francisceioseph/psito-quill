@@ -580,7 +580,13 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
 - **Etapa 9: as metas.** Do livro com prazo e do dia, o histórico em `metas.json`, a meta na barra de status e um gráfico dos últimos 30 dias num `CustomPainter`.
 - **Etapa 10: a cortiça.** Os capítulos como cartões, a mesma árvore do fichário, com a sinopse editável no cartão.
 - **Fecho:** o `docs/FASE3-RESULTADOS.md` e a documentação.
-- **Estado em 24/11/2026:** as Etapas 1 (D-071) e 2 (D-073) estão feitas.
+- **Estado em 24/11/2026:** as Etapas 1 (D-071), 2 (D-073), 3 (D-075) e 4 (D-076) estão feitas, e o papel escuro passou a ser desenhado pelo Quill (D-074).
+  - **O que saiu diferente do plano nas Etapas 3 e 4** (as sondas na 24.2):
+    - desligar o cabeçalho, a primeira página e as pares diferentes, a hifenização do documento e a capitular passam pela cópia dos estilos e o `.uno:LoadStyles` (D-075), porque os comandos do motor abrem janelas que travam o LOK. Essas mudanças não entram no Ctrl+Z;
+    - editar o cabeçalho é pelo botão (o cursor vai até ele), não pelo clique duplo;
+    - a quebra de seção e o campo do título ficaram de fora: o `InsertSection` e o `InsertTitleField` não fazem nada na 24.2. A página em branco são duas quebras de página;
+    - a primeira página e as pares diferentes estão na faixa e no menu, não no painel Página;
+    - a impressão não tem prévia: o GTK só a mostra quando ele mesmo desenha as páginas (D-076).
 
 **Fase 4: compilar e revisar**
 - Compilar para PDF, EPUB e DOCX com modelos, referências cruzadas, marcadores, sumário e índice. (As notas de rodapé foram para a Fase 3, Etapa 4.)

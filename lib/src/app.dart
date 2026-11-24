@@ -76,24 +76,24 @@ class QuillAppState extends State<QuillApp> {
   }
 
   DocStatus? _paperFor;
-  String? _paperScheme;
+  Object? _paper;
 
-  /// O papel segue o tema: a cada documento aberto, o esquema certo.
+  /// O papel segue o tema: a cada documento aberto, o esquema certo (e, num
+  /// tema escuro, a inversão, D-074).
   void _syncPaper() {
-    if (doc.docStatus == DocStatus.open && _paperFor != DocStatus.open) {
-      _paperScheme = theme.paperScheme;
-      doc.setPaperScheme(theme.paperScheme);
-    }
+    if (doc.docStatus == DocStatus.open && _paperFor != DocStatus.open) _applyPaper();
     _paperFor = doc.docStatus;
+  }
+
+  void _applyPaper() {
+    final p = enginePaper(theme);
+    _paper = p;
+    doc.setPaperScheme(p.scheme, invert: p.invert);
   }
 
   void _onSettings() {
     setState(() {});
-    final scheme = theme.paperScheme;
-    if (doc.isOpen && scheme != _paperScheme) {
-      _paperScheme = scheme;
-      doc.setPaperScheme(scheme);
-    }
+    if (doc.isOpen && enginePaper(theme) != _paper) _applyPaper();
   }
 
   /// Troca o tema (e o papel). O bench usa.

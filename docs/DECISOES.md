@@ -862,3 +862,78 @@ Fase 3, Etapa 2. O motor roda dentro do processo: se o LibreOffice cai, o Quill 
   - unidade, `recovery_test`: a pasta (as sessões, a gravação pela metade), o intervalo e a pausa, salvar e fechar, trocar de aba, desfazer tudo, desligar, a aba que fecha no meio, recuperar (o documento novo, o nome sugerido, a cópia que sai), descartar e sair;
   - widget, `fase3_recovery_test`: a lista na tela inicial, o nome para o leitor de tela, Recuperar e o "(recuperado)" no título, e Descartar com a pergunta;
   - integração, passo 23: a cópia do motor é um ODT com o texto novo, o documento segue no mesmo arquivo e modificado, e a cópia recuperada abre editável, sem arquivo.
+
+## D-074 · O papel escuro desenhado pelo Quill: a luminosidade invertida, o tom mantido
+
+O Francisco viu, no modo escuro, o texto de um DOCX quase sumir no papel escuro, e os cartões de estilo da faixa também.
+
+- **A causa:** o esquema escuro do LibreOffice (`PsitoQuillEscuro`) só troca a cor do texto **automático**. Esse DOCX pinta o corpo com uma cor fixa (um cinza-escuro), que fica escura no papel escuro. Os títulos vermelhos apareciam porque o vermelho é claro o bastante.
+- **As opções, sondadas no `lok_script` (24/11):**
+  - a opção do LibreOffice "cor automática para o texto na tela" (`Accessibility/IsAutomaticFontColor`) clareia o cinza, mas apaga todas as cores: o vermelho dos títulos foi a 0 pixels;
+  - **a escolhida, pelo Francisco:** o motor pinta o papel claro, e o plugin nativo inverte a luminosidade de cada ladrilho mantendo o tom.
+- **A conta** (`LokEngine::invertPixels`, ao copiar o ladrilho para a vaga, na thread do kit):
+  - a luminosidade de cada pixel vai por uma reta: a do papel claro do motor vira a cor do papel do tema escuro, e o preto vira a tinta do tema;
+  - a diferença de cada canal para a luminosidade é somada de volta, então o tom fica: o vermelho escuro vira um vermelho claro, e o cinza-escuro, um cinza-claro;
+  - os pixels transparentes (fora das páginas) não mudam, e os meio transparentes são tirados do pré-multiplicado e postos de volta.
+  - Com o documento de teste: o papel virou o do tema, o cinza #333 virou ~#ccc e o vermelho #c00000 virou ~#ff8080.
+- **Os temas:** um tema escuro pede ao motor o esquema do tema claro irmão (o Escuro pede o Claro; o Alto contraste escuro, o Alto contraste claro) e liga a inversão com o papel e a tinta dele (`enginePaper`, `pqk_set_paper_invert`). Os temas claros não invertem. O modo zen com o papel escuro usa o tema Escuro e vem junto.
+- **Os cartões de estilo da faixa** usam a mesma conta em Dart (`PaperInvert.apply`), para mostrar a cor como a página mostra.
+- **O preço:**
+  - as imagens do documento também ficam invertidas no modo escuro (como num "modo leitura escura" de navegador). O arquivo não muda;
+  - o ondulado da ortografia vem invertido junto (um vermelho mais claro).
+  - **A memória:** nenhuma; a tabela tem 768 bytes. A conta é um laço sobre os 65.536 pixels de cada ladrilho pintado, na thread do kit, depois do `paintTile` do motor (que custa muito mais).
+- **Os testes:** `paper_invert_test.cc` (o papel, a tinta, o cinza, o vermelho, o transparente e o meio transparente), `paper_invert_test.dart` (a mesma conta em Dart e o mapa dos temas) e o `fase2b_a11y_test` (o tema escuro manda o esquema claro e a inversão).
+
+## D-075 · A página do livro: o cabeçalho, os campos, a hifenização e a capitular, e os estilos mudados pela cópia
+
+A Fase 3, Etapa 3. Os itens vieram do OnlyOffice (os prints do Francisco): o cabeçalho e o rodapé, o número da página e os campos, a primeira página e as pares diferentes, a hifenização, a capitular e as quebras.
+
+- **O que a 24.2 faz pelo `.uno:`** (sondado no `lok_script`, 24/11):
+  - `.uno:InsertPageHeader` e `.uno:InsertPageFooter` com `{"On":true}` e **sem** o nome do estilo ligam em todos os estilos de página, e o cursor vai para o cabeçalho. Com o nome do estilo (`PageStyle`), não fazem nada;
+  - `.uno:JumpToHeader` e `.uno:JumpToFooter` levam o cursor até ele;
+  - os campos: `.uno:InsertPageNumberField`, `.uno:InsertPageCountField`, `.uno:InsertDateField` e `.uno:InsertTimeField`;
+  - a hifenização de um parágrafo: `.uno:SetHyphenZone` com o booleano (formatação direta);
+  - `.uno:InsertColumnBreak` funciona.
+- **O que não funciona pelo `.uno:`:**
+  - com `On:false`, o motor abre a janela "apagar o cabeçalho?" e o LOK trava;
+  - `.uno:Hyphenate` trava (a janela da hifenização);
+  - `.uno:FormatDropcap` com argumentos que ele não conhece também trava, e sem eles abre a janela;
+  - `InsertBlankPage`, `InsertSection`, `InsertBreak` e `InsertTitleField` não fazem nada na 24.2. A página em branco são duas quebras de página.
+- **O caminho que sobra: mudar os estilos pela cópia** (`style_patch.dart`, `PageFormat.patchStyles`):
+  1. o motor grava a cópia FODT do documento, a mesma do D-044;
+  2. o Dart, num isolate, tira o texto dela (`stylesOnly`: o capítulo de 30 páginas vai de ~1 MB a ~30 KB) e muda só o XML que precisa;
+  3. o motor converte o FODT para ODT (`KitConverter`, D-071), porque o `.uno:LoadStyles` não lê o FODT;
+  4. o `.uno:LoadStyles` com os tipos (`Flags`: parágrafo 1, página 4) e a sobrescrita (16) carrega os estilos por cima. Como a cópia tem todos os estilos do próprio documento, os outros voltam iguais.
+  - **A vista certa** (achado na integração): o `postUnoCommand` despacha pelo quadro "atual" do LibreOffice, que é global. Depois da conversão (o motor abre o FODT oculto, salva e fecha), esse quadro deixa de ser o do documento, e o `LoadStyles` não fazia nada, em silêncio. Agora o `LokEngine` guarda a vista de cada documento ao abrir (`getView`) e chama o `setView` ao ativar uma aba e antes de cada `postUnoCommand` e `getCommandValues` (`focusView`). Isso também protege as abas (D-054) e o documento oculto do dicionário (D-069).
+  - Uma cópia a mais, depois do `LoadStyles` na fila, diz quando ele terminou, e refaz a Estrutura, os estilos e o estado da página (`FodtSnapshot.page`, `parsePageSetup`). As cópias temporárias são apagadas.
+  - **O tempo:** a cópia ODT do capítulo de 30 páginas leva ~0,27 s, e a de 300 páginas ~0,65 s. Somado à cópia FODT, uma mudança leva perto de 1 s num livro grande. Não é para digitar, mas é aceitável para um botão.
+  - **O preço:** essas mudanças não passam pelo desfazer do motor (o `LoadStyles` não entra no Ctrl+Z). O caminho certo é a API UNO, que o LOK não expõe sem um script Basic ou Python, e eles estão desligados no perfil por privacidade e segurança.
+- **As mudanças:**
+  - **desligar o cabeçalho (ou o rodapé):** tira o bloco de todos os estilos de página, com as versões da primeira página e das pares, e o espaço dele no leiaute;
+  - **a primeira página diferente:** um `style:header-first` (e `footer-first`) vazio onde houver cabeçalho;
+  - **as pares diferentes:** um `style:header-left` que começa igual ao das ímpares;
+  - **a hifenização do documento:** liga no estilo padrão de parágrafo e nos estilos que a desligavam por conta própria, menos os títulos (os de nível de estrutura), que não se hifenizam;
+  - **a capitular** é do parágrafo, e o Writer só a muda pelo estilo ou pela janela. Então o Quill cria um estilo filho do estilo do parágrafo, "Corpo de texto · capitular 2", com a capitular, e o aplica. Tirar a capitular volta ao estilo de base. O estilo fica no documento.
+  - O nome do estilo pai sai da própria cópia (`paragraphStyleXmlName`), porque o LibreOffice guarda as letras com acento no nome do XML ("Citação") e codifica o resto ("Text_20_body").
+- **A interface:** a aba Inserir ganhou os grupos Páginas, Cabeçalho e rodapé, Notas, Links e Tipografia; a aba Layout, a Hifenização. Tudo também no menu Clássico 97 (Inserir e Formatar).
+- **Os testes:** `style_patch_test.dart` (o XML de cada mudança), `fase3_page_test.dart` e o passo 24 da integração (ligar, mudar e desligar no motor real, e o ODT salvo).
+
+## D-076 · O PDF, a impressão, as notas, os links e os caracteres especiais
+
+A Fase 3, Etapa 4.
+
+- **O PDF:** a cópia do D-044 no formato `pdf` (`exportTo`), com a janela de onde gravar (`pickExportPdf`). Os títulos viram marcadores do PDF, como o motor faz.
+- **Imprimir (Ctrl+P):**
+  - o motor grava um PDF temporário, e o plugin nativo abre a janela de impressão do GTK (`GtkPrintUnixDialog`, sem bloquear) e manda o PDF pronto à impressora (`GtkPrintJob`, `pqk_print_pdf`). O resultado volta como `PQK_EVENT_PRINTED` ("ok", "cancelado" ou o erro), e o PDF é apagado em todos os caminhos;
+  - **o preço:** a janela não tem prévia, porque o GTK só mostra a prévia quando ele mesmo desenha as páginas. Uma impressora que não aceita PDF recebe um aviso.
+  - A impressão é local (a fila do CUPS), sem rede do Quill.
+- **As notas:** `.uno:InsertFootnote` (Ctrl+Alt+F) e `.uno:InsertEndnote` (Ctrl+Alt+D), os atalhos do Word. `.uno:JumpToFootnoteOrAnchor` vai do número ao texto e de volta.
+- **Os links:**
+  - **inserir e trocar:** `.uno:SetHyperlink` com o texto e o endereço; tirar: `.uno:RemoveHyperlink`;
+  - **saber se o cursor está num link:** o callback 7 (`LOK_CALLBACK_HYPERLINK_CLICKED`) não chegou nas sondas. O que funciona é ligar o `LOK_FEATURE_VIEWID_IN_VISCURSOR_INVALIDATION_CALLBACK` no `LokEngine::init`: o callback 1 passa a ser um JSON com o `hyperlink` do cursor (`parseCursorLink`, `DocumentController.link`);
+  - **Ctrl+clique:** como no Word. Um clique simples leva o cursor; se ele parar num link, o Quill **pergunta antes de abrir** ("Abrir o link?", com o endereço) e só então chama o `xdg-open`. Senão, faz a seleção da frase de sempre (o clique triplo do motor). O Quill não abre nada sozinho;
+  - **só a web e o e-mail** (`http`, `https`, `mailto`). Um link `file:` levaria o `xdg-open` a rodar um script ou um `.desktop` do disco, então ele não abre, com um aviso.
+- **Os caracteres especiais:** uma janela com os 46 mais usados num livro (o travessão, as aspas curvas, as reticências, o espaço sem quebra, o hífen opcional, as setas, os símbolos), com a busca pelo nome sem acento. A lista é fixa e pequena, sem a tabela Unicode inteira (que pesaria na memória e não ajuda quem escreve).
+- **As aspas curvas e o travessão automáticos:** o autocorrigir do LibreOffice só age nas teclas, e o texto do IME chegava como `LOK_EXT_TEXTINPUT`, que ele não vê. Agora um caractere confirmado sozinho, sem pré-edição, vai ao motor como tecla (`postKey`). A composição do IME (`´` + `a`) continua pelo `TextInput`. Com uma imagem selecionada, a letra continua como texto: o Writer ignora a tecla nesse caso, e o texto tira a seleção e digita (o passo 21 da integração pegou isso). O "completar palavras" do LibreOffice ficou desligado no perfil, porque com as teclas ele passaria a sugerir no meio do texto.
+  - **A memória** (`tool/ab.py f546027`, mediana de 3, 24/11): abrir, rolar e a latência da tecla ficaram iguais, mas **depois de digitar a memória anônima subiu +8,9 MB**. É o autocorrigir do motor, que só acorda com as teclas e carrega as regras dele: no `lok_script`, 60 palavras digitadas como teclas custam +2,6 MB de memória anônima (+5,7 MB de RSS) a mais que como texto. O resto deve ser ruído (só rolar variou +3,4 MB). **Aceito:** a outra saída seria o Quill fazer as aspas e o travessão sozinho, sem o custo, mas ele não sabe a letra antes do cursor depois de um clique no meio do texto, e a aspa de abrir e a de fechar sairiam trocadas.
+- **Os testes:** `fase3_page_test.dart` (a impressão, a nota, o caractere especial, a janela do link, a pergunta e o `file:` recusado), o `document_view_test` (a letra vai como tecla) e o passo 24 da integração (a nota, o link no cursor, o ODT e o PDF).

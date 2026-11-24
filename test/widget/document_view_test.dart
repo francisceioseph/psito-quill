@@ -105,9 +105,11 @@ void main() {
     tester.testTextInput.updateEditingValue(const TextEditingValue(text: 'a'));
     await tester.pump();
     expect(kit.text, 'a');
+    // Um caractere vai como tecla, para o autocorrigir do motor (D-076).
+    expect(kit.keys.first, (KeyEventType.input, 0x61, 0));
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
-    expect(kit.keys.where((k) => k.$1 == KeyEventType.input).map((k) => k.$3), [VclKey.enter, VclKey.left]);
+    expect(kit.keys.where((k) => k.$1 == KeyEventType.input && k.$3 != 0).map((k) => k.$3), [VclKey.enter, VclKey.left]);
   });
 
   testWidgets('acento composto (´ + e): pré-edição e depois o texto final', (tester) async {

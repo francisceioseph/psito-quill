@@ -11,6 +11,7 @@ import 'dart:ui' show Offset, Rect, Size;
 
 import 'package:flutter/foundation.dart';
 
+import '../book/docx_import.dart' show KitConverter;
 import '../kit/lok/lo_styles.dart';
 import '../kit/lok/lok_payloads.dart';
 import '../kit/quill_kit.dart';
@@ -19,10 +20,14 @@ import 'fodt.dart';
 import 'outline.dart';
 import 'recovery.dart';
 import 'search.dart';
+import 'style_patch.dart';
 import 'text_clipboard.dart';
 
 export 'doc_tab.dart' show DocStatus, DocTab;
+export '../kit/quill_kit.dart' show DocLink, PrintOutcome, Printed;
 export '../kit/lok/lok_payloads.dart' show DocLanguage;
+
+part 'page_format.dart';
 
 /// O que trava a tela (D-066).
 enum BusyKind { opening, saving }
@@ -59,6 +64,12 @@ class OpenFailedMessage extends DocMessage {
 
 class PluginMessage extends DocMessage {
   const PluginMessage(this.text);
+  final String text;
+}
+
+/// Um aviso já traduzido pela página (exportado, impresso, D-076).
+class NoticeMessage extends DocMessage {
+  const NoticeMessage(this.text);
   final String text;
 }
 
@@ -555,10 +566,25 @@ class DocumentController extends ChangeNotifier {
   /// Texto confirmado pelo teclado ou pelo IME.
   void insertText(String text) {
     if (canEdit && busy == null && text.isNotEmpty) {
-      kit.extTextInput(text, commit: true);
+      final rune = text.runes.length == 1 ? text.runes.first : -1;
+      if (!_composing && graphic == null && rune >= 0x20 && rune != 0x7f && rune <= 0xFFFF) {
+        // Um caractere digitado vai como tecla: o autocorrigir do motor (as
+        // aspas curvas, o travessão) só age nas teclas, não no texto do IME
+        // (sondado, D-076). Com uma imagem selecionada, não: o Writer
+        // ignora a tecla, e o texto do IME tira a seleção e digita.
+        kit.postKey(KeyEventType.input, charCode: rune);
+        kit.postKey(KeyEventType.up, charCode: rune);
+      } else {
+        kit.extTextInput(text, commit: true);
+      }
+      _composing = false;
       _edited();
     }
   }
+
+  /// O IME está compondo (o `´` esperando a letra): o texto confirmado
+  /// fecha a composição pelo `extTextInput`.
+  bool _composing = false;
 
   // --------------------------------------- a Estrutura ao vivo (D-047) --
 
@@ -690,13 +716,16 @@ class DocumentController extends ChangeNotifier {
   /// A pré-edição foi cancelada (o `´` e depois Esc): o motor tira o `´` e
   /// sai do modo de entrada composta. Sem isso, o `´` ficava no texto.
   void cancelComposition() {
+    _composing = false;
     if (canEdit) kit.extTextInput('', commit: true);
   }
 
   /// Pré-edição do IME (o `´` antes do `a`): aparece no documento, mas a
   /// próxima chamada a substitui.
   void composeText(String text) {
-    if (canEdit) kit.extTextInput(text, commit: false);
+    if (!canEdit) return;
+    _composing = text.isNotEmpty;
+    kit.extTextInput(text, commit: false);
   }
 
   void postMouse(MouseEventType type, Offset twips, {int count = 1, int buttons = 1, int modifier = 0}) {
@@ -765,6 +794,25 @@ class DocumentController extends ChangeNotifier {
     );
     refreshSnapshot();
   }
+
+  // ------------------------- a página, as notas e os links (D-075, D-076) --
+
+  /// As cópias que alguém espera (`exportTo`): o caminho e o aviso.
+  final _copyWaiters = <String, Completer<bool>>{};
+
+  /// Uma mudança de estilos pela cópia em andamento (uma por vez).
+  bool _patching = false;
+
+  /// O link em que o cursor está (o callback 1 traz, D-076).
+  DocLink? link;
+
+  /// Um Ctrl+clique esperando o cursor (`expectLinkClick`).
+  bool _linkClick = false;
+  Timer? _linkClickTimer;
+  void Function()? _linkOtherwise;
+
+  /// O Ctrl+clique parou num link: a página pergunta se abre.
+  void Function(DocLink link)? onLinkClicked;
 
   // ------------------------------- o salvamento automático (D-073) --
 
@@ -1382,8 +1430,11 @@ class DocumentController extends ChangeNotifier {
     kit.saveAs(target, dot < 0 ? 'odt' : target.substring(dot + 1).toLowerCase());
   }
 
-  /// Troca o esquema de cor do papel ("PsitoQuillEscuro", por exemplo).
-  void setPaperScheme(String name) {
+  /// Troca o esquema de cor do papel ("PsitoQuillClaro", por exemplo). Com
+  /// [invert], o Quill inverte a luminosidade dos ladrilhos (o papel escuro,
+  /// D-074).
+  void setPaperScheme(String name, {PaperInvert? invert}) {
+    kit.setPaperInvert(invert);
     kit.uno('.uno:ChangeTheme', '{"NewTheme":{"type":"string","value":"$name"}}');
     kit.repaintAll();
   }
@@ -1506,8 +1557,14 @@ class DocumentController extends ChangeNotifier {
       case TilePlaced(:final slot, :final key):
         _tiles[slot] = TilePlacement(slot, key, kit.textureId(slot));
         if (_openWork != null) _runOpenWork();
-      case CursorMoved(:final rect):
+      case CursorMoved(:final rect, link: final l):
         cursor = rect;
+        if (l != link) {
+          link = l;
+          // O menu de contexto e a faixa mostram "Abrir o link" pelo estado.
+          stateRevision++;
+        }
+        if (_linkClick) _settleLinkClick(l);
       case CursorVisibility(:final visible):
         cursorVisible = visible;
       case SelectionChanged(:final rects):
@@ -1592,6 +1649,10 @@ class DocumentController extends ChangeNotifier {
         message = SavedMessage(path);
         refreshSnapshot();
       case CopyExported(:final path, :final ok):
+        if (_copyWaiters.remove(path) case final c?) {
+          c.complete(ok);
+          return;
+        }
         if (_recoveryWrites.remove(path) case final w?) {
           _recoveryWritten(w, ok: ok);
           return;
@@ -1650,8 +1711,11 @@ class DocumentController extends ChangeNotifier {
         return;
       case OtherKitEvent():
         return;
-      // As conversões são do livro (D-071), não do documento.
+      // As conversões são do livro (D-071) e da mudança de estilos (D-075);
+      // a impressão, de quem a pediu (D-076).
       case FileConverted():
+        return;
+      case Printed():
         return;
     }
     // Ladrilhos, cursor e seleção mudam só a vista (D-037).
@@ -1689,6 +1753,10 @@ class DocumentController extends ChangeNotifier {
     _savingGuard?.cancel();
     _openWork?.cancel();
     _autosaveTimer?.cancel();
+    _linkClickTimer?.cancel();
+    for (final c in _copyWaiters.values) {
+      if (!c.isCompleted) c.complete(false);
+    }
     if (_exporting case final p?) _deleteCopy(p);
     endTextSearch();
     _sub.cancel();
