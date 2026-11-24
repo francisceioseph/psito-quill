@@ -250,14 +250,39 @@ FodtSnapshot parseFodt(String xml) {
   // título é 1 + as quebras antes dele.
   final outline = <OutlineEntry>[];
   var page = 1;
+  // O texto de cada parágrafo antes do título, para contar as ocorrências
+  // da chave de busca dele (o salto, D-072). A busca do motor não atravessa
+  // parágrafos, e cada ocorrência numa mesma linha conta.
+  final paragraphs = [
+    for (final p in _bodyParas.allMatches(body))
+      if (p[1] == null) (end: p.end, text: _paragraphText(_noteRemoved(p[4] ?? ''))),
+  ];
+  var before = 0;
   for (final m in _bodyMarks.allMatches(body)) {
     if (m[1] != null) {
       page++;
       continue;
     }
-    final text = _headingText(m[3]!);
+    final inner = _noteRemoved(m[3]!);
+    final text = _headingText(inner);
     if (text.isEmpty) continue;
-    outline.add(OutlineEntry(level: int.tryParse(_attrs(m[2]!)['text:outline-level'] ?? '') ?? 1, text: text, page: page));
+    final key = headingSearchKey(inner);
+    while (before < paragraphs.length && paragraphs[before].end <= m.start) {
+      before++;
+    }
+    var occurrence = 0;
+    if (key.isNotEmpty) {
+      for (var i = 0; i < before; i++) {
+        occurrence += _countOf(paragraphs[i].text, key);
+      }
+    }
+    outline.add(OutlineEntry(
+      level: int.tryParse(_attrs(m[2]!)['text:outline-level'] ?? '') ?? 1,
+      text: text,
+      page: page,
+      searchKey: key.isEmpty ? text : key,
+      occurrence: occurrence,
+    ));
   }
 
   return FodtSnapshot(
@@ -293,6 +318,26 @@ PageMarginsCm? _pageMargins(String xml) {
     return (top: top, bottom: bottom, left: left, right: right);
   }
   return null;
+}
+
+final _note = RegExp(r'<text:note\b[\s\S]*?</text:note>');
+String _noteRemoved(String inner) => inner.replaceAll(_note, '');
+
+final _keyStop = RegExp(r'<text:(tab|line-break)\s*/>');
+
+/// A chave de busca de um título (o miolo do `text:h`): o texto até a
+/// primeira tabulação ou quebra de linha, com os espaços como estão.
+String headingSearchKey(String inner) {
+  final stop = _keyStop.firstMatch(inner);
+  return _paragraphText(stop == null ? inner : inner.substring(0, stop.start)).trim();
+}
+
+int _countOf(String text, String key) {
+  var n = 0;
+  for (var i = text.indexOf(key); i >= 0; i = text.indexOf(key, i + key.length)) {
+    n++;
+  }
+  return n;
 }
 
 String _headingText(String inner) {

@@ -147,6 +147,17 @@ void main() {
     final last = doc.snapshot.outline.last;
     doc.goToHeading(last);
     await until(() => (doc.page?.$1 ?? 0) >= last.page - 1, 'o salto ao último título (página ${last.page})');
+    // O título cujo texto aparece mais vezes antes dele (D-072): o salto
+    // conta as ocorrências do começo e seleciona exatamente o título.
+    final tricky = doc.snapshot.outline.reduce((a, b) => b.occurrence > a.occurrence ? b : a);
+    clipboard.text = null;
+    doc.goToHeading(tricky);
+    await settle(800);
+    doc.copy();
+    await until(() => clipboard.text != null, 'copiar o título do salto');
+    expect(clipboard.text!.trim(), tricky.searchKey, reason: '${tricky.text}: ${tricky.occurrence} antes');
+    expect(doc.search.query, isNull, reason: 'o salto não acende o Localizar');
+    clipboard.text = null;
     final single = doc.documentSize.width;
     doc.setViewLayout(columns: 3);
     await until(() => doc.documentSize.width > single * 2.5, 'três páginas de largura');

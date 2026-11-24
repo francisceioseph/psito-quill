@@ -77,15 +77,21 @@ LokEngine::~LokEngine() { shutdown(); }
 // uma vem do sistema (hunspell-pt-br, hunspell-en-us...).
 const char* const kSpellLanguages = "pt_BR pt_PT en_US en_GB es_ES fr_FR de_DE it_IT";
 
+void LokEngine::prepareEnvironment() {
+  // Sem esta lista, o LOK desliga a ortografia ("No language allowlisted").
+  // Quem rodar com a variável já definida escolhe as línguas.
+  setenv("LOK_ALLOWLIST_LANGUAGES", kSpellLanguages, 0);
+  // Os avisos do LibreOffice não vão para o terminal (privacidade, D-041).
+  // Quem depura define o SAL_LOG antes, e ele vale.
+  setenv("SAL_LOG", "-WARN-INFO", 0);
+}
+
 void LokEngine::init(const std::string& installPath, const std::string& profileUrl) {
   queue_.post([this, installPath, profileUrl] {
     if (kit_) return;
-    // Sem esta lista, o LOK desliga a ortografia ("No language allowlisted").
-    // Quem rodar com a variável já definida escolhe as línguas.
-    setenv("LOK_ALLOWLIST_LANGUAGES", kSpellLanguages, 0);
-    // Os avisos do LibreOffice não vão para o terminal (privacidade, D-041).
-    // Quem depura define o SAL_LOG antes, e ele vale.
-    setenv("SAL_LOG", "-WARN-INFO", 0);
+    // No app, o main já chamou (D-072): aqui, com as variáveis definidas, o
+    // setenv não escreve nada. Vale para as ferramentas (lok_script, testes).
+    prepareEnvironment();
     kit_ = lok_init_2(installPath.c_str(),
                       profileUrl.empty() ? nullptr : profileUrl.c_str());
     if (!kit_) {

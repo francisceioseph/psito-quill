@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:psito_quill/src/app.dart';
 import 'package:psito_quill/src/kit/fake/fake_quill_kit.dart';
+import 'package:psito_quill/src/kit/quill_kit.dart';
+import 'package:psito_quill/src/ui/organisms/document_view.dart';
 import 'package:psito_quill/src/ui/organisms/nav_rail.dart';
 import 'package:psito_quill/src/ui/organisms/outline_panel.dart';
 
@@ -85,9 +87,37 @@ void main() {
         reason: 'os três estão na página 1, a do cursor: o atual é o último dela');
     await tester.tap(find.text('Cena 2 · A tempestade'));
     await tester.pump();
-    expect(kit.unoCommands.last, '.uno:ExecuteSearch');
+    // O salto (D-072): ao começo, e uma busca a mais que as ocorrências antes.
+    final n = kit.unoCommands.length;
+    expect(kit.unoCommands.sublist(n - 2), ['.uno:GoToStartOfDoc', '.uno:ExecuteSearch']);
     expect(kit.unoArgs.last, contains('Cena 2 · A tempestade'));
+    expect(h.doc.search.query, isNull, reason: 'o salto não acende o Localizar');
     handle.dispose();
+  });
+
+  testWidgets('o cursor fora da tela: a vista rola até ele (D-072)', (tester) async {
+    await pumpApp(tester);
+    ScrollPosition vertical() => tester
+        .stateList<ScrollableState>(find.descendant(of: find.byType(DocumentView), matching: find.byType(Scrollable)))
+        .map((s) => s.position)
+        .firstWhere((p) => p.axis == Axis.vertical);
+    expect(vertical().pixels, 0);
+    final far = h.doc.documentSize.height * 0.6;
+    kit.emit(CursorMoved(Rect.fromLTWH(2000, far, 20, 280)));
+    await tester.pump();
+    await tester.pump();
+    final at = vertical().pixels;
+    expect(at, greaterThan(0), reason: 'o salto longe rola');
+    // Rolar com a roda não puxa a vista de volta: o cursor não mudou.
+    vertical().jumpTo(0);
+    await tester.pump();
+    await tester.pump();
+    expect(vertical().pixels, 0);
+    // Uma tecla move o cursor um pouco: a vista vai até ele de novo.
+    kit.emit(CursorMoved(Rect.fromLTWH(2120, far, 20, 280)));
+    await tester.pump();
+    await tester.pump();
+    expect(vertical().pixels, closeTo(at, 2));
   });
 
   testWidgets('com a Estrutura aberta, uma pausa de 2 s na digitação refaz a cópia; fechada, não', (tester) async {

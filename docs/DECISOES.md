@@ -820,3 +820,22 @@ A Etapa 1 da Fase 3. O Francisco escolheu a pasta com um ODT por capítulo, e os
   - unidade, `book_test`: o zip, o corte, o `livro.json`, o controlador e o importador com o falso;
   - widget, `fase3_book_test`: o fichário, o teclado, os detalhes, a tela inicial, os recentes e o `binderDrop`;
   - integração, passo 22: importar o DOCX de teste pelo motor, a nota no capítulo, abrir pelo fichário, salvar e recontar.
+
+## D-072 · A Estrutura leva ao título: a vista segue o cursor, e o salto conta as ocorrências
+
+O Francisco viu que, num DOCX, clicar num título da Estrutura não levava até ele.
+
+- **A causa principal: a vista não seguia o cursor.** O salto funcionava no motor: a busca selecionava o título, e a página da barra de status mudava. Mas o `DocumentView` só rolava sozinho na máquina de escrever. Fora dela, o cursor ia para longe e a tela ficava parada. O mesmo valia para o Localizar e para as setas na beira da página. O passo 2d da integração não pegou, porque conferia a página do motor, não a rolagem.
+  - **Agora,** quando o cursor muda e sai da área, a vista rola até ele. Perto, só o bastante para caber, com uma margem de 16 px. Longe (mais de uma tela), com ele no meio.
+  - Rolar com a roda não move o cursor, então não puxa a vista de volta. Trocar de aba guarda a rolagem da aba (D-054), sem saltar ao cursor.
+- **A segunda causa: o salto parava no lugar errado.** A busca do texto do título, a partir do cursor, para no primeiro parágrafo com aquele texto. Isso pode ser um parágrafo que cita o título, outro título igual, ou "Cena 10" quando o título é "Cena 1" (o capítulo de teste tem os dois).
+  - **Agora,** a cópia conta, para cada título, quantas vezes a chave de busca dele aparece no texto antes dele. O salto vai ao começo (`.uno:GoToStartOfDoc`, sondado na 24.2) e procura uma vez a mais que isso.
+  - **A chave** é o texto do título como está no parágrafo, até a primeira tabulação ou quebra de linha, porque a busca do motor não acha pelo espaço que a Estrutura mostra. As notas de rodapé dentro do título ficam de fora.
+  - As respostas dessas buscas não acendem o Localizar nem marcam as ocorrências.
+- **Um travamento ao abrir, achado no meio:** o teste de ponta a ponta caiu uma vez com SIGSEGV em `getenv`, dentro do fontconfig, na thread do GTK. O motor definia o `LOK_ALLOWLIST_LANGUAGES` e o `SAL_LOG` com `setenv` na thread dele enquanto o GTK lia o ambiente, e o `setenv` com outra thread lendo derruba o processo. Os despejos de 22/11 eram parecidos.
+  - **Agora,** o `main` do app chama o `pqk_prepare_environment()` antes de qualquer thread. No motor, o `setenv` sem sobrescrever não escreve nada quando a variável já existe, e continua lá para as ferramentas.
+  - Depois disso, o fechamento passou 5 vezes em 5, mas uma falha às vezes não se prova com repetições.
+- **Os testes:**
+  - `fodt_test`: a chave, as ocorrências (com "Cena 10", um título repetido, a tabulação e a nota);
+  - `fase2b_pages_test`: o salto manda o começo e a busca sem acender o Localizar, e a vista rola até o cursor longe, sem puxar de volta depois da roda;
+  - integração, passo 2d: o título com mais ocorrências antes dele fica selecionado, exatamente ele.

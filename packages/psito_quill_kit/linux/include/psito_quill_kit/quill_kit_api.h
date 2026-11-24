@@ -76,6 +76,10 @@ PQK_EXPORT void pqk_set_accessibility(bool on);
 // Abre o documento em [path] oculto, para carregar o dicionário antes do
 // primeiro capítulo (D-069). Só sem documento aberto; apaga o arquivo.
 PQK_EXPORT void pqk_preload_spelling(const char* path);
+// Define as variáveis de ambiente do LibreOffice. Chame no começo do main,
+// antes de qualquer thread: o setenv com outra thread lendo o ambiente
+// derruba o processo (D-072).
+PQK_EXPORT void pqk_prepare_environment(void);
 // Abre [src] oculto ("" para um documento novo), salva em [dst] no [format]
 // ("odt", "fodt") e fecha, sem tocar nas abas. Responde PQK_EVENT_CONVERTED.
 PQK_EXPORT void pqk_convert(int32_t id, const char* src, const char* dst, const char* format);

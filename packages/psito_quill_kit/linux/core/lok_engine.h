@@ -98,6 +98,11 @@ class LokEngine {
   // primeiro capítulo aberto depois não espera por ele (D-069). O documento
   // oculto fecha quando outro abre. Apaga o arquivo logo depois de abrir.
   void preloadSpelling(const std::string& path);
+  // As variáveis do LOK (as línguas da ortografia, o SAL_LOG). Num processo
+  // com outras threads, chame no começo do main: o setenv numa thread
+  // enquanto outra lê o ambiente (o fontconfig do GTK) derruba o processo
+  // (D-072).
+  static void prepareEnvironment();
   // Abre [src] oculto, salva em [dst] no [format] e fecha, sem tocar nos
   // documentos das abas (o importador de livros, D-071). [src] vazio: um
   // documento novo. Responde com kEvConverted e o [id] de quem pediu.

@@ -293,10 +293,48 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
       _lastCursor = widget.doc.cursor;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _sendCaretRect();
-        if (widget.typewriter) _centerCaret();
+        if (widget.typewriter) {
+          _centerCaret();
+        } else {
+          _revealCaret();
+        }
       });
     }
     if (mounted) setState(() {});
+  }
+
+  /// O cursor saiu da área (o salto a um título, a busca, as setas na beira
+  /// da página): a vista rola até ele (D-072). Perto, só o bastante para ele
+  /// caber com uma margem; longe (mais de uma tela), com ele no meio. Rolar
+  /// com a roda não move o cursor, então não puxa a vista de volta.
+  void _revealCaret() {
+    final g = _geometry;
+    final c = widget.doc.cursor;
+    if (!mounted || g == null || c == Rect.zero) return;
+    final caret = g.toLocal(c);
+    var moved = false;
+    for (final (controller, lo, hi, size) in [
+      (_scroll, caret.top, caret.bottom, g.viewSize.height),
+      (_hscroll, caret.left, caret.right, g.viewSize.width),
+    ]) {
+      if (!controller.hasClients) continue;
+      final p = controller.position;
+      final margin = math.min(16.0, size / 8);
+      final start = p.pixels, end = p.pixels + size;
+      if (lo >= start + margin && hi <= end - margin) continue;
+      final far = lo > end + size || hi < start - size;
+      final target = far
+          ? (lo + hi) / 2 - size / 2
+          : lo < start + margin
+              ? lo - margin
+              : hi - size + margin;
+      final clamped = target.clamp(p.minScrollExtent, p.maxScrollExtent);
+      if ((clamped - p.pixels).abs() > 1) {
+        controller.jumpTo(clamped);
+        moved = true;
+      }
+    }
+    if (moved) _pushViewport();
   }
 
   /// A linha do cursor no meio da área (a máquina de escrever).

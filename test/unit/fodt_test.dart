@@ -49,6 +49,24 @@ void main() {
     expect(currentHeading(const [], 3), isNull);
   });
 
+  test('o salto a um título (D-072): a chave de busca e as ocorrências antes dele', () {
+    final s = parseFodt('<office:body>'
+        '<text:p>Na Cena 1 e na Cena 1 de novo</text:p>'
+        '<text:h text:outline-level="1">Cena 1</text:h>'
+        '<text:h text:outline-level="1">Cena 10</text:h>'
+        '<text:h text:outline-level="2">Cena 1</text:h>'
+        '<text:h text:outline-level="2">Parte<text:tab/>Um</text:h>'
+        '<text:h text:outline-level="2">Com nota<text:note text:note-class="footnote"><text:note-body><text:p>Cena 1</text:p></text:note-body></text:note></text:h>'
+        '</office:body>');
+    expect(s.outline.map((e) => (e.text, e.searchKey, e.occurrence)), [
+      ('Cena 1', 'Cena 1', 2),
+      ('Cena 10', 'Cena 10', 0),
+      ('Cena 1', 'Cena 1', 4),
+      ('Parte Um', 'Parte', 0),
+      ('Com nota', 'Com nota', 0),
+    ]);
+  });
+
   test('as palavras e os caracteres vêm do meta:document-statistic', () {
     expect(snap.words, 21069);
     expect(snap.characters, 117539);

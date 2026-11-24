@@ -3,8 +3,13 @@
 #include <cstdio>
 
 #include "my_application.h"
+#include "psito_quill_kit/quill_kit_api.h"
 
 int main(int argc, char** argv) {
+  // Antes de qualquer thread (D-072): o motor definia as variáveis na thread
+  // dele enquanto o fontconfig do GTK lia o ambiente, e o app caía às vezes
+  // ao abrir (SIGSEGV em getenv).
+  pqk_prepare_environment();
   int status;
   {
     g_autoptr(MyApplication) app = my_application_new();

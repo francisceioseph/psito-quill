@@ -573,12 +573,23 @@ class DocumentController extends ChangeNotifier {
   }
 
   /// Leva o cursor ao título [e] da Estrutura. Sondado (D-047): a 24.2 não
-  /// tem um comando de ir para o título; a busca do texto dele, do começo,
-  /// seleciona o título e rola até lá.
+  /// tem um comando de ir para o título; a busca do texto dele seleciona o
+  /// título. Para não parar num parágrafo com o mesmo texto antes dele
+  /// ("Cena 1" dentro de "Cena 10", um título repetido), vai ao começo do
+  /// documento e procura uma vez a mais que as ocorrências antes do título
+  /// (D-072). A vista rola até o cursor. A busca não acende o Localizar.
   void goToHeading(OutlineEntry e) {
-    if (!isOpen || e.text.isEmpty) return;
-    find(SearchQuery(e.text, matchCase: true));
+    if (!isOpen || e.searchKey.isEmpty) return;
+    kit.uno('.uno:GoToStartOfDoc');
+    final args = searchArgs(SearchQuery(e.searchKey, matchCase: true), SearchCommand.next);
+    for (var i = 0; i <= e.occurrence; i++) {
+      _headingSearches++;
+      kit.uno('.uno:ExecuteSearch', args);
+    }
   }
+
+  /// As respostas da busca do salto a um título, que não são do Localizar.
+  int _headingSearches = 0;
 
   // ------------------------------------- a busca no texto (D-050) --
 
@@ -986,6 +997,8 @@ class DocumentController extends ChangeNotifier {
 
   void _search(SearchQuery q, SearchCommand c, {String replacement = '', bool backward = false}) {
     if (!isOpen || q.isEmpty) return;
+    // Uma resposta perdida do salto a um título não engole a do Localizar.
+    _headingSearches = 0;
     search = SearchStatus(query: q);
     kit.uno('.uno:ExecuteSearch', searchArgs(q, c, replacement: replacement, backward: backward));
   }
@@ -1380,6 +1393,9 @@ class DocumentController extends ChangeNotifier {
         // para a lista toda, quando ela chega.
         final classes = kit.fontClasses(fonts);
         fontClasses = {for (var i = 0; i < fonts.length; i++) fonts[i]: classes[i]};
+      case SearchResult() || SearchNotFound() when _headingSearches > 0:
+        _headingSearches--;
+        return;
       case SearchResult(:final matches, :final all):
         searchHighlights = [for (final m in matches) ...m];
         if (_countingForReplace) {
