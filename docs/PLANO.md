@@ -372,7 +372,7 @@ end)
 |---|---|---|
 | App aberto, documento vazio | ≤ 340 MB | 335 MB ✅ |
 | Capítulo de 30 páginas aberto | ≤ 380 MB | 364 MB ✅ |
-| Livro de 60 capítulos, um aberto | ≤ 400 MB (não cresce com o livro) | (Fase 3) |
+| Livro de 60 capítulos, um aberto | O livro soma ≤ ~10 MB ao capítulo aberto e não cresce com o número de capítulos (D-085; era ≤ 400 MB) | +3,8 MB com o capítulo (Fase 3) |
 | Sessão de 4 horas digitando | crescimento ≤ 30 MB | (teste de resistência) |
 | Tecla → ladrilho pronto | ≤ 16 ms no p95 | 11,4 ms ✅ |
 | Rolar | 60 fps sem quadros perdidos no capítulo de 30 páginas | 59,5 fps, 0 perdidos ✅ |
@@ -547,7 +547,7 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
 - **Em todas as etapas:**
   - só o capítulo da tela (e os das abas, até o limite do D-054) fica no motor;
   - o que se lê dos capítulos fechados (as palavras, a busca, as cenas) sai do `content.xml`, num isolate, por um leitor de zip nosso (`ZLibDecoder(raw: true)`), sem pacote novo. O Dart nunca escreve ODT: quem escreve é o motor;
-  - um livro de 60 capítulos com um aberto fica ≤ 400 MB e não cresce com o livro (seção 8).
+  - um livro de 60 capítulos com um aberto soma ≤ ~10 MB ao capítulo e não cresce com o livro (seção 8, D-085).
 - **Etapa 1: o livro, o importador e o fichário.**
   - O `livro.json` (a árvore de partes e capítulos, o status, o rótulo e a sinopse), gravado de forma atômica, e os capítulos em `capitulos/`. Apagar vai para a `lixeira/` do livro.
   - O importador de DOCX: o motor salva uma cópia FODT, o Dart a corta nos títulos do nível escolhido (com a prévia dos capítulos achados), e o motor salva cada pedaço em ODT. Uma sonda confere listas, notas, imagens e marcadores antes.

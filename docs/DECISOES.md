@@ -1208,3 +1208,11 @@ A Etapa 10 da Fase 3: os capítulos como cartões, para reorganizar a história.
 - **A memória:** a grade monta só os cartões visíveis (`GridView.builder`, colunas de pelo menos 240 px), e os nós de foco são só dos capítulos da lista. Com a cortiça na tela, a página sai da árvore e nada passa pelo motor; o capítulo continua aberto na aba.
 - **A medida** (o livro de 60 capítulos do `docs/FASE3-RESULTADOS.md`, com as notas, as metas e um ano de histórico; a build de release, 3 rodadas alternadas, a mediana, contra a build da Etapa 8 no mesmo livro): o RSS com o capítulo deu 453,8 contra 446,8 MB, depois de digitar 461,3 contra 459,7, e no fim 457,1 contra 461,4. É o ruído do host (D-038): a cortiça só existe com ela na tela, e o bench não a abre. A tecla (p95) ficou em 8,5 ms. O quadro ao digitar no livro ficou de 4,8 para 5,1 ms (build, p95): é a meta do dia na barra de status, refeita a cada tecla com as palavras do motor, e fica longe dos 16 ms.
 - **Os testes:** widget, `fase3_corkboard_test`: a cortiça pelo fichário no lugar da página, os cartões com a sinopse, arrastar um cartão para outra parte, Alt+→, a ordem gravada no `livro.json`, F2 e Ctrl+Enter na sinopse, o Esc que volta, o escopo de uma parte, o duplo clique que abre o capítulo, o `corkDrop` e o menu Livro do Clássico 97.
+
+## D-085 · As respostas do fecho da Fase 3: a cortiça, a meta do dia e a memória do livro
+
+O Francisco respondeu às três perguntas do `docs/FASE3-RESULTADOS.md` (24/11/2026):
+
+- **A cortiça fica com os capítulos.** Não haverá cartões por cena, nem um título e uma sinopse por cena no `livro.json` (D-084).
+- **Cortar texto conta zero na meta do dia,** como está: as palavras de hoje são o que cada capítulo cresceu desde a base do dia, sem o saldo (D-083).
+- **A meta de memória do livro** da seção 8 deixa de ser "≤ 400 MB com um capítulo aberto", escrita antes de medir (o capítulo avulso já passa de 440 MB). Passa a ser: o livro soma ≤ ~10 MB ao capítulo aberto e não cresce com o número de capítulos. O livro de 60 capítulos mediu +3,8 MB.

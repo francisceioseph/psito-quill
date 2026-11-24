@@ -132,6 +132,8 @@ As que deram certo e viraram código: o `pqk_convert` (o importador, os capítul
 
 ## Perguntas para o Francisco
 
-1. **A cortiça mostra os capítulos.** O plano falava em "as cenas de uma parte". Cartões por cena pediriam um título e uma sinopse por cena no `livro.json`, que hoje só guarda o começo de cada uma. Vale a pena?
-2. **Os capítulos que encolhem contam zero na meta do dia.** Cortar 300 palavras numa revisão não desconta o que se escreveu em outro capítulo. É o que você quer, ou prefere o saldo (escrito menos cortado)?
-3. **A meta de 400 MB da seção 8** fica velha: o capítulo avulso já está em ~445 MB. Trocamos por "o livro não soma mais que ~10 MB ao capítulo"?
+Respondidas no D-085:
+
+1. **A cortiça fica com os capítulos:** sem cartões por cena.
+2. **Cortar conta zero na meta do dia:** só conta o que cada capítulo cresceu.
+3. **A meta de memória do livro** passa a ser: o livro soma ≤ ~10 MB ao capítulo aberto e não cresce com o número de capítulos. Medido: +3,8 MB.
