@@ -9,11 +9,12 @@ env:
   FLUTTER_VERSION: 3.47.4
   # O que o Quill compila e o que os testes abrem: o LibreOffice do sistema (o
   # motor), o cabeçalho do LibreOfficeKit, o Lua 5.4, o GoogleTest e o clang do
-  # ffigen. O Ubuntu 24.04 tem o LibreOffice 24.2, o mesmo das medições.
+  # ffigen. O Ubuntu 24.04 tem o LibreOffice 24.2, o mesmo das medições. O
+  # pacote de português faz o menu do motor sair em pt-BR, como a integração espera.
   BUILD_DEPS: >-
     libgtk-3-dev ninja-build cmake clang pkg-config
     libreoffice-writer libreofficekit-dev liblua5.4-dev libgtest-dev libclang-18-dev
-    hunspell-pt-br fonts-liberation
+    libreoffice-l10n-pt-br hunspell-pt-br fonts-liberation
 
 jobs:
   check:

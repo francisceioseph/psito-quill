@@ -980,3 +980,21 @@ Como no Psito Player (o mesmo modelo de scripts e de workflows).
 
   Os commits só de documentação (a licença, os planos, o fecho da Fase 2B) não ganharam versão. O `pubspec.yaml` passa a 0.11.0, e o primeiro `feat:` depois disso sai como 0.12.0, já com os pacotes.
 - **Ainda não:** o repositório APT e DNF no GitHub Pages, como o do Player. Ele precisa de uma chave de assinatura própria do Quill (o segredo `APT_SIGNING_KEY`), que é do Francisco criar.
+
+## D-078 · A sonda do LibreOfficeKit no Windows
+
+O Francisco perguntou pela versão Windows (24/11). O plugin do motor é só Linux (D-077), e antes de portar era preciso saber se o LibreOffice comum do Windows serve de motor pelo LibreOfficeKit.
+
+- **A sonda** (`tool/windows-probe/lok_win_probe.cc`, compilada no Linux com o MinGW num contêiner, `build.sh`): sem Flutter e sem nada do Quill, faz o que o plugin faz. Liga o motor com um perfil próprio, abre o `capitulo-30p.docx`, desenha ladrilhos, digita por teclas e pelo texto do IME, liga o negrito e espera o estado, pede as fontes e salva em ODT e PDF. Ela conta os callbacks por tipo.
+- **Onde:** a VM de Windows do Player, numa camada qcow2 por cima do disco dele (`~/vms/psito-quill-windows`, o disco do Player não muda), com o LibreOffice 25.8.7 oficial (o MSI da The Document Foundation, conferido pelo SHA-256), instalado em silêncio.
+- **O que funciona no Windows:**
+  - o `lok_init_2` acha o `mergedlo.dll` sozinho (o `LibreOfficeKitInit.h` já tem o caminho do Windows): ~1,1 a 2,1 s para ligar;
+  - abrir o DOCX (~3,2 a 4,5 s na VM, contra ~0,6 s no Linux), o tamanho, os ladrilhos (o texto certo, com as fontes; ~25 a 40 ms o primeiro);
+  - as teclas e o texto do IME entram ("ção" com acento), o negrito volta pelo estado (callback 8), as fontes (27 KB de JSON), o ODT e o PDF.
+- **O que não funciona:** **o motor não manda nenhuma invalidação de ladrilho** (o callback 0) no Windows, nem depois de digitar, nem com a área visível e o zoom do cliente como o Quill faz, nem chamando o motor de novo por 5 s. O texto muda (o ladrilho desenhado de novo tem outra tinta), mas o aviso não vem. No Linux, a mesma sonda recebe a invalidação, e o `--bench` do D-077 mediu a tecla até o ladrilho no LibreOffice 25.8 do Fedora. Então é do LibreOfficeKit no Windows, não da versão.
+  - **Por que pesa:** o Quill inteiro redesenha pela invalidação (a `TileCache`, D-005): sem ela, a página não mudaria ao digitar.
+- **As saídas, se o Windows for adiante:**
+  1. **redesenhar sem o aviso:** depois de cada tecla, comando ou estado, o Quill pede de novo os ladrilhos da tela a partir do parágrafo do cursor (o callback 1 chega). Custa CPU (~25 ms por ladrilho na VM, 72 na tela) e pode perder mudanças fora da tela (um título que muda a numeração);
+  2. **descobrir por que o Windows não manda:** ler o `desktop/source/lib/init.cxx` e o fluxo das invalidações no Windows (o Collabora Office para desktop usa o LOK no Windows, com builds próprios), e ver se uma opção ou um build do LibreOffice resolve;
+  3. **ficar só Linux.**
+- **Fica como está:** o Quill continua só Linux até o Francisco decidir. O resto do porte (as texturas do Flutter no Windows, a impressão, as fontes, o perfil, as travas) não foi começado.
