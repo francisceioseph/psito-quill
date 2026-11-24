@@ -733,4 +733,26 @@ A investigação da lentidão ao abrir que o fecho da Fase 2B achou (369 ms na F
   - o **primeiro ladrilho**, que é o que quem escreve sente: Fase 2 ~1320 ms, Fase 2B ~1520 ms. Essa era a perda real, uns 200 ms.
 - **A correção:** ao abrir, o Quill pedia ao motor, de uma vez, a cópia do documento (a Estrutura e os estilos, D-044), a lista de fontes, a de estilos e a de idiomas. Tudo isso roda na thread do motor e passava na frente dos ladrilhos. Agora espera o primeiro ladrilho chegar (ou 1 s, sem vista). Depois da correção, o primeiro ladrilho foi a ~1430 ms (Fase 2 a ~1315 na mesma rodada): uns 90 ms recuperados, e ~120 ms ainda acima da Fase 2.
 - **Nos testes,** o adiamento é uma opção do `DocumentController` (`deferOpenWork`), ligada no app e na integração. Os testes de unidade e de widget continuam com o trabalho na hora; o `open_work_test` confere o adiamento.
-- **O que sobra:** a meta de abrir em 400 ms não se cumpre com o dicionário carregando junto. Carregar o dicionário antes, com o Quill ainda na tela inicial, tiraria os 800 ms do primeiro capítulo aberto depois. Não foi feito: pede uma decisão (o dicionário passaria a ocupar a memória mesmo sem documento).
+- **O que sobra:** a meta de abrir em 400 ms não se cumpre com o dicionário carregando junto. Carregar o dicionário antes, com o Quill ainda na tela inicial, tiraria os 800 ms do primeiro capítulo aberto depois. Feito depois, com a decisão do Francisco: D-069.
+
+## D-069 · O dicionário carrega na tela inicial
+
+O que sobrou do D-068: o primeiro capítulo aberto esperava ~800 ms pelo dicionário pt-BR. O Francisco decidiu carregar o dicionário logo que o Quill abre, enquanto ele está na tela inicial.
+
+- **Como:** o `DocumentController.preloadSpelling` escreve um documento pequeno (uma frase, com o idioma pt-BR) nas cópias (`$XDG_RUNTIME_DIR`, com o prefixo delas). Ele pede ao motor `pqk_preload_spelling`, e o `LokEngine` abre o documento sem vista nem callback e apaga o arquivo. A ortografia automática do LibreOffice faz o resto na thread principal dele.
+- **O documento oculto fecha** quando outro abre (o `LokEngine::open` o destrói antes de carregar). O dicionário fica no serviço de ortografia do processo, e não com o documento. Não há relógio nem thread a mais.
+- **Só na tela inicial:**
+  - Com outro documento aberto, o motor ignora o pedido. Um segundo documento mudaria a vista atual do LOK.
+  - O documento em branco (`startScreen` desligado) não pede: não tem texto para verificar.
+  - O `--bench` também não pede, e continua medindo o pior caso.
+- **Medido no `lok_script`** (o motor sozinho, o `capitulo-30p.docx`, 2 rodadas):
+  - o primeiro ladrilho do capítulo foi de ~1630 ms para ~975 ms;
+  - o "aberto" foi de ~840 ms para ~585 ms.
+  - Parte do ganho é o Writer, que já fica iniciado; o resto é o dicionário.
+- **Memória** (3 rodadas, iguais):
+  - com o capítulo aberto, +1 MB anônima e +3 MB de RSS;
+  - na tela inicial, +87 MB anônima (de 45 para 132): o Writer e o dicionário carregam antes. É o mesmo custo de abrir qualquer documento, só que adiantado. Abaixo do teto do D-038 e aceito pelo Francisco.
+- **Testes:**
+  - o `preload_spelling_test` confere o arquivo (o prefixo das cópias e o idioma) e que nada é pedido com documento aberto;
+  - a integração pede o dicionário antes do primeiro capítulo, espera o arquivo sumir e abre por cima.
+

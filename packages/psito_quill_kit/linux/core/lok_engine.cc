@@ -108,6 +108,10 @@ void LokEngine::open(const std::string& path) {
       sink_->onEvent(kEvOpenFailed, "motor não iniciado");
       return;
     }
+    if (spellDoc_) {
+      spellDoc_->pClass->destroy(spellDoc_);
+      spellDoc_ = nullptr;
+    }
     const std::string url = path.empty() ? "private:factory/swriter" : toFileUrl(path);
     auto* doc = kit_->pClass->documentLoadWithOptions(kit_, url.c_str(), "Language=pt-BR");
     if (!doc) {
@@ -319,6 +323,17 @@ void LokEngine::setAccessibility(bool on) {
   });
 }
 
+void LokEngine::preloadSpelling(const std::string& path) {
+  queue_.post([this, path] {
+    if (!kit_ || spellDoc_ || !docs_.empty()) {
+      std::remove(path.c_str());
+      return;
+    }
+    spellDoc_ = kit_->pClass->documentLoadWithOptions(kit_, toFileUrl(path).c_str(), "Language=pt-BR");
+    std::remove(path.c_str());
+  });
+}
+
 void LokEngine::repaintAll() {
   queue_.post([this] {
     cache_.invalidateAll();
@@ -331,6 +346,8 @@ void LokEngine::shutdown() {
     makeActive(nullptr);
     for (auto& d : docs_) d->doc->pClass->destroy(d->doc);
     docs_.clear();
+    if (spellDoc_) spellDoc_->pClass->destroy(spellDoc_);
+    spellDoc_ = nullptr;
     // kit_->destroy encerra o LibreOffice; depois dele o processo não pode
     // iniciar outro LOK. Fica para o fim do processo.
     if (kit_) kit_->pClass->destroy(kit_);

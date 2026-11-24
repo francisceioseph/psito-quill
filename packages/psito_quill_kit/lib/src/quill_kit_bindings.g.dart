@@ -256,6 +256,17 @@ class QuillKitBindings {
   late final _pqk_post_mouse = _pqk_post_mousePtr
       .asFunction<void Function(int, int, int, int, int, int)>();
 
+  void pqk_preload_spelling(ffi.Pointer<ffi.Char> path) {
+    return _pqk_preload_spelling(path);
+  }
+
+  late final _pqk_preload_spellingPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Char>)>>(
+        'pqk_preload_spelling',
+      );
+  late final _pqk_preload_spelling = _pqk_preload_spellingPtr
+      .asFunction<void Function(ffi.Pointer<ffi.Char>)>();
+
   void pqk_repaint_all() {
     return _pqk_repaint_all();
   }

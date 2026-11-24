@@ -1170,6 +1170,33 @@ class DocumentController extends ChangeNotifier {
     _notifyView();
   }
 
+  /// Carrega o dicionário de português enquanto a tela inicial está aberta
+  /// (D-069): o motor abre um documento oculto com uma frase, e a ortografia
+  /// automática faz o resto. Sem isso, o primeiro capítulo espera ~800 ms
+  /// pelo dicionário. O arquivo é uma cópia como as outras (o motor apaga; se
+  /// sobrar, a limpeza das cópias leva).
+  void preloadSpelling() {
+    if (isOpen) return;
+    final path = '$copyDir/$_copyPrefix$pid-ortografia.fodt';
+    try {
+      File(path).writeAsStringSync(_spellingSample);
+    } on FileSystemException {
+      return;
+    }
+    kit.preloadSpelling(path);
+  }
+
+  static const _spellingSample = '<?xml version="1.0" encoding="UTF-8"?>'
+      '<office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" '
+      'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" '
+      'xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" '
+      'xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" '
+      'office:version="1.3" office:mimetype="application/vnd.oasis.opendocument.text">'
+      '<office:styles><style:default-style style:family="paragraph">'
+      '<style:text-properties fo:language="pt" fo:country="BR"/></style:default-style></office:styles>'
+      '<office:body><office:text><text:p>O livro começa aqui.</text:p></office:text></office:body>'
+      '</office:document>';
+
   /// Só a barra de status lê o progresso: não refaz a faixa nem o painel.
   void _notifyStatus() {
     statusRevision++;

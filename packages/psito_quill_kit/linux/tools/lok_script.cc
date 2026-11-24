@@ -17,6 +17,7 @@
 //   sel                       a seleção como texto
 //   save <arquivo> <formato>  salvar como
 //   wait <ms>                 espera os callbacks
+//   preload <arquivo>         carrega o dicionário por um documento oculto
 //   repaint                   redesenha todos os ladrilhos
 //   a11y on|off               setAccessibilityState (callbacks 62 e 63)
 //   color <rrggbb> [tol]      conta os pixels perto da cor nos ladrilhos
@@ -105,6 +106,8 @@ int main(int argc, char** argv) {
     } else if (op == "uno") {
       auto sp = rest.find(' ');
       e.uno(rest.substr(0, sp), sp == std::string::npos ? "" : rest.substr(sp + 1));
+    } else if (op == "preload") {
+      e.preloadSpelling(rest);
     } else if (op == "repaint") {
       e.repaintAll();
     } else if (op == "a11y") {

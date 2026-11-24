@@ -84,6 +84,9 @@ class LokQuillKit implements QuillKit {
   void setAccessibility(bool on) => _native.setAccessibility(on);
 
   @override
+  void preloadSpelling(String path) => _native.preloadSpelling(path);
+
+  @override
   void postKey(KeyEventType type, {int charCode = 0, int keyCode = 0}) => _native.postKey(
       type == KeyEventType.input
           ? LibreOfficeKitKeyEventType.LOK_KEYEVENT_KEYINPUT

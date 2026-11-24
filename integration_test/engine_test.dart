@@ -84,6 +84,16 @@ void main() {
     expect(doc.kitStatus, KitStatus.ready, reason: '${doc.message}');
     expect(doc.engineVersion, contains('LibreOffice'));
 
+    // 0. O dicionário na tela inicial (D-069): o documento oculto abre, o
+    //    arquivo some, e o primeiro capítulo abre por cima normalmente.
+    final preloadDir = Directory(DocumentController.copyDir);
+    bool preloadLeft() => preloadDir
+        .listSync()
+        .any((f) => f.path.endsWith('${DocumentController.copyPrefixOfThisProcess}ortografia.fodt'));
+    doc.preloadSpelling();
+    expect(preloadLeft(), isTrue);
+    await until(() => !preloadLeft(), 'o motor apagar o arquivo do dicionário');
+
     // 1. Abrir: 30 páginas A4 ≈ 30 × 16838 twips de altura. O motor avisa o
     //    fim do carregamento pelo callback do escritório (D-066).
     final beforeOpen = events.length;

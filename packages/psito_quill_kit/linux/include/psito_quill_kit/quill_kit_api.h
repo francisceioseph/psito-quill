@@ -72,6 +72,9 @@ PQK_EXPORT void pqk_set_viewport(int32_t scale_milli, int64_t x, int64_t y, int6
 PQK_EXPORT void pqk_repaint_all(void);
 // Os callbacks de acessibilidade do documento ativo (o parágrafo e o cursor).
 PQK_EXPORT void pqk_set_accessibility(bool on);
+// Abre o documento em [path] oculto, para carregar o dicionário antes do
+// primeiro capítulo (D-069). Só sem documento aberto; apaga o arquivo.
+PQK_EXPORT void pqk_preload_spelling(const char* path);
 PQK_EXPORT void pqk_post_key(int32_t type, int32_t char_code, int32_t key_code);
 PQK_EXPORT void pqk_post_mouse(int32_t type, int32_t x, int32_t y, int32_t count,
                                int32_t buttons, int32_t modifier);

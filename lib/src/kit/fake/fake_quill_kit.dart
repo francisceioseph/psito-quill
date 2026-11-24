@@ -201,6 +201,12 @@ class FakeQuillKit implements QuillKit {
   @override
   void setAccessibility(bool on) => accessibility.add(on);
 
+  /// Os arquivos pedidos ao [preloadSpelling].
+  final preloads = <String>[];
+
+  @override
+  void preloadSpelling(String path) => preloads.add(path);
+
   @override
   void postKey(KeyEventType type, {int charCode = 0, int keyCode = 0}) {
     keys.add((type, charCode, keyCode));

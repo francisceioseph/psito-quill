@@ -92,6 +92,11 @@ class LokEngine {
   // Liga os callbacks de acessibilidade do documento ativo (D-067): o
   // parágrafo do cursor (62) e a posição do cursor nele (63).
   void setAccessibility(bool on);
+  // Abre [path] (um documento pequeno com texto) sem mostrar: a ortografia
+  // automática carrega o dicionário enquanto a tela inicial está aberta, e o
+  // primeiro capítulo aberto depois não espera por ele (D-069). O documento
+  // oculto fecha quando outro abre. Apaga o arquivo logo depois de abrir.
+  void preloadSpelling(const std::string& path);
   void repaintAll();
 
   // Para o encerramento: espera a fila esvaziar e destrói o LOK.
@@ -139,6 +144,8 @@ class LokEngine {
   // O ativo (doc_ e tileMode_ são os dele). Atômico: os callbacks leem.
   std::atomic<int> activeId_{0};
   _LibreOfficeKitDocument* doc_ = nullptr;
+  // O documento oculto do preloadSpelling, até o próximo abrir.
+  _LibreOfficeKitDocument* spellDoc_ = nullptr;
   int tileMode_ = 0;
   int32_t scaleMilli_ = 1000;
   TwipRect viewport_;

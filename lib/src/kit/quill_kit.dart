@@ -345,6 +345,12 @@ abstract interface class QuillKit {
   /// Custam trabalho a cada tecla: só para quem usa leitor de tela.
   void setAccessibility(bool on);
 
+  /// Abre o documento em [path] (pequeno, com texto em português) sem
+  /// mostrar, para a ortografia carregar o dicionário enquanto a tela inicial
+  /// está aberta (D-069). Só vale sem documento aberto; o motor apaga o
+  /// arquivo, e o documento oculto fecha quando outro abre.
+  void preloadSpelling(String path);
+
   void postKey(KeyEventType type, {int charCode = 0, int keyCode = 0});
   void postMouse(MouseEventType type, int x, int y, {int count = 1, int buttons = 1, int modifier = 0});
   void uno(String command, [String argsJson = '']);

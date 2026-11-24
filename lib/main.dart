@@ -67,7 +67,13 @@ void main(List<String> args) {
       // A trava só pode ser julgada com o motor ligado (ele segura o perfil).
       if (path == null) {
         // A tela inicial (D-064) é o editor sem documento.
-        if (!settings.startScreen) doc.open('');
+        // Na tela inicial, o dicionário carrega enquanto se escolhe o
+        // capítulo (D-069). O documento em branco não precisa dele.
+        if (settings.startScreen) {
+          doc.preloadSpelling();
+        } else {
+          doc.open('');
+        }
       } else {
         workspace.openPath(path);
       }

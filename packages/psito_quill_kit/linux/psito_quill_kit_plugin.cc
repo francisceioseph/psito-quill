@@ -172,6 +172,9 @@ void pqk_repaint_all(void) {
 void pqk_set_accessibility(bool on) {
   if (g_kit) g_kit->engine().setAccessibility(on);
 }
+void pqk_preload_spelling(const char* path) {
+  if (g_kit && path) g_kit->engine().preloadSpelling(path);
+}
 void pqk_post_key(int32_t type, int32_t char_code, int32_t key_code) {
   if (g_kit) g_kit->engine().postKey(type, char_code, key_code);
 }

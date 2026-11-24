@@ -29,6 +29,7 @@ Editor de texto para livros longos (*Dustland*, *Silicon Gods*), em Flutter, par
 - **A `EditorPage` memoiza a faixa e o painel Formatar** pela `stateRevision` do controlador (D-037). Algo novo que eles leiam e não venha do motor entra na chave, ou o widget fica velho.
 - **Os dois callbacks do LOK:** o de cada documento e o do escritório (`LokEngine::officeCallback`), que traz o progresso de abrir (9 a 11). O do escritório responde "sem senha" na hora a um pedido de senha, senão o motor espera para sempre (D-066).
 - **Ocupado:** abrir e salvar travam a tela pelo `DocumentController.busy` e pelo `BusyScope` (D-066). Entrada nova de teclado ou texto precisa respeitar o `busy`.
+- **O dicionário carrega na tela inicial:** o motor abre um documento oculto de uma frase (`preloadSpelling`), que fecha quando outro abre (D-069). O `--bench` não faz isso, para medir o pior caso.
 - **O leitor de tela** recebe o parágrafo do cursor pelos callbacks 62 e 63, só com a acessibilidade ligada (`pqk_set_accessibility`, D-067). O `DocumentSemantics` é o nó do documento.
 - **O tamanho da interface** é o `UiZoom` (D-067): a interface inteira é montada menor e desenhada ampliada, com a densidade de pixels multiplicada. O `textScaler` fica em 1; não use o tamanho do texto para crescer controles.
 
