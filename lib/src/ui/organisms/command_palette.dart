@@ -114,7 +114,7 @@ class _CommandPaletteState extends State<CommandPalette> {
     }
     setState(() => _searching = true);
     _debounce = Timer(const Duration(milliseconds: 250), () async {
-      final r = await widget.doc!.searchText(q);
+      final r = await widget.doc!.searchText(SearchQuery(q));
       // Só a resposta da última pergunta vale.
       if (!mounted || _query.text != q) return;
       setState(() {

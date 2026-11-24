@@ -62,6 +62,9 @@ class RecoveryStore {
   /// pela metade (a troca é o `rename`, em [commit]).
   String writingPath(String id) => '${dir.path}/$id.gravando.odt';
   String _copy(String id) => '${dir.path}/$id.odt';
+
+  /// A última cópia gravada da aba [id] (pode não existir).
+  String copyPath(String id) => _copy(id);
   String _meta(String id) => '${dir.path}/$id.json';
 
   /// O caminho é de uma cópia de recuperação (o controlador não a apaga

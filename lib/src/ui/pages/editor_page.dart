@@ -844,6 +844,8 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
                     closeLabel: l10n.findClose,
                     initialText: _findSeed ?? doc.search.query?.text ?? '',
                     onClose: _closeFind,
+                    searchBook: books.book != null ? widget.workspace.searchBook : null,
+                    onOpenBookHit: widget.workspace.openBookHit,
                   )
                 : _left == null
                 ? null

@@ -7,6 +7,11 @@
 // ao documento. O motor seleciona a ocorrência e diz quantas há. A lista sai
 // da cópia do documento (a mesma da busca única, D-050), refeita quando o
 // texto mudou, e só as linhas visíveis são construídas.
+//
+// Com um livro aberto, "No livro" troca a lista pela do livro inteiro
+// (Fase 3, Etapa 6, D-080), agrupada por capítulo; o clique abre o capítulo
+// e seleciona a ocorrência. As setas, "Todas" e Substituir continuam no
+// capítulo da tela.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -15,19 +20,35 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../document/document_controller.dart';
+import '../../book/book_search.dart';
 import '../../document/fodt.dart' show TextHit, TextSearchResult;
 import '../../document/search.dart';
 import '../atoms/w_button.dart';
 import '../atoms/w_label.dart';
+import '../atoms/w_segmented.dart';
 import '../atoms/w_text_field.dart';
 import '../molecules/side_panel.dart';
 import '../tokens/tokens.dart';
 
 class FindPanel extends StatefulWidget {
-  const FindPanel({super.key, required this.doc, required this.onClose, required this.closeLabel, this.initialText = ''});
+  const FindPanel({
+    super.key,
+    required this.doc,
+    required this.onClose,
+    required this.closeLabel,
+    this.initialText = '',
+    this.searchBook,
+    this.onOpenBookHit,
+  });
 
   final DocumentController doc;
   final VoidCallback onClose;
+
+  /// A busca no livro inteiro; null: não há livro aberto (sem "No livro").
+  final Future<BookSearchResult> Function(SearchQuery q)? searchBook;
+
+  /// Abre o capítulo e seleciona a ocorrência.
+  final void Function(String chapterId, TextHit hit)? onOpenBookHit;
 
   /// "Fechar a busca (Ctrl+H)".
   final String closeLabel;
@@ -48,11 +69,26 @@ class FindPanelState extends State<FindPanel> {
 
   /// A lista e a pergunta que a gerou.
   TextSearchResult _result = TextSearchResult.empty;
-  String? _asked;
+  BookSearchResult _bookResult = BookSearchResult.empty;
+  SearchQuery? _asked;
+  bool _askedInBook = false;
   bool _searching = false;
-  int? _picked;
+  String? _picked;
+
+  /// "No livro" (só com [FindPanel.searchBook]).
+  bool _inBook = false;
+
+  /// Uma busca no livro já roda: a próxima espera por ela (um isolate de
+  /// cada vez, para a memória não dobrar enquanto se digita).
+  bool _bookRunning = false;
+  bool _bookAgain = false;
+
+  bool get _bookScope => _inBook && widget.searchBook != null;
 
   SearchQuery get query => SearchQuery(_find.text, matchCase: _matchCase, wholeWord: _wholeWord, regex: _regex);
+
+  /// A lista mostrada é a desta pergunta, neste lugar.
+  bool get _current => _asked == query && _askedInBook == _bookScope && !_searching;
 
   @override
   void initState() {
@@ -69,6 +105,16 @@ class FindPanelState extends State<FindPanel> {
   }
 
   @override
+  void didUpdateWidget(FindPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // O livro fechou: volta ao capítulo.
+    if (oldWidget.searchBook != null && widget.searchBook == null && _inBook) {
+      _inBook = false;
+      _list(now: true);
+    }
+  }
+
+  @override
   void dispose() {
     _debounce?.cancel();
     _find.dispose();
@@ -80,30 +126,81 @@ class FindPanelState extends State<FindPanel> {
   /// Refaz a lista depois de uma pausa (ou já, com [now]).
   void _list({bool now = false}) {
     _debounce?.cancel();
-    final q = _find.text;
-    if (q.trim().length < 2) {
-      if (_asked != null || _result.total > 0) {
+    if (_find.text.trim().length < 2) {
+      if (_asked != null || _result.total > 0 || _bookResult.total > 0) {
         setState(() {
           _result = TextSearchResult.empty;
+          _bookResult = BookSearchResult.empty;
           _asked = null;
           _picked = null;
         });
       }
       return;
     }
-    _debounce = Timer(now ? Duration.zero : const Duration(milliseconds: 300), () async {
+    // O livro lê todos os capítulos: espera um pouco mais pela digitação.
+    final pause = now ? Duration.zero : Duration(milliseconds: _bookScope ? 500 : 300);
+    _debounce = Timer(pause, () {
       if (!mounted) return;
-      setState(() => _searching = true);
-      final r = await widget.doc.searchText(q, fresh: true);
-      // Só a resposta da última pergunta vale.
-      if (!mounted || _find.text != q) return;
-      setState(() {
-        _result = r;
-        _asked = q;
-        _searching = false;
-        _picked = null;
-      });
+      if (_bookScope) {
+        _runBook();
+      } else {
+        _runChapter();
+      }
     });
+  }
+
+  Future<void> _runChapter() async {
+    final q = query;
+    setState(() => _searching = true);
+    final r = await widget.doc.searchText(q, fresh: true);
+    // Só a resposta da última pergunta vale.
+    if (!mounted || query != q || _bookScope) return;
+    setState(() {
+      _result = r;
+      _asked = q;
+      _askedInBook = false;
+      _searching = false;
+      _picked = null;
+    });
+  }
+
+  Future<void> _runBook() async {
+    if (_bookRunning) {
+      _bookAgain = true;
+      return;
+    }
+    final search = widget.searchBook;
+    if (search == null) return;
+    final q = query;
+    _bookRunning = true;
+    setState(() => _searching = true);
+    BookSearchResult r;
+    try {
+      r = await search(q);
+    } on Object {
+      r = BookSearchResult.empty;
+    } finally {
+      _bookRunning = false;
+    }
+    if (!mounted) return;
+    if (_bookAgain || query != q || !_bookScope) {
+      _bookAgain = false;
+      // A pergunta mudou enquanto buscava: a última vale.
+      if (_bookScope) _list(now: true);
+      return;
+    }
+    setState(() {
+      _bookResult = r;
+      _asked = q;
+      _askedInBook = true;
+      _searching = false;
+      _picked = null;
+    });
+  }
+
+  void _option(void Function() change) {
+    setState(change);
+    _list(now: true);
   }
 
   void _next({bool backward = false}) => widget.doc.find(query, backward: backward);
@@ -143,8 +240,13 @@ class FindPanelState extends State<FindPanel> {
           listenable: doc,
           builder: (context, _) {
             final s = doc.search;
-            final status = s.query != query
-                ? (_asked == _find.text && !_searching ? l10n.searchHitsCount(_result.total) : '')
+            final bad = _current && (_bookScope ? _bookResult.badPattern : _result.badPattern);
+            final status = bad
+                ? l10n.findBadRegex
+                : _bookScope
+                ? (_current ? l10n.bookHitsCount(_bookResult.total, _bookResult.chapters.length) : '')
+                : s.query != query
+                ? (_current ? l10n.searchHitsCount(_result.total) : '')
                 : s.replaced != null
                 ? l10n.findReplaced(s.replaced!)
                 : s.notFound
@@ -155,6 +257,26 @@ class FindPanelState extends State<FindPanel> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (widget.searchBook != null) ...[
+                  WSegmented<bool>(
+                    label: l10n.findScope,
+                    expanded: true,
+                    segments: [
+                      WSegment(false, l10n.findScopeChapter),
+                      WSegment(true, l10n.findScopeBook),
+                    ],
+                    selected: _inBook,
+                    onChanged: (v) {
+                      if (v == _inBook) return;
+                      setState(() {
+                        _inBook = v;
+                        _picked = null;
+                      });
+                      _list(now: true);
+                    },
+                  ),
+                  SizedBox(height: t.space.md),
+                ],
                 WTextField(
                   label: l10n.findField,
                   controller: _find,
@@ -202,19 +324,19 @@ class FindPanelState extends State<FindPanel> {
                           icon: Symbols.text_fields_rounded,
                           label: l10n.findMatchCase,
                           value: _matchCase,
-                          onPressed: () => setState(() => _matchCase = !_matchCase),
+                          onPressed: () => _option(() => _matchCase = !_matchCase),
                         ),
                         WToggle(
                           icon: Symbols.space_bar_rounded,
                           label: l10n.findWholeWord,
                           value: _wholeWord,
-                          onPressed: () => setState(() => _wholeWord = !_wholeWord),
+                          onPressed: () => _option(() => _wholeWord = !_wholeWord),
                         ),
                         WToggle(
                           icon: Symbols.data_object_rounded,
                           label: l10n.findRegex,
                           value: _regex,
-                          onPressed: () => setState(() => _regex = !_regex),
+                          onPressed: () => _option(() => _regex = !_regex),
                         ),
                       ],
                     ),
@@ -233,7 +355,7 @@ class FindPanelState extends State<FindPanel> {
                       onPressed: doc.canEdit
                           ? () {
                               doc.replaceAll(query, _replace.text);
-                              _list(now: true);
+                              if (!_bookScope) _list(now: true);
                             }
                           : null,
                     ),
@@ -242,7 +364,11 @@ class FindPanelState extends State<FindPanel> {
                 SizedBox(height: t.space.md),
                 Semantics(
                   liveRegion: true,
-                  child: WLabel(status, small: true, tone: s.notFound && s.query == query ? WLabelTone.danger : WLabelTone.muted),
+                  child: WLabel(
+                    status,
+                    small: true,
+                    tone: bad || (!_bookScope && s.notFound && s.query == query) ? WLabelTone.danger : WLabelTone.muted,
+                  ),
                 ),
                 SizedBox(height: t.space.sm),
                 Divider(height: 1, color: t.colors.border),
@@ -255,21 +381,16 @@ class FindPanelState extends State<FindPanel> {
     );
   }
 
+  Widget _note(String text, QuillTokens t) => Padding(
+    padding: EdgeInsets.only(top: t.space.md),
+    child: WLabel(text, small: true, tone: WLabelTone.muted),
+  );
+
   Widget _hits(BuildContext context, AppLocalizations l10n, QuillTokens t) {
-    final q = _find.text;
-    if (q.trim().length < 2) return const SizedBox.shrink();
-    if (_searching || _asked != q) {
-      return Padding(
-        padding: EdgeInsets.only(top: t.space.md),
-        child: WLabel(l10n.searchSearching, small: true, tone: WLabelTone.muted),
-      );
-    }
-    if (_result.hits.isEmpty) {
-      return Padding(
-        padding: EdgeInsets.only(top: t.space.md),
-        child: WLabel(l10n.searchNoHits, small: true, tone: WLabelTone.muted),
-      );
-    }
+    if (_find.text.trim().length < 2) return const SizedBox.shrink();
+    if (!_current) return _note(l10n.searchSearching, t);
+    if (_bookScope) return _bookHits(context, l10n, t);
+    if (_result.hits.isEmpty) return _result.badPattern ? const SizedBox.shrink() : _note(l10n.searchNoHits, t);
     final more = _result.total - _result.hits.length;
     return Semantics(
       container: true,
@@ -288,10 +409,83 @@ class FindPanelState extends State<FindPanel> {
           final hit = _result.hits[i];
           return _HitTile(
             hit: hit,
-            selected: _picked == i,
+            label: l10n.searchHitLabel('${hit.before}${hit.match}${hit.after}'.trim(), hit.page),
+            selected: _picked == '$i',
             onPressed: () {
-              setState(() => _picked = i);
+              setState(() => _picked = '$i');
               widget.doc.goToHit(hit);
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  /// A lista do livro: o nome de cada capítulo, as ocorrências dele e, se
+  /// passou do limite, quantas faltam. As linhas são um índice achatado, e
+  /// só as visíveis são construídas.
+  Widget _bookHits(BuildContext context, AppLocalizations l10n, QuillTokens t) {
+    final r = _bookResult;
+    if (r.chapters.isEmpty) {
+      if (r.badPattern) return const SizedBox.shrink();
+      return _note(r.unread > 0 ? '${l10n.searchNoHits}. ${l10n.bookUnread(r.unread)}' : l10n.searchNoHits, t);
+    }
+    final rows = <(ChapterHits, int)>[]; // -1: o nome; hits.length: "mais"
+    for (final c in r.chapters) {
+      rows.add((c, -1));
+      for (var i = 0; i < c.hits.length; i++) {
+        rows.add((c, i));
+      }
+      if (c.total > c.hits.length) rows.add((c, c.hits.length));
+    }
+    final unread = r.unread > 0 ? 1 : 0;
+    return Semantics(
+      container: true,
+      explicitChildNodes: true,
+      label: l10n.bookHitsList,
+      child: ListView.builder(
+        padding: EdgeInsets.only(top: t.space.sm),
+        itemCount: rows.length + unread,
+        itemBuilder: (context, n) {
+          if (n == rows.length) {
+            return Padding(
+              padding: EdgeInsets.all(t.space.md),
+              child: WLabel(l10n.bookUnread(r.unread), small: true, tone: WLabelTone.muted),
+            );
+          }
+          final (c, i) = rows[n];
+          if (i < 0) {
+            return Semantics(
+              header: true,
+              label: l10n.bookChapterHits(c.title, c.total),
+              child: ExcludeSemantics(
+                child: Padding(
+                  padding: EdgeInsets.only(top: n == 0 ? 0 : t.space.md, bottom: t.space.xs, left: t.space.xs),
+                  child: Row(
+                    children: [
+                      Expanded(child: WLabel(c.title, heading: true)),
+                      WLabel('${c.total}', small: true, tone: WLabelTone.muted),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+          if (i == c.hits.length) {
+            return Padding(
+              padding: EdgeInsets.symmetric(horizontal: t.space.md, vertical: t.space.xs),
+              child: WLabel(l10n.bookMoreHits(c.total - c.hits.length), small: true, tone: WLabelTone.muted),
+            );
+          }
+          final hit = c.hits[i];
+          final key = '${c.id}#$i';
+          return _HitTile(
+            hit: hit,
+            label: l10n.bookHitLabel('${hit.before}${hit.match}${hit.after}'.trim(), c.title, hit.page),
+            selected: _picked == key,
+            onPressed: () {
+              setState(() => _picked = key);
+              widget.onOpenBookHit?.call(c.id, hit);
             },
           );
         },
@@ -302,8 +496,12 @@ class FindPanelState extends State<FindPanel> {
 
 /// Uma ocorrência: a página em cima e o trecho com o achado em negrito.
 class _HitTile extends StatefulWidget {
-  const _HitTile({required this.hit, required this.selected, required this.onPressed});
+  const _HitTile({required this.hit, required this.label, required this.selected, required this.onPressed});
   final TextHit hit;
+
+  /// O nome para o leitor de tela (o trecho e a página; no livro, também o
+  /// capítulo).
+  final String label;
   final bool selected;
   final VoidCallback onPressed;
 
@@ -323,11 +521,10 @@ class _HitTileState extends State<_HitTile> {
     final modern = t.component == ComponentStyle.modern;
     final fg = widget.selected && modern ? c.onAccentSoft : c.onFrame;
     final style = TextStyle(color: fg, fontSize: t.font.ui, fontFamily: t.font.family, height: 1.35);
-    final text = '${hit.before}${hit.match}${hit.after}';
     return Semantics(
       button: true,
       selected: widget.selected,
-      label: l10n.searchHitLabel(text.trim(), hit.page),
+      label: widget.label,
       child: FocusableActionDetector(
         mouseCursor: SystemMouseCursors.click,
         onShowHoverHighlight: (v) => setState(() => _hover = v),

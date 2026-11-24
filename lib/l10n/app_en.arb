@@ -625,5 +625,15 @@
   "scenesNone": "No loose separators (* * *, #) in this document",
   "scenesFailed": "Couldn't create the Scene style",
   "importScenes": "{count, plural, =1{1 scene separator (* * *) goes to the Scene style} other{{count} scene separators (* * *) go to the Scene style}}",
-  "busyWorkingChapters": "Reorganizing chapters"
+  "busyWorkingChapters": "Reorganizing chapters",
+  "findScope": "Search in",
+  "findScopeChapter": "This chapter",
+  "findScopeBook": "Whole book",
+  "findBadRegex": "Invalid regular expression",
+  "bookHitsList": "Matches in the book",
+  "bookHitsCount": "{count, plural, =1{1 match} other{{count} matches}} in {chapters, plural, =1{1 chapter} other{{chapters} chapters}}",
+  "bookChapterHits": "{title}, {count, plural, =1{1 match} other{{count} matches}}",
+  "bookMoreHits": "{count, plural, =1{1 more in this chapter: open it and search there} other{{count} more in this chapter: open it and search there}}",
+  "bookHitLabel": "{text}, {chapter}, page {page}",
+  "bookUnread": "{count, plural, =1{1 chapter could not be read} other{{count} chapters could not be read}}"
 }

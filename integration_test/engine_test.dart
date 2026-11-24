@@ -15,6 +15,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:psito_quill/src/plugins/plugin_host.dart';
+import 'package:psito_quill/src/book/book_search.dart';
 import 'package:psito_quill/src/book/odt_zip.dart';
 import 'package:psito_quill/src/book/docx_import.dart';
 import 'package:psito_quill/src/book/book_io.dart';
@@ -169,7 +170,7 @@ void main() {
     // 2e. A busca única (D-050): as ocorrências vêm de uma cópia, e o salto
     // a uma delas pela expressão com o contexto seleciona só ela, na página
     // certa. Fechar a busca apaga a cópia.
-    final textHits = await doc.searchText('que', limit: 400);
+    final textHits = await doc.searchText(const SearchQuery('que'), limit: 400);
     expect(textHits.total, greaterThan(50));
     final far = textHits.hits.firstWhere((h) => h.page >= 5);
     // Antes, o Ctrl+Home do passo anterior precisa ter chegado (a página e a
@@ -669,6 +670,37 @@ void main() {
     expect(await doc.insertScene(), isTrue);
     await until(() => doc.snapshot.scenes.length == sceneCount, 'a cena nova', detail: () => '${doc.snapshot.scenes.length}');
     expect(doc.snapshot.scenes[1].searchKey, sceneSeparatorText);
+
+    // 26. A busca no livro (D-080): o capítulo da tela com alterações vale o
+    //     do motor; os fechados, o content.xml; uma aba de fundo com
+    //     alterações, a cópia de recuperação que sair dela gravou. O clique
+    //     volta ao capítulo e seleciona a ocorrência.
+    doc.recovery = RecoveryStore(Directory('${tmp.path}/rec-busca'), session: 'busca');
+    doc.uno('.uno:GoToEndOfDoc');
+    doc.uno('.uno:InsertText', '{"Text":{"type":"string","value":" Zumbizal"}}');
+    await settle();
+    const unique = SearchQuery('zumbizal');
+    var inBook = await workspace.searchBook(unique);
+    expect(inBook.chapters.map((c) => c.id), [withScenes.id], reason: 'só na tela, pela cópia do motor (modificado: ${doc.modified})');
+    expect(inBook.chapters.single.hits.single.match, 'Zumbizal');
+    final common = await workspace.searchBook(const SearchQuery('cidade', wholeWord: true));
+    expect(common.chapters.length, greaterThan(2), reason: 'os capítulos fechados, pelo content.xml');
+    expect(common.unread, 0);
+    expect(common.chapters.every((c) => c.hits.length <= bookHitsPerChapter), isTrue);
+
+    final other = workspace.book.book!.chapters.firstWhere((c) => c.id != withScenes.id);
+    workspace.openChapter(other);
+    await until(() => doc.path == '$sceneDir/${other.file}' && doc.docStatus == DocStatus.open, 'abrir outro capítulo');
+    // A cópia entra na fila do motor atrás da abertura do outro capítulo.
+    await until(() => doc.backgroundCopyOf(scenePath) != null, 'a cópia de recuperação da aba de fundo', seconds: 20,
+        detail: () => '${Directory('${tmp.path}/rec-busca').existsSync() ? Directory('${tmp.path}/rec-busca').listSync().map((f) => f.path.split('/').last).toList() : 'sem pasta'} '
+            '${[for (final t in doc.tabs) '${t.serial} ${t.path == scenePath} ${t.modified} ${t == doc.currentTab}']}');
+    inBook = await workspace.searchBook(unique);
+    expect(inBook.chapters.map((c) => c.id), [withScenes.id], reason: 'a aba de fundo vale a cópia, não o arquivo');
+    workspace.openBookHit(withScenes.id, inBook.chapters.single.hits.single);
+    await until(() => doc.path == scenePath && doc.hasSelection, 'voltar ao capítulo e selecionar a ocorrência');
+    doc.recovery = null;
+
     workspace.onUnsaved = () async => UnsavedChoice.discard;
     expect(await workspace.closeBook(), isTrue);
 

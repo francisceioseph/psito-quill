@@ -3853,6 +3853,66 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Reorganizando os capítulos'**
   String get busyWorkingChapters;
+
+  /// No description provided for @findScope.
+  ///
+  /// In pt, this message translates to:
+  /// **'Onde buscar'**
+  String get findScope;
+
+  /// No description provided for @findScopeChapter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Neste capítulo'**
+  String get findScopeChapter;
+
+  /// No description provided for @findScopeBook.
+  ///
+  /// In pt, this message translates to:
+  /// **'No livro'**
+  String get findScopeBook;
+
+  /// No description provided for @findBadRegex.
+  ///
+  /// In pt, this message translates to:
+  /// **'A expressão regular não vale'**
+  String get findBadRegex;
+
+  /// No description provided for @bookHitsList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ocorrências no livro'**
+  String get bookHitsList;
+
+  /// No description provided for @bookHitsCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{1 ocorrência} other{{count} ocorrências}} em {chapters, plural, =1{1 capítulo} other{{chapters} capítulos}}'**
+  String bookHitsCount(int count, int chapters);
+
+  /// No description provided for @bookChapterHits.
+  ///
+  /// In pt, this message translates to:
+  /// **'{title}, {count, plural, =1{1 ocorrência} other{{count} ocorrências}}'**
+  String bookChapterHits(String title, int count);
+
+  /// No description provided for @bookMoreHits.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{Mais 1 neste capítulo: abra-o e busque nele} other{Mais {count} neste capítulo: abra-o e busque nele}}'**
+  String bookMoreHits(int count);
+
+  /// No description provided for @bookHitLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'{text}, {chapter}, página {page}'**
+  String bookHitLabel(String text, String chapter, int page);
+
+  /// No description provided for @bookUnread.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{1 capítulo não pôde ser lido} other{{count} capítulos não puderam ser lidos}}'**
+  String bookUnread(int count);
 }
 
 class _AppLocalizationsDelegate

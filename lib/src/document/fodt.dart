@@ -8,8 +8,10 @@
 import 'package:flutter/foundation.dart';
 
 import 'outline.dart';
+import 'search.dart';
 import 'style_patch.dart';
 
+export 'search.dart' show SearchQuery;
 export 'style_patch.dart' show PageSetup;
 
 /// O que a galeria e o "Revelar formatação" precisam de um estilo, já com o
@@ -382,13 +384,17 @@ class TextHit {
 }
 
 class TextSearchResult {
-  const TextSearchResult(this.hits, this.total);
+  const TextSearchResult(this.hits, this.total, {this.badPattern = false});
 
   /// As primeiras ocorrências (até o limite) e quantas há ao todo.
   final List<TextHit> hits;
   final int total;
 
+  /// A expressão regular da pergunta não vale.
+  final bool badPattern;
+
   static const empty = TextSearchResult([], 0);
+  static const invalid = TextSearchResult([], 0, badPattern: true);
 }
 
 final _regexSpecial = RegExp(r'[\\^$.|?*+()\[\]{}]');
@@ -405,17 +411,42 @@ String _paragraphText(String inner) => _unescape(inner
     .replaceAll(_breakLike, ' ')
     .replaceAll(_tag, ''));
 
-/// Acha [query] no corpo da cópia, sem diferenciar maiúsculas. O contexto
-/// tem até [context] caracteres de cada lado, cortado no parágrafo.
-TextSearchResult searchFodtText(String xml, String query, {int limit = 50, int context = 28}) {
-  final q = query.trim().toLowerCase();
-  if (q.isEmpty) return TextSearchResult.empty;
+/// Acha [query] no corpo da cópia, sem diferenciar maiúsculas (a busca
+/// única, D-050). O contexto tem até [context] caracteres de cada lado,
+/// cortado no parágrafo.
+TextSearchResult searchFodtText(String xml, String query, {int limit = 50, int context = 28}) =>
+    searchOdfText(xml, SearchQuery(query), limit: limit, context: context);
+
+/// A expressão de [q] para o Dart: o texto escapado (ou a expressão, com
+/// [SearchQuery.regex]), a palavra inteira pelas letras do Unicode (o `\b`
+/// do Dart só conhece o ASCII) e as maiúsculas. null: a expressão não vale.
+RegExp? searchPattern(SearchQuery q) {
+  final text = q.regex ? q.text : q.text.trim();
+  if (text.isEmpty) return null;
+  var source = q.regex ? '(?:$text)' : escapeRegex(text);
+  if (q.wholeWord) source = '(?<![\\p{L}\\p{N}_])$source(?![\\p{L}\\p{N}_])';
+  try {
+    return RegExp(source, caseSensitive: q.matchCase, unicode: true);
+  } on FormatException {
+    return null;
+  }
+}
+
+/// Acha [q] no corpo de um ODT (a cópia plana ou o `content.xml` de um
+/// capítulo fechado), com as opções do Localizar (Fase 3, Etapa 6). A
+/// página sai das quebras que o LibreOffice escreve; o contexto tem até
+/// [context] caracteres de cada lado, cortado no parágrafo. Uma expressão
+/// que não vale dá [TextSearchResult.invalid].
+TextSearchResult searchOdfText(String xml, SearchQuery q, {int limit = 50, int context = 28}) {
+  if ((q.regex ? q.text : q.text.trim()).isEmpty) return TextSearchResult.empty;
+  final pattern = searchPattern(q);
+  if (pattern == null) return TextSearchResult.invalid;
+  // Do começo do corpo, sem copiar o texto (o livro lê dezenas de capítulos).
   final bodyStart = xml.indexOf('<office:text');
-  final body = bodyStart < 0 ? xml : xml.substring(bodyStart);
   final hits = <TextHit>[];
   var total = 0;
   var page = 1;
-  for (final m in _bodyParas.allMatches(body)) {
+  for (final m in _bodyParas.allMatches(xml, bodyStart < 0 ? 0 : bodyStart)) {
     if (m[1] != null) {
       page++;
       continue;
@@ -425,17 +456,18 @@ TextSearchResult searchFodtText(String xml, String query, {int limit = 50, int c
     // Uma quebra no meio do parágrafo: o resto dele já está na página seguinte.
     final breaks = _softBreak.allMatches(inner).length;
     final text = _paragraphText(inner);
-    final lower = text.toLowerCase();
-    for (var i = lower.indexOf(q); i >= 0; i = lower.indexOf(q, i + q.length)) {
+    for (final f in pattern.allMatches(text)) {
+      // Uma expressão que casa o vazio (`x*`) não é uma ocorrência.
+      if (f.end == f.start) continue;
       total++;
       if (hits.length >= limit) continue;
-      final from = (i - context).clamp(0, text.length);
-      final to = (i + q.length + context).clamp(0, text.length);
+      final from = (f.start - context).clamp(0, text.length);
+      final to = (f.end + context).clamp(0, text.length);
       hits.add(TextHit(
         page: page,
-        before: text.substring(from, i),
-        match: text.substring(i, i + q.length),
-        after: text.substring(i + q.length, to),
+        before: text.substring(from, f.start),
+        match: text.substring(f.start, f.end),
+        after: text.substring(f.end, to),
       ));
     }
     page += breaks;

@@ -638,8 +638,9 @@ class DocumentController extends ChangeNotifier {
     }
   }
 
-  /// A cena a saltar quando o capítulo que está abrindo tiver a cópia.
-  ({String path, int index})? _pendingScene;
+  /// A cena (ou a ocorrência da busca no livro) a saltar quando o capítulo
+  /// que está abrindo tiver a cópia.
+  ({String path, int? index, TextHit? hit})? _pendingScene;
 
   /// As respostas da busca do salto a um título, que não são do Localizar.
   int _headingSearches = 0;
@@ -664,9 +665,25 @@ class DocumentController extends ChangeNotifier {
   /// Com [fresh], a cópia é refeita se o documento mudou desde ela: o painel
   /// Localizar fica aberto enquanto se escreve (a busca única é modal e não
   /// precisa).
-  Future<TextSearchResult> searchText(String query, {int limit = 50, bool fresh = false}) async {
-    if (!isOpen || query.trim().length < 2) return TextSearchResult.empty;
-    final count = commandStates['.uno:StateWordCount'];
+  Future<TextSearchResult> searchText(SearchQuery q, {int limit = 50, bool fresh = false}) async {
+    if (!isOpen || q.text.trim().length < 2) return TextSearchResult.empty;
+    final path = await searchCopy(fresh: fresh);
+    if (path == null) return TextSearchResult.empty;
+    try {
+      return await Isolate.run(() => searchOdfText(File(path).readAsStringSync(), q, limit: limit));
+    } on Object {
+      return TextSearchResult.empty;
+    }
+  }
+
+  /// A cópia da busca (um ODT plano), feita agora ou a que já está aqui; null
+  /// se o motor não gravou. Com [fresh], refeita se o documento mudou desde
+  /// ela. Sai com [endTextSearch].
+  Future<String?> searchCopy({bool fresh = false}) async {
+    if (!isOpen) return null;
+    // Mudou: a contagem do motor (pega também o desfazer) ou uma edição
+    // daqui (a contagem chega depois, pelo callback).
+    final count = '${commandStates['.uno:StateWordCount']}#$_editSerial';
     if (fresh && _searchCopyReady != null && _searchCopyCount != count) endTextSearch();
     if (_searchCopyReady == null) {
       _searchCopyCount = count;
@@ -677,12 +694,24 @@ class DocumentController extends ChangeNotifier {
     }
     final ok = await _searchCopyReady!.future;
     final path = _searchCopyPath;
-    if (!ok || path == null || _disposed) return TextSearchResult.empty;
-    try {
-      return await Isolate.run(() => searchFodtText(File(path).readAsStringSync(), query, limit: limit));
-    } on Object {
-      return TextSearchResult.empty;
+    return !ok || _disposed ? null : path;
+  }
+
+  /// A última cópia de recuperação da aba de fundo com o arquivo [file]
+  /// (Fase 3, Etapa 6): uma aba de fundo não muda, e sair dela gravou a cópia
+  /// (`_flushRecovery`). null: a aba não está aberta ou não tem cópia (sem
+  /// edições desde que salvou, ou o salvamento automático desligado).
+  String? backgroundCopyOf(String file) {
+    final store = recovery;
+    if (store == null) return null;
+    for (final t in tabs) {
+      // Sem olhar o "modificado" da aba: ele chega tarde (D-080). A cópia
+      // existir basta, porque salvar e fechar a apagam.
+      if (t == _current || t.path != file) continue;
+      final copy = store.copyPath(store.idFor(t.serial));
+      return File(copy).existsSync() ? copy : null;
     }
+    return null;
   }
 
   /// Fecha a busca: a cópia sai.
@@ -860,6 +889,9 @@ class DocumentController extends ChangeNotifier {
 
   /// Mudou desde a última cópia de recuperação.
   bool _recoveryDirty = false;
+
+  /// Sobe a cada edição mandada daqui (a cópia da busca sabe que ficou velha).
+  int _editSerial = 0;
   DateTime _lastEdit = DateTime.fromMillisecondsSinceEpoch(0);
   Timer? _autosaveTimer;
 
@@ -867,6 +899,7 @@ class DocumentController extends ChangeNotifier {
   final _recoveryWrites = <String, ({DocTab tab, String id, String? original, String? title})>{};
 
   void _markRecovery() {
+    _editSerial++;
     _recoveryDirty = true;
     _lastEdit = DateTime.now();
     _scheduleAutosave();
@@ -894,19 +927,25 @@ class DocumentController extends ChangeNotifier {
   void _flushRecovery() {
     _autosaveTimer?.cancel();
     _autosaveTimer = null;
-    if (_recoveryDirty && !_switching && isOpen && busy == null) _writeRecovery();
+    if (_recoveryDirty && !_switching && isOpen && busy == null) _writeRecovery(leaving: true);
   }
 
-  void _writeRecovery() {
+  /// Com [leaving] (a aba vai para o fundo), grava mesmo sem o "modificado":
+  /// o motor avisa a mudança bem depois da edição (visto na integração, D-080),
+  /// e uma aba de fundo não grava outra cópia. Se ela desfez tudo, a próxima
+  /// cópia, quando voltar à tela, apaga.
+  void _writeRecovery({bool leaving = false}) {
     final store = recovery, tab = _current;
     if (store == null || tab == null || !_autosave || readOnly) return;
-    _recoveryDirty = false;
     final id = store.idFor(tab.serial);
-    if (!isOn('.uno:ModifiedStatus')) {
-      // Desfez tudo: o arquivo já é o documento.
+    if (!leaving && !isOn('.uno:ModifiedStatus')) {
+      // Desfez tudo (o arquivo já é o documento), ou o motor ainda não avisou
+      // a mudança. A marca de edição fica: o aviso pede a cópia de novo, e
+      // sair da aba a grava (salvar tira a marca).
       store.delete(id);
       return;
     }
+    _recoveryDirty = false;
     if (!store.ensureDir()) return;
     final at = store.writingPath(id);
     if (_recoveryWrites.containsKey(at)) {

@@ -1113,5 +1113,62 @@
       }
     }
   },
-  "busyWorkingChapters": "Reorganizando os capítulos"
+  "busyWorkingChapters": "Reorganizando os capítulos",
+  "findScope": "Onde buscar",
+  "findScopeChapter": "Neste capítulo",
+  "findScopeBook": "No livro",
+  "findBadRegex": "A expressão regular não vale",
+  "bookHitsList": "Ocorrências no livro",
+  "bookHitsCount": "{count, plural, =1{1 ocorrência} other{{count} ocorrências}} em {chapters, plural, =1{1 capítulo} other{{chapters} capítulos}}",
+  "@bookHitsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "chapters": {
+        "type": "int"
+      }
+    }
+  },
+  "bookChapterHits": "{title}, {count, plural, =1{1 ocorrência} other{{count} ocorrências}}",
+  "@bookChapterHits": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bookMoreHits": "{count, plural, =1{Mais 1 neste capítulo: abra-o e busque nele} other{Mais {count} neste capítulo: abra-o e busque nele}}",
+  "@bookMoreHits": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bookHitLabel": "{text}, {chapter}, página {page}",
+  "@bookHitLabel": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      },
+      "chapter": {
+        "type": "String"
+      },
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "bookUnread": "{count, plural, =1{1 capítulo não pôde ser lido} other{{count} capítulos não puderam ser lidos}}",
+  "@bookUnread": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

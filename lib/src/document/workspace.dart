@@ -12,12 +12,15 @@ import 'package:flutter/foundation.dart';
 import '../book/book.dart';
 import '../book/book_controller.dart';
 import '../book/book_io.dart';
+import '../book/book_search.dart';
 import '../book/chapter_cut.dart';
 import '../files/file_dialogs.dart';
 import '../files/lo_lock.dart';
 import '../files/recent_files.dart';
 import '../kit/quill_kit.dart';
 import 'document_controller.dart';
+import 'fodt.dart' show TextHit;
+import 'search.dart';
 import 'recovery.dart';
 
 /// Por que dividir ou juntar capítulos não deu (D-079).
@@ -167,6 +170,47 @@ class Workspace extends ChangeNotifier {
     _open(path);
     // Já aberto: a cópia da aba já está aqui.
     if (scene != null && doc.isOpen && doc.path == path) doc.takePendingScene();
+  }
+
+  // -------------------------------------- a busca no livro (Etapa 6) --
+
+  /// Acha [q] em todos os capítulos do livro (D-080). O capítulo da tela vale
+  /// o do motor (a cópia do Localizar); uma aba de fundo com
+  /// alterações, a última cópia de recuperação dela; os outros, o arquivo.
+  Future<BookSearchResult> searchBook(SearchQuery q) async {
+    final b = book.book;
+    if (b == null || q.text.trim().length < 2) return BookSearchResult.empty;
+    final sources = <ChapterSource>[];
+    final titles = <String, String>{};
+    for (final node in b.chapters) {
+      final path = book.pathOf(node);
+      if (path == null) continue;
+      titles[node.id] = node.title;
+      // O da tela vai sempre pela cópia: o "modificado" do motor chega depois.
+      if (doc.isOpen && doc.path == path) {
+        final copy = await doc.searchCopy(fresh: true);
+        if (copy != null) {
+          sources.add((id: node.id, path: copy, flat: true));
+          continue;
+        }
+      }
+      sources.add((id: node.id, path: doc.backgroundCopyOf(path) ?? path, flat: false));
+    }
+    return searchChapters(sources, q, titles: titles);
+  }
+
+  /// Abre o capítulo [id] (ou lhe dá a tela) e seleciona a ocorrência [hit].
+  void openBookHit(String id, TextHit hit) {
+    final node = book.book?.find(id)?.$1;
+    final path = node == null ? null : book.pathOf(node);
+    if (node == null || path == null) return;
+    if (doc.isOpen && doc.path == path) {
+      doc.goToHit(hit);
+      return;
+    }
+    doc.goToHitWhenOpen(path, hit);
+    _open(path);
+    if (doc.isOpen && doc.path == path) doc.takePendingScene();
   }
 
   // ---------------------------------- dividir e juntar capítulos (D-079) --

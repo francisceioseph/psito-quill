@@ -1078,3 +1078,36 @@ A Etapa 5 da Fase 3. O Francisco decidiu (24/11) que os separadores dos manuscri
   - unidade, `scene_flows_test`, com o motor falso: a nova cena, converter, saltar, juntar e dividir;
   - widget, `fase3_scenes_test`: as cenas no fichário, o teclado, o clique, os menus e o soltar;
   - integração, passo 25: importar o `capitulo-30p.docx`, as cenas da cópia iguais às do `content.xml`, dividir na segunda cena, juntar de volta e a cena nova.
+
+## D-080 · A busca no livro inteiro
+
+A Etapa 6 da Fase 3: "No livro" no painel Localizar.
+
+- **O painel** ganha, em cima, "Neste capítulo" e "No livro" (só com um livro aberto). No livro, a lista vem agrupada por capítulo, na ordem do livro: o nome e quantas há, e as ocorrências com a página e o trecho. As setas, "Todas" e Substituir continuam no capítulo da tela.
+  - **O clique** abre o capítulo (ou lhe dá a tela, se já está numa aba) e seleciona a ocorrência pela expressão com o contexto (D-050). Num capítulo que ainda vai abrir, o salto espera a cópia dele, como o das cenas (D-079).
+  - **Até 30 ocorrências por capítulo** vêm com o trecho; as outras só contam ("Mais 12 neste capítulo: abra-o e busque nele"). A lista monta só as linhas visíveis.
+  - **Substituir no livro todo** fica para depois, como o plano previa: substituir num capítulo fechado exige abri-lo no motor.
+- **De onde vem cada capítulo:**
+  - **o capítulo da tela** vem sempre pela cópia do motor (a mesma do Localizar, um ODT plano). Primeiro era só com alterações, mas o "modificado" do motor chega depois da edição, e a integração achou o capítulo sendo lido do disco, sem a palavra nova;
+  - **uma aba de fundo com alterações** vem pela última cópia de recuperação dela (D-073). O motor só copia o documento da tela, e uma aba de fundo não muda: sair dela gravou a cópia (o `_flushRecovery`). Com o salvamento automático desligado, vale o arquivo;
+  - **o "modificado" do motor chega tarde, e isso mexeu no D-073.** Na integração, depois de uma cena nova, de uma palavra nova e de segundos de espera, o `.uno:ModifiedStatus` ainda dizia "sem alterações"; ele só mudou depois da cópia da busca. A cópia do intervalo via "sem alterações", não gravava e tirava a marca de edição; sair da aba depois disso também não gravava, e uma queda perderia o que foi escrito antes da troca. Agora:
+    - a cópia do intervalo que vê "sem alterações" não tira a marca. Quando o aviso do motor chega, a cópia sai;
+    - sair da aba grava se há a marca, sem esperar o motor. Se a aba tinha desfeito tudo, a próxima cópia, quando ela voltar à tela, apaga. Salvar tira a marca. A busca usa a cópia da aba de fundo se ela existir, porque salvar e fechar a apagam;
+  - **os outros** vêm pelo `content.xml` do ODT (o leitor de zip do D-071).
+- **Quem busca é o Dart,** num isolate, um capítulo de cada vez: lê, busca e solta o texto antes do próximo. Só voltam os trechos.
+  - **As opções do Localizar valem** (`searchOdfText`): maiúsculas, palavra inteira e expressão regular. A palavra inteira olha as letras do Unicode (`\p{L}`), porque o `\b` do Dart só conhece o ASCII e cortaria o "ç" de "ação". Uma expressão que não vale avisa no painel, e uma que casa o vazio não conta.
+  - **"Neste capítulo" também passou a usar as opções** na lista (antes, a lista ignorava maiúsculas sempre, e só o motor respeitava as opções).
+  - **Uma busca no livro de cada vez:** se o texto muda no meio, a próxima espera a que está rodando, para não haver dois isolates lendo o livro ao mesmo tempo. A pausa da digitação é de 500 ms (no capítulo, 300).
+- **A cópia da busca fica velha** pela contagem de palavras do motor e, agora, também por um contador de edições do controlador: a contagem chega depois, pelo callback.
+- **A medida** (60 cópias do `capitulo-30p` em ODT, 1.800 páginas, mais que um livro de verdade; num `flutter test`, o processo de teste, sem o motor):
+  - **o tempo:** de 0,32 a 0,47 s por busca, e uns 0,7 s na primeira, com o disco frio;
+  - **a memória:** a primeira busca sobe o RSS uns 7 MB. Buscas seguidas sobem até uns 28 MB acima do início e param aí: o RSS oscila entre +16 e +28 MB, e não cresce mais depois da sexta busca. É o heap do grupo de isolates (o isolate divide o heap com o app, D-079), que o coletor reusa mas não devolve logo;
+  - **a contagem das palavras ao abrir o livro** (`countChapterWords`, D-071) custa o mesmo: +21 MB ao ler os 60 capítulos. Depois dela, a busca soma só de 1 a 3 MB;
+  - **um corte:** a busca percorria uma cópia do corpo do XML (`substring`); agora percorre o texto do lugar onde o corpo começa. A primeira busca foi de +18 para +7 MB;
+  - **o app sem buscar no livro** (`tool/ab.py fc33e64`, a build de release, 3 rodadas alternadas, a mediana; o `capitulo-30p.docx` avulso): na primeira medida, −6,1 MB de memória anônima com o capítulo, −4,6 depois de rolar e +8,0 depois de digitar. No caminho de digitar só entrou o contador de edições, então medi de novo: −3,3, +2,8 e −0,5 MB. Era ruído. A latência da tecla (p95) ficou em 13,6 ms, e o fps de rolar, em 59,5;
+  - **passa do teto de ~5 MB, e fica assim:** o custo só aparece quando se busca no livro, tem limite e não cresce com as buscas. Um processo à parte, que devolveria a memória ao sair, custaria mais a cada busca. A contagem das palavras pode ganhar o mesmo corte depois.
+- **Os testes:**
+  - unidade, `book_search_test`: as opções (as maiúsculas com acento, a palavra inteira com o "ç", a expressão e a que não vale) e a leitura dos capítulos (o ODT, o ODT plano, um arquivo que sumiu e um que não é zip);
+  - widget, `fase3_book_search_test`: "No livro" agrupa, o clique abre o outro capítulo e seleciona, o capítulo da tela vem do motor, a expressão que não vale avisa, e a volta a "Neste capítulo";
+  - unidade, `recovery_test`: trocar de aba logo depois de editar, com o "modificado" atrasado e depois da cópia do intervalo, grava a cópia (o teste falha no código antigo);
+  - integração, passo 26: a palavra nova só no capítulo da tela; os fechados pelo `content.xml`; a aba de fundo pela cópia de recuperação; e o clique que volta ao capítulo e seleciona.

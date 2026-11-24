@@ -88,7 +88,11 @@ extension SceneOps on DocumentController {
 
   /// Leva à cena [index] quando a cópia do documento [path] chegar (um
   /// capítulo que ainda vai abrir).
-  void goToSceneWhenOpen(String path, int index) => _pendingScene = (path: path, index: index);
+  void goToSceneWhenOpen(String path, int index) => _pendingScene = (path: path, index: index, hit: null);
+
+  /// Leva à ocorrência [hit] da busca no livro quando o documento [path]
+  /// abrir (Fase 3, Etapa 6).
+  void goToHitWhenOpen(String path, TextHit hit) => _pendingScene = (path: path, index: null, hit: hit);
 
   /// O salto pendente, se é deste documento (um capítulo que já estava
   /// aberto numa aba).
@@ -98,7 +102,11 @@ extension SceneOps on DocumentController {
     final p = _pendingScene;
     if (p == null || p.path != path) return;
     _pendingScene = null;
-    if (p.index < snapshot.scenes.length) goToScene(snapshot.scenes[p.index]);
+    if (p.hit case final hit?) {
+      goToHit(hit);
+    } else if (p.index case final i? when i < snapshot.scenes.length) {
+      goToScene(snapshot.scenes[i]);
+    }
   }
 
   // ------------------------------------------ dividir e juntar (D-079) --

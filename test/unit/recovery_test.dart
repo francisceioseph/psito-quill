@@ -122,6 +122,21 @@ void main() {
       expect(files(), contains('${store.idFor(a.serial)}.odt'));
     });
 
+    test('trocar de aba logo depois de editar grava, mesmo antes do "modificado" do motor (D-080)', () async {
+      await h.workspace.openPath(h.file('a.odt'));
+      h.doc.insertText('x');
+      // O motor ainda não avisou: o "modificado" chega bem depois.
+      h.kit.emitState('.uno:ModifiedStatus', 'false');
+      // A cópia do intervalo vê "sem alterações" e não grava.
+      await wait();
+      expect(files(), isEmpty);
+      final a = h.doc.currentTab!;
+      await h.workspace.openPath(h.file('b.odt'));
+      expect(files(), contains('${store.idFor(a.serial)}.odt'));
+      expect(h.doc.backgroundCopyOf(h.file('a.odt')), endsWith('${store.idFor(a.serial)}.odt'));
+      expect(h.doc.backgroundCopyOf(h.file('b.odt')), isNull, reason: 'a da tela não é de fundo');
+    });
+
     test('desfazer tudo apaga a cópia; desligar não grava e apaga as da sessão', () async {
       await h.workspace.openPath(h.file('cap.odt'));
       h.doc.insertText('x');

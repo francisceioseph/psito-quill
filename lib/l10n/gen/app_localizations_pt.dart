@@ -2095,4 +2095,74 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get busyWorkingChapters => 'Reorganizando os capítulos';
+
+  @override
+  String get findScope => 'Onde buscar';
+
+  @override
+  String get findScopeChapter => 'Neste capítulo';
+
+  @override
+  String get findScopeBook => 'No livro';
+
+  @override
+  String get findBadRegex => 'A expressão regular não vale';
+
+  @override
+  String get bookHitsList => 'Ocorrências no livro';
+
+  @override
+  String bookHitsCount(int count, int chapters) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ocorrências',
+      one: '1 ocorrência',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      chapters,
+      locale: localeName,
+      other: '$chapters capítulos',
+      one: '1 capítulo',
+    );
+    return '$_temp0 em $_temp1';
+  }
+
+  @override
+  String bookChapterHits(String title, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ocorrências',
+      one: '1 ocorrência',
+    );
+    return '$title, $_temp0';
+  }
+
+  @override
+  String bookMoreHits(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Mais $count neste capítulo: abra-o e busque nele',
+      one: 'Mais 1 neste capítulo: abra-o e busque nele',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bookHitLabel(String text, String chapter, int page) {
+    return '$text, $chapter, página $page';
+  }
+
+  @override
+  String bookUnread(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count capítulos não puderam ser lidos',
+      one: '1 capítulo não pôde ser lido',
+    );
+    return '$_temp0';
+  }
 }
