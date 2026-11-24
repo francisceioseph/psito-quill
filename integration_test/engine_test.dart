@@ -701,6 +701,48 @@ void main() {
     await until(() => doc.path == scenePath && doc.hasSelection, 'voltar ao capítulo e selecionar a ocorrência');
     doc.recovery = null;
 
+    // 27. Os instantâneos (D-081): o do capítulo da tela sai do motor, com o
+    //     que não foi salvo. Comparar abre o instantâneo numa aba ao lado,
+    //     só para leitura. Restaurar guarda o atual antes, fecha a aba e
+    //     abre o capítulo com o texto do instantâneo.
+    final snap = await workspace.takeSnapshot(withScenes, name: 'com zumbizal');
+    expect(snap, isNotNull);
+    final snapFile = workspace.snapshotFile(withScenes, snap!)!;
+    expect(readOdtContent(snapFile), contains('Zumbizal'), reason: 'o instantâneo leva o que não foi salvo');
+    expect(snap.words, greaterThan(100));
+    expect(File(snapFile).parent.listSync().where((f) => f.path.contains('.~lock')), isEmpty);
+    expect(readOdtContent(scenePath), isNot(contains('Zumbizal')), reason: 'o capítulo no disco não muda');
+
+    doc.uno('.uno:GoToEndOfDoc');
+    doc.uno('.uno:InsertText', '{"Text":{"type":"string","value":" Xiquexique"}}');
+    await settle();
+    // Comparar é abrir o instantâneo ao lado, só para leitura (o
+    // CompareDocuments derruba o motor ao fechar o documento, D-081).
+    expect(workspace.viewSnapshot(withScenes, snap, label: 'agora'), isTrue);
+    await until(() => doc.path == snapFile && doc.docStatus == DocStatus.open, 'o instantâneo numa aba ao lado');
+    expect(doc.readOnly, isTrue);
+    expect(doc.viewing, 'agora');
+    expect(doc.canEdit, isFalse);
+    expect((await doc.searchText(unique, fresh: true)).total, 1);
+    expect((await doc.searchText(const SearchQuery('xiquexique'), fresh: true)).total, 0, reason: 'o instantâneo é de antes');
+    expect(await workspace.closeTab(), isTrue);
+    await until(() => doc.path == scenePath && doc.docStatus == DocStatus.open, 'de volta ao capítulo');
+    expect(doc.viewing, isNull);
+    expect((await doc.searchText(const SearchQuery('xiquexique'), fresh: true)).total, 1);
+    await until(() => File(snapFile).parent.listSync().every((f) => !f.path.contains('.~lock')), 'a trava do instantâneo sai ao fechar');
+
+    doc.uno('.uno:InsertText', '{"Text":{"type":"string","value":" Quixeramobim"}}');
+    await settle();
+    expect(await workspace.restoreSnapshot(withScenes, snap, beforeName: 'Antes de restaurar'), isTrue);
+    await until(() => doc.path == scenePath && doc.docStatus == DocStatus.open && doc.busy == null, 'o capítulo restaurado, aberto de novo');
+    expect(doc.modified, isFalse);
+    expect(readOdtContent(scenePath), contains('Zumbizal'));
+    final kept = workspace.snapshotsOf(withScenes);
+    expect(kept.map((s) => s.name), containsAll(['Antes de restaurar', 'com zumbizal']));
+    final beforeFile = workspace.snapshotFile(withScenes, kept.firstWhere((s) => s.name == 'Antes de restaurar'))!;
+    expect(readOdtContent(beforeFile), contains('Quixeramobim'), reason: 'o "antes" tem o que não foi salvo');
+    expect((await doc.searchText(const SearchQuery('quixeramobim'), fresh: true)).total, 0);
+
     workspace.onUnsaved = () async => UnsavedChoice.discard;
     expect(await workspace.closeBook(), isTrue);
 

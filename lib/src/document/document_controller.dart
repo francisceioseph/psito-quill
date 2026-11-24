@@ -198,6 +198,10 @@ class DocumentController extends ChangeNotifier {
 
   bool get isOpen => docStatus == DocStatus.open;
   bool get canEdit => isOpen && !readOnly;
+
+  /// O nome do instantâneo que a aba da tela mostra (D-081); null num
+  /// documento.
+  String? get viewing => _current?.viewing;
   /// Uma cópia recuperada (D-073) conta como modificada até ser salva: ela
   /// não é o arquivo de ninguém.
   bool get modified => isOn('.uno:ModifiedStatus') || recovered != null;
@@ -453,8 +457,9 @@ class DocumentController extends ChangeNotifier {
     tabRevision++;
     _switching = false;
     if (tabs.isEmpty) return;
-    // A vizinha da direita, ou a da esquerda se era a última.
-    final next = tabs[i.clamp(0, tabs.length - 1)];
+    // A vizinha da direita, ou a da esquerda se era a última. Um instantâneo
+    // abre logo à direita do capítulo (D-081): volta para ele.
+    final next = t.viewing != null && i > 0 ? tabs[i - 1] : tabs[i.clamp(0, tabs.length - 1)];
     activateTab(next);
   }
 
@@ -475,15 +480,16 @@ class DocumentController extends ChangeNotifier {
   }
 
   /// Abre numa aba nova. [path] vazio abre um documento novo. [lockOwner]: o
-  /// arquivo está com outro, e abre só para leitura. Um documento novo e
-  /// vazio na tela dá lugar a este quando ele abrir.
-  void open(String path, {String? lockOwner, RecoveryEntry? recovered}) {
+  /// arquivo está com outro, e abre só para leitura. [viewing]: um
+  /// instantâneo (D-081), só para leitura, com esse nome na aba. Um
+  /// documento novo e vazio na tela dá lugar a este quando ele abrir.
+  void open(String path, {String? lockOwner, RecoveryEntry? recovered, String? viewing}) {
     _flushRecovery();
     final previous = _current;
     _replaceWhenOpened = previous != null && _pristine ? previous : null;
     _cameFrom = previous;
     if (previous != null) _stash(previous);
-    final t = _newTab();
+    final t = _newTab()..viewing = viewing;
     tabs.insert(previous == null ? tabs.length : tabs.indexOf(previous) + 1, t);
     _current = t;
     tabRevision++;
@@ -506,7 +512,7 @@ class DocumentController extends ChangeNotifier {
     _openingPath = path.isEmpty ? null : path;
     a11yParagraph = null;
     docStatus = DocStatus.opening;
-    readOnly = lockOwner != null;
+    readOnly = lockOwner != null || viewing != null;
     this.lockOwner = lockOwner;
     selection = const [];
     commandStates.clear();

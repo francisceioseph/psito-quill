@@ -26,6 +26,7 @@ import '../molecules/command_menu.dart';
 import '../molecules/info_banner.dart';
 import '../organisms/binder_panel.dart';
 import '../organisms/book_dialogs.dart';
+import '../organisms/snapshots_dialog.dart';
 import '../organisms/classic_bars.dart';
 import '../organisms/command_palette.dart';
 import '../organisms/doc_tabs.dart';
@@ -349,6 +350,37 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
       _ => l10n.joinFailed,
     });
   }
+
+  // ------------------------------------- os instantâneos (D-081) --
+
+  @override
+  void takeSnapshot() => unawaited(_takeSnapshot());
+  Future<void> _takeSnapshot() async {
+    final l10n = AppLocalizations.of(context);
+    final current = _currentChapter;
+    if (current == null) return;
+    final s = await widget.workspace.takeSnapshot(current);
+    if (!mounted) return;
+    _notice(s == null ? l10n.snapshotFailed : l10n.snapshotTaken(current.title));
+  }
+
+  @override
+  void showSnapshots() {
+    final current = _currentChapter;
+    if (current != null) unawaited(_showSnapshots(current));
+  }
+
+  Future<void> _showSnapshots(BookNode chapter) async {
+    final request = await showSnapshotsDialog(context, workspace: widget.workspace, chapter: chapter, onNotice: _notice);
+    if (request == null || !mounted) return;
+    final l10n = AppLocalizations.of(context);
+    if (!widget.workspace.viewSnapshot(chapter, request.snapshot, label: l10n.snapshotLabel(chapter.title, request.when))) {
+      _notice(l10n.snapshotCompareFailed);
+      return;
+    }
+    _backToDocument();
+  }
+
 
   @override
   void newPart() {
@@ -864,6 +896,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
                           },
                           onNewChapter: newChapter,
                           onNewPart: newPart,
+                          onSnapshots: (chapter) => unawaited(_showSnapshots(chapter)),
                           onClose: toggleBinder,
                           closeLabel: l10n.binderClose,
                         ),
@@ -926,12 +959,21 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
                       },
                     ),
                   ),
-            banner: doc.readOnly && !_fileOpen
+            banner: _fileOpen
+                ? null
+                : doc.readOnly && doc.viewing == null
                 ? InfoBanner(
                     icon: Symbols.lock_outline_rounded,
                     text: l10n.readOnlyBanner(doc.lockOwner ?? ''),
                     actionLabel: l10n.readOnlySaveCopy,
                     onAction: () => unawaited(widget.workspace.saveAs()),
+                  )
+                : doc.viewing != null
+                ? InfoBanner(
+                    icon: Symbols.history_rounded,
+                    text: l10n.snapshotViewingBanner(doc.viewing!),
+                    actionLabel: l10n.snapshotCloseView,
+                    onAction: () => unawaited(widget.workspace.closeTab()),
                   )
                 : null,
             body: _fileOpen

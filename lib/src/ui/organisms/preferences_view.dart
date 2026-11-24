@@ -73,6 +73,7 @@ class _PreferencesViewState extends State<PreferencesView> {
               s.zoomOnOpen, (v) => s.zoomOnOpen = v),
         ),
         _switch(l10n.prefAutosave, s.autosave, (v) => s.autosave = v, note: l10n.prefAutosaveNote),
+        _switch(l10n.prefAutoSnapshots, s.autoSnapshots, (v) => s.autoSnapshots = v, note: l10n.prefAutoSnapshotsNote),
       ];
 
   List<Widget> _appearance(AppLocalizations l10n, Settings s) => [

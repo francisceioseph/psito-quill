@@ -14,6 +14,7 @@ import '../book/book_controller.dart';
 import '../book/book_io.dart';
 import '../book/book_search.dart';
 import '../book/chapter_cut.dart';
+import '../book/snapshots.dart';
 import '../files/file_dialogs.dart';
 import '../files/lo_lock.dart';
 import '../files/recent_files.dart';
@@ -213,6 +214,166 @@ class Workspace extends ChangeNotifier {
     if (doc.isOpen && doc.path == path) doc.takePendingScene();
   }
 
+  // ------------------------------------- os instantâneos (Etapa 7) --
+
+  /// Um instantâneo automático por dia de cada capítulo, antes do primeiro
+  /// salvamento do dia (D-081): guarda como o capítulo estava de manhã. A
+  /// preferência põe aqui.
+  bool autoSnapshots = true;
+
+  /// Os automáticos já feitos nesta sessão ("id@dia"): dois salvamentos
+  /// seguidos não fazem dois, enquanto o primeiro ainda conta as palavras.
+  final _autoDone = <String>{};
+
+  /// Sobe a cada instantâneo novo, restaurado ou apagado.
+  int snapshotRevision = 0;
+
+  /// Os instantâneos do capítulo [node], do mais novo ao mais velho.
+  List<Snapshot> snapshotsOf(BookNode node) {
+    final dir = book.dir;
+    return dir == null ? const [] : listSnapshots(dir, node.id);
+  }
+
+  /// O arquivo do instantâneo [s] do capítulo [node].
+  String? snapshotFile(BookNode node, Snapshot s) {
+    final dir = book.dir;
+    return dir == null ? null : snapshotPath(dir, node.id, s);
+  }
+
+  /// Guarda um instantâneo do capítulo [node]: o da tela, pelo motor (com o
+  /// que ainda não foi salvo); uma aba de fundo, pela cópia de recuperação;
+  /// um fechado, o arquivo. O automático é sempre o arquivo, copiado antes
+  /// de qualquer espera (quem chama salva logo depois). null: não gravou.
+  Future<Snapshot?> takeSnapshot(BookNode node, {String name = '', bool auto = false}) async {
+    final dir = book.dir, path = book.pathOf(node);
+    if (dir == null || path == null) return null;
+    final now = DateTime.now();
+    final String target;
+    try {
+      target = newSnapshotPath(dir, node.id, now);
+    } on FileSystemException {
+      return null;
+    }
+    var ok = false;
+    if (!auto && doc.isOpen && doc.path == path) {
+      ok = await doc.exportTo(target, 'odt');
+      _deleteLock(target);
+    } else {
+      try {
+        File(auto ? path : doc.backgroundCopyOf(path) ?? path).copySync(target);
+        ok = true;
+      } on FileSystemException {
+        ok = false;
+      }
+    }
+    if (!ok || !File(target).existsSync()) {
+      _deleteQuietly(target);
+      return null;
+    }
+    final words = (await countChapterWords([target]))[target]?.words ?? 0;
+    try {
+      final s = recordSnapshot(dir, node.id, target, at: now, name: name, auto: auto, words: words);
+      snapshotRevision++;
+      notifyListeners();
+      return s;
+    } on FileSystemException {
+      _deleteQuietly(target);
+      return null;
+    }
+  }
+
+  static void _deleteQuietly(String path) {
+    try {
+      if (File(path).existsSync()) File(path).deleteSync();
+    } on FileSystemException {
+      // Já foi.
+    }
+  }
+
+  /// A trava que o motor pode deixar ao lado da cópia.
+  static void _deleteLock(String path) {
+    final slash = path.lastIndexOf('/');
+    _deleteQuietly('${path.substring(0, slash)}/.~lock.${path.substring(slash + 1)}#');
+  }
+
+  /// O automático do dia, antes de salvar o capítulo em [path].
+  void _autoSnapshotBeforeSave(String path) {
+    final node = book.chapterAt(path), dir = book.dir;
+    if (!autoSnapshots || node == null || dir == null || !File(path).existsSync()) return;
+    final now = DateTime.now();
+    final key = '${node.id}@${now.year}-${now.month}-${now.day}';
+    if (_autoDone.contains(key)) return;
+    _autoDone.add(key);
+    if (hasAutoSnapshotOn(dir, node.id, now)) return;
+    // A cópia do arquivo sai antes da primeira espera, então antes do salvar.
+    unawaited(takeSnapshot(node, auto: true));
+  }
+
+  /// Volta o capítulo [node] ao instantâneo [s]. Antes, o texto atual (com o
+  /// que não foi salvo) vira o instantâneo [beforeName]; a aba do capítulo
+  /// fecha sem perguntar e abre de novo com o texto restaurado. false: nada
+  /// mudou.
+  Future<bool> restoreSnapshot(BookNode node, Snapshot s, {required String beforeName}) async {
+    final dir = book.dir, path = book.pathOf(node);
+    if (dir == null || path == null || doc.busy != null) return false;
+    final source = snapshotPath(dir, node.id, s);
+    if (!File(source).existsSync()) return false;
+    if (await takeSnapshot(node, name: beforeName) == null) return false;
+    var wasOpen = false;
+    for (final t in [...doc.tabs]) {
+      if (doc.tabPath(t) != path) continue;
+      wasOpen = true;
+      await doc.closeTab(t);
+    }
+    var ok = true;
+    final tmp = '$path.restaurando';
+    try {
+      File(source).copySync(tmp);
+      File(tmp).renameSync(path);
+    } on FileSystemException {
+      _deleteQuietly(tmp);
+      ok = false;
+    }
+    if (ok) unawaited(book.refreshWords());
+    snapshotRevision++;
+    notifyListeners();
+    // Estava aberto: abre de novo, na tela (quem restaura quer ver).
+    if (wasOpen) openChapter(node);
+    return ok;
+  }
+
+  /// Apaga o instantâneo [s] do capítulo [node] (vai para a lixeira do livro).
+  void deleteSnapshot(BookNode node, Snapshot s) {
+    final dir = book.dir;
+    if (dir == null) return;
+    try {
+      removeSnapshot(dir, node.id, s);
+    } on FileSystemException {
+      return;
+    }
+    snapshotRevision++;
+    notifyListeners();
+  }
+
+  /// Abre o instantâneo [s] do capítulo [node] numa aba ao lado, só para
+  /// ler, com o nome [label] (D-081): comparar é olhar as duas abas. O
+  /// `.uno:CompareDocuments` da 24.2 abre o "Gerenciar alterações", e fechar
+  /// o documento depois disso derruba o motor. false: o arquivo sumiu.
+  bool viewSnapshot(BookNode node, Snapshot s, {required String label}) {
+    final dir = book.dir;
+    if (dir == null) return false;
+    final source = snapshotPath(dir, node.id, s);
+    if (!File(source).existsSync()) return false;
+    for (final t in doc.tabs) {
+      if (doc.tabPath(t) == source) {
+        doc.activateTab(t);
+        return true;
+      }
+    }
+    doc.open(source, viewing: label);
+    return true;
+  }
+
   // ---------------------------------- dividir e juntar capítulos (D-079) --
 
   /// Divide o capítulo da tela no cursor: o resto vira um capítulo novo logo
@@ -329,6 +490,7 @@ class Workspace extends ChangeNotifier {
   Future<bool> save() async {
     if (!doc.isOpen) return false;
     if (doc.path == null || doc.readOnly) return saveAs();
+    _autoSnapshotBeforeSave(doc.path!);
     final done = _nextSaveResult();
     doc.save();
     return done;

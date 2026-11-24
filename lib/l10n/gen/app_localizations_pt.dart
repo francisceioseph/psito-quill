@@ -2165,4 +2165,117 @@ class AppLocalizationsPt extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get commandTakeSnapshot => 'Guardar um instantâneo do capítulo';
+
+  @override
+  String get commandSnapshots => 'Instantâneos do capítulo…';
+
+  @override
+  String get binderSnapshots => 'Instantâneos…';
+
+  @override
+  String snapshotsTitle(String chapter) {
+    return 'Instantâneos de $chapter';
+  }
+
+  @override
+  String get snapshotName => 'Nome do instantâneo (opcional)';
+
+  @override
+  String get snapshotTake => 'Guardar agora';
+
+  @override
+  String get snapshotsEmpty =>
+      'Nenhum instantâneo ainda. Um instantâneo guarda o capítulo como está agora, para comparar ou voltar a ele depois.';
+
+  @override
+  String get snapshotAuto => 'Automático';
+
+  @override
+  String get snapshotUnnamed => 'Sem nome';
+
+  @override
+  String snapshotWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count palavras',
+      one: '1 palavra',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get snapshotCompare => 'Abrir ao lado, só para leitura';
+
+  @override
+  String get snapshotRestore => 'Restaurar';
+
+  @override
+  String get snapshotDelete => 'Apagar';
+
+  @override
+  String get snapshotRestoreTitle => 'Restaurar o instantâneo?';
+
+  @override
+  String snapshotRestoreBody(String when) {
+    return 'O capítulo volta a como estava em $when. O texto de agora, com o que não foi salvo, fica guardado num instantâneo \"Antes de restaurar\".';
+  }
+
+  @override
+  String get snapshotBeforeRestore => 'Antes de restaurar';
+
+  @override
+  String get snapshotDeleteTitle => 'Apagar o instantâneo?';
+
+  @override
+  String snapshotDeleteBody(String when) {
+    return 'O instantâneo de $when vai para a lixeira do livro.';
+  }
+
+  @override
+  String snapshotTaken(String chapter) {
+    return 'Instantâneo de $chapter guardado';
+  }
+
+  @override
+  String get snapshotFailed => 'Não deu para guardar o instantâneo';
+
+  @override
+  String snapshotRestored(String when) {
+    return 'O capítulo voltou a $when';
+  }
+
+  @override
+  String get snapshotRestoreFailed => 'Não deu para restaurar o instantâneo';
+
+  @override
+  String get snapshotCompareFailed => 'Não deu para abrir o instantâneo';
+
+  @override
+  String get prefAutoSnapshots => 'Instantâneo automático dos capítulos';
+
+  @override
+  String get prefAutoSnapshotsNote =>
+      'No primeiro salvamento de cada dia, o Quill guarda como o capítulo estava antes, na pasta \"versoes\" do livro. Ficam os 30 últimos de cada capítulo.';
+
+  @override
+  String snapshotLabel(String chapter, String when) {
+    return '$chapter, $when';
+  }
+
+  @override
+  String snapshotTab(String label) {
+    return 'Instantâneo: $label';
+  }
+
+  @override
+  String snapshotViewingBanner(String label) {
+    return 'Instantâneo de $label, só para leitura. Para comparar, passe para a aba do capítulo e volte.';
+  }
+
+  @override
+  String get snapshotCloseView => 'Fechar o instantâneo';
 }

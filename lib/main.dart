@@ -51,7 +51,8 @@ void main(List<String> args) {
     recents: recents,
     dialogs: const SystemFileDialogs(),
     locks: LockInspector(profileUrl: profile.url),
-  );
+  )..autoSnapshots = settings.autoSnapshots;
+  settings.addListener(() => workspace.autoSnapshots = settings.autoSnapshots);
   if (!bench) workspace.loadRecoverable();
   final scroll = ScrollController();
   final app = GlobalKey<QuillAppState>();

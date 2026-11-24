@@ -1111,3 +1111,28 @@ A Etapa 6 da Fase 3: "No livro" no painel Localizar.
   - widget, `fase3_book_search_test`: "No livro" agrupa, o clique abre o outro capítulo e seleciona, o capítulo da tela vem do motor, a expressão que não vale avisa, e a volta a "Neste capítulo";
   - unidade, `recovery_test`: trocar de aba logo depois de editar, com o "modificado" atrasado e depois da cópia do intervalo, grava a cópia (o teste falha no código antigo);
   - integração, passo 26: a palavra nova só no capítulo da tela; os fechados pelo `content.xml`; a aba de fundo pela cópia de recuperação; e o clique que volta ao capítulo e seleciona.
+
+## D-081 · Os instantâneos dos capítulos
+
+A Etapa 7 da Fase 3: guardar um capítulo como está, para ver ou voltar a ele depois.
+
+- **Onde ficam:** em `versoes/<id do capítulo>/` dentro do livro, um ODT por instantâneo (`20261124-140210.odt`) e um índice pequeno, o `versoes.json` (a data, o nome, as palavras e se é automático), gravado de forma atômica como o `livro.json`. A pasta é pelo id do capítulo, porque o arquivo pode mudar de nome (`snapshots.dart`).
+- **De onde vem o texto:**
+  - **o capítulo da tela** sai do motor (`exportTo`, ODT), com o que ainda não foi salvo, sem mudar o documento;
+  - **uma aba de fundo** sai da última cópia de recuperação dela, se houver (D-080). Um capítulo fechado é o arquivo copiado;
+  - o Dart nunca escreve ODT. As palavras saem do `content.xml` da cópia, num isolate.
+- **A janela "Instantâneos do capítulo"** (menu Livro e menu do item no fichário) tem um nome opcional e "Guardar agora", e a lista. Cada linha tem três ações: abrir ao lado, restaurar e apagar. O plano punha a lista no painel do fichário, mas ele já tem o status, o rótulo e a sinopse num espaço de 280 px. Na janela, nada fica na memória quando ela fecha. "Guardar um instantâneo do capítulo" também está no menu Livro, sem janela.
+- **Comparar não é pelo motor.** A sonda do `.uno:CompareDocuments` com a URL do instantâneo funcionou: o que mudou aparece marcado como alteração, "rejeitar todas" volta ao instantâneo, e o Ctrl+Z desfaz tudo. O problema vem depois:
+  - o motor abre junto o "Gerenciar alterações" como diálogo do LOK (callback 46), mesmo com `NoAcceptDialog`;
+  - na 24.2, fechar o documento depois disso derruba o LibreOffice ("Unspecified Application Error"). Reproduzi no `lok_script` com um perfil novo (ele ganhou o passo `close`), e a integração caiu no restaurar. Desligar a janela com o `.uno:AcceptTrackedChanges` também derruba. Sem comparar, fechar não cai;
+  - o perfil guarda a janela como aberta, então o risco ficaria para os documentos seguintes;
+  - **o caminho alternativo, que o plano já previa:** o instantâneo abre numa aba ao lado, só para leitura (`viewing`, que trava o `canEdit` no Dart). A aba se chama "Instantâneo: Capítulo, data". A faixa diz que é só leitura e tem "Fechar o instantâneo". Fechar volta ao capítulo de onde ele abriu (a aba fica logo à direita dele). Comparar é passar de uma aba para a outra. Uma comparação de verdade, se vier, será no Dart, pelos parágrafos dos dois `content.xml`.
+- **Restaurar** pergunta antes. Primeiro guarda o texto atual num instantâneo "Antes de restaurar", com o que não foi salvo. Depois fecha a aba do capítulo sem perguntar (o "antes" já tem tudo), troca o arquivo (copia ao lado e renomeia) e abre o capítulo de novo, na tela. As palavras do fichário são recontadas.
+- **Apagar** manda o ODT para a `lixeira/` do livro, como o fichário: nada se apaga de vez, exceto os automáticos além do limite.
+- **O automático**, um por dia de cada capítulo: no primeiro salvamento do dia, o arquivo é copiado antes de o motor gravar por cima. Ficam os 30 últimos de cada capítulo; os com nome nunca saem sozinhos. O plano dizia "ao fechar o livro", mas a cópia feita ali seria igual ao arquivo, e só serviria no dia seguinte. Antes do salvamento, ela guarda como o capítulo estava de manhã, mesmo que o Quill caia. Dividir e juntar capítulos salvam, então também ganham o automático. Uma preferência desliga ("Instantâneo automático dos capítulos").
+- **A memória:** os instantâneos não ficam na memória. A janela lê o índice ao abrir e depois de cada ação. Uma aba de instantâneo custa o mesmo que outra aba (D-051) e respeita o limite do D-054.
+  - **O app sem instantâneos** (`tool/ab.py ef9ce99`, a build de release, o `capitulo-30p.docx` avulso, 3 rodadas, a mediana): na primeira medida, +1,3 MB de memória anônima com o capítulo, +6,0 depois de rolar e +4,2 depois de digitar. Nada novo roda nesse caminho, então medi de novo: +1,0, +1,6 e −3,6 MB. Era ruído. A latência da tecla (p95) ficou em 12,4 ms, e o fps de rolar, em 59,5.
+- **Os testes:**
+  - unidade, `snapshots_test`: a ordem, dois no mesmo segundo, o limite dos automáticos, apagar para a lixeira, o automático do dia, e o índice estragado ou o arquivo que sumiu;
+  - widget, `fase3_snapshots_test`: guardar com nome e restaurar um capítulo fechado (com o "Antes de restaurar"); abrir ao lado só para leitura, com a aba, a faixa e a volta ao capítulo; e o automático (um por dia, desligável);
+  - integração, passo 27: o instantâneo do motor leva o que não foi salvo e não muda o arquivo; a aba ao lado é só leitura e tem o texto de antes; a trava sai ao fechar; e restaurar volta o texto, com o "antes" guardando o que não foi salvo.

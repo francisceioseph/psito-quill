@@ -28,6 +28,9 @@ class DocTab {
 
   DocStatus status = DocStatus.opening;
   String? path, openingPath, lockOwner;
+
+  /// Um instantâneo aberto só para ver (D-081): o nome dele, para a aba.
+  String? viewing;
   bool readOnly = false;
   Size documentSize = Size.zero;
   Rect cursor = Rect.zero;

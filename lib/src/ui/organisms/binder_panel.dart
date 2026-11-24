@@ -104,6 +104,7 @@ class BinderPanel extends StatefulWidget {
     this.scenes = const [],
     required this.onNewChapter,
     required this.onNewPart,
+    this.onSnapshots,
     required this.onClose,
     required this.closeLabel,
   });
@@ -120,6 +121,9 @@ class BinderPanel extends StatefulWidget {
   /// As cenas do capítulo da tela, da cópia dele (ao vivo).
   final List<SceneEntry> scenes;
   final VoidCallback onNewChapter, onNewPart, onClose;
+
+  /// Os instantâneos do capítulo (D-081), pelo menu do item.
+  final ValueChanged<BookNode>? onSnapshots;
   final String closeLabel;
 
   @override
@@ -224,6 +228,7 @@ class _BinderPanelState extends State<BinderPanel> {
       items: [
         if (!n.isPart) PopupMenuItem(value: 'open', child: Text(l10n.binderOpen)),
         PopupMenuItem(value: 'rename', child: Text(l10n.binderRename)),
+        if (!n.isPart && widget.onSnapshots != null) PopupMenuItem(value: 'snapshots', child: Text(l10n.binderSnapshots)),
         PopupMenuItem(value: 'delete', child: Text(l10n.binderDelete)),
       ],
     );
@@ -232,6 +237,8 @@ class _BinderPanelState extends State<BinderPanel> {
         widget.onOpen(n);
       case 'rename':
         _startRename(n);
+      case 'snapshots':
+        widget.onSnapshots?.call(n);
       case 'delete':
         await _remove(n);
     }

@@ -3913,6 +3913,180 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'{count, plural, =1{1 capítulo não pôde ser lido} other{{count} capítulos não puderam ser lidos}}'**
   String bookUnread(int count);
+
+  /// No description provided for @commandTakeSnapshot.
+  ///
+  /// In pt, this message translates to:
+  /// **'Guardar um instantâneo do capítulo'**
+  String get commandTakeSnapshot;
+
+  /// No description provided for @commandSnapshots.
+  ///
+  /// In pt, this message translates to:
+  /// **'Instantâneos do capítulo…'**
+  String get commandSnapshots;
+
+  /// No description provided for @binderSnapshots.
+  ///
+  /// In pt, this message translates to:
+  /// **'Instantâneos…'**
+  String get binderSnapshots;
+
+  /// No description provided for @snapshotsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Instantâneos de {chapter}'**
+  String snapshotsTitle(String chapter);
+
+  /// No description provided for @snapshotName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome do instantâneo (opcional)'**
+  String get snapshotName;
+
+  /// No description provided for @snapshotTake.
+  ///
+  /// In pt, this message translates to:
+  /// **'Guardar agora'**
+  String get snapshotTake;
+
+  /// No description provided for @snapshotsEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum instantâneo ainda. Um instantâneo guarda o capítulo como está agora, para comparar ou voltar a ele depois.'**
+  String get snapshotsEmpty;
+
+  /// No description provided for @snapshotAuto.
+  ///
+  /// In pt, this message translates to:
+  /// **'Automático'**
+  String get snapshotAuto;
+
+  /// No description provided for @snapshotUnnamed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem nome'**
+  String get snapshotUnnamed;
+
+  /// No description provided for @snapshotWords.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{1 palavra} other{{count} palavras}}'**
+  String snapshotWords(int count);
+
+  /// No description provided for @snapshotCompare.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir ao lado, só para leitura'**
+  String get snapshotCompare;
+
+  /// No description provided for @snapshotRestore.
+  ///
+  /// In pt, this message translates to:
+  /// **'Restaurar'**
+  String get snapshotRestore;
+
+  /// No description provided for @snapshotDelete.
+  ///
+  /// In pt, this message translates to:
+  /// **'Apagar'**
+  String get snapshotDelete;
+
+  /// No description provided for @snapshotRestoreTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Restaurar o instantâneo?'**
+  String get snapshotRestoreTitle;
+
+  /// No description provided for @snapshotRestoreBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'O capítulo volta a como estava em {when}. O texto de agora, com o que não foi salvo, fica guardado num instantâneo \"Antes de restaurar\".'**
+  String snapshotRestoreBody(String when);
+
+  /// No description provided for @snapshotBeforeRestore.
+  ///
+  /// In pt, this message translates to:
+  /// **'Antes de restaurar'**
+  String get snapshotBeforeRestore;
+
+  /// No description provided for @snapshotDeleteTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Apagar o instantâneo?'**
+  String get snapshotDeleteTitle;
+
+  /// No description provided for @snapshotDeleteBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'O instantâneo de {when} vai para a lixeira do livro.'**
+  String snapshotDeleteBody(String when);
+
+  /// No description provided for @snapshotTaken.
+  ///
+  /// In pt, this message translates to:
+  /// **'Instantâneo de {chapter} guardado'**
+  String snapshotTaken(String chapter);
+
+  /// No description provided for @snapshotFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não deu para guardar o instantâneo'**
+  String get snapshotFailed;
+
+  /// No description provided for @snapshotRestored.
+  ///
+  /// In pt, this message translates to:
+  /// **'O capítulo voltou a {when}'**
+  String snapshotRestored(String when);
+
+  /// No description provided for @snapshotRestoreFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não deu para restaurar o instantâneo'**
+  String get snapshotRestoreFailed;
+
+  /// No description provided for @snapshotCompareFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não deu para abrir o instantâneo'**
+  String get snapshotCompareFailed;
+
+  /// No description provided for @prefAutoSnapshots.
+  ///
+  /// In pt, this message translates to:
+  /// **'Instantâneo automático dos capítulos'**
+  String get prefAutoSnapshots;
+
+  /// No description provided for @prefAutoSnapshotsNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'No primeiro salvamento de cada dia, o Quill guarda como o capítulo estava antes, na pasta \"versoes\" do livro. Ficam os 30 últimos de cada capítulo.'**
+  String get prefAutoSnapshotsNote;
+
+  /// No description provided for @snapshotLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'{chapter}, {when}'**
+  String snapshotLabel(String chapter, String when);
+
+  /// No description provided for @snapshotTab.
+  ///
+  /// In pt, this message translates to:
+  /// **'Instantâneo: {label}'**
+  String snapshotTab(String label);
+
+  /// No description provided for @snapshotViewingBanner.
+  ///
+  /// In pt, this message translates to:
+  /// **'Instantâneo de {label}, só para leitura. Para comparar, passe para a aba do capítulo e volte.'**
+  String snapshotViewingBanner(String label);
+
+  /// No description provided for @snapshotCloseView.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fechar o instantâneo'**
+  String get snapshotCloseView;
 }
 
 class _AppLocalizationsDelegate

@@ -2164,4 +2164,117 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get commandTakeSnapshot => 'Take a chapter snapshot';
+
+  @override
+  String get commandSnapshots => 'Chapter snapshots…';
+
+  @override
+  String get binderSnapshots => 'Snapshots…';
+
+  @override
+  String snapshotsTitle(String chapter) {
+    return 'Snapshots of $chapter';
+  }
+
+  @override
+  String get snapshotName => 'Snapshot name (optional)';
+
+  @override
+  String get snapshotTake => 'Take now';
+
+  @override
+  String get snapshotsEmpty =>
+      'No snapshots yet. A snapshot keeps the chapter as it is now, so you can compare with it or go back to it later.';
+
+  @override
+  String get snapshotAuto => 'Automatic';
+
+  @override
+  String get snapshotUnnamed => 'Unnamed';
+
+  @override
+  String snapshotWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count words',
+      one: '1 word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get snapshotCompare => 'Open alongside, read-only';
+
+  @override
+  String get snapshotRestore => 'Restore';
+
+  @override
+  String get snapshotDelete => 'Delete';
+
+  @override
+  String get snapshotRestoreTitle => 'Restore the snapshot?';
+
+  @override
+  String snapshotRestoreBody(String when) {
+    return 'The chapter goes back to how it was on $when. The current text, including unsaved changes, is kept in a \"Before restoring\" snapshot.';
+  }
+
+  @override
+  String get snapshotBeforeRestore => 'Before restoring';
+
+  @override
+  String get snapshotDeleteTitle => 'Delete the snapshot?';
+
+  @override
+  String snapshotDeleteBody(String when) {
+    return 'The snapshot from $when goes to the book\'s trash.';
+  }
+
+  @override
+  String snapshotTaken(String chapter) {
+    return 'Snapshot of $chapter taken';
+  }
+
+  @override
+  String get snapshotFailed => 'Couldn\'t take the snapshot';
+
+  @override
+  String snapshotRestored(String when) {
+    return 'The chapter is back to $when';
+  }
+
+  @override
+  String get snapshotRestoreFailed => 'Couldn\'t restore the snapshot';
+
+  @override
+  String get snapshotCompareFailed => 'Couldn\'t open the snapshot';
+
+  @override
+  String get prefAutoSnapshots => 'Automatic chapter snapshots';
+
+  @override
+  String get prefAutoSnapshotsNote =>
+      'On the first save of each day, Quill keeps how the chapter was before, in the book\'s \"versoes\" folder. The last 30 of each chapter are kept.';
+
+  @override
+  String snapshotLabel(String chapter, String when) {
+    return '$chapter, $when';
+  }
+
+  @override
+  String snapshotTab(String label) {
+    return 'Snapshot: $label';
+  }
+
+  @override
+  String snapshotViewingBanner(String label) {
+    return 'Snapshot of $label, read-only. To compare, switch to the chapter tab and back.';
+  }
+
+  @override
+  String get snapshotCloseView => 'Close the snapshot';
 }

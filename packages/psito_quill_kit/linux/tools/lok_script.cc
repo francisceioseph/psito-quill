@@ -5,6 +5,7 @@
 // callbacks). Cada linha do roteiro (na entrada padrão) é um passo:
 //
 //   open <arquivo>            abre ("" ou "-" para um documento novo)
+//   close                     fecha o documento ativo (destroy)
 //   open0 <arquivo>           abre sem mandar a área visível (como o app,
 //                             que manda no quadro seguinte)
 //   view <escala> <x> <y> <w> <h>  a área visível, em twips
@@ -98,6 +99,8 @@ int main(int argc, char** argv) {
     if (op == "open") {
       e.open(rest == "-" ? "" : rest);
       e.setViewport(1000, {0, 0, 18000, 12000});
+    } else if (op == "close") {
+      e.close();
     } else if (op == "open0") {
       e.open(rest == "-" ? "" : rest);
     } else if (op == "view") {

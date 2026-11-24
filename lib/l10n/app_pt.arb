@@ -1170,5 +1170,100 @@
         "type": "int"
       }
     }
-  }
+  },
+  "commandTakeSnapshot": "Guardar um instantâneo do capítulo",
+  "commandSnapshots": "Instantâneos do capítulo…",
+  "binderSnapshots": "Instantâneos…",
+  "snapshotsTitle": "Instantâneos de {chapter}",
+  "@snapshotsTitle": {
+    "placeholders": {
+      "chapter": {
+        "type": "String"
+      }
+    }
+  },
+  "snapshotName": "Nome do instantâneo (opcional)",
+  "snapshotTake": "Guardar agora",
+  "snapshotsEmpty": "Nenhum instantâneo ainda. Um instantâneo guarda o capítulo como está agora, para comparar ou voltar a ele depois.",
+  "snapshotAuto": "Automático",
+  "snapshotUnnamed": "Sem nome",
+  "snapshotWords": "{count, plural, =1{1 palavra} other{{count} palavras}}",
+  "@snapshotWords": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "snapshotCompare": "Abrir ao lado, só para leitura",
+  "snapshotRestore": "Restaurar",
+  "snapshotDelete": "Apagar",
+  "snapshotRestoreTitle": "Restaurar o instantâneo?",
+  "snapshotRestoreBody": "O capítulo volta a como estava em {when}. O texto de agora, com o que não foi salvo, fica guardado num instantâneo \"Antes de restaurar\".",
+  "@snapshotRestoreBody": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "snapshotBeforeRestore": "Antes de restaurar",
+  "snapshotDeleteTitle": "Apagar o instantâneo?",
+  "snapshotDeleteBody": "O instantâneo de {when} vai para a lixeira do livro.",
+  "@snapshotDeleteBody": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "snapshotTaken": "Instantâneo de {chapter} guardado",
+  "@snapshotTaken": {
+    "placeholders": {
+      "chapter": {
+        "type": "String"
+      }
+    }
+  },
+  "snapshotFailed": "Não deu para guardar o instantâneo",
+  "snapshotRestored": "O capítulo voltou a {when}",
+  "@snapshotRestored": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "snapshotRestoreFailed": "Não deu para restaurar o instantâneo",
+  "snapshotCompareFailed": "Não deu para abrir o instantâneo",
+  "prefAutoSnapshots": "Instantâneo automático dos capítulos",
+  "prefAutoSnapshotsNote": "No primeiro salvamento de cada dia, o Quill guarda como o capítulo estava antes, na pasta \"versoes\" do livro. Ficam os 30 últimos de cada capítulo.",
+  "snapshotLabel": "{chapter}, {when}",
+  "@snapshotLabel": {
+    "placeholders": {
+      "chapter": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "snapshotTab": "Instantâneo: {label}",
+  "@snapshotTab": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "snapshotViewingBanner": "Instantâneo de {label}, só para leitura. Para comparar, passe para a aba do capítulo e volte.",
+  "@snapshotViewingBanner": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "snapshotCloseView": "Fechar o instantâneo"
 }

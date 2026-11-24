@@ -51,6 +51,10 @@ class _NoBookView implements BookViewActions {
   void joinChapter() {}
   @override
   void convertScenes() {}
+  @override
+  void takeSnapshot() {}
+  @override
+  void showSnapshots() {}
 }
 
 class _NoPageView implements PageViewActions {

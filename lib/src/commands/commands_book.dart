@@ -1,6 +1,7 @@
 // Os comandos do livro (Fase 3, Etapa 1, D-071): novo, abrir, importar e
 // fechar o livro, o fichário, e os capítulos e partes novos; e as cenas
-// (Etapa 5, D-079): nova cena, dividir, juntar e converter os separadores.
+// (Etapa 5, D-079): nova cena, dividir, juntar e converter os separadores;
+// e os instantâneos (Etapa 7, D-081).
 //
 // Command com receptor, como os de tela: o que pede uma janela (o título do
 // livro, a pasta, o manuscrito) é da página do editor, que implementa
@@ -25,6 +26,9 @@ abstract final class BookCommandIds {
   static const splitChapter = 'livro.dividir';
   static const joinChapter = 'livro.juntar';
   static const convertScenes = 'livro.converterCenas';
+  // Os instantâneos (Etapa 7, D-081).
+  static const takeSnapshot = 'livro.instantaneo';
+  static const snapshots = 'livro.instantaneos';
 }
 
 /// O que a página do editor sabe abrir para o livro.
@@ -40,6 +44,8 @@ abstract interface class BookViewActions {
   void splitChapter();
   void joinChapter();
   void convertScenes();
+  void takeSnapshot();
+  void showSnapshots();
 }
 
 void registerBookCommands(
@@ -119,6 +125,20 @@ void registerBookCommands(
       icon: Symbols.auto_fix_high_rounded,
       run: view.convertScenes,
       canRun: editable,
+    ),
+    Command(
+      id: BookCommandIds.takeSnapshot,
+      label: l10n.commandTakeSnapshot,
+      icon: Symbols.add_a_photo_rounded,
+      run: view.takeSnapshot,
+      canRun: () => ready() && doc.busy == null && workspace.book.chapterAt(doc.path) != null,
+    ),
+    Command(
+      id: BookCommandIds.snapshots,
+      label: l10n.commandSnapshots,
+      icon: Symbols.history_rounded,
+      run: view.showSnapshots,
+      canRun: () => ready() && workspace.book.chapterAt(doc.path) != null,
     ),
   ]) {
     registry.register(c);
