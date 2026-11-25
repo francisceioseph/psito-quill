@@ -386,6 +386,39 @@ class CommentChanged extends KitEvent {
   final DocComment comment;
 }
 
+enum TrackedChangeKind { insert, delete, format, other }
+
+/// Uma alteração do controle de alterações (D-089), como a lista do
+/// `getCommandValues(".uno:AcceptTrackedChanges")` traz. [index] é o número
+/// que aceitar e rejeitar uma pedem.
+class TrackedChange {
+  const TrackedChange({
+    required this.index,
+    this.kind = TrackedChangeKind.other,
+    this.author = '',
+    this.description = '',
+    this.comment = '',
+    this.date,
+    this.range = const [],
+  });
+
+  final int index;
+  final TrackedChangeKind kind;
+  final String author;
+
+  /// "Inserir “Ele miava.”", no idioma do motor.
+  final String description;
+  final String comment;
+  final DateTime? date;
+  final List<Rect> range;
+}
+
+/// A tabela das alterações mudou (os callbacks 30 e 31, D-089). O Quill pede
+/// a lista de novo, se precisar dela.
+class TrackedChangesChanged extends KitEvent {
+  const TrackedChangesChanged();
+}
+
 /// O resto, cru: o que o app ainda não usa.
 class OtherKitEvent extends KitEvent {
   const OtherKitEvent(this.type, this.payload);

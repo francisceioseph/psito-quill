@@ -5125,6 +5125,186 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Vazio: o nome da sua conta ({name}). Vale para os capítulos abertos depois.'**
   String prefAuthorNameNote(String name);
+
+  /// No description provided for @modeEditing.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editando'**
+  String get modeEditing;
+
+  /// No description provided for @modeReview.
+  ///
+  /// In pt, this message translates to:
+  /// **'Revisão'**
+  String get modeReview;
+
+  /// No description provided for @modeReading.
+  ///
+  /// In pt, this message translates to:
+  /// **'Leitura'**
+  String get modeReading;
+
+  /// No description provided for @modeLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Modo'**
+  String get modeLabel;
+
+  /// No description provided for @modeReadingExit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sair da leitura (Esc)'**
+  String get modeReadingExit;
+
+  /// No description provided for @modeReadingHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'As setas e o Page Down folheiam.'**
+  String get modeReadingHint;
+
+  /// No description provided for @groupTracking.
+  ///
+  /// In pt, this message translates to:
+  /// **'Controle'**
+  String get groupTracking;
+
+  /// No description provided for @groupChanges.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alterações'**
+  String get groupChanges;
+
+  /// No description provided for @groupReading.
+  ///
+  /// In pt, this message translates to:
+  /// **'Leitura'**
+  String get groupReading;
+
+  /// No description provided for @commandChanges.
+  ///
+  /// In pt, this message translates to:
+  /// **'Painel Alterações'**
+  String get commandChanges;
+
+  /// No description provided for @commandShowChanges.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar as alterações'**
+  String get commandShowChanges;
+
+  /// No description provided for @commandPreviousChange.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alteração anterior'**
+  String get commandPreviousChange;
+
+  /// No description provided for @commandNextChange.
+  ///
+  /// In pt, this message translates to:
+  /// **'Próxima alteração'**
+  String get commandNextChange;
+
+  /// No description provided for @commandAcceptChange.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aceitar a alteração'**
+  String get commandAcceptChange;
+
+  /// No description provided for @commandRejectChange.
+  ///
+  /// In pt, this message translates to:
+  /// **'Rejeitar a alteração'**
+  String get commandRejectChange;
+
+  /// No description provided for @commandAcceptAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aceitar todas'**
+  String get commandAcceptAll;
+
+  /// No description provided for @commandRejectAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Rejeitar todas'**
+  String get commandRejectAll;
+
+  /// No description provided for @railChanges.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alterações'**
+  String get railChanges;
+
+  /// No description provided for @changesTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alterações'**
+  String get changesTitle;
+
+  /// No description provided for @changesClose.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fechar as alterações'**
+  String get changesClose;
+
+  /// No description provided for @changesTracking.
+  ///
+  /// In pt, this message translates to:
+  /// **'Revisão: marcar o que eu mudar'**
+  String get changesTracking;
+
+  /// No description provided for @changesShow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar na página'**
+  String get changesShow;
+
+  /// No description provided for @changesEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma alteração neste capítulo. Ligue a Revisão (Ctrl+Shift+E) para marcar o que você mudar.'**
+  String get changesEmpty;
+
+  /// No description provided for @changesCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{1 alteração} other{{count} alterações}}'**
+  String changesCount(int count);
+
+  /// No description provided for @changesAccept.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aceitar'**
+  String get changesAccept;
+
+  /// No description provided for @changesReject.
+  ///
+  /// In pt, this message translates to:
+  /// **'Rejeitar'**
+  String get changesReject;
+
+  /// No description provided for @changeInsert.
+  ///
+  /// In pt, this message translates to:
+  /// **'Inserção'**
+  String get changeInsert;
+
+  /// No description provided for @changeDelete.
+  ///
+  /// In pt, this message translates to:
+  /// **'Exclusão'**
+  String get changeDelete;
+
+  /// No description provided for @changeFormat.
+  ///
+  /// In pt, this message translates to:
+  /// **'Formatação'**
+  String get changeFormat;
+
+  /// No description provided for @changeOther.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alteração'**
+  String get changeOther;
 }
 
 class _AppLocalizationsDelegate

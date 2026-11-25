@@ -498,6 +498,20 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
       return KeyEventResult.handled;
     }
     if (event is KeyUpEvent) return KeyEventResult.ignored;
+    // A Leitura (D-089): as setas, o espaço e o Page Down folheiam.
+    if (widget.doc.reading && !keyboard.isControlPressed && !keyboard.isAltPressed) {
+      final k = event.logicalKey;
+      final page = switch (k) {
+        LogicalKeyboardKey.arrowDown || LogicalKeyboardKey.arrowRight || LogicalKeyboardKey.space ||
+        LogicalKeyboardKey.pageDown => VclKey.pageDown,
+        LogicalKeyboardKey.arrowUp || LogicalKeyboardKey.arrowLeft || LogicalKeyboardKey.pageUp => VclKey.pageUp,
+        _ => null,
+      };
+      if (page != null) {
+        widget.doc.postKey(0, page);
+        return KeyEventResult.handled;
+      }
+    }
     final route = routeKey(event, control: keyboard.isControlPressed, alt: keyboard.isAltPressed);
     switch (route) {
       case KeyRoute.textInput:

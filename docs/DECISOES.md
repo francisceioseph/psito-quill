@@ -1332,3 +1332,38 @@ A Etapa 3 da Fase 4: comentar o texto, responder, resolver e excluir, num painel
   - nativo: o JSON do autor, com as aspas e a barra escapadas;
   - widget, `fase4_comments_test`: o Ctrl+Alt+C com o foco, comentar, a marca, responder, ir ao trecho, resolver e os resolvidos, reabrir, excluir, o modo só leitura e a contagem no fichário;
   - integração (o passo 30): o autor com aspas, comentar a primeira palavra (o trecho), responder, resolver, salvar, a contagem do `content.xml`, reabrir com a conversa na ordem do texto, e excluir.
+
+## D-089 · O controle de alterações e o modo Leitura
+
+A Etapa 4 da Fase 4: os três modos (Editando, Revisão e Leitura) e o painel Alterações. A comparação de documentos fica de fora, pela sonda.
+
+- **A sonda** (`lok_script`, na 24.2), conferida pelo estado:
+  - `.uno:TrackChanges` liga e desliga a Revisão, e `.uno:ShowTrackedChanges` mostra ou esconde as marcas do motor na página. Os dois mandam o estado (`true`/`false`);
+  - a lista vem pelo `getCommandValues(".uno:AcceptTrackedChanges")`: o índice, o autor (o mesmo `.uno:Author` dos comentários, D-088), o tipo (`Insert`, `Delete`, os de formatação), a descrição do motor ("Inserir “Ele miava.”"), a data e o trecho (`textRange`, em twips). Ela vem na ordem do motor, não na do texto;
+  - `.uno:AcceptTrackedChange` e `.uno:RejectTrackedChange` aceitam ou rejeitam a do cursor sem argumento, ou uma pelo índice (`{"AcceptTrackedChange": {"type": "unsigned short", "value": n}}`). Os "todas" funcionam;
+  - `.uno:NextTrackedChange` e `.uno:PreviousTrackedChange` selecionam a seguinte ou a anterior;
+  - os estados `AcceptAllTrackedChanges` e `AcceptTrackedChange` (`enabled`/`disabled`) dizem se há alterações e se há uma no cursor;
+  - os callbacks 30 e 31 (`REDLINE_TABLE_SIZE_CHANGED` e `REDLINE_TABLE_ENTRY_MODIFIED`) chegam a cada mudança, inclusive a cada tecla na Revisão;
+  - apagar, na Revisão, um trecho inserido na própria Revisão some com ele (não vira exclusão);
+  - salvar em ODT guarda as alterações (`text:tracked-changes`).
+- **A lista só com o painel aberto** (`DocumentController.liveChanges`): os callbacks 30 e 31 viram um aviso só (`TrackedChangesChanged`), e o controlador pede a lista numa pausa de 300 ms. Com o painel fechado, o aviso é ignorado, e a lista não fica na memória. Os estados do motor bastam para os comandos.
+- **Os três modos**, na barra de status (três botões), no menu Revisar e na faixa Revisão:
+  - **Editando:** o normal;
+  - **Revisão:** o controle de alterações ligado no motor (Ctrl+Shift+E, como no Word, livre nos dois jogos de atalhos). O modo é o estado do motor, então segue o documento: cada aba tem a sua Revisão, e um DOCX revisado abre nela;
+  - **Leitura:** a página sozinha, com uma barrinha em cima (o título, a página, "As setas e o Page Down folheiam" e "Sair da leitura (Esc)"). Sem a faixa, o trilho, os painéis e as réguas. O controlador fica em `reading`, que tira o `canEdit`: nada se digita, apaga ou aceita. As setas, o espaço e o Page Up/Down vão ao motor como Page Up/Down. O Esc sai por um tratador do teclado, como no zen, e volta ao modo de antes (a Revisão continua ligada, se estava). A Leitura vale para a tela, não para o documento.
+- **O painel Alterações** (no trilho):
+  - a chave "Revisão: marcar o que eu mudar" e "Mostrar na página";
+  - a anterior e a próxima, "Aceitar todas" e "Rejeitar todas";
+  - a lista na ordem do texto, com o tipo, o autor, a data e a descrição do motor, e Aceitar e Rejeitar em cada uma, pelo índice;
+  - o clique leva ao começo do trecho, como nos comentários.
+- **Os comandos:** os três modos, o painel, mostrar, a anterior, a próxima, aceitar e rejeitar a do cursor, e todas. Eles estão no menu Revisar e na faixa (os grupos Controle, Alterações e Leitura).
+- **O trilho rola:** com o Comentários e o Alterações, ele passou da altura de uma janela baixa com a interface a 200%.
+- **Comparar e combinar** (a sonda num documento à parte, como o plano pedia):
+  - o `.uno:CompareDocuments` com a `URL` marca as diferenças, mas fechar o documento depois derruba o LibreOffice ("Unspecified Application Error"), como no D-081;
+  - o `.uno:MergeDocuments` trava (deve esperar uma janela do motor);
+  - **uma saída possível:** comparar num processo à parte. Abrir, comparar, gravar o ODT e sair sem fechar o documento dá um arquivo com as diferenças marcadas, que o Quill abriria numa aba com o painel Alterações. Custa um segundo LibreOffice durante a comparação. Fica para o Francisco decidir.
+- **A memória:** com o painel fechado, nada novo fica guardado (a lista é solta ao fechar). Pelo `tool/ab.py 09b5994` (o `capitulo-30p.docx`, 5 rodadas, a mediana), a memória anônima variou de −3,6 a +3,9 MB: +1,1 com o capítulo, +2,0 depois de rolar e +3,9 depois de digitar. A tecla (p95) foi de 9,5 para 9,6 ms, e o rolar ficou em 59,5 fps. O caminho de digitar não mudou fora da Leitura (um `if` no `DocumentView`), então deve ser a variação entre as rodadas, como no D-088.
+- **Os testes:**
+  - unidade, `track_changes_test`: a lista (os tipos, a data, o trecho, a vazia, a estragada), os callbacks 30 e 31, a ordem do texto;
+  - widget, `fase4_review_test`: o Ctrl+Shift+E, a lista só com o painel e na pausa, ir ao trecho, aceitar pelo índice, rejeitar todas, mostrar na página, a chave da Revisão, fechar o painel; a Leitura (sem a faixa, nada se digita, as setas folheiam, o Esc sai); a Leitura que guarda a Revisão;
+  - integração (o passo 31): a Revisão marca a exclusão e as duas inserções, com o autor; aceitar uma pelo índice, rejeitar as outras; na Leitura, nada se aceita; o ODT salvo guarda a pendente.

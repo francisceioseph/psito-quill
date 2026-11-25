@@ -42,7 +42,9 @@ class NavRail<T> extends StatelessWidget {
       label: label,
       child: SizedBox(
         width: 64,
-        child: Column(children: [
+        // Numa janela baixa (ou com a interface ampliada), o trilho rola.
+        child: SingleChildScrollView(
+          child: Column(children: [
           SizedBox(height: t.space.sm),
           for (final item in items) ...[
             _RailButton<T>(
@@ -53,6 +55,7 @@ class NavRail<T> extends StatelessWidget {
             SizedBox(height: t.space.md),
           ],
         ]),
+        ),
       ),
     );
   }

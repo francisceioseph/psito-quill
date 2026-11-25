@@ -39,7 +39,9 @@ import '../organisms/compile_dialog.dart';
 import '../organisms/goals_dialog.dart';
 import '../organisms/inspector.dart';
 import '../organisms/nav_rail.dart';
+import '../organisms/changes_panel.dart';
 import '../organisms/comments_panel.dart';
+import '../organisms/reading_view.dart';
 import '../organisms/notes_panel.dart';
 import '../../document/outline.dart';
 import '../atoms/w_segmented.dart';
@@ -87,7 +89,7 @@ class EditorPage extends StatefulWidget {
 
 /// Os painéis do trilho, à esquerda. Localizar abre a barra de localizar,
 /// não um painel.
-enum _LeftPanel { binder, notes, outline, find, styles, comments }
+enum _LeftPanel { binder, notes, outline, find, styles, comments, changes }
 
 /// Os temas como comandos (a paleta e o menu Exibir do tema 97 os mostram).
 const themeCommandPrefix = 'tema.';
@@ -265,6 +267,48 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
     if (_find != null) _closeFind();
     if (!commentsOpen) _setLeft(_LeftPanel.comments);
     WidgetsBinding.instance.addPostFrameCallback((_) => _commentsKey.currentState?.focusNew());
+  }
+
+  @override
+  bool get changesOpen => _left == _LeftPanel.changes;
+
+  @override
+  void toggleChanges() => _setLeft(changesOpen ? null : _LeftPanel.changes);
+
+  @override
+  EditMode get editMode => doc.reading
+      ? EditMode.reading
+      : doc.tracking
+          ? EditMode.review
+          : EditMode.editing;
+
+  /// Os modos (D-089). A Leitura não mexe na Revisão: o Esc volta ao modo de
+  /// antes. O Esc sai por um tratador do teclado, como no zen.
+  @override
+  void setEditMode(EditMode mode) {
+    if (!doc.isOpen) return;
+    final reading = mode == EditMode.reading;
+    if (mode != EditMode.reading) doc.setTracking(mode == EditMode.review);
+    if (reading == doc.reading) {
+      _backToDocument();
+      return;
+    }
+    if (reading) {
+      if (_find != null) _closeFind();
+      HardwareKeyboard.instance.addHandler(_readingEscape);
+    } else {
+      HardwareKeyboard.instance.removeHandler(_readingEscape);
+    }
+    doc.reading = reading;
+    _backToDocument();
+  }
+
+  bool _readingEscape(KeyEvent e) {
+    if (e is! KeyDownEvent || e.logicalKey != LogicalKeyboardKey.escape || !doc.reading) return false;
+    HardwareKeyboard.instance.removeHandler(_readingEscape);
+    doc.reading = false;
+    _backToDocument();
+    return true;
   }
 
   /// Abre as notas, se preciso, e cria uma nota nova nelas (D-082).
@@ -635,6 +679,8 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
     setState(() => _left = p);
     // O fichário também: as cenas do capítulo da tela vêm da cópia (D-079).
     doc.liveOutline = p == _LeftPanel.outline || p == _LeftPanel.binder;
+    // A lista das alterações só é pedida com o painel aberto (D-089).
+    doc.liveChanges = p == _LeftPanel.changes;
   }
 
   @override
@@ -792,6 +838,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
     _commands?.dispose();
     _docFocus.dispose();
     HardwareKeyboard.instance.removeHandler(_zenEscape);
+    HardwareKeyboard.instance.removeHandler(_readingEscape);
     _viewport.removeListener(_applyLayout);
     _viewport.dispose();
     super.dispose();
@@ -865,6 +912,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
         builder: (context, _) {
           widget.window?.setTitle(_windowTitle(l10n));
           if (widget.settings.zen && doc.isOpen && !doc.documentSize.isEmpty) return _zenView(l10n);
+          if (doc.reading && doc.isOpen) return _readingView(l10n);
           final classic = t.component == ComponentStyle.bevel;
           // Tudo o que a faixa e o painel leem e não vem do motor.
           final key = (
@@ -971,6 +1019,8 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
                           NavRailItem(_LeftPanel.styles, Symbols.style_rounded, l10n.ribbonStyles),
                           NavRailItem(_LeftPanel.comments, Symbols.comment_rounded, l10n.railComments,
                               tooltip: commands.tooltipOf(ViewCommandIds.comments)),
+                          NavRailItem(_LeftPanel.changes, Symbols.difference_rounded, l10n.railChanges,
+                              tooltip: commands.tooltipOf(ViewCommandIds.changes)),
                         ],
                       ],
                       selected: _find != null ? _LeftPanel.find : _left,
@@ -1002,7 +1052,11 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
                 : _memoized(
                     'left',
                     // Os comentários mudam sem o estado do motor (D-088).
-                    (statusKey, _left == _LeftPanel.comments || _left == _LeftPanel.binder ? (doc.commentRevision, doc.canEdit) : null),
+                    (
+                      statusKey,
+                      _left == _LeftPanel.comments || _left == _LeftPanel.binder ? (doc.commentRevision, doc.canEdit) : null,
+                      _left == _LeftPanel.changes ? doc.changesRevision : null,
+                    ),
                     () => switch (_left!) {
                       _LeftPanel.binder => BinderPanel(
                           books: books,
@@ -1043,6 +1097,12 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
                           doc: doc,
                           onClose: toggleComments,
                           closeLabel: l10n.commentsClose,
+                          onRan: _backToDocument,
+                        ),
+                      _LeftPanel.changes => ChangesPanel(
+                          doc: doc,
+                          onClose: toggleChanges,
+                          closeLabel: l10n.changesClose,
                           onRan: _backToDocument,
                         ),
                       _LeftPanel.styles || _LeftPanel.find => StylesPanel(
@@ -1208,6 +1268,18 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
                 trailing: [
                   if (widget.showMemory) ...[MemoryLabel(format: l10n.statusMemory), SizedBox(width: t.space.md)],
                   if (doc.isOpen) ...[
+                    WSegmented<EditMode>(
+                      label: l10n.modeLabel,
+                      segments: [
+                        WSegment(EditMode.editing, l10n.modeEditing, icon: Symbols.edit_rounded, iconOnly: true),
+                        WSegment(EditMode.review, l10n.modeReview, icon: Symbols.rate_review_rounded, iconOnly: true),
+                        WSegment(EditMode.reading, l10n.modeReading, icon: Symbols.chrome_reader_mode_rounded, iconOnly: true),
+                      ],
+                      selected: editMode,
+                      onChanged: setEditMode,
+                      compact: true,
+                    ),
+                    SizedBox(width: t.space.md),
                     WSegmented<String>(
                       label: l10n.layoutLabel,
                       segments: [
@@ -1385,6 +1457,27 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
       ),
     );
   }
+
+  /// O modo Leitura (D-089): só a página, com uma barrinha em cima (o
+  /// título, a página e o sair). Sem faixa, painéis, trilho nem réguas.
+  Widget _readingView(AppLocalizations l10n) => ReadingView(
+        title: _windowTitle(l10n),
+        page: switch (doc.page) {
+          (final page, final pages) => l10n.statusPage(page, pages),
+          null => null,
+        },
+        onExit: () => setEditMode(doc.tracking ? EditMode.review : EditMode.editing),
+        child: DocumentView(
+          doc: doc,
+          commands: _commands!,
+          focusNode: _docFocus,
+          semanticLabel: l10n.documentArea,
+          scrollController: widget.scrollController,
+          viewport: _viewport,
+          caretWidth: widget.settings.caretWidth.toDouble(),
+          caretBlink: widget.settings.caretBlink,
+        ),
+      );
 
   /// A página com as réguas, se estiverem ligadas (Exibir › Régua).
   Widget _withRulers(Widget view) {

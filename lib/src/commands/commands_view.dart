@@ -37,7 +37,22 @@ abstract final class ViewCommandIds {
   static const layoutBook = 'exibir.livro';
   static const newComment = 'revisar.novoComentario';
   static const comments = 'revisar.comentarios';
+  static const modeEditing = 'revisar.editando';
+  static const modeReview = 'revisar.revisao';
+  static const modeReading = 'revisar.leitura';
+  static const changes = 'revisar.alteracoes';
+  static const showChanges = 'revisar.mostrarAlteracoes';
+  static const nextChange = 'revisar.proximaAlteracao';
+  static const previousChange = 'revisar.alteracaoAnterior';
+  static const acceptChange = 'revisar.aceitar';
+  static const rejectChange = 'revisar.rejeitar';
+  static const acceptAll = 'revisar.aceitarTodas';
+  static const rejectAll = 'revisar.rejeitarTodas';
 }
+
+/// Os três modos do documento (D-089): editar, revisar (as alterações
+/// marcadas) e ler.
+enum EditMode { editing, review, reading }
 
 /// O que a página do editor sabe abrir.
 abstract interface class EditorViewActions {
@@ -67,6 +82,15 @@ abstract interface class EditorViewActions {
   void toggleComments();
   bool get commentsOpen;
   void newComment();
+
+  /// O modo (D-089): a Revisão liga o controle de alterações no motor; a
+  /// Leitura esconde a faixa e os painéis.
+  EditMode get editMode;
+  void setEditMode(EditMode mode);
+
+  /// O painel Alterações.
+  void toggleChanges();
+  bool get changesOpen;
 
   /// A faixa só com as abas (Ctrl+F1).
   void toggleRibbon();
@@ -217,6 +241,90 @@ void registerViewCommands(
       run: view.toggleComments,
       isActive: () => view.commentsOpen,
       canRun: open,
+    ),
+    Command(
+      id: ViewCommandIds.modeEditing,
+      label: l10n.modeEditing,
+      icon: Symbols.edit_rounded,
+      run: () => view.setEditMode(EditMode.editing),
+      isActive: () => view.editMode == EditMode.editing,
+      canRun: open,
+    ),
+    // Ctrl+Shift+E liga e desliga a Revisão, como no Word.
+    Command(
+      id: ViewCommandIds.modeReview,
+      label: l10n.modeReview,
+      icon: Symbols.rate_review_rounded,
+      run: () => view.setEditMode(view.editMode == EditMode.review ? EditMode.editing : EditMode.review),
+      isActive: () => view.editMode == EditMode.review,
+      canRun: () => doc.isOpen && !doc.readOnly,
+      shortcuts: both(const SingleActivator(LogicalKeyboardKey.keyE, control: true, shift: true)),
+    ),
+    Command(
+      id: ViewCommandIds.modeReading,
+      label: l10n.modeReading,
+      icon: Symbols.chrome_reader_mode_rounded,
+      run: () => view.setEditMode(view.editMode == EditMode.reading ? EditMode.editing : EditMode.reading),
+      isActive: () => view.editMode == EditMode.reading,
+      canRun: open,
+    ),
+    Command(
+      id: ViewCommandIds.changes,
+      label: l10n.commandChanges,
+      icon: Symbols.difference_rounded,
+      run: view.toggleChanges,
+      isActive: () => view.changesOpen,
+      canRun: open,
+    ),
+    Command(
+      id: ViewCommandIds.showChanges,
+      label: l10n.commandShowChanges,
+      icon: Symbols.visibility_rounded,
+      run: doc.toggleShowChanges,
+      isActive: () => doc.showChanges,
+      canRun: open,
+    ),
+    Command(
+      id: ViewCommandIds.previousChange,
+      label: l10n.commandPreviousChange,
+      icon: Symbols.arrow_upward_rounded,
+      run: () => doc.nextChange(back: true),
+      canRun: () => doc.isOpen && doc.hasChanges,
+    ),
+    Command(
+      id: ViewCommandIds.nextChange,
+      label: l10n.commandNextChange,
+      icon: Symbols.arrow_downward_rounded,
+      run: doc.nextChange,
+      canRun: () => doc.isOpen && doc.hasChanges,
+    ),
+    Command(
+      id: ViewCommandIds.acceptChange,
+      label: l10n.commandAcceptChange,
+      icon: Symbols.check_rounded,
+      run: doc.acceptCurrentChange,
+      canRun: () => doc.canEdit && doc.hasCurrentChange,
+    ),
+    Command(
+      id: ViewCommandIds.rejectChange,
+      label: l10n.commandRejectChange,
+      icon: Symbols.close_rounded,
+      run: doc.rejectCurrentChange,
+      canRun: () => doc.canEdit && doc.hasCurrentChange,
+    ),
+    Command(
+      id: ViewCommandIds.acceptAll,
+      label: l10n.commandAcceptAll,
+      icon: Symbols.done_all_rounded,
+      run: doc.acceptAllChanges,
+      canRun: () => doc.canEdit && doc.hasChanges,
+    ),
+    Command(
+      id: ViewCommandIds.rejectAll,
+      label: l10n.commandRejectAll,
+      icon: Symbols.remove_done_rounded,
+      run: doc.rejectAllChanges,
+      canRun: () => doc.canEdit && doc.hasChanges,
     ),
     Command(
       id: ViewCommandIds.stylesPanel,

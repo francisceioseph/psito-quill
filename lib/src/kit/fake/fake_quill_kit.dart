@@ -385,6 +385,30 @@ class FakeQuillKit implements QuillKit {
   @override
   void requestCommandValues(String command) {
     requestedValues.add(command);
+    if (command == '.uno:AcceptTrackedChanges') {
+      _emit(CommandValues(
+          command,
+          jsonEncode({
+            'redlines': [
+              for (final c in changes)
+                {
+                  'index': c.index,
+                  'author': c.author,
+                  'type': switch (c.kind) {
+                    TrackedChangeKind.insert => 'Insert',
+                    TrackedChangeKind.delete => 'Delete',
+                    TrackedChangeKind.format => 'Format',
+                    TrackedChangeKind.other => 'Other',
+                  },
+                  'comment': c.comment,
+                  'description': c.description,
+                  'dateTime': c.date?.toIso8601String() ?? '',
+                  'textRange': c.range.map(_rect).join('; '),
+                }
+            ]
+          })));
+      return;
+    }
     if (command == '.uno:ViewAnnotations') {
       _emit(CommandValues(
           command,
@@ -436,11 +460,77 @@ class FakeQuillKit implements QuillKit {
   void trimMemory() => trims++;
 
   void _edit(String next) {
+    final before = text;
     _undo.add(text);
     _redo.clear();
     text = next;
     _afterEdit();
+    if (tracking && next != before) {
+      final grew = next.length > before.length;
+      _trackChange(TrackedChange(
+        index: ++_changeIndex,
+        kind: grew ? TrackedChangeKind.insert : TrackedChangeKind.delete,
+        author: author,
+        description: grew ? 'Inserir “${next.substring(before.length)}”' : 'Excluir',
+        date: DateTime(2026, 11, 25, 11),
+        range: [Rect.fromLTWH(1440 + before.length * 120.0, 1440, 400, 280)],
+      ));
+    }
   }
+
+  // ------------------------------------- as alterações (D-089) --
+
+  /// O controle de alterações ligado (`.uno:TrackChanges`) e as alterações,
+  /// na ordem do motor.
+  bool tracking = false;
+  bool showChanges = true;
+  final changes = <TrackedChange>[];
+  int _changeIndex = 0;
+
+  void _trackChange(TrackedChange c) {
+    changes.add(c);
+    _changesChanged();
+  }
+
+  void _changesChanged() {
+    final any = changes.isEmpty ? 'disabled' : 'enabled';
+    _state('.uno:AcceptAllTrackedChanges', any);
+    _state('.uno:RejectAllTrackedChanges', any);
+    _emit(const TrackedChangesChanged());
+  }
+
+  void _changeCommand(String command, String argsJson) {
+    int? index() {
+      if (argsJson.isEmpty) return null;
+      final v = (jsonDecode(argsJson) as Map).values.first;
+      return (v as Map)['value'] as int?;
+    }
+
+    switch (command) {
+      case '.uno:TrackChanges':
+        tracking = !tracking;
+        _state(command, '$tracking');
+      case '.uno:ShowTrackedChanges':
+        showChanges = !showChanges;
+        _state(command, '$showChanges');
+      case '.uno:AcceptTrackedChange' || '.uno:RejectTrackedChange':
+        final i = index();
+        changes.removeWhere((c) => c.index == i);
+        _changesChanged();
+      case '.uno:AcceptAllTrackedChanges' || '.uno:RejectAllTrackedChanges':
+        changes.clear();
+        _changesChanged();
+    }
+  }
+
+  static const changeCommands = {
+    '.uno:TrackChanges',
+    '.uno:ShowTrackedChanges',
+    '.uno:AcceptTrackedChange',
+    '.uno:RejectTrackedChange',
+    '.uno:AcceptAllTrackedChanges',
+    '.uno:RejectAllTrackedChanges',
+  };
 
   void _afterEdit() {
     _state('.uno:ModifiedStatus', 'true');
@@ -549,6 +639,10 @@ class FakeQuillKit implements QuillKit {
   void uno(String command, [String argsJson = '']) {
     unoCommands.add(command);
     unoArgs.add(argsJson);
+    if (changeCommands.contains(command)) {
+      _changeCommand(command, argsJson);
+      return;
+    }
     if (commentCommands.contains(command)) {
       _comment(command, argsJson.isEmpty ? const {} : jsonDecode(argsJson) as Map<String, dynamic>);
       return;

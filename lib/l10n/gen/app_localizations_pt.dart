@@ -2876,4 +2876,103 @@ class AppLocalizationsPt extends AppLocalizations {
   String prefAuthorNameNote(String name) {
     return 'Vazio: o nome da sua conta ($name). Vale para os capítulos abertos depois.';
   }
+
+  @override
+  String get modeEditing => 'Editando';
+
+  @override
+  String get modeReview => 'Revisão';
+
+  @override
+  String get modeReading => 'Leitura';
+
+  @override
+  String get modeLabel => 'Modo';
+
+  @override
+  String get modeReadingExit => 'Sair da leitura (Esc)';
+
+  @override
+  String get modeReadingHint => 'As setas e o Page Down folheiam.';
+
+  @override
+  String get groupTracking => 'Controle';
+
+  @override
+  String get groupChanges => 'Alterações';
+
+  @override
+  String get groupReading => 'Leitura';
+
+  @override
+  String get commandChanges => 'Painel Alterações';
+
+  @override
+  String get commandShowChanges => 'Mostrar as alterações';
+
+  @override
+  String get commandPreviousChange => 'Alteração anterior';
+
+  @override
+  String get commandNextChange => 'Próxima alteração';
+
+  @override
+  String get commandAcceptChange => 'Aceitar a alteração';
+
+  @override
+  String get commandRejectChange => 'Rejeitar a alteração';
+
+  @override
+  String get commandAcceptAll => 'Aceitar todas';
+
+  @override
+  String get commandRejectAll => 'Rejeitar todas';
+
+  @override
+  String get railChanges => 'Alterações';
+
+  @override
+  String get changesTitle => 'Alterações';
+
+  @override
+  String get changesClose => 'Fechar as alterações';
+
+  @override
+  String get changesTracking => 'Revisão: marcar o que eu mudar';
+
+  @override
+  String get changesShow => 'Mostrar na página';
+
+  @override
+  String get changesEmpty =>
+      'Nenhuma alteração neste capítulo. Ligue a Revisão (Ctrl+Shift+E) para marcar o que você mudar.';
+
+  @override
+  String changesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count alterações',
+      one: '1 alteração',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get changesAccept => 'Aceitar';
+
+  @override
+  String get changesReject => 'Rejeitar';
+
+  @override
+  String get changeInsert => 'Inserção';
+
+  @override
+  String get changeDelete => 'Exclusão';
+
+  @override
+  String get changeFormat => 'Formatação';
+
+  @override
+  String get changeOther => 'Alteração';
 }

@@ -857,6 +857,55 @@ void main() {
     await until(() => doc.comments.length == 2, 'excluir');
     expect(await workspace.closeTab(), isTrue);
 
+    // 31. O controle de alterações (D-089): a Revisão marca o que se digita e
+    //     o que se apaga; a lista vem só com o painel (liveChanges); aceitar
+    //     uma pelo índice, rejeitar as outras; a Leitura não deixa editar; o
+    //     ODT guarda a alteração que ficou.
+    final revised = File('test/fixtures/capitulo-curto.odt').copySync('${tmp.path}/revisado.odt').path;
+    await openAndWait(revised);
+    doc.liveChanges = true;
+    doc.setTracking(true);
+    await until(() => doc.tracking, 'ligar a Revisão');
+    // Apagar uma inserção da própria Revisão some com ela: apaga antes.
+    doc.uno('.uno:GoToStartOfDoc');
+    doc.uno('.uno:WordRightSel');
+    doc.uno('.uno:Delete');
+    doc.uno('.uno:GoToStartOfDoc');
+    doc.uno('.uno:InsertText', '{"Text":{"type":"string","value":"Aceita "}}');
+    doc.uno('.uno:GoToEndOfDoc');
+    doc.uno('.uno:InsertText', '{"Text":{"type":"string","value":" Rejeitada"}}');
+    await until(() => doc.changes.length == 3 && doc.hasChanges, 'a lista das alterações',
+        detail: () => '${doc.changes.map((c) => c.description)}');
+    expect(doc.changes.where((c) => c.kind == TrackedChangeKind.delete), hasLength(1));
+    final accepted = doc.changes.firstWhere((c) => c.description.contains('Aceita'));
+    expect(accepted.kind, TrackedChangeKind.insert);
+    expect(accepted.author, 'Ana "Revisora" Teste');
+    expect(accepted.range, isNotEmpty);
+    doc.acceptChange(accepted.index);
+    await until(() => doc.changes.every((c) => c.index != accepted.index), 'aceitar uma');
+    doc.rejectAllChanges();
+    await until(() => doc.changes.isEmpty && !doc.hasChanges, 'rejeitar as outras');
+    expect((await doc.searchText(const SearchQuery('Rejeitada'), fresh: true)).total, 0);
+    doc.uno('.uno:GoToEndOfDoc');
+    doc.uno('.uno:InsertText', '{"Text":{"type":"string","value":" Pendente"}}');
+    await until(() => doc.changes.length == 1, 'a que fica pendente');
+    doc.reading = true;
+    expect(doc.canEdit, isFalse);
+    doc.acceptAllChanges();
+    await settle(500);
+    expect(doc.changes, hasLength(1), reason: 'na Leitura, nada se aceita');
+    doc.reading = false;
+    doc.setTracking(false);
+    await until(() => !doc.tracking, 'desligar a Revisão');
+    await workspace.save();
+    await until(() => !doc.modified && doc.busy == null, 'salvar o revisado');
+    final revisedXml = readOdtContent(revised)!;
+    expect(revisedXml, contains('Aceita'));
+    expect(revisedXml, contains('<text:changed-region'));
+    expect(revisedXml, isNot(contains('Rejeitada')));
+    doc.liveChanges = false;
+    expect(await workspace.closeTab(), isTrue);
+
         // Fecha sem salvar (descarta), para não deixar trava.
     workspace.onUnsaved = () async => UnsavedChoice.discard;
     expect(await workspace.requestExit(), isTrue);

@@ -198,7 +198,19 @@ class DocumentController extends ChangeNotifier {
   bool _enabled(String command) => commandStates[command] == 'enabled';
 
   bool get isOpen => docStatus == DocStatus.open;
-  bool get canEdit => isOpen && !readOnly;
+  bool get canEdit => isOpen && !readOnly && !reading;
+
+  /// O modo Leitura (D-089): só ler e folhear. Não muda o documento nem a
+  /// trava, então vale para qualquer aba.
+  bool get reading => _reading;
+  bool _reading = false;
+  set reading(bool v) {
+    if (v == _reading) return;
+    _reading = v;
+    // A faixa e o painel Formatar leem o canEdit.
+    stateRevision++;
+    notifyListeners();
+  }
 
   /// O nome do instantâneo que a aba da tela mostra (D-081); null num
   /// documento.
@@ -790,6 +802,86 @@ class DocumentController extends ChangeNotifier {
     final at = Offset(r.left + 1, r.center.dy);
     kit.postMouse(MouseEventType.down, at.dx.round(), at.dy.round());
     kit.postMouse(MouseEventType.up, at.dx.round(), at.dy.round());
+  }
+
+  // ------------------------------- o controle de alterações (D-089) --
+
+  /// A Revisão: o que se digita vira alteração (`.uno:TrackChanges`).
+  bool get tracking => isOn('.uno:TrackChanges');
+
+  /// As alterações à mostra na página (o riscado e o sublinhado do motor).
+  bool get showChanges => commandStates['.uno:ShowTrackedChanges'] != 'false';
+
+  /// Há alterações para aceitar ou rejeitar.
+  bool get hasChanges => _enabled('.uno:AcceptAllTrackedChanges');
+
+  /// As alterações, só com o painel aberto ([liveChanges]): os callbacks
+  /// chegam a cada tecla na Revisão, e a lista é pedida numa pausa.
+  List<TrackedChange> changes = const [];
+  int changesRevision = 0;
+
+  bool _liveChanges = false;
+  Timer? _changesTimer;
+  static const changesPause = Duration(milliseconds: 300);
+
+  bool get liveChanges => _liveChanges;
+  set liveChanges(bool v) {
+    if (v == _liveChanges) return;
+    _liveChanges = v;
+    if (v) {
+      _requestChanges();
+    } else {
+      _changesTimer?.cancel();
+      changes = const [];
+      changesRevision++;
+    }
+  }
+
+  void _requestChanges() {
+    _changesTimer?.cancel();
+    if (isOpen) kit.requestCommandValues('.uno:AcceptTrackedChanges');
+  }
+
+  void _changesSoon() {
+    if (!_liveChanges) return;
+    _changesTimer?.cancel();
+    _changesTimer = Timer(changesPause, _requestChanges);
+  }
+
+  /// Liga ou desliga a Revisão; o motor alterna.
+  void setTracking(bool on) {
+    if (on != tracking) uno('.uno:TrackChanges');
+  }
+
+  /// Mostra ou esconde as alterações na página (não muda o documento).
+  void toggleShowChanges() {
+    if (isOpen) kit.uno('.uno:ShowTrackedChanges');
+  }
+
+  static String _changeArgs(String command, int index) =>
+      jsonEncode({command: {'type': 'unsigned short', 'value': index}});
+
+  void acceptChange(int index) => uno('.uno:AcceptTrackedChange', _changeArgs('AcceptTrackedChange', index));
+  void rejectChange(int index) => uno('.uno:RejectTrackedChange', _changeArgs('RejectTrackedChange', index));
+  void acceptAllChanges() => uno('.uno:AcceptAllTrackedChanges');
+
+  /// A do cursor (ou a selecionada pela anterior e a próxima).
+  bool get hasCurrentChange => _enabled('.uno:AcceptTrackedChange');
+  void acceptCurrentChange() => uno('.uno:AcceptTrackedChange');
+  void rejectCurrentChange() => uno('.uno:RejectTrackedChange');
+  void rejectAllChanges() => uno('.uno:RejectAllTrackedChanges');
+
+  /// Seleciona a alteração seguinte (ou a anterior) a partir do cursor.
+  void nextChange({bool back = false}) {
+    if (isOpen) kit.uno(back ? '.uno:PreviousTrackedChange' : '.uno:NextTrackedChange');
+  }
+
+  /// Leva o cursor ao começo da alteração.
+  void goToChange(TrackedChange c) {
+    final r = c.range.firstOrNull;
+    if (!isOpen || r == null) return;
+    kit.postMouse(MouseEventType.down, (r.left + 1).round(), r.center.dy.round());
+    kit.postMouse(MouseEventType.up, (r.left + 1).round(), r.center.dy.round());
   }
 
   // ------------------------------------------ várias páginas (D-047) --
@@ -1581,7 +1673,10 @@ class DocumentController extends ChangeNotifier {
       e is GraphicSelected ||
       e is TableSelected ||
       e is CommentChanged ||
-      (e is CommandValues && (e.command == '.uno:StyleApply' || e.command == '.uno:ViewAnnotations'));
+      e is TrackedChangesChanged ||
+      (e is CommandValues && (e.command == '.uno:StyleApply' ||
+              e.command == '.uno:ViewAnnotations' ||
+              e.command == '.uno:AcceptTrackedChanges'));
 
   void _onEvent(KitEvent e) {
     // Até o motor confirmar o documento da tela, o que chega é do anterior.
@@ -1626,6 +1721,9 @@ class DocumentController extends ChangeNotifier {
         if (_accessibility) kit.setAccessibility(true);
         snapshot = FodtSnapshot.empty;
         _setComments(const []);
+        changes = const [];
+        changesRevision++;
+        if (_liveChanges) _requestChanges();
         _deferOpenWork();
       case DocumentOpenFailed(:final message):
         progress = null;
@@ -1661,6 +1759,9 @@ class DocumentController extends ChangeNotifier {
         // O motor descarta os callbacks das abas de fundo: a lista vem de novo.
         _setComments(const []);
         kit.requestCommandValues('.uno:ViewAnnotations');
+        changes = const [];
+        changesRevision++;
+        if (_liveChanges) _requestChanges();
       case DocumentClosed(:final id):
         if (_unloading.remove(id)) return;
         final tab = [for (final t in tabs) if (t.engineId == id) t].firstOrNull;
@@ -1685,6 +1786,8 @@ class DocumentController extends ChangeNotifier {
         contextMenu = null;
         commandStates.clear();
         _setComments(const []);
+        changes = const [];
+        changesRevision++;
         if (tab != null) _removeTab(tab);
       case DocumentSizeChanged(:final size):
         documentSize = size;
@@ -1726,6 +1829,13 @@ class DocumentController extends ChangeNotifier {
         _setComments(parseCommentList(json));
       case CommentChanged():
         _setComments(applyCommentChange(comments, e));
+      case CommandValues(command: '.uno:AcceptTrackedChanges', :final json):
+        if (!_liveChanges) return;
+        changes = parseTrackedChanges(json);
+        changesRevision++;
+      case TrackedChangesChanged():
+        _changesSoon();
+        return;
       case CommandValues(:final command, :final json):
         if (command != '.uno:CharFontName') return;
         fonts = parseFontList(json);
@@ -1892,6 +2002,7 @@ class DocumentController extends ChangeNotifier {
     _openWork?.cancel();
     _autosaveTimer?.cancel();
     _linkClickTimer?.cancel();
+    _changesTimer?.cancel();
     for (final c in _copyWaiters.values) {
       if (!c.isCompleted) c.complete(false);
     }

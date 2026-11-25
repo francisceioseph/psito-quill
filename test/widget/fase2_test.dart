@@ -110,6 +110,14 @@ class _NoView implements EditorViewActions {
   @override
   void newComment() {}
   @override
+  EditMode editMode = EditMode.editing;
+  @override
+  void setEditMode(EditMode mode) {}
+  @override
+  bool changesOpen = false;
+  @override
+  void toggleChanges() {}
+  @override
   void toggleRibbon() {}
   @override
   void about() {}

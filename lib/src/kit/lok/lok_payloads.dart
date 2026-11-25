@@ -342,6 +342,8 @@ DocComment? parseComment(Object? json) {
   );
 }
 
+DateTime? lokDate(String s) => _commentDate(s);
+
 DateTime? _commentDate(String s) {
   // "2026-11-25T08:48:34,468242030": o Dart só lê até os microssegundos.
   final m = RegExp(r'^(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)(?:[.,](\d{1,6})\d*)?').firstMatch(s);
@@ -375,6 +377,37 @@ List<DocComment> parseCommentList(String json) {
     final list = (jsonDecode(json) as Map<String, dynamic>)['comments'];
     if (list is! List) return const [];
     return [for (final c in list) ?parseComment(c)];
+  } on FormatException {
+    return const [];
+  }
+}
+
+// ------------------------------------------------- as alterações (D-089) --
+
+/// A lista do `.uno:AcceptTrackedChanges`: {"redlines": [...]}, na ordem do
+/// motor (não a do texto).
+List<TrackedChange> parseTrackedChanges(String json) {
+  try {
+    final list = (jsonDecode(json) as Map<String, dynamic>)['redlines'];
+    if (list is! List) return const [];
+    return [
+      for (final r in list)
+        if ((r is Map ? int.tryParse('${r['index']}') : null) case final index?)
+          TrackedChange(
+            index: index,
+            kind: switch ('${(r as Map)['type']}') {
+              'Insert' => TrackedChangeKind.insert,
+              'Delete' => TrackedChangeKind.delete,
+              'Format' || 'Attributes' || 'ParagraphFormat' => TrackedChangeKind.format,
+              _ => TrackedChangeKind.other,
+            },
+            author: '${r['author'] ?? ''}',
+            description: '${r['description'] ?? ''}',
+            comment: '${r['comment'] ?? ''}',
+            date: lokDate('${r['dateTime'] ?? ''}'),
+            range: parseSelection('${r['textRange'] ?? ''}'),
+          ),
+    ];
   } on FormatException {
     return const [];
   }

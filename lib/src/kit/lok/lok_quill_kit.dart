@@ -278,6 +278,9 @@ class LokQuillKit implements QuillKit {
         return parseA11yCaret(payload) ?? OtherKitEvent(type, payload);
       case LibreOfficeKitCallbackType.LOK_CALLBACK_SEARCH_NOT_FOUND:
         return SearchNotFound(payload);
+      case LibreOfficeKitCallbackType.LOK_CALLBACK_REDLINE_TABLE_SIZE_CHANGED:
+      case LibreOfficeKitCallbackType.LOK_CALLBACK_REDLINE_TABLE_ENTRY_MODIFIED:
+        return const TrackedChangesChanged();
       case LibreOfficeKitCallbackType.LOK_CALLBACK_COMMENT:
         return parseCommentChanged(payload) ?? OtherKitEvent(type, payload);
       case LibreOfficeKitCallbackType.LOK_CALLBACK_CONTEXT_MENU:

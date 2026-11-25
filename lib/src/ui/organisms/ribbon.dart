@@ -263,6 +263,19 @@ class Ribbon extends StatelessWidget {
                       RibbonTab.review => _groups(commands, onRan, [
                         (l10n.groupProofing, [CommandIds.spellOnline]),
                         (l10n.groupComments, [ViewCommandIds.newComment, ViewCommandIds.comments]),
+                        (l10n.groupTracking, [ViewCommandIds.modeReview, ViewCommandIds.showChanges, ViewCommandIds.changes]),
+                        (
+                          l10n.groupChanges,
+                          [
+                            ViewCommandIds.previousChange,
+                            ViewCommandIds.nextChange,
+                            ViewCommandIds.acceptChange,
+                            ViewCommandIds.rejectChange,
+                            ViewCommandIds.acceptAll,
+                            ViewCommandIds.rejectAll,
+                          ],
+                        ),
+                        (l10n.groupReading, [ViewCommandIds.modeReading]),
                         (l10n.groupEditing, [ViewCommandIds.find, ViewCommandIds.replace]),
                       ]),
                       RibbonTab.view => _ViewTab(commands: commands, onRan: onRan),
