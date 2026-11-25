@@ -17,6 +17,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:psito_quill/src/plugins/plugin_host.dart';
 import 'package:psito_quill/src/book/book_search.dart';
 import 'package:psito_quill/src/book/compile.dart';
+import 'package:psito_quill/src/book/compile_models.dart';
 import 'package:psito_quill/src/book/odt_zip.dart';
 import 'package:psito_quill/src/book/docx_import.dart';
 import 'package:psito_quill/src/book/book_io.dart';
@@ -780,6 +781,35 @@ void main() {
     expect(utf8.decode(docxXml!), contains('Compiladíssimo'));
     expect(doc.path, scenePath, reason: 'o compilar não toca nas abas');
     expect((await doc.searchText(const SearchQuery('compiladíssimo'), fresh: true)).total, 1, reason: 'o capítulo da tela continua com o texto');
+
+    // 29. Os modelos (D-087): o 6×9 sai em 15,24 × 22,86 cm, com o título
+    //     do livro no cabeçalho das pares; o Manuscrito, em DOCX com espaço
+    //     duplo, Times e o cabeçalho "Sobrenome / TÍTULO / página".
+    final sixPdf = '${tmp.path}/modelo-6x9.pdf';
+    expect((await workspace.compileBook(CompileJob(kit),
+                BuiltInModel.sixByNine.settings.copyWith(title: 'Cenas', author: 'Fulano de Tal'), sixPdf))
+            .outcome,
+        CompileOutcome.done);
+    final info = await Process.run('pdfinfo', [sixPdf]);
+    if (info.exitCode == 0) {
+      expect(info.stdout as String, contains('Page size:       432 x 648 pts'));
+      final text = (await Process.run('pdftotext', ['-layout', sixPdf, '-'])).stdout as String;
+      expect(RegExp(r'\b\d+\s+Cenas\b').hasMatch(text), isTrue, reason: 'o título do livro no cabeçalho das pares');
+    }
+    final manuscriptDocx = '${tmp.path}/modelo-manuscrito.docx';
+    expect((await workspace.compileBook(CompileJob(kit),
+                BuiltInModel.manuscript.settings.copyWith(title: 'Cenas', author: 'Fulano de Tal'), manuscriptDocx))
+            .outcome,
+        CompileOutcome.done);
+    final docxBytes = File(manuscriptDocx).readAsBytesSync();
+    final docxStyles = utf8.decode(readZipEntry(docxBytes, 'word/styles.xml')!);
+    expect(docxStyles, contains('w:line="480"'));
+    expect(docxStyles, contains('Times New Roman'));
+    final headers = [
+      for (var i = 1; i <= 4; i++)
+        if (readZipEntry(docxBytes, 'word/header$i.xml') case final h?) utf8.decode(h),
+    ].join();
+    expect(headers, contains('Tal / CENAS / '));
 
     workspace.onUnsaved = () async => UnsavedChoice.discard;
     expect(await workspace.closeBook(), isTrue);

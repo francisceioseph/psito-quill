@@ -2,6 +2,10 @@
 // árvore do fichário com caixas de marcar), a folha de rosto, o sumário, as
 // quebras, o separador de cena e o formato. "Compilar…" pergunta onde gravar
 // e mostra o andamento; cancelar para no próximo passo.
+//
+// Os modelos (Etapa 2, D-087): o Manuscrito, o Livro 6×9 e o E-book, e os
+// de quem escreve, no `compilar.json` do livro, com a aparência (a página,
+// o corpo, os cabeçalhos) e a capa. A janela abre como ficou da última vez.
 import 'dart:async';
 import 'dart:io';
 
@@ -10,6 +14,8 @@ import 'package:flutter/material.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../book/book.dart';
 import '../../book/compile.dart';
+import '../../book/compile_models.dart';
+import '../../book/compile_style.dart';
 import '../../book/fodt_join.dart';
 import '../../document/workspace.dart';
 import '../atoms/w_checkbox.dart';
@@ -44,18 +50,68 @@ class _CompileDialogState extends State<CompileDialog> {
   final _subtitle = TextEditingController();
   late final _author = TextEditingController(text: _book.author);
   TextEditingController? _tocTitle;
+  final _font = TextEditingController();
   bool _titlePage = true, _toc = true, _pageBreaks = true, _partTitles = true, _chapterTitles = true;
   SceneBreakMode _scenes = SceneBreakMode.keep;
   CompileFormat _format = CompileFormat.pdf;
+  OutputStyle _style = const OutputStyle();
+  String _cover = '';
+
+  /// O `compilar.json` do livro e o modelo escolhido (null: nenhum).
+  late final CompileStore _store;
+  String? _model;
 
   CompileJob? _job;
   CompileStage? _stage;
   int _done = 0, _total = 0;
 
+  String? get _bookDir => widget.workspace.book.dir;
+
+  @override
+  void initState() {
+    super.initState();
+    final dir = _bookDir;
+    _store = dir == null ? CompileStore() : CompileStore.read(dir);
+    if (_store.last != null && _store.settingsOf(_store.last!) != null) _model = _store.last;
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _tocTitle ??= TextEditingController(text: AppLocalizations.of(context).compileTocDefault);
+    if (_tocTitle != null) return;
+    _tocTitle = TextEditingController(text: AppLocalizations.of(context).compileTocDefault);
+    // A janela como ficou da última vez; os capítulos que já não existem
+    // saem da lista dos de fora.
+    final last = _store.choices;
+    if (last != null) {
+      final ids = {for (final c in _book.chapters) c.id};
+      _apply(last.copyWith(
+        excluded: last.excluded.intersection(ids),
+        title: last.title.isEmpty ? _book.title : last.title,
+        author: last.author.isEmpty ? _book.author : last.author,
+      ));
+    }
+  }
+
+  /// Põe [s] na janela.
+  void _apply(CompileSettings s) {
+    _excluded
+      ..clear()
+      ..addAll(s.excluded);
+    _title.text = s.title;
+    _subtitle.text = s.subtitle;
+    _author.text = s.author;
+    _tocTitle!.text = s.tocTitle;
+    _titlePage = s.titlePage;
+    _toc = s.toc;
+    _pageBreaks = s.pageBreaks;
+    _partTitles = s.partTitles;
+    _chapterTitles = s.chapterTitles;
+    _scenes = s.scenes;
+    _format = s.format;
+    _style = s.style;
+    _font.text = s.style.font;
+    _cover = s.cover;
   }
 
   @override
@@ -64,6 +120,7 @@ class _CompileDialogState extends State<CompileDialog> {
     _subtitle.dispose();
     _author.dispose();
     _tocTitle?.dispose();
+    _font.dispose();
     super.dispose();
   }
 
@@ -80,7 +137,89 @@ class _CompileDialogState extends State<CompileDialog> {
         chapterTitles: _chapterTitles,
         scenes: _scenes,
         format: _format,
+        style: _style.copyWith(font: _font.text.trim()),
+        cover: _cover,
       );
+
+  /// Grava o `compilar.json`; false se não deu.
+  bool _writeStore() {
+    final dir = _bookDir;
+    if (dir == null) return false;
+    try {
+      _store.write(dir);
+      return true;
+    } on FileSystemException {
+      widget.onNotice(AppLocalizations.of(context).compileModelWriteFailed);
+      return false;
+    }
+  }
+
+  String _modelLabel(AppLocalizations l10n, String? id) {
+    if (id == null) return l10n.compileModelNone;
+    return switch (BuiltInModel.values.where((b) => b.id == id).firstOrNull) {
+      BuiltInModel.manuscript => l10n.compileModelManuscript,
+      BuiltInModel.sixByNine => l10n.compileModelSixByNine,
+      BuiltInModel.ebook => l10n.compileModelEbook,
+      null => id,
+    };
+  }
+
+  void _chooseModel(String? id) {
+    final model = id == null ? null : _store.settingsOf(id);
+    setState(() {
+      _model = id;
+      if (model != null) _apply(_settings.withModel(model));
+    });
+  }
+
+  Future<String?> _askName(String title, String initial) => showDialog<String>(
+        context: context,
+        builder: (_) => _NameDialog(title: title, initial: initial),
+      );
+
+  Future<void> _saveModel() async {
+    final l10n = AppLocalizations.of(context);
+    final current = _model != null && _store.named(_model!) != null ? _model! : '';
+    final name = (await _askName(l10n.compileModelSaveTitle, current))?.trim();
+    if (name == null || name.isEmpty || !mounted) return;
+    setState(() => _store.save(name, _settings));
+    if (_writeStore()) {
+      setState(() => _model = name);
+      widget.onNotice(l10n.compileModelSaved(name));
+    }
+  }
+
+  Future<void> _renameModel() async {
+    final l10n = AppLocalizations.of(context);
+    final from = _model;
+    if (from == null || _store.named(from) == null) return;
+    final to = (await _askName(l10n.compileModelRenameTitle, from))?.trim();
+    if (to == null || to.isEmpty || to == from || !mounted) return;
+    setState(() {
+      _store.delete(to);
+      _store.rename(from, to);
+      _model = to;
+    });
+    _writeStore();
+  }
+
+  void _deleteModel() {
+    final l10n = AppLocalizations.of(context);
+    final name = _model;
+    if (name == null || _store.named(name) == null) return;
+    setState(() {
+      _store.delete(name);
+      _model = null;
+    });
+    if (_writeStore()) widget.onNotice(l10n.compileModelDeleted(name));
+  }
+
+  Future<void> _pickCover() async {
+    final l10n = AppLocalizations.of(context);
+    final path = await widget.workspace.dialogs.pickImage(label: l10n.compileCover);
+    if (path == null || !mounted) return;
+    setState(() => _cover = path);
+  }
 
   String _formatLabel(AppLocalizations l10n, CompileFormat f) => switch (f) {
         CompileFormat.pdf => l10n.compileFormatPdf,
@@ -106,6 +245,11 @@ class _CompileDialogState extends State<CompileDialog> {
       mime: _format.mime,
     );
     if (target == null || !mounted) return;
+    // A janela da próxima vez começa como esta.
+    _store
+      ..last = _model
+      ..choices = settings;
+    _writeStore();
     final job = CompileJob(widget.workspace.doc.kit);
     setState(() {
       _job = job;
@@ -133,6 +277,34 @@ class _CompileDialogState extends State<CompileDialog> {
       CompileOutcome.writeFailed => l10n.compileFailed,
     });
   }
+
+  String _pageLabel(AppLocalizations l10n, PageChoice p) => switch (p) {
+        PageChoice.keep => l10n.compileKeep,
+        PageChoice.a4 => l10n.compilePageA4,
+        PageChoice.letter => l10n.compilePageLetter,
+        PageChoice.a5 => l10n.compilePageA5,
+        PageChoice.sixByNine => l10n.compilePageSixByNine,
+      };
+
+  String _spacingLabel(AppLocalizations l10n, LineSpacing v) => switch (v) {
+        LineSpacing.keep => l10n.compileKeep,
+        LineSpacing.single => l10n.compileSpacingSingle,
+        LineSpacing.oneHalf => l10n.compileSpacingOneHalf,
+        LineSpacing.double => l10n.compileSpacingDouble,
+      };
+
+  String _indentLabel(AppLocalizations l10n, IndentChoice v) => switch (v) {
+        IndentChoice.keep => l10n.compileKeep,
+        IndentChoice.on => l10n.compileIndentOn,
+        IndentChoice.off => l10n.compileIndentOff,
+      };
+
+  String _headersLabel(AppLocalizations l10n, HeaderMode v) => switch (v) {
+        HeaderMode.keep => l10n.compileKeep,
+        HeaderMode.none => l10n.compileHeadersNone,
+        HeaderMode.manuscript => l10n.compileHeadersManuscript,
+        HeaderMode.book => l10n.compileHeadersBook,
+      };
 
   void _select(bool Function(BookNode c) keep) => setState(() {
         _excluded
@@ -168,6 +340,22 @@ class _CompileDialogState extends State<CompileDialog> {
             Expanded(child: IgnorePointer(ignoring: !enabled || running, child: WTextField(label: label, controller: c))),
           ]),
         );
+
+    Widget drop<T>(String label, String text, List<WDropdownItem<T>> items, ValueChanged<T> onSelected) => Padding(
+          padding: EdgeInsets.only(bottom: t.space.sm),
+          child: Row(children: [
+            SizedBox(width: 160, child: WLabel(label)),
+            WDropdown<T>(label: label, width: 300, text: text, items: items, onSelected: running ? null : onSelected),
+          ]),
+        );
+
+    final modelSettings = _model == null ? null : _store.settingsOf(_model!);
+    final modelText = modelSettings != null && !_settings.sameModel(modelSettings)
+        ? l10n.compileModelChanged(_modelLabel(l10n, _model))
+        : _modelLabel(l10n, _model);
+    final ownModel = _model != null && _store.named(_model!) != null;
+    String keepOr(bool keep, String text) => keep ? l10n.compileKeep : text;
+    final st = _style;
 
     final rows = <Widget>[];
     for (final n in _book.nodes) {
@@ -220,6 +408,28 @@ class _CompileDialogState extends State<CompileDialog> {
     } else {
       body = SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Row(children: [
+            SizedBox(width: 160, child: WLabel(l10n.compileModel)),
+            WDropdown<String?>(
+              label: l10n.compileModel,
+              width: 220,
+              text: modelText,
+              items: [
+                WDropdownItem(null, l10n.compileModelNone),
+                for (final b in BuiltInModel.values) WDropdownItem(b.id, _modelLabel(l10n, b.id)),
+                for (final m in _store.models) WDropdownItem(m.name, m.name),
+              ],
+              onSelected: _chooseModel,
+            ),
+          ]),
+          Wrap(alignment: WrapAlignment.end, children: [
+            TextButton(onPressed: () => unawaited(_saveModel()), child: Text(l10n.compileModelSave)),
+            if (ownModel) ...[
+              TextButton(onPressed: () => unawaited(_renameModel()), child: Text(l10n.compileModelRename)),
+              TextButton(onPressed: _deleteModel, child: Text(l10n.compileModelDelete)),
+            ],
+          ]),
+          SizedBox(height: t.space.md),
           Row(children: [
             Expanded(child: Semantics(header: true, child: WLabel(l10n.compileChapters, heading: true))),
             TextButton(onPressed: () => _select((_) => true), child: Text(l10n.compileSelectAll)),
@@ -280,6 +490,65 @@ class _CompileDialogState extends State<CompileDialog> {
               onSelected: (v) => setState(() => _format = v),
             ),
           ]),
+          SizedBox(height: t.space.lg),
+          Semantics(header: true, child: WLabel(l10n.compileLook, heading: true)),
+          SizedBox(height: t.space.sm),
+          drop<PageChoice>(
+            l10n.compilePage,
+            _pageLabel(l10n, st.page),
+            [for (final p in PageChoice.values) WDropdownItem(p, _pageLabel(l10n, p))],
+            (v) => setState(() => _style = _style.copyWith(page: v)),
+          ),
+          Padding(
+            padding: EdgeInsets.only(bottom: t.space.sm),
+            child: Row(children: [
+              SizedBox(width: 160, child: WLabel(l10n.compileFont)),
+              SizedBox(
+                width: 300,
+                child: IgnorePointer(
+                  ignoring: running,
+                  child: WTextField(label: l10n.compileFont, hint: l10n.compileKeep, controller: _font, onChanged: (_) => setState(() {})),
+                ),
+              ),
+            ]),
+          ),
+          drop<int>(
+            l10n.compileFontSize,
+            keepOr(st.fontSize == 0, l10n.compileFontSizePt(st.fontSize)),
+            [for (final n in const [0, 10, 11, 12, 13, 14]) WDropdownItem(n, keepOr(n == 0, l10n.compileFontSizePt(n)))],
+            (v) => setState(() => _style = _style.copyWith(fontSize: v)),
+          ),
+          drop<LineSpacing>(
+            l10n.compileSpacing,
+            _spacingLabel(l10n, st.spacing),
+            [for (final v in LineSpacing.values) WDropdownItem(v, _spacingLabel(l10n, v))],
+            (v) => setState(() => _style = _style.copyWith(spacing: v)),
+          ),
+          drop<IndentChoice>(
+            l10n.compileIndent,
+            _indentLabel(l10n, st.indent),
+            [for (final v in IndentChoice.values) WDropdownItem(v, _indentLabel(l10n, v))],
+            (v) => setState(() => _style = _style.copyWith(indent: v)),
+          ),
+          drop<HeaderMode>(
+            l10n.compileHeaders,
+            _headersLabel(l10n, st.headers),
+            [for (final v in HeaderMode.values) WDropdownItem(v, _headersLabel(l10n, v))],
+            (v) => setState(() => _style = _style.copyWith(headers: v)),
+          ),
+          toggle(l10n.compileRightPage, st.rightPage, (v) => setState(() => _style = _style.copyWith(rightPage: v))),
+          Row(children: [
+            SizedBox(width: 160, child: WLabel(l10n.compileCover)),
+            Expanded(
+              child: WLabel(
+                _cover.isEmpty ? l10n.compileCoverNone : _cover.split('/').last,
+                tone: _cover.isEmpty ? WLabelTone.muted : WLabelTone.normal,
+              ),
+            ),
+            TextButton(onPressed: running ? null : () => unawaited(_pickCover()), child: Text(l10n.compileCoverPick)),
+            if (_cover.isNotEmpty)
+              TextButton(onPressed: running ? null : () => setState(() => _cover = ''), child: Text(l10n.compileCoverRemove)),
+          ]),
         ]),
       );
     }
@@ -297,6 +566,46 @@ class _CompileDialogState extends State<CompileDialog> {
           if (!running) FilledButton(onPressed: () => unawaited(_run()), child: Text(l10n.compileRun)),
         ],
       ),
+    );
+  }
+}
+
+/// O nome de um modelo, para salvar ou renomear.
+class _NameDialog extends StatefulWidget {
+  const _NameDialog({required this.title, required this.initial});
+  final String title, initial;
+
+  @override
+  State<_NameDialog> createState() => _NameDialogState();
+}
+
+class _NameDialogState extends State<_NameDialog> {
+  late final _name = TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  void _ok() {
+    final name = _name.text.trim();
+    if (name.isNotEmpty) Navigator.pop(context, name);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(widget.title),
+      content: SizedBox(
+        width: 360,
+        child: WTextField(label: l10n.compileModelName, controller: _name, autofocus: true, onSubmitted: (_) => _ok()),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.dialogCancel)),
+        FilledButton(onPressed: _ok, child: Text(l10n.compileModelOk)),
+      ],
     );
   }
 }

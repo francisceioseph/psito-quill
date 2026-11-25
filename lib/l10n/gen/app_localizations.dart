@@ -4723,6 +4723,258 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Compilar cancelado.'**
   String get compileCancelled;
+
+  /// No description provided for @compileModel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Modelo'**
+  String get compileModel;
+
+  /// No description provided for @compileModelNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem modelo'**
+  String get compileModelNone;
+
+  /// No description provided for @compileModelManuscript.
+  ///
+  /// In pt, this message translates to:
+  /// **'Manuscrito'**
+  String get compileModelManuscript;
+
+  /// No description provided for @compileModelSixByNine.
+  ///
+  /// In pt, this message translates to:
+  /// **'Livro 6×9'**
+  String get compileModelSixByNine;
+
+  /// No description provided for @compileModelEbook.
+  ///
+  /// In pt, this message translates to:
+  /// **'E-book'**
+  String get compileModelEbook;
+
+  /// No description provided for @compileModelChanged.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} (alterado)'**
+  String compileModelChanged(String name);
+
+  /// No description provided for @compileModelSave.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvar como modelo…'**
+  String get compileModelSave;
+
+  /// No description provided for @compileModelRename.
+  ///
+  /// In pt, this message translates to:
+  /// **'Renomear…'**
+  String get compileModelRename;
+
+  /// No description provided for @compileModelDelete.
+  ///
+  /// In pt, this message translates to:
+  /// **'Apagar o modelo'**
+  String get compileModelDelete;
+
+  /// No description provided for @compileModelName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome do modelo'**
+  String get compileModelName;
+
+  /// No description provided for @compileModelSaveTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvar como modelo'**
+  String get compileModelSaveTitle;
+
+  /// No description provided for @compileModelRenameTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Renomear o modelo'**
+  String get compileModelRenameTitle;
+
+  /// No description provided for @compileModelOk.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvar'**
+  String get compileModelOk;
+
+  /// No description provided for @compileModelSaved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Modelo \"{name}\" salvo no livro.'**
+  String compileModelSaved(String name);
+
+  /// No description provided for @compileModelDeleted.
+  ///
+  /// In pt, this message translates to:
+  /// **'Modelo \"{name}\" apagado.'**
+  String compileModelDeleted(String name);
+
+  /// No description provided for @compileModelWriteFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não deu para gravar o compilar.json do livro.'**
+  String get compileModelWriteFailed;
+
+  /// No description provided for @compileLook.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aparência'**
+  String get compileLook;
+
+  /// No description provided for @compileKeep.
+  ///
+  /// In pt, this message translates to:
+  /// **'A do capítulo'**
+  String get compileKeep;
+
+  /// No description provided for @compilePage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Página'**
+  String get compilePage;
+
+  /// No description provided for @compilePageA4.
+  ///
+  /// In pt, this message translates to:
+  /// **'A4'**
+  String get compilePageA4;
+
+  /// No description provided for @compilePageLetter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Carta'**
+  String get compilePageLetter;
+
+  /// No description provided for @compilePageA5.
+  ///
+  /// In pt, this message translates to:
+  /// **'A5'**
+  String get compilePageA5;
+
+  /// No description provided for @compilePageSixByNine.
+  ///
+  /// In pt, this message translates to:
+  /// **'15,24 × 22,86 cm (6×9, espelhada)'**
+  String get compilePageSixByNine;
+
+  /// No description provided for @compileFont.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fonte do corpo'**
+  String get compileFont;
+
+  /// No description provided for @compileFontSize.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tamanho do corpo'**
+  String get compileFontSize;
+
+  /// No description provided for @compileFontSizePt.
+  ///
+  /// In pt, this message translates to:
+  /// **'{size} pt'**
+  String compileFontSizePt(int size);
+
+  /// No description provided for @compileSpacing.
+  ///
+  /// In pt, this message translates to:
+  /// **'Espaçamento'**
+  String get compileSpacing;
+
+  /// No description provided for @compileSpacingSingle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Simples'**
+  String get compileSpacingSingle;
+
+  /// No description provided for @compileSpacingOneHalf.
+  ///
+  /// In pt, this message translates to:
+  /// **'1,5 linha'**
+  String get compileSpacingOneHalf;
+
+  /// No description provided for @compileSpacingDouble.
+  ///
+  /// In pt, this message translates to:
+  /// **'Duplo'**
+  String get compileSpacingDouble;
+
+  /// No description provided for @compileIndent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recuo da primeira linha'**
+  String get compileIndent;
+
+  /// No description provided for @compileIndentOn.
+  ///
+  /// In pt, this message translates to:
+  /// **'Com recuo'**
+  String get compileIndentOn;
+
+  /// No description provided for @compileIndentOff.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem recuo'**
+  String get compileIndentOff;
+
+  /// No description provided for @compileHeaders.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cabeçalhos'**
+  String get compileHeaders;
+
+  /// No description provided for @compileHeadersNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum'**
+  String get compileHeadersNone;
+
+  /// No description provided for @compileHeadersManuscript.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sobrenome / título / página'**
+  String get compileHeadersManuscript;
+
+  /// No description provided for @compileHeadersBook.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alternados: o livro e o capítulo'**
+  String get compileHeadersBook;
+
+  /// No description provided for @compileRightPage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cada capítulo começa numa página ímpar'**
+  String get compileRightPage;
+
+  /// No description provided for @compileCover.
+  ///
+  /// In pt, this message translates to:
+  /// **'Capa'**
+  String get compileCover;
+
+  /// No description provided for @compileCoverNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem capa'**
+  String get compileCoverNone;
+
+  /// No description provided for @compileCoverPick.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolher a imagem…'**
+  String get compileCoverPick;
+
+  /// No description provided for @compileCoverRemove.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tirar a capa'**
+  String get compileCoverRemove;
 }
 
 class _AppLocalizationsDelegate

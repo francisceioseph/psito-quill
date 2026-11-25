@@ -2653,4 +2653,139 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get compileCancelled => 'Compile cancelled.';
+
+  @override
+  String get compileModel => 'Template';
+
+  @override
+  String get compileModelNone => 'No template';
+
+  @override
+  String get compileModelManuscript => 'Manuscript';
+
+  @override
+  String get compileModelSixByNine => '6×9 book';
+
+  @override
+  String get compileModelEbook => 'E-book';
+
+  @override
+  String compileModelChanged(String name) {
+    return '$name (changed)';
+  }
+
+  @override
+  String get compileModelSave => 'Save as template…';
+
+  @override
+  String get compileModelRename => 'Rename…';
+
+  @override
+  String get compileModelDelete => 'Delete template';
+
+  @override
+  String get compileModelName => 'Template name';
+
+  @override
+  String get compileModelSaveTitle => 'Save as template';
+
+  @override
+  String get compileModelRenameTitle => 'Rename template';
+
+  @override
+  String get compileModelOk => 'Save';
+
+  @override
+  String compileModelSaved(String name) {
+    return 'Template \"$name\" saved in the book.';
+  }
+
+  @override
+  String compileModelDeleted(String name) {
+    return 'Template \"$name\" deleted.';
+  }
+
+  @override
+  String get compileModelWriteFailed =>
+      'Could not write the book\'s compilar.json.';
+
+  @override
+  String get compileLook => 'Look';
+
+  @override
+  String get compileKeep => 'The chapter\'s';
+
+  @override
+  String get compilePage => 'Page';
+
+  @override
+  String get compilePageA4 => 'A4';
+
+  @override
+  String get compilePageLetter => 'Letter';
+
+  @override
+  String get compilePageA5 => 'A5';
+
+  @override
+  String get compilePageSixByNine => '6 × 9 in (mirrored)';
+
+  @override
+  String get compileFont => 'Body font';
+
+  @override
+  String get compileFontSize => 'Body size';
+
+  @override
+  String compileFontSizePt(int size) {
+    return '$size pt';
+  }
+
+  @override
+  String get compileSpacing => 'Line spacing';
+
+  @override
+  String get compileSpacingSingle => 'Single';
+
+  @override
+  String get compileSpacingOneHalf => '1.5 lines';
+
+  @override
+  String get compileSpacingDouble => 'Double';
+
+  @override
+  String get compileIndent => 'First-line indent';
+
+  @override
+  String get compileIndentOn => 'Indented';
+
+  @override
+  String get compileIndentOff => 'Not indented';
+
+  @override
+  String get compileHeaders => 'Headers';
+
+  @override
+  String get compileHeadersNone => 'None';
+
+  @override
+  String get compileHeadersManuscript => 'Surname / title / page';
+
+  @override
+  String get compileHeadersBook => 'Alternating: book and chapter';
+
+  @override
+  String get compileRightPage => 'Each chapter starts on a right-hand page';
+
+  @override
+  String get compileCover => 'Cover';
+
+  @override
+  String get compileCoverNone => 'No cover';
+
+  @override
+  String get compileCoverPick => 'Choose image…';
+
+  @override
+  String get compileCoverRemove => 'Remove cover';
 }

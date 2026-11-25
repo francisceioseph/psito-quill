@@ -17,6 +17,7 @@ import 'dart:isolate';
 import '../document/document_controller.dart';
 import '../kit/quill_kit.dart';
 import 'book.dart';
+import 'compile_style.dart';
 import 'docx_import.dart' show KitConverter;
 import 'fodt_join.dart';
 
@@ -29,12 +30,6 @@ enum CompileFormat {
 
   const CompileFormat(this.extension, this.mime);
   final String extension, mime;
-
-  /// As opções do filtro: o PDF leva os títulos como marcadores.
-  String get filterOptions => switch (this) {
-        pdf => '{"ExportBookmarks":{"type":"boolean","value":"true"}}',
-        _ => '',
-      };
 }
 
 /// O que a janela Compilar escolheu.
@@ -52,6 +47,8 @@ class CompileSettings {
     this.chapterTitles = true,
     this.scenes = SceneBreakMode.keep,
     this.format = CompileFormat.pdf,
+    this.style = const OutputStyle(),
+    this.cover = '',
   });
 
   /// Os capítulos que ficam de fora (os ids). Guardar os de fora, e não os
@@ -69,6 +66,112 @@ class CompileSettings {
   final SceneBreakMode scenes;
   final CompileFormat format;
 
+  /// A página, o corpo e os cabeçalhos do modelo (D-087).
+  final OutputStyle style;
+
+  /// A imagem da capa ('' sem capa).
+  final String cover;
+
+  /// As opções do filtro: o PDF leva os títulos como marcadores e, com os
+  /// capítulos na página ímpar, as páginas em branco (que ele pula).
+  String get filterOptions => switch (format) {
+        CompileFormat.pdf => '{"ExportBookmarks":{"type":"boolean","value":"true"}'
+            '${style.rightPage ? ',"IsSkipEmptyPages":{"type":"boolean","value":"false"}' : ''}}',
+        _ => '',
+      };
+
+  CompileSettings copyWith({
+    Set<String>? excluded,
+    bool? titlePage,
+    String? title,
+    String? subtitle,
+    String? author,
+    bool? toc,
+    String? tocTitle,
+    bool? pageBreaks,
+    bool? partTitles,
+    bool? chapterTitles,
+    SceneBreakMode? scenes,
+    CompileFormat? format,
+    OutputStyle? style,
+    String? cover,
+  }) =>
+      CompileSettings(
+        excluded: excluded ?? this.excluded,
+        titlePage: titlePage ?? this.titlePage,
+        title: title ?? this.title,
+        subtitle: subtitle ?? this.subtitle,
+        author: author ?? this.author,
+        toc: toc ?? this.toc,
+        tocTitle: tocTitle ?? this.tocTitle,
+        pageBreaks: pageBreaks ?? this.pageBreaks,
+        partTitles: partTitles ?? this.partTitles,
+        chapterTitles: chapterTitles ?? this.chapterTitles,
+        scenes: scenes ?? this.scenes,
+        format: format ?? this.format,
+        style: style ?? this.style,
+        cover: cover ?? this.cover,
+      );
+
+  /// As escolhas que um modelo guarda: sem o que é do livro (os capítulos,
+  /// o título, o subtítulo, o autor e a capa).
+  Map<String, Object?> modelJson() => {
+        'folhaDeRosto': titlePage,
+        'sumario': toc,
+        'tituloDoSumario': tocTitle,
+        'quebras': pageBreaks,
+        'partes': partTitles,
+        'titulos': chapterTitles,
+        'cenas': scenes.name,
+        'formato': format.name,
+        'estilo': style.toJson(),
+      };
+
+  /// Tudo, para o "último usado".
+  Map<String, Object?> toJson() => {
+        ...modelJson(),
+        'deFora': [...excluded]..sort(),
+        if (title.isNotEmpty) 'titulo': title,
+        if (subtitle.isNotEmpty) 'subtitulo': subtitle,
+        if (author.isNotEmpty) 'autor': author,
+        if (cover.isNotEmpty) 'capa': cover,
+      };
+
+  static CompileSettings fromJson(Object? j) {
+    if (j is! Map) return const CompileSettings();
+    bool flag(String k, bool d) => j[k] is bool ? j[k] as bool : d;
+    String text(String k, String d) => j[k] is String ? j[k] as String : d;
+    final out = j['deFora'];
+    return CompileSettings(
+      excluded: {if (out is List) ...out.whereType<String>()},
+      titlePage: flag('folhaDeRosto', true),
+      title: text('titulo', ''),
+      subtitle: text('subtitulo', ''),
+      author: text('autor', ''),
+      toc: flag('sumario', true),
+      tocTitle: text('tituloDoSumario', 'Sumário'),
+      pageBreaks: flag('quebras', true),
+      partTitles: flag('partes', true),
+      chapterTitles: flag('titulos', true),
+      scenes: SceneBreakMode.values.where((v) => v.name == j['cenas']).firstOrNull ?? SceneBreakMode.keep,
+      format: CompileFormat.values.where((v) => v.name == j['formato']).firstOrNull ?? CompileFormat.pdf,
+      style: OutputStyle.fromJson(j['estilo']),
+      cover: text('capa', ''),
+    );
+  }
+
+  /// As escolhas do modelo [m] por cima destas, mantendo o que é do livro.
+  CompileSettings withModel(CompileSettings m) => m.copyWith(
+        excluded: excluded,
+        title: title,
+        subtitle: subtitle,
+        author: author,
+        cover: cover,
+      );
+
+  /// As mesmas escolhas de modelo que [other].
+  bool sameModel(CompileSettings other) => _deepEq(modelJson(), other.modelJson());
+
   JoinOptions get join => JoinOptions(
         titlePage: titlePage,
         title: title,
@@ -79,7 +182,17 @@ class CompileSettings {
         pageBreaks: pageBreaks,
         chapterTitles: chapterTitles,
         scenes: scenes,
+        style: style,
+        cover: cover.isEmpty ? null : cover,
+        tocPageNumbers: format != CompileFormat.epub,
       );
+}
+
+bool _deepEq(Object? a, Object? b) {
+  if (a is Map && b is Map) {
+    return a.length == b.length && a.keys.every((k) => b.containsKey(k) && _deepEq(a[k], b[k]));
+  }
+  return a == b;
 }
 
 /// Em que passo o compilar está.
@@ -170,7 +283,8 @@ class CompileJob {
       onProgress?.call(CompileStage.joining, chosen.length, chosen.length);
       final joined = _tmp('livro', 'fodt');
       temps.add(joined);
-      final options = s.join;
+      // Uma capa que saiu do lugar não derruba o compilar: o livro sai sem.
+      final options = (s.cover.isEmpty || File(s.cover).existsSync() ? s : s.copyWith(cover: '')).join;
       try {
         await Isolate.run(() => joinFodt(items, options, joined));
       } on FormatException {
@@ -182,7 +296,7 @@ class CompileJob {
 
       onProgress?.call(CompileStage.writing, chosen.length, chosen.length);
       final ok = await _convert.convert(joined, target, s.format.extension,
-          options: s.format.filterOptions, updateIndexes: s.toc, timeout: const Duration(minutes: 10));
+          options: s.filterOptions, updateIndexes: s.toc, timeout: const Duration(minutes: 10));
       return CompileResult(ok ? CompileOutcome.done : CompileOutcome.writeFailed);
     } finally {
       for (final t in temps) {

@@ -1,6 +1,7 @@
 // O compilar (Fase 4, Etapa 1, D-086): a janela (os capítulos, o filtro dos
 // prontos, o leitor de tela), o andamento e o aviso no fim; o comando nos
 // menus.
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -9,9 +10,12 @@ import 'package:psito_quill/l10n/gen/app_localizations_pt.dart';
 import 'package:psito_quill/src/app.dart';
 import 'package:psito_quill/src/book/book.dart';
 import 'package:psito_quill/src/book/book_io.dart';
+import 'package:psito_quill/src/book/compile_models.dart';
 import 'package:psito_quill/src/commands/commands_book.dart';
 import 'package:psito_quill/src/commands/menus.dart';
 import 'package:psito_quill/src/ui/atoms/w_checkbox.dart';
+import 'package:psito_quill/src/ui/atoms/w_dropdown.dart';
+import 'package:psito_quill/src/ui/atoms/w_text_field.dart';
 import 'package:psito_quill/src/ui/organisms/compile_dialog.dart';
 import 'package:psito_quill/src/ui/pages/editor_page.dart';
 
@@ -128,6 +132,82 @@ void main() {
     expect(find.byType(CompileDialog), findsNothing);
     expect(h.kit.conversions.where((c) => c.$3 == 'pdf'), isEmpty);
     await tester.pump(const Duration(seconds: 3));
+  });
+
+  Finder dropdown(String label) => find.byWidgetPredicate((w) => w is WDropdown && w.label == label);
+
+  testWidgets('os modelos: escolher, salvar no livro, a janela da última vez e apagar', (tester) async {
+    final h = await pumpApp(tester);
+    final dir = makeBook(h);
+    await tester.runAsync(() => h.workspace.openPath(dir));
+    await tester.pump();
+    final actions = tester.state(find.byType(EditorPage)) as BookViewActions;
+
+    actions.compileBook();
+    await tester.pumpAndSettle();
+    expect((tester.widget(dropdown('Modelo')) as WDropdown).text, 'Sem modelo');
+    await tester.tap(dropdown('Modelo'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Livro 6×9').last);
+    await tester.pumpAndSettle();
+    // O modelo muda a aparência; o que é do livro fica.
+    expect((tester.widget(dropdown('Página')) as WDropdown).text, contains('15,24'));
+    expect((tester.widget(dropdown('Cabeçalhos')) as WDropdown).text, 'Alternados: o livro e o capítulo');
+    expect(find.textContaining('3 de 3 capítulos'), findsOneWidget);
+
+    // Mudar uma escolha marca o modelo como alterado.
+    await tester.ensureVisible(dropdown('Formato'));
+    await tester.pumpAndSettle();
+    await tester.tap(dropdown('Formato'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('DOCX, Word').last);
+    await tester.pumpAndSettle();
+    expect((tester.widget(dropdown('Modelo')) as WDropdown).text, 'Livro 6×9 (alterado)');
+
+    // Salvar como modelo grava no compilar.json do livro.
+    await tester.ensureVisible(find.text('Salvar como modelo…'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Salvar como modelo…'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.descendant(of: find.byType(AlertDialog).last, matching: find.byType(WTextField)), 'Prova');
+    await tester.tap(find.text('Salvar'));
+    await tester.pumpAndSettle();
+    expect((tester.widget(dropdown('Modelo')) as WDropdown).text, 'Prova');
+    var j = jsonDecode(File('$dir/$compileFileName').readAsStringSync()) as Map;
+    expect(((j['modelos'] as List).single as Map)['nome'], 'Prova');
+    expect(((j['modelos'] as List).single as Map)['formato'], 'docx');
+
+    // Compilar guarda a janela; a próxima abre como esta.
+    await tester.ensureVisible(find.text('Só os prontos'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Só os prontos'));
+    await tester.pumpAndSettle();
+    h.dialogs.exportAnswer = '${h.dir.path}/Dustland.docx';
+    await tester.tap(find.text('Compilar…'));
+    await tester.pump();
+    await settleUntil(tester, () => h.kit.trims > 0);
+    await tester.pumpAndSettle();
+    j = jsonDecode(File('$dir/$compileFileName').readAsStringSync()) as Map;
+    expect(j['ultimo'], 'Prova');
+    expect((j['escolhas'] as Map)['deFora'], ['b']);
+    await tester.pump(const Duration(seconds: 5));
+
+    actions.compileBook();
+    await tester.pumpAndSettle();
+    expect((tester.widget(dropdown('Modelo')) as WDropdown).text, 'Prova');
+    expect(find.textContaining('2 de 3 capítulos'), findsOneWidget);
+    expect((tester.widget(dropdown('Formato')) as WDropdown).text, 'DOCX, Word');
+
+    await tester.ensureVisible(find.text('Apagar o modelo'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Apagar o modelo'));
+    await tester.pumpAndSettle();
+    expect((tester.widget(dropdown('Modelo')) as WDropdown).text, 'Sem modelo');
+    j = jsonDecode(File('$dir/$compileFileName').readAsStringSync()) as Map;
+    expect(j['modelos'], isEmpty);
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 5));
   });
 
   test('o compilar no menu Livro', () {

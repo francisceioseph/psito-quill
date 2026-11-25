@@ -14,9 +14,11 @@
 //
 // Um capítulo de cada vez: o corpo vai para um arquivo ao lado, e só os
 // estilos (pequenos) ficam na memória até o fim. Roda num isolate.
+import 'dart:convert';
 import 'dart:io';
 
 import '../document/fodt.dart';
+import 'compile_style.dart';
 
 /// Como o separador de cena sai no livro compilado.
 enum SceneBreakMode {
@@ -67,6 +69,9 @@ class JoinOptions {
     this.pageBreaks = true,
     this.chapterTitles = true,
     this.scenes = SceneBreakMode.keep,
+    this.style = const OutputStyle(),
+    this.cover,
+    this.tocPageNumbers = true,
   });
 
   final bool titlePage;
@@ -80,6 +85,15 @@ class JoinOptions {
   /// O título do capítulo entra quando o capítulo não começa por um título.
   final bool chapterTitles;
   final SceneBreakMode scenes;
+
+  /// O que o modelo troca: a página, o corpo, os cabeçalhos (D-087).
+  final OutputStyle style;
+
+  /// A imagem da capa (PNG ou JPEG), numa página antes da folha de rosto.
+  final String? cover;
+
+  /// O sumário com o número das páginas (o EPUB não tem páginas).
+  final bool tocPageNumbers;
 }
 
 /// Junta [items] em [out] (um FODT). Lança [FormatException] se nenhum
@@ -88,6 +102,7 @@ void joinFodt(List<JoinItem> items, JoinOptions o, String out) {
   final bodyFile = File('$out.corpo');
   final body = bodyFile.openSync(mode: FileMode.write);
   final j = _Joiner(o);
+  if (o.cover != null) j.cover(File(o.cover!).readAsBytesSync());
   try {
     for (final item in items) {
       switch (item) {
@@ -158,6 +173,32 @@ class _Joiner {
   /// O próximo bloco começa uma página: falso só no primeiro do livro.
   bool _needBreak = false;
 
+  /// A capa, pronta para o corpo.
+  String? _cover;
+
+  void cover(List<int> bytes) {
+    final size = imageSize(bytes);
+    if (size == null) return;
+    final (w, h) = size;
+    // A largura de 12 cm, ou menos se a altura passaria de 18 cm.
+    var width = 12.0, height = 12.0 * h / w;
+    if (height > 18) {
+      width = width * 18 / height;
+      height = 18;
+    }
+    _cover = '<text:p text:style-name="QuillCapa"><draw:frame draw:name="QuillCapa" text:anchor-type="as-char" '
+        'svg:width="${width.toStringAsFixed(2)}cm" svg:height="${height.toStringAsFixed(2)}cm">'
+        '<draw:image><office:binary-data>${base64.encode(bytes)}</office:binary-data></draw:image></draw:frame></text:p>';
+  }
+
+  /// O começo de uma página nova: na página ímpar, pelo estilo de página da
+  /// abertura (o motor põe a branca que faltar); senão, a quebra.
+  String get _breakStyleAttr => o.style.rightPage ? ' style:master-page-name="$openingMaster"' : '';
+  String get _breakProp => o.style.rightPage ? 'style:page-number="auto"' : 'fo:break-before="page"';
+
+  /// O leiaute do corpo (o do estilo de página do primeiro capítulo).
+  String? _mainLayout;
+
   void part(String title, RandomAccessFile body) {
     _front();
     final style = o.pageBreaks && _needBreak ? 'QuillParteQuebra' : 'QuillParte';
@@ -186,9 +227,19 @@ class _Joiner {
     // outros com o prefixo e sem as páginas (só o primeiro manda nelas).
     final autos = <String>[];
     final names = <String>{};
-    for (final a in _children(_section(xml, 'office:automatic-styles') ?? '')) {
+    if (n == 0) {
+      final masters = _whole(xml, 'office:master-styles') ?? '';
+      _mainLayout = masterLayoutName(masters, mainMasterName(masters));
+    }
+    for (var a in _children(_section(xml, 'office:automatic-styles') ?? '')) {
       final isLayout = a.startsWith('<style:page-layout');
       if (n > 0 && isLayout) continue;
+      if (isLayout) {
+        a = styleLayout(a, o.style);
+        if (o.style.rightPage && _attr(a, 'style:name') == _mainLayout) autos.add(openingLayoutOf(a));
+      } else {
+        a = styleAuto(a, o.style);
+      }
       autos.add(a);
       if (n > 0) {
         final name = _attr(a, 'style:name');
@@ -234,7 +285,7 @@ class _Joiner {
       blocks.insert(lead < 0 ? 0 : lead, '<text:h text:style-name="$style" text:outline-level="1">${_escape(title)}</text:h>');
     } else if (breakHere) {
       final at = lead < 0 ? 0 : lead;
-      final broken = lead < 0 ? null : _withBreak(blocks[at], 'QuillQuebra$n', autos);
+      final broken = lead < 0 ? null : _withBreak(blocks[at], 'QuillQuebra$n', autos, right: o.style.rightPage);
       if (broken != null) {
         blocks[at] = broken;
       } else {
@@ -264,12 +315,13 @@ class _Joiner {
   void _front() {
     if (_frontCounted) return;
     _frontCounted = true;
-    if (o.titlePage || o.toc) _needBreak = true;
+    if (o.titlePage || o.toc || _cover != null) _needBreak = true;
   }
 
   /// A folha de rosto e o sumário, no começo do corpo.
   String _frontXml() {
     final out = StringBuffer();
+    if (_cover != null) out.write(_cover);
     if (o.titlePage) {
       out.write('<text:p text:style-name="QuillRostoTitulo">${_escape(o.title)}</text:p>');
       if (o.subtitle.trim().isNotEmpty) out.write('<text:p text:style-name="QuillRostoSubtitulo">${_escape(o.subtitle)}</text:p>');
@@ -286,7 +338,7 @@ class _Joiner {
     for (var l = 1; l <= _tocLevel; l++) {
       entries.write('<text:table-of-content-entry-template text:outline-level="$l" text:style-name="Contents_20_$l">'
           '<text:index-entry-link-start text:style-name="Index_20_Link"/><text:index-entry-text/>'
-          '<text:index-entry-tab-stop style:type="right" style:leader-char="."/><text:index-entry-page-number/>'
+          '${o.tocPageNumbers ? '<text:index-entry-tab-stop style:type="right" style:leader-char="."/><text:index-entry-page-number/>' : ''}'
           '<text:index-entry-link-end/></text:table-of-content-entry-template>');
     }
     return '<text:table-of-content text:name="QuillSumario" text:protected="true">'
@@ -301,6 +353,7 @@ class _Joiner {
   /// O cabeçalho do livro: depois de todos os capítulos (os estilos de todos).
   String head() {
     final f = first!;
+    final font = o.style.font.trim();
     final meta = StringBuffer('<office:meta>');
     if (o.title.trim().isNotEmpty) meta.write('<dc:title>${_escape(o.title)}</dc:title>');
     if (o.author.trim().isNotEmpty) {
@@ -315,13 +368,15 @@ class _Joiner {
       ..write(f.scripts)
       ..write('<office:font-face-decls>')
       ..writeAll(_fonts.values)
+      ..write(font.isNotEmpty && !_fonts.containsKey('style:font-face|$font|') ? fontFaceXml(font) : '')
       ..write('</office:font-face-decls><office:styles>')
-      ..writeAll(_styles.values)
+      ..writeAll(_styles.values.map((e) => styleNamed(e, o.style)))
       ..write('</office:styles><office:automatic-styles>')
       ..write(_autos)
-      ..write(_ownAutos)
+      ..write(_ownAutos.replaceAll(_breakMarker, _breakProp).replaceAll(_breakStyleMarker, _breakStyleAttr))
+      ..write(o.style.headers == HeaderMode.manuscript || o.style.headers == HeaderMode.book ? headerAutos : '')
       ..write('</office:automatic-styles>')
-      ..write(f.masters)
+      ..write(styleMasters(f.masters, o.style, title: o.title, author: o.author))
       ..write('<office:body>')
       ..write(f.textOpen)
       ..write(f.decls)
@@ -329,25 +384,32 @@ class _Joiner {
     return out.toString();
   }
 
+  /// Onde a quebra das partes e dos capítulos entra (ver [_breakProp]).
+  static const _breakMarker = 'QUILL_BREAK_PROP', _breakStyleMarker = ' QUILL_BREAK_STYLE';
+
   /// Os automáticos do compilar. Os pais são estilos que o LibreOffice sempre
   /// tem (Título, Subtítulo, Título 1, Sumário), mesmo sem estar no arquivo.
   static const _ownAutos = '<style:style style:name="QuillRostoTitulo" style:family="paragraph" style:parent-style-name="Title">'
-      '<style:paragraph-properties fo:margin-top="6cm" fo:text-align="center"/></style:style>'
+      '<style:paragraph-properties fo:margin-top="6cm" fo:text-align="center" fo:text-indent="0cm"/></style:style>'
       '<style:style style:name="QuillRostoSubtitulo" style:family="paragraph" style:parent-style-name="Subtitle">'
-      '<style:paragraph-properties fo:text-align="center"/></style:style>'
+      '<style:paragraph-properties fo:text-align="center" fo:text-indent="0cm"/></style:style>'
       '<style:style style:name="QuillRostoAutor" style:family="paragraph" style:parent-style-name="Standard">'
-      '<style:paragraph-properties fo:margin-top="2cm" fo:text-align="center"/><style:text-properties fo:font-size="14pt"/></style:style>'
+      '<style:paragraph-properties fo:margin-top="2cm" fo:text-align="center" fo:text-indent="0cm"/><style:text-properties fo:font-size="14pt"/></style:style>'
       '<style:style style:name="QuillSumarioQuebra" style:family="paragraph" style:parent-style-name="Contents_20_Heading">'
-      '<style:paragraph-properties fo:break-before="page"/></style:style>'
+      '<style:paragraph-properties fo:break-before="page" fo:text-indent="0cm"/></style:style>'
       '<style:style style:name="QuillParte" style:family="paragraph" style:parent-style-name="Heading_20_1">'
-      '<style:paragraph-properties fo:margin-top="6cm" fo:text-align="center"/></style:style>'
-      '<style:style style:name="QuillParteQuebra" style:family="paragraph" style:parent-style-name="Heading_20_1">'
-      '<style:paragraph-properties fo:margin-top="6cm" fo:text-align="center" fo:break-before="page"/></style:style>'
-      '<style:style style:name="QuillCapitulo" style:family="paragraph" style:parent-style-name="Heading_20_1"/>'
-      '<style:style style:name="QuillCapituloQuebra" style:family="paragraph" style:parent-style-name="Heading_20_1">'
-      '<style:paragraph-properties fo:break-before="page"/></style:style>'
-      '<style:style style:name="QuillQuebra" style:family="paragraph" style:parent-style-name="Standard">'
-      '<style:paragraph-properties fo:break-before="page" fo:margin-top="0cm" fo:margin-bottom="0cm"/>'
+      '<style:paragraph-properties fo:margin-top="6cm" fo:text-align="center" fo:text-indent="0cm"/></style:style>'
+      '<style:style style:name="QuillParteQuebra" style:family="paragraph" style:parent-style-name="Heading_20_1"$_breakStyleMarker>'
+      '<style:paragraph-properties fo:margin-top="6cm" fo:text-align="center" fo:text-indent="0cm" $_breakMarker/></style:style>'
+      '<style:style style:name="QuillCapitulo" style:family="paragraph" style:parent-style-name="Heading_20_1">'
+      '<style:paragraph-properties fo:text-indent="0cm"/></style:style>'
+      '<style:style style:name="QuillCapa" style:family="paragraph" style:parent-style-name="Standard">'
+      '<style:paragraph-properties fo:text-align="center" fo:text-indent="0cm" fo:margin-top="0cm" fo:margin-bottom="0cm" '
+      'fo:line-height="100%" fo:break-after="page"/></style:style>'
+      '<style:style style:name="QuillCapituloQuebra" style:family="paragraph" style:parent-style-name="Heading_20_1"$_breakStyleMarker>'
+      '<style:paragraph-properties fo:text-indent="0cm" $_breakMarker/></style:style>'
+      '<style:style style:name="QuillQuebra" style:family="paragraph" style:parent-style-name="Standard"$_breakStyleMarker>'
+      '<style:paragraph-properties $_breakMarker fo:margin-top="0cm" fo:margin-bottom="0cm" fo:text-indent="0cm"/>'
       '<style:text-properties fo:font-size="1pt"/></style:style>';
 }
 
@@ -462,26 +524,44 @@ String _replaceScenes(String inner, Set<String> styles, String text) {
 /// O bloco [block] (um parágrafo ou um título) começando uma página: um
 /// automático novo, [name], copiado do dele com a quebra (ou filho do estilo
 /// com nome dele), entra em [autos]. null se o bloco não é um parágrafo.
-String? _withBreak(String block, String name, List<String> autos) {
+String? _withBreak(String block, String name, List<String> autos, {bool right = false}) {
   final open = RegExp(r'^<text:(p|h)\b([^>]*?)(/?)>').firstMatch(block);
   if (open == null) return null;
   final style = _styleNameAttr.firstMatch(open[2]!)?[1];
   String def;
   final source = style == null ? null : autos.where((a) => _attr(a, 'style:name') == style && _attr(a, 'style:family') == 'paragraph').firstOrNull;
   if (source != null) {
-    def = _breakBefore(source.replaceFirst(RegExp(r'\sstyle:name="[^"]*"'), ' style:name="$name"'));
+    def = _breakBefore(source.replaceFirst(RegExp(r'\sstyle:name="[^"]*"'), ' style:name="$name"'), right: right);
   } else {
     final parent = style ?? 'Standard';
-    def = '<style:style style:name="$name" style:family="paragraph" style:parent-style-name="$parent">'
-        '<style:paragraph-properties fo:break-before="page"/></style:style>';
+    def = right
+        ? '<style:style style:name="$name" style:family="paragraph" style:parent-style-name="$parent" '
+            'style:master-page-name="$openingMaster"><style:paragraph-properties style:page-number="auto"/></style:style>'
+        : '<style:style style:name="$name" style:family="paragraph" style:parent-style-name="$parent">'
+            '<style:paragraph-properties fo:break-before="page"/></style:style>';
   }
   autos.add(def);
   final attrs = style == null ? '${open[2]} text:style-name="$name"' : open[2]!.replaceFirst(_styleNameAttr, ' text:style-name="$name"');
   return '<text:${open[1]}$attrs${open[3]}>${block.substring(open.end)}';
 }
 
-/// A definição [def] de um estilo com `fo:break-before="page"`.
-String _breakBefore(String def) {
+/// A definição [def] de um estilo com `fo:break-before="page"`; com [right],
+/// começando no estilo de página da abertura (numa página ímpar).
+String _breakBefore(String def, {bool right = false}) {
+  if (right) {
+    var out = def.replaceAll(RegExp(r'\sfo:break-before="[^"]*"'), '');
+    out = out.replaceAll(RegExp(r'\sstyle:master-page-name="[^"]*"'), '');
+    final open = RegExp(r'^<style:style\b([^>]*?)(/?)>').firstMatch(out)!;
+    out = out.replaceRange(open.start, open.end, '<style:style${open[1]} style:master-page-name="$openingMaster"${open[2]}>');
+    final props = RegExp(r'<style:paragraph-properties\b([^>]*?)(/?)>').firstMatch(out);
+    if (props != null) {
+      final a = props[1]!.replaceAll(RegExp(r'\sstyle:page-number="[^"]*"'), '');
+      return out.replaceRange(props.start, props.end, '<style:paragraph-properties$a style:page-number="auto"${props[2]}>');
+    }
+    const p = '<style:paragraph-properties style:page-number="auto"/>';
+    final o2 = RegExp(r'^<style:style\b([^>]*?)(/?)>').firstMatch(out)!;
+    return o2[2] == '/' ? '<style:style${o2[1]}>$p</style:style>' : out.replaceRange(o2.end, o2.end, p);
+  }
   final props = RegExp(r'<style:paragraph-properties\b([^>]*?)(/?)>').firstMatch(def);
   if (props != null) {
     final attrs = props[1]!.contains('fo:break-before=')

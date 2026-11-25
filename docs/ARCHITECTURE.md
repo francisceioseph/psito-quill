@@ -93,7 +93,8 @@ lib/
                              docx_import.dart (o importador), odt_zip.dart (lê o content.xml; D-071),
                              chapter_cut.dart (dividir, D-079), book_search.dart (D-080), snapshots.dart
                              (D-081), notes.dart (D-082), goals.dart (as metas, D-083), compile.dart e
-                             fodt_join.dart (o compilar, D-086)
+                             fodt_join.dart (o compilar, D-086), compile_models.dart e
+                             compile_style.dart (os modelos, D-087)
   src/document/              document_controller.dart, doc_tab.dart (as abas), workspace.dart, fodt.dart
                              (a cópia lida), outline.dart, search.dart, format_origin.dart,
                              text_clipboard.dart, doc_colors.dart

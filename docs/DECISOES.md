@@ -1253,3 +1253,46 @@ A Etapa 1 da Fase 4: o livro inteiro num PDF, num EPUB, num DOCX ou num ODT.
   - unidade, `compile_test`: os capítulos na ordem, sem os de fora, as cópias pelo motor, o sumário só quando pedido, o capítulo da tela pela cópia, o cancelar, a falha que diz o capítulo e a limpeza das temporárias;
   - widget, `fase4_compile_test`: a janela, "Só os prontos", a parte que marca os dela, o leitor de tela das caixas, o livro compilado com o aviso e o menu Livro;
   - integração (o passo 28): o livro das cenas, com uma palavra só no motor, em PDF (o sumário com as páginas, pelo `pdftotext`), EPUB (o título no `content.opf`), DOCX e ODT, sem tocar nas abas.
+
+## D-087 · Os modelos de compilação
+
+A Etapa 2 da Fase 4: a janela Compilar ganha os modelos e a aparência do livro.
+
+- **O `compilar.json` no livro** (decidido com o Francisco): viaja com o `.psitobook`. Ele guarda:
+  - os modelos de quem escreve;
+  - o último usado (`ultimo`);
+  - a janela da última vez (`escolhas`): a janela abre como ficou, e os capítulos que já não existem saem da lista dos de fora.
+
+  É gravado de forma atômica, como o `livro.json`. Um arquivo estragado vira um livro sem modelos.
+- **Um modelo guarda as escolhas da janela, menos o que é do livro:** os capítulos, o título, o subtítulo, o autor e a capa ficam. Escolher um modelo troca o resto, e mexer numa escolha marca "(alterado)". "Salvar como modelo…", "Renomear…" e "Apagar o modelo" (estes dois, só nos de quem escreve) gravam na hora.
+- **Os três que vêm prontos** (no código, `BuiltInModel`; não se apagam):
+  - **Manuscrito:** A4, Times New Roman 12, espaço duplo, sem espaço entre os parágrafos, o recuo de 1,27 cm, o cabeçalho "Sobrenome / TÍTULO / página" à direita, o `#` nas cenas, sem sumário, em DOCX;
+  - **Livro 6×9:** 15,24 × 22,86 cm com as margens espelhadas (2,2 cm por dentro, 1,6 cm por fora), os cabeçalhos alternados (nas pares, o número e o título do livro; nas ímpares, o título do capítulo, pelo campo `text:chapter`, e o número) e cada capítulo e parte numa página ímpar, em PDF;
+  - **E-book:** EPUB, sem cabeçalhos, com o sumário sem números de página.
+- **A aparência** (a seção nova da janela; "A do capítulo" é não tocar): a página (A4, Carta, A5, 6×9), a fonte e o tamanho do corpo, o espaçamento, o recuo da primeira linha, os cabeçalhos, "Cada capítulo começa numa página ímpar" e a capa.
+- **Como entra no livro** (`compile_style.dart`, contas no texto do XML como as do `style_patch.dart`, chamadas pelo `fodt_join.dart`):
+  - a página muda os `style:page-layout` do primeiro capítulo, e os cabeçalhos trocam os de todos os estilos de página (os rodapés ficam);
+  - o corpo:
+    - a fonte vai no estilo padrão de parágrafo e no "Padrão" (`Standard`), com a declaração da fonte, se falta;
+    - o espaçamento e o recuo vão neles e no "Corpo do texto";
+    - os automáticos do corpo e os estilos de texto perdem o que mudaria isso (o direto do capítulo; o itálico e o negrito ficam);
+    - os títulos, os cabeçalhos, o sumário, a cena e os do Quill não ganham o recuo;
+  - **a página ímpar**, pela sonda: um estilo de página da abertura (`QuillAbertura`), só das ímpares, sem cabeçalho, com o rodapé do corpo, e que passa para o corpo depois. A parte e o capítulo começam nele (`style:master-page-name`), e o motor põe a página em branco que faltar. O PDF pula as páginas em branco sem o `IsSkipEmptyPages` falso, que o compilar manda nesse caso;
+  - **a capa:** a imagem (PNG ou JPEG) embutida no FODT (`office:binary-data`), numa página antes da folha de rosto. Ela tem 12 cm de largura, ou menos para caber em 18 cm de altura.
+- **O que a sonda mostrou no filtro do EPUB:** pelo LOK, na 24.2, ele ignora todas as opções (`EPUBVersion`, `EPUBSplitMethod`, `RVNGCoverImage`, `RVNGMediaDir`). A versão continua 3.0, e a capa não entra. Por isso, a capa vai como a primeira imagem do livro: o leitor a mostra na primeira página, mas o `content.opf` não a marca como capa (`cover-image`).
+- **Não feito:** os títulos (a fonte e o tamanho deles) ficam como estão no capítulo; o modelo não os troca.
+- **A memória:** o compilar não guarda nada fora da janela (o `compilar.json` é lido quando ela abre). Pelo `tool/ab.py a4402d4` (o `capitulo-30p.docx` avulso, 3 rodadas, a mediana), a memória anônima variou de −0,2 a +1,9 MB: +1,5 na janela vazia, +1,3 com o capítulo, +1,9 depois de rolar e −0,1 depois de digitar. A tecla (p95) foi de 13,5 para 13,7 ms, e o rolar ficou em 59,5 fps. O abrir subiu de 594 para 679 ms, mas nada do caminho de abrir mudou, então deve ser a variação entre as rodadas. Fica para ver no fecho.
+- **Os testes:**
+  - unidade, `compile_style_test`:
+    - a página (o 6×9 espelhado, o "manter", sem cabeçalho);
+    - a abertura;
+    - os cabeçalhos (o manuscrito, os alternados, o rodapé que fica);
+    - o corpo (o padrão, os automáticos, os títulos);
+    - o tamanho da imagem;
+    - os três modelos no livro juntado (a fonte declarada, a quebra pela abertura, a capa antes do rosto, o sumário sem páginas);
+    - o `compilar.json` (gravar, ler, renomear, apagar, o arquivo estragado);
+    - aplicar um modelo sem perder o que é do livro;
+  - widget, `fase4_compile_test`: escolher o Livro 6×9, o "(alterado)", salvar como modelo no `compilar.json`, a janela da última vez (o modelo, os de fora, o formato) e apagar;
+  - integração (o passo 29):
+    - o 6×9 em PDF, em 432 × 648 pt, com o título do livro no cabeçalho das pares;
+    - o Manuscrito em DOCX, com o espaço duplo (`w:line="480"`), a Times e o cabeçalho "Tal / CENAS / ".

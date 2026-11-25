@@ -2653,4 +2653,139 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get compileCancelled => 'Compilar cancelado.';
+
+  @override
+  String get compileModel => 'Modelo';
+
+  @override
+  String get compileModelNone => 'Sem modelo';
+
+  @override
+  String get compileModelManuscript => 'Manuscrito';
+
+  @override
+  String get compileModelSixByNine => 'Livro 6×9';
+
+  @override
+  String get compileModelEbook => 'E-book';
+
+  @override
+  String compileModelChanged(String name) {
+    return '$name (alterado)';
+  }
+
+  @override
+  String get compileModelSave => 'Salvar como modelo…';
+
+  @override
+  String get compileModelRename => 'Renomear…';
+
+  @override
+  String get compileModelDelete => 'Apagar o modelo';
+
+  @override
+  String get compileModelName => 'Nome do modelo';
+
+  @override
+  String get compileModelSaveTitle => 'Salvar como modelo';
+
+  @override
+  String get compileModelRenameTitle => 'Renomear o modelo';
+
+  @override
+  String get compileModelOk => 'Salvar';
+
+  @override
+  String compileModelSaved(String name) {
+    return 'Modelo \"$name\" salvo no livro.';
+  }
+
+  @override
+  String compileModelDeleted(String name) {
+    return 'Modelo \"$name\" apagado.';
+  }
+
+  @override
+  String get compileModelWriteFailed =>
+      'Não deu para gravar o compilar.json do livro.';
+
+  @override
+  String get compileLook => 'Aparência';
+
+  @override
+  String get compileKeep => 'A do capítulo';
+
+  @override
+  String get compilePage => 'Página';
+
+  @override
+  String get compilePageA4 => 'A4';
+
+  @override
+  String get compilePageLetter => 'Carta';
+
+  @override
+  String get compilePageA5 => 'A5';
+
+  @override
+  String get compilePageSixByNine => '15,24 × 22,86 cm (6×9, espelhada)';
+
+  @override
+  String get compileFont => 'Fonte do corpo';
+
+  @override
+  String get compileFontSize => 'Tamanho do corpo';
+
+  @override
+  String compileFontSizePt(int size) {
+    return '$size pt';
+  }
+
+  @override
+  String get compileSpacing => 'Espaçamento';
+
+  @override
+  String get compileSpacingSingle => 'Simples';
+
+  @override
+  String get compileSpacingOneHalf => '1,5 linha';
+
+  @override
+  String get compileSpacingDouble => 'Duplo';
+
+  @override
+  String get compileIndent => 'Recuo da primeira linha';
+
+  @override
+  String get compileIndentOn => 'Com recuo';
+
+  @override
+  String get compileIndentOff => 'Sem recuo';
+
+  @override
+  String get compileHeaders => 'Cabeçalhos';
+
+  @override
+  String get compileHeadersNone => 'Nenhum';
+
+  @override
+  String get compileHeadersManuscript => 'Sobrenome / título / página';
+
+  @override
+  String get compileHeadersBook => 'Alternados: o livro e o capítulo';
+
+  @override
+  String get compileRightPage => 'Cada capítulo começa numa página ímpar';
+
+  @override
+  String get compileCover => 'Capa';
+
+  @override
+  String get compileCoverNone => 'Sem capa';
+
+  @override
+  String get compileCoverPick => 'Escolher a imagem…';
+
+  @override
+  String get compileCoverRemove => 'Tirar a capa';
 }
