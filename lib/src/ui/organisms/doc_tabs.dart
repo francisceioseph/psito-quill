@@ -68,7 +68,7 @@ class DocTabStrip extends StatelessWidget {
   }
 }
 
-class _Tab extends StatelessWidget {
+class _Tab extends StatefulWidget {
   const _Tab({
     super.key,
     required this.title,
@@ -88,22 +88,46 @@ class _Tab extends StatelessWidget {
   static const maxWidth = 240.0;
 
   @override
+  State<_Tab> createState() => _TabState();
+}
+
+class _TabState extends State<_Tab> {
+  bool _hover = false;
+
+  @override
   Widget build(BuildContext context) {
+    final _Tab(:title, :path, :modified, :current, :onSelect, :onClose) = widget;
     final t = QuillTokens.of(context);
     final l10n = AppLocalizations.of(context);
     final c = t.colors;
+    final modern = t.component == ComponentStyle.modern;
     final name = modified ? l10n.tabModifiedNamed(title) : title;
     // As cores do WControlSurface (o conteúdo próprio não as recebe dele).
-    final fg = t.component == ComponentStyle.modern ? (current ? c.onAccentSoft : c.onFrameMuted) : c.onFrame;
+    final fg = modern ? (current ? c.onAccentSoft : c.onFrameMuted) : c.onFrame;
+    // No moderno, o fundo da aba vai por baixo do nome e do X juntos: o X
+    // fica dentro da aba, e não ao lado dela. No bisel, são dois botões.
+    final back = !modern
+        ? null
+        : current
+            ? c.accentSoft
+            : _hover
+                ? c.surfaceHigh
+                : null;
     return Listener(
       onPointerDown: (e) {
         if (e.buttons == kMiddleMouseButton) onClose();
       },
-      child: Row(
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _hover = true),
+        onExit: (_) => setState(() => _hover = false),
+        child: AnimatedContainer(
+          duration: t.motion.fast,
+          decoration: BoxDecoration(color: back, borderRadius: BorderRadius.circular(t.radius.control)),
+          child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: maxWidth),
+              constraints: const BoxConstraints(maxWidth: _Tab.maxWidth),
               child: WControlSurface(
                 tooltip: path ?? title,
                 onPressed: onSelect,
@@ -150,6 +174,8 @@ class _Tab extends StatelessWidget {
             ),
             WButton(icon: Symbols.close_rounded, label: l10n.tabCloseNamed(title), onPressed: onClose),
           ],
+          ),
+        ),
       ),
     );
   }

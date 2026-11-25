@@ -43,6 +43,26 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('o X fica dentro da aba da tela, no fundo dela', (tester) async {
+    final h = await pumpApp(tester);
+    h.doc.open('/livro/cap1.odt');
+    h.doc.open('/livro/cap2.odt');
+    await tester.pump();
+    await tester.pump();
+    final close = tester.getRect(find.bySemanticsLabel('Fechar cap2.odt'));
+    final name = tester.getRect(find.text('cap2.odt'));
+    // O fundo da aba: o AnimatedContainer em volta do nome que tem também o X.
+    final back = find
+        .ancestor(of: find.text('cap2.odt'), matching: find.byType(AnimatedContainer))
+        .evaluate()
+        .firstWhere((e) => (e.renderObject! as RenderBox).paintBounds.shift(tester.getTopLeft(find.byElementPredicate((x) => x == e))).contains(close.center));
+    final tab = tester.getRect(find.byElementPredicate((x) => x == back));
+    final deco = (back.widget as AnimatedContainer).decoration as BoxDecoration?;
+    expect(deco?.color, isNotNull, reason: 'a aba da tela tem fundo');
+    expect(tab.contains(name.center), isTrue);
+    expect(tab.right, greaterThanOrEqualTo(close.right));
+  });
+
   testWidgets('clicar troca; o ponto e o nome dizem que há alterações', (tester) async {
     final h = await pumpApp(tester);
     h.doc.open('/livro/cap1.odt');

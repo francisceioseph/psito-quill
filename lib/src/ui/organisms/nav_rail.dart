@@ -2,9 +2,10 @@
 // abrem ao lado da página (o fichário e as Notas do livro, Estrutura,
 // Localizar, Estilos). O Assistente entra quando existir.
 //
-// Cada item é um botão de 56 px com o ícone numa pílula e o nome embaixo,
-// como o NavigationRail do Material 3. O aberto fica com a pílula tonal e o
-// ícone preenchido. Clicar no aberto fecha o painel.
+// Cada item é um bloco de 76 px com o ícone e o nome embaixo (até duas
+// linhas, sem cortar "Comentários"). O aberto fica com o bloco inteiro tonal
+// e o ícone preenchido; o realce do mouse e do foco também vão no bloco
+// todo. Clicar no aberto fecha o painel.
 import 'package:flutter/material.dart';
 
 import '../tokens/tokens.dart';
@@ -33,6 +34,11 @@ class NavRail<T> extends StatelessWidget {
   /// O nome do trilho para o leitor de tela ("Painéis").
   final String label;
 
+  /// A largura do trilho; o bloco de cada item tem 4 px de folga de cada lado.
+  /// O nome tem 72 px: "Comentários", o maior, mede uns 68 na Noto Sans de
+  /// 11 px.
+  static const width = 84.0;
+
   @override
   Widget build(BuildContext context) {
     final t = QuillTokens.of(context);
@@ -41,7 +47,7 @@ class NavRail<T> extends StatelessWidget {
       explicitChildNodes: true,
       label: label,
       child: SizedBox(
-        width: 64,
+        width: width,
         // Numa janela baixa (ou com a interface ampliada), o trilho rola.
         child: SingleChildScrollView(
           child: Column(children: [
@@ -52,7 +58,7 @@ class NavRail<T> extends StatelessWidget {
               selected: item.value == selected,
               onPressed: () => onSelected(item.value == selected ? null : item.value),
             ),
-            SizedBox(height: t.space.md),
+            SizedBox(height: t.space.xs),
           ],
         ]),
         ),
@@ -81,20 +87,7 @@ class _RailButtonState<T> extends State<_RailButton<T>> {
     final modern = t.component == ComponentStyle.modern;
     final on = widget.selected;
     final fg = on && modern ? c.onAccentSoft : c.onFrameMuted;
-    final pill = Container(
-      width: 48,
-      height: 28,
-      decoration: BoxDecoration(
-        color: on
-            ? c.accentSoft
-            : _hover
-                ? c.surfaceHigh
-                : null,
-        borderRadius: BorderRadius.circular(modern ? 14 : 0),
-        border: _focused ? Border.all(color: c.focusRing, width: 2) : null,
-      ),
-      child: Icon(widget.item.icon, size: t.density.icon, color: fg, fill: on && modern ? 1 : 0, weight: on ? 500 : 400),
-    );
+    final icon = Icon(widget.item.icon, size: t.density.icon, color: fg, fill: on && modern ? 1 : 0, weight: on ? 500 : 400);
     return Semantics(
       container: true,
       button: true,
@@ -116,16 +109,28 @@ class _RailButtonState<T> extends State<_RailButton<T>> {
           child: GestureDetector(
             onTap: widget.onPressed,
             child: ExcludeSemantics(
-              child: SizedBox(
-                width: 56,
+              child: AnimatedContainer(
+                duration: t.motion.fast,
+                width: NavRail.width - 8,
+                padding: EdgeInsets.symmetric(horizontal: 2, vertical: t.space.sm),
+                decoration: BoxDecoration(
+                  color: on
+                      ? c.accentSoft
+                      : _hover
+                          ? c.surfaceHigh
+                          : null,
+                  borderRadius: BorderRadius.circular(modern ? t.radius.control : 0),
+                  border: _focused ? Border.all(color: c.focusRing, width: 2) : null,
+                ),
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  pill,
+                  icon,
                   SizedBox(height: t.space.xs),
                   Text(
                     widget.item.label,
-                    maxLines: 1,
+                    maxLines: 2,
+                    textAlign: TextAlign.center,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.w500, fontFamily: t.font.family),
+                    style: TextStyle(color: fg, fontSize: 11, height: 1.15, fontWeight: FontWeight.w500, fontFamily: t.font.family),
                   ),
                 ]),
               ),

@@ -2,6 +2,7 @@
 // pesquisa e o Recolher, o trilho com os painéis da esquerda, o painel
 // Formatar com uma seção de cada vez, e a barra de status com o zoom.
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:psito_quill/src/app.dart';
@@ -104,6 +105,27 @@ void main() {
     expect(kit.unoCommands.last, '.uno:StyleApply');
     expect(kit.unoArgs.last, contains('"Heading 2"'));
     handle.dispose();
+  });
+
+  testWidgets('o trilho: o aberto fica com o bloco inteiro realçado, e nenhum nome corta', (tester) async {
+    await pumpApp(tester);
+    await tester.tap(rail('Estrutura'));
+    await tester.pump();
+    final leftRail = find.byWidgetPredicate((w) => w is NavRail && w is! NavRail<InspectorPart>);
+    final name = find.descendant(of: leftRail, matching: find.text('Estrutura'));
+    final block = find.ancestor(of: name, matching: find.byType(AnimatedContainer)).first;
+    final deco = tester.widget<AnimatedContainer>(block).decoration as BoxDecoration?;
+    expect(deco?.color, isNotNull, reason: 'o aberto tem fundo');
+    final box = tester.getRect(block);
+    expect(box.contains(tester.getRect(name).bottomCenter - const Offset(0, 1)), isTrue, reason: 'o fundo cobre o nome');
+    expect(box.contains(tester.getCenter(find.descendant(of: block, matching: find.byType(Icon)))), isTrue);
+    // A fonte dos testes desenha cada letra como um quadrado, então o corte
+    // não se confere aqui: confere-se a largura que o nome tem. "Comentários"
+    // mede uns 68 px na Noto Sans de 11 px.
+    for (final e in find.descendant(of: find.byWidgetPredicate((w) => w is NavRail), matching: find.byType(Text)).evaluate()) {
+      final p = e.renderObject! as RenderParagraph;
+      expect(p.constraints.maxWidth, greaterThanOrEqualTo(72), reason: (e.widget as Text).data);
+    }
   });
 
   testWidgets('o trilho: Localizar e substituir abre e fecha o painel', (tester) async {
