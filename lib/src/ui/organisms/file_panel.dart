@@ -13,6 +13,7 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../../commands/command_registry.dart';
 import '../../commands/commands_book.dart';
 import '../../commands/commands_document.dart';
+import '../../commands/commands_layout.dart';
 import '../../commands/commands_view.dart';
 import '../../document/document_controller.dart';
 import '../../document/paragraph_format.dart';
@@ -110,7 +111,7 @@ class _FilePanelState extends State<FilePanel> {
           ),
         ),
       FileSection.info => (l10n.fileInfo, _InfoView(workspace: widget.workspace)),
-      FileSection.preferences => (l10n.preferencesTitle, PreferencesView(settings: widget.settings)),
+      FileSection.preferences => (l10n.preferencesTitle, PreferencesView(settings: widget.settings, commands: widget.commands)),
     };
 
     return CallbackShortcuts(
@@ -131,6 +132,7 @@ class _FilePanelState extends State<FilePanel> {
                   _BackstageItem(icon: Symbols.arrow_back_rounded, label: l10n.fileBack, onPressed: widget.onClose, autofocus: true),
                   divider(),
                   command(CommandIds.newDocument),
+                  command(LayoutCommandIds.newFromTemplate),
                   command(CommandIds.open),
                   divider(),
                   command(BookCommandIds.newBook),
@@ -143,6 +145,7 @@ class _FilePanelState extends State<FilePanel> {
                   section(FileSection.info, Symbols.info_rounded, l10n.fileInfo, enabled: doc.isOpen),
                   command(CommandIds.save),
                   command(CommandIds.saveAs),
+                  command(LayoutCommandIds.saveAsTemplate),
                   command(CommandIds.closeTab),
                   divider(),
                   section(FileSection.preferences, Symbols.settings_rounded, l10n.preferencesTitle),

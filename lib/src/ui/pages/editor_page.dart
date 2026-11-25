@@ -19,6 +19,7 @@ import '../../commands/commands_page.dart';
 import '../../commands/commands_view.dart';
 import '../../document/comments.dart' show commentThreads;
 import '../../document/document_controller.dart';
+import '../../document/templates.dart';
 import '../../document/workspace.dart';
 import '../../files/app_window.dart';
 import '../../files/file_dialogs.dart';
@@ -51,6 +52,7 @@ import '../atoms/w_segmented.dart';
 import '../organisms/outline_panel.dart';
 import '../organisms/page_dialogs.dart';
 import '../organisms/paragraph_dialog.dart';
+import '../organisms/templates_dialog.dart';
 import '../organisms/watermark_dialog.dart';
 import '../organisms/reference_dialogs.dart';
 import '../organisms/ruler.dart';
@@ -272,6 +274,39 @@ class _EditorPageState extends State<EditorPage>
         doc.insertCaptionRef(caption, format);
     }
     _docFocus.requestFocus();
+  }
+
+  // ------------------------------------------------- os modelos (D-093) --
+
+  @override
+  bool get bookOpen => books.isOpen;
+
+  @override
+  void newFromTemplate() => unawaited(_newFromTemplate());
+  Future<void> _newFromTemplate() async {
+    final l10n = AppLocalizations.of(context);
+    final path = await showNewFromTemplateDialog(context, templates: widget.workspace.templates(), folder: templatesDir());
+    if (path == null || !mounted) return;
+    if (!await widget.workspace.newFromTemplate(path)) doc.notice(l10n.templatesOpenFailed);
+  }
+
+  @override
+  void saveAsTemplate() => unawaited(_saveAsTemplate());
+  Future<void> _saveAsTemplate() async {
+    final l10n = AppLocalizations.of(context);
+    final folder = templatesDir();
+    final file = await showSaveTemplateDialog(context, folder: folder);
+    if (file == null || !mounted) return;
+    final ok = await widget.workspace.saveStylesAsTemplate('${folder.path}/$file');
+    doc.notice(ok ? l10n.templatesSaved(file.substring(0, file.length - 4)) : l10n.templatesSaveFailed);
+  }
+
+  @override
+  void saveBookTemplate() => unawaited(_saveBookTemplate());
+  Future<void> _saveBookTemplate() async {
+    final l10n = AppLocalizations.of(context);
+    final ok = await widget.workspace.saveBookTemplate();
+    if (mounted) doc.notice(ok ? l10n.templatesBookSaved : l10n.templatesSaveFailed);
   }
 
   @override
@@ -675,8 +710,18 @@ class _EditorPageState extends State<EditorPage>
     }
   }
 
+  /// Os atalhos escolhidos nas preferências (D-093).
+  Map<String, SingleActivator?> _customShortcuts() => {
+        for (final MapEntry(:key, :value) in widget.settings.customShortcuts.entries) key: decodeActivator(value),
+      };
+  Map<String, String>? _appliedShortcuts;
+
   void _onSettings() {
     _commands?.scheme = widget.settings.shortcuts;
+    if (!identical(_appliedShortcuts, widget.settings.customShortcuts)) {
+      _appliedShortcuts = widget.settings.customShortcuts;
+      _commands?.overrides = _customShortcuts();
+    }
     _syncAccessibility();
     _applyLayout();
     if (mounted) setState(() {});
@@ -900,7 +945,8 @@ class _EditorPageState extends State<EditorPage>
     final l10n = AppLocalizations.of(context);
     // Os rótulos dos comandos vêm da l10n, que só existe com o contexto.
     if (_commands == null) {
-      final registry = CommandRegistry(scheme: widget.settings.shortcuts);
+      final registry = CommandRegistry(scheme: widget.settings.shortcuts)..overrides = _customShortcuts();
+      _appliedShortcuts = widget.settings.customShortcuts;
       registerEditorCommands(registry, doc: doc, workspace: widget.workspace, l10n: l10n);
       registerViewCommands(registry, doc: doc, view: this, l10n: l10n);
       registerBookCommands(registry, doc: doc, workspace: widget.workspace, view: this, l10n: l10n);
@@ -1044,6 +1090,8 @@ class _EditorPageState extends State<EditorPage>
             widget.settings.pageLayout,
             widget.settings.ruler, // as caixas da aba Exibir
             widget.settings.statusBar,
+            widget.settings.quickAccess,
+            widget.settings.customShortcuts, // as dicas dos botões
           );
           // A barra de status e a Estrutura leem também a página e as palavras.
           final statusKey = (key, doc.statusRevision);
@@ -1078,6 +1126,7 @@ class _EditorPageState extends State<EditorPage>
                     )
                   : Ribbon(
                       commands: commands,
+                      quickAccess: widget.settings.quickAccess,
                       doc: doc,
                       fileOpen: _fileOpen,
                       tab: _tab,

@@ -1,25 +1,33 @@
 // As preferências, nos bastidores do Arquivo (D-064, D-067): Geral,
-// Aparência, Acessibilidade, Privacidade e Atalhos. Só a seção aberta é
-// construída.
+// Aparência, Acessibilidade, Privacidade, Acesso rápido e Atalhos (D-093:
+// escolher os do acesso rápido e o atalho de cada comando). Só a seção aberta
+// é construída.
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../commands/command_registry.dart';
 import '../../settings/settings.dart';
 import '../atoms/w_button.dart';
+import '../atoms/w_dropdown.dart';
 import '../atoms/w_label.dart';
 import '../atoms/w_segmented.dart';
 import '../atoms/w_switch.dart';
 import '../atoms/w_text_field.dart';
 import '../theme_labels.dart';
 import '../tokens/tokens.dart';
+import 'shortcut_dialog.dart';
 
-enum PreferencesSection { general, appearance, accessibility, privacy, shortcuts }
+enum PreferencesSection { general, appearance, accessibility, privacy, quickAccess, shortcuts }
 
 class PreferencesView extends StatefulWidget {
-  const PreferencesView({super.key, required this.settings, this.initial = PreferencesSection.general});
+  const PreferencesView({super.key, required this.settings, this.commands, this.initial = PreferencesSection.general});
 
   final Settings settings;
+
+  /// Os comandos, para o acesso rápido e os atalhos; sem eles, só o jogo.
+  final CommandRegistry? commands;
   final PreferencesSection initial;
 
   @override
@@ -30,10 +38,12 @@ class _PreferencesViewState extends State<PreferencesView> {
   late PreferencesSection _section = widget.initial;
   late final _author = TextEditingController(text: widget.settings.authorName);
   late final _systemName = systemUserName();
+  final _filter = TextEditingController();
 
   @override
   void dispose() {
     _author.dispose();
+    _filter.dispose();
     super.dispose();
   }
 
@@ -52,6 +62,7 @@ class _PreferencesViewState extends State<PreferencesView> {
             WSegment(PreferencesSection.appearance, l10n.prefAppearance),
             WSegment(PreferencesSection.accessibility, l10n.prefAccessibility),
             WSegment(PreferencesSection.privacy, l10n.prefPrivacy),
+            if (widget.commands != null) WSegment(PreferencesSection.quickAccess, l10n.prefQuickAccess),
             WSegment(PreferencesSection.shortcuts, l10n.prefShortcuts),
           ],
           selected: _section,
@@ -63,6 +74,7 @@ class _PreferencesViewState extends State<PreferencesView> {
           PreferencesSection.appearance => _appearance(l10n, s),
           PreferencesSection.accessibility => _accessibility(l10n, s),
           PreferencesSection.privacy => _privacy(l10n, s),
+          PreferencesSection.quickAccess => _quickAccess(l10n, s),
           PreferencesSection.shortcuts => _shortcuts(l10n, s),
         },
       ]),
@@ -94,6 +106,9 @@ class _PreferencesViewState extends State<PreferencesView> {
         ),
         _switch(l10n.prefAutosave, s.autosave, (v) => s.autosave = v, note: l10n.prefAutosaveNote),
         _switch(l10n.prefAutoSnapshots, s.autoSnapshots, (v) => s.autoSnapshots = v, note: l10n.prefAutoSnapshotsNote),
+        // A ortografia (D-093): vai no perfil do motor, que só lê ao ligar.
+        _switch(l10n.prefSpellIgnoreUpper, s.spellIgnoreUpper, (v) => s.spellIgnoreUpper = v),
+        _switch(l10n.prefSpellIgnoreDigits, s.spellIgnoreDigits, (v) => s.spellIgnoreDigits = v, note: l10n.prefSpellRulesNote),
       ];
 
   List<Widget> _appearance(AppLocalizations l10n, Settings s) => [
@@ -140,14 +155,116 @@ class _PreferencesViewState extends State<PreferencesView> {
         WLabel(l10n.prefPrivacyNote, tone: WLabelTone.muted, maxLines: 3),
       ];
 
-  List<Widget> _shortcuts(AppLocalizations l10n, Settings s) => [
-        _Row(
-          label: l10n.prefShortcuts,
-          child: _choices(l10n.prefShortcuts,
-              [(ShortcutScheme.wordPt, l10n.schemeWordPt), (ShortcutScheme.wordEn, l10n.schemeWordEn)], s.shortcuts,
-              (v) => s.shortcuts = v),
+  /// Os comandos que dá para pôr no acesso rápido e nos atalhos, pelo nome.
+  List<Command> _sorted(CommandRegistry commands) => [...commands.all]..sort((a, b) => a.label.compareTo(b.label));
+
+  List<Widget> _quickAccess(AppLocalizations l10n, Settings s) {
+    final commands = widget.commands!;
+    final t = QuillTokens.of(context);
+    final list = [for (final id in s.quickAccess) if (commands[id] != null) id];
+    void save(List<String> v) => s.quickAccess = v;
+    return [
+      WLabel(l10n.prefQuickAccessNote, small: true, tone: WLabelTone.muted, maxLines: 3),
+      SizedBox(height: t.space.md),
+      for (final (i, id) in list.indexed)
+        Padding(
+          padding: EdgeInsets.only(bottom: t.space.xs),
+          child: Row(children: [
+            Icon(commands[id]!.icon, size: t.density.icon, color: t.colors.onFrameMuted),
+            SizedBox(width: t.space.sm),
+            Expanded(child: WLabel(commands[id]!.label, maxLines: 1)),
+            WButton(
+              icon: Symbols.arrow_upward_rounded,
+              label: l10n.prefQuickAccessUp(commands[id]!.label),
+              onPressed: i == 0 ? null : () => save([...list]..removeAt(i)..insert(i - 1, id)),
+            ),
+            WButton(
+              icon: Symbols.arrow_downward_rounded,
+              label: l10n.prefQuickAccessDown(commands[id]!.label),
+              onPressed: i == list.length - 1 ? null : () => save([...list]..removeAt(i)..insert(i + 1, id)),
+            ),
+            WButton(
+              icon: Symbols.close_rounded,
+              label: l10n.prefQuickAccessRemove(commands[id]!.label),
+              onPressed: () => save([...list]..removeAt(i)),
+            ),
+          ]),
         ),
-      ];
+      SizedBox(height: t.space.md),
+      Row(children: [
+        WDropdown<String>(
+          label: l10n.prefQuickAccessAdd,
+          text: l10n.prefQuickAccessAdd,
+          width: 320,
+          items: [
+            for (final c in _sorted(commands))
+              if (!list.contains(c.id)) WDropdownItem(c.id, c.label),
+          ],
+          onSelected: list.length >= 12 ? null : (id) => save([...list, id]),
+        ),
+        SizedBox(width: t.space.sm),
+        WTextButton(
+          label: l10n.prefQuickAccessDefault,
+          pill: false,
+          onPressed: listEquals(list, Settings.defaultQuickAccess) ? null : () => save(Settings.defaultQuickAccess),
+        ),
+      ]),
+    ];
+  }
+
+  List<Widget> _shortcuts(AppLocalizations l10n, Settings s) {
+    final commands = widget.commands;
+    final t = QuillTokens.of(context);
+    final q = _filter.text.trim().toLowerCase();
+    final shown = commands == null
+        ? const <Command>[]
+        : [
+            for (final c in _sorted(commands))
+              if (q.isEmpty || c.label.toLowerCase().contains(q) || (commands.shortcutLabelOf(c.id) ?? '').toLowerCase().contains(q)) c,
+          ];
+    Future<void> change(String id) async {
+      final choice = await showShortcutDialog(context, commands: commands!, id: id);
+      if (choice == null || !mounted) return;
+      s.customShortcuts = applyShortcutChoice(commands, s.customShortcuts, id, choice);
+    }
+
+    return [
+      _Row(
+        label: l10n.prefShortcuts,
+        child: _choices(l10n.prefShortcuts,
+            [(ShortcutScheme.wordPt, l10n.schemeWordPt), (ShortcutScheme.wordEn, l10n.schemeWordEn)], s.shortcuts,
+            (v) => s.shortcuts = v),
+      ),
+      if (commands != null) ...[
+        WLabel(l10n.prefShortcutsNote, small: true, tone: WLabelTone.muted, maxLines: 3),
+        SizedBox(height: t.space.sm),
+        Row(children: [
+          WTextField(label: l10n.prefShortcutsFilter, controller: _filter, width: 320, onChanged: (_) => setState(() {})),
+          SizedBox(width: t.space.sm),
+          WTextButton(
+            label: l10n.prefShortcutsResetAll,
+            pill: false,
+            onPressed: s.customShortcuts.isEmpty ? null : () => s.customShortcuts = const {},
+          ),
+        ]),
+        SizedBox(height: t.space.sm),
+        for (final c in shown)
+          MergeSemantics(
+            child: Row(children: [
+              Expanded(child: WLabel(c.label, maxLines: 1)),
+              SizedBox(
+                width: 160,
+                child: WLabel(
+                  commands.shortcutLabelOf(c.id) ?? '—',
+                  tone: s.customShortcuts.containsKey(c.id) ? WLabelTone.normal : WLabelTone.muted,
+                ),
+              ),
+              WTextButton(label: l10n.prefShortcutChange, pill: false, onPressed: () => change(c.id)),
+            ]),
+          ),
+      ],
+    ];
+  }
 
   Widget _choices<T>(String label, List<(T, String)> options, T selected, ValueChanged<T> onChanged) => Wrap(
         spacing: QuillTokens.of(context).space.sm,

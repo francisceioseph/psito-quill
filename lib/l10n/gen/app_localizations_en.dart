@@ -3476,4 +3476,147 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get watermarkApply => 'Apply';
+
+  @override
+  String get prefSpellIgnoreUpper => 'Don\'t check words in UPPERCASE';
+
+  @override
+  String get prefSpellIgnoreDigits => 'Don\'t check words with numbers';
+
+  @override
+  String get prefSpellRulesNote =>
+      'The spelling rules apply the next time Quill opens: LibreOffice only reads them when it starts.';
+
+  @override
+  String get prefQuickAccess => 'Quick access';
+
+  @override
+  String get prefQuickAccessNote =>
+      'The buttons before File, on the ribbon. Up to 12.';
+
+  @override
+  String prefQuickAccessUp(String name) {
+    return 'Move $name up';
+  }
+
+  @override
+  String prefQuickAccessDown(String name) {
+    return 'Move $name down';
+  }
+
+  @override
+  String prefQuickAccessRemove(String name) {
+    return 'Remove $name';
+  }
+
+  @override
+  String get prefQuickAccessAdd => 'Add a command';
+
+  @override
+  String get prefQuickAccessDefault => 'Restore the default';
+
+  @override
+  String get prefShortcutsNote =>
+      'Each command can have its own shortcut, over the chosen set. The highlighted ones are yours.';
+
+  @override
+  String get prefShortcutsFilter => 'Search a command or shortcut';
+
+  @override
+  String get prefShortcutsResetAll => 'Reset all to the set';
+
+  @override
+  String get prefShortcutChange => 'Change';
+
+  @override
+  String shortcutDialogTitle(String name) {
+    return 'Shortcut for $name';
+  }
+
+  @override
+  String get shortcutNone => 'No shortcut now.';
+
+  @override
+  String shortcutCurrent(String keys) {
+    return 'Now: $keys';
+  }
+
+  @override
+  String get shortcutPress => 'Press the shortcut keys';
+
+  @override
+  String get shortcutUnusable =>
+      'Use Ctrl or Alt with a key, or an F key: a letter alone is text.';
+
+  @override
+  String shortcutTaken(String name) {
+    return 'This is already the shortcut for $name. Assigning removes it there.';
+  }
+
+  @override
+  String get shortcutRemove => 'No shortcut';
+
+  @override
+  String get shortcutReset => 'The set\'s';
+
+  @override
+  String get shortcutAssign => 'Assign';
+
+  @override
+  String get commandNewFromTemplate => 'New from template…';
+
+  @override
+  String get commandSaveAsTemplate => 'Save as template…';
+
+  @override
+  String get commandSaveBookTemplate =>
+      'Save the styles as the book\'s template';
+
+  @override
+  String get templatesNewTitle => 'New from template';
+
+  @override
+  String templatesNone(String folder) {
+    return 'No templates yet. \"Save as template\" stores a document\'s styles in $folder.';
+  }
+
+  @override
+  String get templatesOfBook => 'The book\'s styles (estilos.ott)';
+
+  @override
+  String get templatesOpenFolder => 'Open the templates folder';
+
+  @override
+  String get templatesOpenFailed => 'The template didn\'t open.';
+
+  @override
+  String get templatesSaveTitle => 'Save as template';
+
+  @override
+  String get templatesSaveNote =>
+      'The template keeps this document\'s styles (the page, paragraphs, headings), without the text.';
+
+  @override
+  String get templatesName => 'The template\'s name';
+
+  @override
+  String get templatesExists => 'A template with this name already exists.';
+
+  @override
+  String get templatesReplace => 'Replace';
+
+  @override
+  String get templatesSave => 'Save';
+
+  @override
+  String templatesSaved(String name) {
+    return 'The template $name was saved.';
+  }
+
+  @override
+  String get templatesBookSaved =>
+      'The styles are now the book\'s template: new chapters start from it.';
+
+  @override
+  String get templatesSaveFailed => 'The template wasn\'t saved.';
 }

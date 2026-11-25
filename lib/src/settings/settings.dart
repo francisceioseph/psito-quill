@@ -149,6 +149,26 @@ class Settings extends ChangeNotifier {
   bool get screenReaderDoc => _screenReaderDoc;
   set screenReaderDoc(bool v) => _set(() => _screenReaderDoc = v);
 
+  /// A ortografia (D-093): não verificar as palavras em MAIÚSCULAS, nem as
+  /// com números. Vão no perfil do motor ao ligar: valem na próxima vez.
+  bool _spellIgnoreUpper = false, _spellIgnoreDigits = false;
+  bool get spellIgnoreUpper => _spellIgnoreUpper;
+  set spellIgnoreUpper(bool v) => _set(() => _spellIgnoreUpper = v);
+  bool get spellIgnoreDigits => _spellIgnoreDigits;
+  set spellIgnoreDigits(bool v) => _set(() => _spellIgnoreDigits = v);
+
+  /// Os comandos do acesso rápido, na ordem (os ids do `CommandRegistry`).
+  static const defaultQuickAccess = ['arquivo.salvar', 'editar.desfazer', 'editar.refazer'];
+  List<String> _quickAccess = defaultQuickAccess;
+  List<String> get quickAccess => _quickAccess;
+  set quickAccess(List<String> v) => _set(() => _quickAccess = List.unmodifiable(v));
+
+  /// Os atalhos escolhidos, por cima do jogo: o id e o atalho
+  /// (`encodeActivator`; "" tira o do jogo).
+  Map<String, String> _customShortcuts = const {};
+  Map<String, String> get customShortcuts => _customShortcuts;
+  set customShortcuts(Map<String, String> v) => _set(() => _customShortcuts = Map.unmodifiable(v));
+
   void _set(void Function() change) {
     change();
     _save();
@@ -185,6 +205,13 @@ class Settings extends ChangeNotifier {
       _autoSnapshots = json['instantaneosAutomaticos'] as bool? ?? _autoSnapshots;
       _authorName = json['nome'] as String? ?? _authorName;
       _recentFonts = (json['fontesRecentes'] as List?)?.whereType<String>().take(5).toList() ?? _recentFonts;
+      _spellIgnoreUpper = json['ortografiaSemMaiusculas'] as bool? ?? _spellIgnoreUpper;
+      _spellIgnoreDigits = json['ortografiaSemNumeros'] as bool? ?? _spellIgnoreDigits;
+      _quickAccess = List.unmodifiable((json['acessoRapido'] as List?)?.whereType<String>().take(12) ?? _quickAccess);
+      _customShortcuts = Map.unmodifiable({
+        for (final MapEntry(:key, :value) in ((json['atalhosProprios'] as Map?) ?? const {}).entries)
+          if (key is String && value is String) key: value,
+      });
     } on Object {
       // Sem arquivo ou estragado: os padrões.
     }
@@ -221,6 +248,10 @@ class Settings extends ChangeNotifier {
             'salvamentoAutomatico': _autosave,
             'instantaneosAutomaticos': _autoSnapshots,
             'nome': _authorName,
+            'ortografiaSemMaiusculas': _spellIgnoreUpper,
+            'ortografiaSemNumeros': _spellIgnoreDigits,
+            'acessoRapido': _quickAccess,
+            'atalhosProprios': _customShortcuts,
           }));
     } on FileSystemException {
       // Sem onde gravar: vale só para esta sessão.

@@ -68,6 +68,7 @@ class Ribbon extends StatelessWidget {
     this.recentFonts = const [],
     this.onFontUsed,
     this.trailing = const [],
+    this.quickAccess = const [CommandIds.save, CommandIds.undo, CommandIds.redo],
   });
 
   /// As fontes escolhidas por último (as preferências), e quem guarda a
@@ -97,6 +98,9 @@ class Ribbon extends StatelessWidget {
   /// O ícone "Painel de estilos" da galeria.
   final VoidCallback? onStylesPanel;
   final List<Widget> trailing;
+
+  /// Os comandos do acesso rápido, antes do Arquivo (D-093: a pessoa escolhe).
+  final List<String> quickAccess;
 
   /// A aba que aparece agora: as contextuais somem quando o contexto acaba.
   RibbonTab get shownTab => switch (tab) {
@@ -138,8 +142,8 @@ class Ribbon extends StatelessWidget {
                         children: [
                           // Acesso rápido, como no Word e no OnlyOffice: salvar,
                           // desfazer e refazer, antes do Arquivo (D-049).
-                          for (final id in [CommandIds.save, CommandIds.undo, CommandIds.redo])
-                            CommandButton(commands: commands, id: id, onRan: onRan),
+                          for (final id in quickAccess)
+                            if (commands[id] != null) CommandButton(commands: commands, id: id, onRan: onRan),
                           SizedBox(width: t.space.md),
                           WTextButton(
                             label: l10n.ribbonFile,

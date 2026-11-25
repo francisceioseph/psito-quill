@@ -166,6 +166,19 @@ void main() {
       expect(() => books.create(dir, 'Outro', firstChapter: 'x'), throwsA(isA<BookException>()));
     });
 
+    test('com o estilos.ott, o capítulo novo nasce dele (D-093)', () async {
+      final dir = '${tmp.path}/M.psitobook';
+      await books.create(dir, 'M', firstChapter: 'Um');
+      File('$dir/estilos.ott').writeAsStringSync('modelo');
+      await books.addChapter('Dois');
+      expect(kit.conversions.last.$1, '$dir/estilos.ott');
+      expect(kit.conversions.last.$3, 'odt');
+      // Um capítulo dividido continua vindo do resto do texto.
+      final resto = File('${tmp.path}/resto.odt')..writeAsStringSync('resto');
+      await books.addChapterFrom(resto.path, 'Três');
+      expect(kit.conversions.last.$1, resto.path);
+    });
+
     test('criar, mover, Alt+setas, renomear e apagar para a lixeira', () async {
       final dir = '${tmp.path}/L.psitobook';
       await books.create(dir, 'L', firstChapter: 'Um');

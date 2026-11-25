@@ -3476,4 +3476,147 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get watermarkApply => 'Aplicar';
+
+  @override
+  String get prefSpellIgnoreUpper => 'Não verificar as palavras em MAIÚSCULAS';
+
+  @override
+  String get prefSpellIgnoreDigits => 'Não verificar as palavras com números';
+
+  @override
+  String get prefSpellRulesNote =>
+      'As regras da ortografia valem na próxima vez que o Quill abrir: o LibreOffice só as lê ao ligar.';
+
+  @override
+  String get prefQuickAccess => 'Acesso rápido';
+
+  @override
+  String get prefQuickAccessNote =>
+      'Os botões antes do Arquivo, na faixa. Até 12.';
+
+  @override
+  String prefQuickAccessUp(String name) {
+    return 'Subir $name';
+  }
+
+  @override
+  String prefQuickAccessDown(String name) {
+    return 'Descer $name';
+  }
+
+  @override
+  String prefQuickAccessRemove(String name) {
+    return 'Tirar $name';
+  }
+
+  @override
+  String get prefQuickAccessAdd => 'Adicionar um comando';
+
+  @override
+  String get prefQuickAccessDefault => 'Voltar ao padrão';
+
+  @override
+  String get prefShortcutsNote =>
+      'Cada comando pode ter o seu atalho, por cima do jogo escolhido. Os em destaque são os seus.';
+
+  @override
+  String get prefShortcutsFilter => 'Procurar um comando ou atalho';
+
+  @override
+  String get prefShortcutsResetAll => 'Voltar todos ao jogo';
+
+  @override
+  String get prefShortcutChange => 'Mudar';
+
+  @override
+  String shortcutDialogTitle(String name) {
+    return 'Atalho de $name';
+  }
+
+  @override
+  String get shortcutNone => 'Sem atalho agora.';
+
+  @override
+  String shortcutCurrent(String keys) {
+    return 'Agora: $keys';
+  }
+
+  @override
+  String get shortcutPress => 'Pressione as teclas do atalho';
+
+  @override
+  String get shortcutUnusable =>
+      'Use Ctrl ou Alt com uma tecla, ou uma tecla F: uma letra sozinha é texto.';
+
+  @override
+  String shortcutTaken(String name) {
+    return 'Este já é o atalho de $name. Atribuir tira dele.';
+  }
+
+  @override
+  String get shortcutRemove => 'Sem atalho';
+
+  @override
+  String get shortcutReset => 'O do jogo';
+
+  @override
+  String get shortcutAssign => 'Atribuir';
+
+  @override
+  String get commandNewFromTemplate => 'Novo a partir do modelo…';
+
+  @override
+  String get commandSaveAsTemplate => 'Salvar como modelo…';
+
+  @override
+  String get commandSaveBookTemplate =>
+      'Salvar os estilos como modelo do livro';
+
+  @override
+  String get templatesNewTitle => 'Novo a partir do modelo';
+
+  @override
+  String templatesNone(String folder) {
+    return 'Nenhum modelo ainda. \"Salvar como modelo\" grava os estilos de um documento em $folder.';
+  }
+
+  @override
+  String get templatesOfBook => 'Os estilos do livro (estilos.ott)';
+
+  @override
+  String get templatesOpenFolder => 'Abrir a pasta dos modelos';
+
+  @override
+  String get templatesOpenFailed => 'O modelo não abriu.';
+
+  @override
+  String get templatesSaveTitle => 'Salvar como modelo';
+
+  @override
+  String get templatesSaveNote =>
+      'O modelo guarda os estilos deste documento (a página, os parágrafos, os títulos), sem o texto.';
+
+  @override
+  String get templatesName => 'O nome do modelo';
+
+  @override
+  String get templatesExists => 'Já existe um modelo com esse nome.';
+
+  @override
+  String get templatesReplace => 'Substituir';
+
+  @override
+  String get templatesSave => 'Salvar';
+
+  @override
+  String templatesSaved(String name) {
+    return 'O modelo $name foi salvo.';
+  }
+
+  @override
+  String get templatesBookSaved =>
+      'Os estilos viraram o modelo do livro: os capítulos novos nascem dele.';
+
+  @override
+  String get templatesSaveFailed => 'O modelo não foi salvo.';
 }

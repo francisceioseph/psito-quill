@@ -19,10 +19,12 @@ class MenuSpec {
 List<MenuSpec> editorMenus(AppLocalizations l10n) => [
       MenuSpec(l10n.menuFile, const [
         CommandIds.newDocument,
+        LayoutCommandIds.newFromTemplate,
         CommandIds.open,
         null,
         CommandIds.save,
         CommandIds.saveAs,
+        LayoutCommandIds.saveAsTemplate,
         PageCommandIds.exportPdf,
         PageCommandIds.print,
         null,
@@ -179,6 +181,7 @@ List<MenuSpec> editorMenus(AppLocalizations l10n) => [
         null,
         BookCommandIds.newChapter,
         BookCommandIds.newPart,
+        LayoutCommandIds.saveBookTemplate,
         BookCommandIds.binder,
         BookCommandIds.corkboard,
         null,

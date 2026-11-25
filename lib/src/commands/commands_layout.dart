@@ -1,8 +1,9 @@
 // Os comandos da Página Inicial, do Layout e do Inserir que vieram do
 // OnlyOffice (Fase 4, Etapa 7, D-092): o pincel, maiúsculas e minúsculas, as
 // listas de vários níveis, as colunas, os números de linha, a marca d'água,
-// organizar as imagens e a caixa de texto. A marca d'água pede uma janela,
-// que é da página do editor ([LayoutViewActions]).
+// organizar as imagens e a caixa de texto; e os modelos (D-093). A marca
+// d'água e os modelos pedem uma janela, que é da página do editor
+// ([LayoutViewActions]).
 import 'package:flutter/widgets.dart' show IconData;
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -36,6 +37,11 @@ abstract final class LayoutCommandIds {
   static const arrangeBack = 'imagem.enviarParaTras';
   static const textBox = 'inserir.caixaDeTexto';
 
+  // Os modelos (D-093).
+  static const newFromTemplate = 'arquivo.novoDoModelo';
+  static const saveAsTemplate = 'arquivo.salvarComoModelo';
+  static const saveBookTemplate = 'livro.salvarModelo';
+
   static const cases = [caseSentence, caseLower, caseUpper, caseTitle, caseToggle];
   static const lists = [listDecimal, listRoman, listLetters, listParenthesis, listBullets];
   static const columns = [columns1, columns2, columns3];
@@ -46,6 +52,15 @@ abstract final class LayoutCommandIds {
 abstract interface class LayoutViewActions {
   /// A janela da marca d'água: o texto, a cor e a direção.
   void watermark();
+
+  /// Os modelos (D-093): escolher um para um documento novo, salvar os
+  /// estilos como um modelo, e o modelo do livro.
+  void newFromTemplate();
+  void saveAsTemplate();
+  void saveBookTemplate();
+
+  /// Há um livro aberto (o modelo do livro).
+  bool get bookOpen;
 }
 
 void registerLayoutCommands(
@@ -107,6 +122,26 @@ void registerLayoutCommands(
     run(LayoutCommandIds.arrangeBack, l10n.commandArrangeBack, Symbols.flip_to_back_rounded, () => doc.arrange(Arrange.back),
         when: onImage),
     run(LayoutCommandIds.textBox, l10n.commandTextBox, Symbols.text_fields_rounded, doc.insertTextBox),
+    Command(
+      id: LayoutCommandIds.newFromTemplate,
+      label: l10n.commandNewFromTemplate,
+      icon: Symbols.note_stack_add_rounded,
+      run: view.newFromTemplate,
+    ),
+    Command(
+      id: LayoutCommandIds.saveAsTemplate,
+      label: l10n.commandSaveAsTemplate,
+      icon: Symbols.save_as_rounded,
+      run: view.saveAsTemplate,
+      canRun: () => doc.isOpen,
+    ),
+    Command(
+      id: LayoutCommandIds.saveBookTemplate,
+      label: l10n.commandSaveBookTemplate,
+      icon: Symbols.auto_stories_rounded,
+      run: view.saveBookTemplate,
+      canRun: () => doc.isOpen && view.bookOpen,
+    ),
   ]) {
     registry.register(c);
   }

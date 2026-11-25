@@ -62,7 +62,11 @@ class LoProfile {
   ///
   /// [current] vira o esquema atual do perfil: a cor da ortografia é a dele
   /// quando o motor liga (sem isso, valeria a do LibreOffice na primeira vez).
-  void ensureSettings(List<PaperScheme> schemes, {String? current}) {
+  ///
+  /// [spellUpperCase] e [spellWithDigits] (D-093): verificar as palavras em
+  /// MAIÚSCULAS e as com números. Mudar com o motor ligado não refaz a
+  /// verificação (a sonda), então vale na próxima vez que ele ligar.
+  void ensureSettings(List<PaperScheme> schemes, {String? current, bool spellUpperCase = true, bool spellWithDigits = true}) {
     final file = _registry;
     file.parent.createSync(recursive: true);
     var text = file.existsSync() ? file.readAsStringSync() : _emptyRegistry;
@@ -75,6 +79,8 @@ class LoProfile {
       items.writeln(propItem(path, name, value));
     }
     if (current != null) items.writeln(propItem(_schemePath, 'CurrentColorScheme', current));
+    items.writeln(propItem(_spellPath, 'IsSpellUpperCase', '$spellUpperCase'));
+    items.writeln(propItem(_spellPath, 'IsSpellWithDigits', '$spellWithDigits'));
     items.write('<!-- /$_marker -->\n');
     text = text.replaceFirst('</oor:items>', '$items</oor:items>');
     file.writeAsStringSync(text);
@@ -114,10 +120,14 @@ class LoProfile {
       'library:readonly="false" library:passwordprotected="false"/>\n';
 
   static const _schemePath = '/org.openoffice.Office.UI/ColorScheme';
+  static const _spellPath = '/org.openoffice.Office.Linguistic/SpellChecking';
 
   static String _removeOurItems(String text) {
     // O esquema atual: o LibreOffice regrava (com o último `ChangeTheme`).
     text = text.replaceAll(RegExp('<item oor:path="$_schemePath"><prop oor:name="CurrentColorScheme"[^\n]*?</item>\n?'), '');
+    // As regras da ortografia: o LibreOffice regrava com o valor da sessão.
+    text = text.replaceAll(
+        RegExp('<item oor:path="$_spellPath"><prop oor:name="IsSpell(UpperCase|WithDigits)"[^\n]*?</item>\n?'), '');
     // O LibreOffice regrava as travas no mesmo formato, sem os comentários.
     for (final (path, name, value) in privacy) {
       text = text.replaceAll('${propItem(path, name, value)}\n', '');

@@ -624,7 +624,7 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
 - **Etapa 5: as referências** (feita, D-090). O sumário no capítulo, as legendas, os índices de figuras e de tabelas, os marcadores, a referência cruzada e o índice remissivo (também no compilar). O que o motor só faz por janela vai por uma biblioteca Basic no perfil do Quill.
 - **Etapa 6: os ajustes da Estrutura, do parágrafo e das Informações** (feita, D-091). "Início do documento", o nível e recolher na Estrutura; a cor de fundo do parágrafo e a janela "Parágrafo…" (o intervalo entre parágrafos do mesmo estilo, as bordas, as tabulações), pelas macros do perfil; e nas Informações os parágrafos, os caracteres com e sem espaços e as propriedades editáveis.
 - **Etapa 7: os ajustes da Página Inicial, do Layout e do Inserir** (feita, D-092). O pincel, o Aa e as listas de vários níveis; as colunas, os números de linha, a cor da página, a marca d'água e a ordem das imagens; a caixa de texto e a data e a hora no Inserir. Agrupar imagens ficou de fora: a 24.2 só agrupa formas de desenho.
-- **Etapa 8: as Preferências e os modelos.**
+- **Etapa 8: as Preferências e os modelos** (feita, D-093). As regras da ortografia (no perfil do motor, na próxima abertura), o acesso rápido escolhido, o atalho de cada comando com o aviso de conflito, "Salvar como modelo", o `estilos.ott` do livro (os capítulos novos nascem dele) e "Novo a partir do modelo", que abre uma cópia sem arquivo.
 - **Fecho:** o `docs/FASE4-RESULTADOS.md` e a documentação.
 
 O que a fase cobre (a lista de 23/11/2026):

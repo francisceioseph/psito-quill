@@ -1493,3 +1493,31 @@ A Etapa 7 da Fase 4, com o que o Francisco viu no OnlyOffice: o pincel, o Aa e a
   - unidade, `layout_format_test`: a cor do Standard, a marca d'água e os números de linha na cópia, os modelos de lista e as macros novas;
   - widget, `fase4_layout_test`: o pincel e o estado dele, o Aa com uma seleção, a lista de vários níveis e descer um nível; as colunas e o estado, os números de linha, a cor da página e a janela da marca d'água; a ordem só com uma imagem; a caixa de texto;
   - integração (o passo 34): maiúsculas, a lista com o subitem, duas colunas, os números de linha, a cor da página, a marca d'água, a ordem da imagem e a caixa de texto no ODT gravado (o `content.xml` e o `styles.xml`), e tirar tudo de volta pela cópia.
+
+## D-093 · As Preferências e os modelos
+
+A Etapa 8 da Fase 4, com o que o Francisco viu no OnlyOffice: as regras da ortografia, personalizar o acesso rápido, escolher cada atalho e "Novo a partir do modelo".
+
+- **A sonda** (`lok_script`, na 24.2):
+  - **a ortografia:** o `IsSpellUpperCase` e o `IsSpellWithDigits` (`/org.openoffice.Office.Linguistic/SpellChecking`).
+    - Mudar com o motor ligado, pela `LinguProperties` de uma macro, grava no perfil, mas não refaz a verificação: as palavras já marcadas continuam, mesmo desligando e religando o `.uno:SpellOnline`.
+    - Com o valor no perfil antes de ligar, "XPTOZQ" e "abcqz123" deixam de ser marcadas (o menu de contexto vem sem a ortografia).
+    - Por isso, a regra vai no perfil a cada vez que o Quill liga (`LoProfile.ensureSettings`, como as travas do D-041), e as Preferências avisam que vale na próxima abertura. O LibreOffice regrava o arquivo com o valor da sessão; o Quill tira o dele e põe o das Preferências;
+  - **o modelo:**
+    - o motor grava um `.ott` (o formato `ott`, o `mimetype` de modelo);
+    - **abrir o `.ott` direto edita o próprio modelo,** com a trava ao lado dele, e não um documento novo. Por isso, o "Novo a partir do modelo" converte o modelo numa cópia (o `pqk_convert`, no documento oculto), na pasta das cópias, e abre a cópia sem arquivo.
+- **O acesso rápido** (Preferências › Acesso rápido): os botões antes do Arquivo, na faixa, até 12, na ordem que a pessoa escolhe (adicionar qualquer comando, subir, descer, tirar, voltar ao padrão). Ficam nas preferências (`acessoRapido`).
+- **Os atalhos** (Preferências › Atalhos de teclado): cada comando pode ter o seu, por cima do jogo escolhido (`atalhosProprios`, o id e o atalho; vazio tira o do jogo).
+  - O `CommandRegistry.overrides` vale para a tecla, para as dicas dos botões e para os menus.
+  - A janela captura a próxima combinação. Ela precisa de Ctrl ou Alt, ou ser uma tecla F: uma letra sozinha, ou com Shift, é texto.
+  - Quando a combinação já é de outro comando, a janela avisa, e atribuir a tira dele. "O do jogo" devolve o padrão (e tira o atalho de quem estava com ele), "Sem atalho" tira, e o igual ao do jogo não fica guardado.
+  - A lista tem um campo de procurar, pelo nome ou pelo atalho, e "Voltar todos ao jogo".
+- **Os modelos** (`templates.dart`):
+  - **"Salvar como modelo…"** (no Arquivo) grava os estilos do documento da tela, sem o texto, na pasta de modelos do Quill (`~/.config/psito-quill/modelos`). Sai da cópia FODT (`stylesOnly`, como no D-075), e o motor converte para `.ott`;
+  - **"Salvar os estilos como modelo do livro"** (no Livro) grava o `estilos.ott` na pasta do livro. Ele é o primeiro do "Novo a partir do modelo", e **o capítulo novo do livro nasce dele** (o `BookController.addChapterFrom`, sem texto), como o `PLANO.md` previa. Um capítulo dividido continua vindo do resto do texto;
+  - **"Novo a partir do modelo…"** abre a janela com o do livro e os da pasta, e "Abrir a pasta dos modelos". O documento novo é uma aba sem arquivo (`DocTab.asNew`): salvar pede o nome, e a aba não mostra o nome da cópia. A cópia fica na pasta das cópias, que a limpeza do início apaga (D-044).
+- **A memória:** nada fica guardado além de duas listas pequenas nas preferências; a lista dos atalhos só existe com a seção aberta. Pelo `tool/ab.py beb1c92` (o `capitulo-30p.docx`, 5 rodadas, a mediana), a memória anônima variou de −2,1 a 0,0 MB. O rolar ficou em 59,5 fps. A tecla (p95) subiu para 13,6 ms na build anterior e 13,8 ms nesta, nas duas igual: a máquina estava mais ocupada nesse dia.
+- **Os testes:**
+  - unidade, `preferences_templates_test`: o atalho guardado e lido, o escolhido por cima do jogo, atribuir o de outro, voltar ao jogo, uma letra sozinha, as preferências novas no arquivo, as regras no perfil (sem repetir depois de o LibreOffice regravar), a lista e o nome dos modelos; e, no `book_test`, o capítulo novo do `estilos.ott`;
+  - widget, `fase4_preferences_test`: o atalho com o aviso de conflito (e o Ctrl+N passa a pôr itálico), o acesso rápido (tirar, subir, voltar ao padrão), a regra da ortografia, o novo a partir do modelo sem arquivo e salvar como modelo (o nome repetido);
+  - integração (o passo 35): os estilos de um capítulo num `.ott` sem o texto, o novo a partir dele sem arquivo e sem trava ao lado do modelo, e o modelo intocado.

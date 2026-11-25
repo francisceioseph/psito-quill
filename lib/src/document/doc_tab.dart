@@ -54,6 +54,10 @@ class DocTab {
   /// ser salva.
   RecoveryEntry? recovered;
 
+  /// Aberto de um modelo (D-093): o arquivo é uma cópia temporária, e o
+  /// documento fica sem arquivo (salvar pede o nome).
+  bool asNew = false;
+
   /// A rolagem da página (pixels lógicos), que a vista devolve ao voltar.
   Offset scroll = Offset.zero;
 

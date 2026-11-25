@@ -10,6 +10,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import '../kit/quill_kit.dart';
+import '../document/templates.dart';
 import 'book.dart';
 import 'book_io.dart';
 import 'docx_import.dart';
@@ -239,7 +240,10 @@ class BookController extends ChangeNotifier {
   Future<BookNode> addChapterFrom(String source, String title, {String? afterId, String? partId}) async {
     final book = _book!, dir = _dir!;
     final file = newChapterFile(dir, title);
-    if (!await _convert.convert(source, '$dir/$file', 'odt')) throw const BookException(BookError.writeFailed);
+    // Vazio, nasce do modelo de estilos do livro, se ele tem (D-093).
+    final template = bookTemplatePath(dir);
+    final from = source.isEmpty && File(template).existsSync() ? template : source;
+    if (!await _convert.convert(from, '$dir/$file', 'odt')) throw const BookException(BookError.writeFailed);
     final node = BookNode(id: newNodeId(book), kind: BookNodeKind.chapter, title: title, file: file);
     // Vazio, entra na base das metas com zero; com texto (dividido), com o
     // que tiver na primeira contagem.

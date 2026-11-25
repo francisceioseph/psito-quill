@@ -32,6 +32,8 @@ void main(List<String> args) {
     ..ensureSettings(
       paperSchemes(builtInThemes, spell: spellMarkColors[settings.spellColor]),
       current: enginePaper(themeById(settings.theme)).scheme,
+      spellUpperCase: !settings.spellIgnoreUpper,
+      spellWithDigits: !settings.spellIgnoreDigits,
     );
   // Cópias temporárias de uma sessão que caiu (D-044): têm o texto do livro.
   DocumentController.cleanStaleCopies();

@@ -1136,6 +1136,30 @@ void main() {
         'tirar o Layout', detail: () => '${doc.snapshot.page.watermark} ${doc.snapshot.page.lineNumbers} ${doc.snapshot.page.pageColor}');
     expect(await workspace.closeTab(), isTrue);
 
+    // 35. Os modelos (D-093): os estilos de um capítulo viram um .ott sem o
+    //     texto; o novo a partir dele abre sem arquivo, com os estilos, e sem
+    //     trava ao lado do modelo.
+    final styled = File('test/fixtures/capitulo-curto.odt').copySync('${tmp.path}/com-estilo.odt').path;
+    await openAndWait(styled);
+    final template = '${tmp.path}/modelos/Teste.ott';
+    expect(await workspace.saveStylesAsTemplate(template), isTrue);
+    final ottBytes = File(template).readAsBytesSync();
+    expect(utf8.decode(readZipEntry(ottBytes, 'mimetype')!), 'application/vnd.oasis.opendocument.text-template');
+    final ottContent = utf8.decode(readZipEntry(ottBytes, 'content.xml')!);
+    final ottText = ottContent.replaceAll(RegExp(r'<[^>]+>'), '').trim();
+    expect(ottText, isEmpty, reason: 'o modelo sem o texto do capítulo');
+    expect(utf8.decode(readZipEntry(ottBytes, 'styles.xml')!), contains('style:name="Heading"'), reason: 'os estilos do capítulo');
+    expect(await workspace.closeTab(), isTrue);
+    expect(await workspace.newFromTemplate(template), isTrue);
+    await until(() => doc.isOpen && doc.busy == null && doc.currentTab != null && doc.docStatus == DocStatus.open, 'o novo do modelo');
+    expect(doc.path, isNull, reason: 'sem arquivo: salvar pede o nome');
+    expect(File('${tmp.path}/modelos/.~lock.Teste.ott#').existsSync(), isFalse, reason: 'o modelo não fica aberto');
+    type('Do modelo');
+    await until(() => doc.modified, 'o novo do modelo muda');
+    workspace.onUnsaved = () async => UnsavedChoice.discard;
+    expect(await workspace.closeTab(), isTrue);
+    expect(File(template).readAsBytesSync(), ottBytes, reason: 'o modelo intocado');
+
         // Fecha sem salvar (descarta), para não deixar trava.
     workspace.onUnsaved = () async => UnsavedChoice.discard;
     expect(await workspace.requestExit(), isTrue);

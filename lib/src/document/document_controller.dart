@@ -325,7 +325,7 @@ class DocumentController extends ChangeNotifier {
   /// A rolagem da página, que a vista escreve (sem avisar ninguém).
   Offset scrollPosition = Offset.zero;
 
-  String? tabPath(DocTab t) => t == _current ? (path ?? _openingPath) : (t.path ?? t.openingPath);
+  String? tabPath(DocTab t) => t.asNew ? (t == _current ? path : t.path) : t == _current ? (path ?? _openingPath) : (t.path ?? t.openingPath);
   bool tabModified(DocTab t) => t == _current ? modified : t.modified;
 
   bool get _pristine => isOpen && path == null && !modified && !_switching;
@@ -500,13 +500,17 @@ class DocumentController extends ChangeNotifier {
   /// arquivo está com outro, e abre só para leitura. [viewing]: um
   /// instantâneo (D-081), só para leitura, com esse nome na aba. Um
   /// documento novo e vazio na tela dá lugar a este quando ele abrir.
-  void open(String path, {String? lockOwner, RecoveryEntry? recovered, String? viewing}) {
+  /// [asNew]: [path] é uma cópia (a de um modelo), e o documento abre sem
+  /// arquivo, como um novo.
+  void open(String path, {String? lockOwner, RecoveryEntry? recovered, String? viewing, bool asNew = false}) {
     _flushRecovery();
     final previous = _current;
     _replaceWhenOpened = previous != null && _pristine ? previous : null;
     _cameFrom = previous;
     if (previous != null) _stash(previous);
-    final t = _newTab()..viewing = viewing;
+    final t = _newTab()
+      ..viewing = viewing
+      ..asNew = asNew;
     tabs.insert(previous == null ? tabs.length : tabs.indexOf(previous) + 1, t);
     _current = t;
     tabRevision++;
@@ -1826,7 +1830,7 @@ class DocumentController extends ChangeNotifier {
           // Abriu, mas outra aba já está na tela (dois pedidos seguidos).
           tab
             ..status = DocStatus.open
-            ..path = tab.recovered == null ? tab.openingPath : null
+            ..path = tab.recovered == null && !tab.asNew ? tab.openingPath : null
             ..documentSize = size;
           if (tab.recovered != null) tab.openingPath = null;
           return;
@@ -1840,7 +1844,7 @@ class DocumentController extends ChangeNotifier {
         _enforceLimit();
         docStatus = DocStatus.open;
         // A cópia recuperada abre como um documento novo, sem arquivo.
-        path = recovered == null ? _openingPath : null;
+        path = recovered == null && !(_current?.asNew ?? false) ? _openingPath : null;
         if (recovered != null) _openingPath = null;
         documentSize = size;
         // O LOK manda a posição do cursor ao abrir, mas o "cursor visível"

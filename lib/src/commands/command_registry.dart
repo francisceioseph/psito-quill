@@ -49,6 +49,15 @@ class CommandRegistry extends ChangeNotifier {
   }
   final Map<String, Command> _commands = {};
 
+  /// Os atalhos que a pessoa escolheu (D-093), por cima do jogo: o id e o
+  /// atalho; null tira o do jogo.
+  Map<String, SingleActivator?> _overrides = const {};
+  Map<String, SingleActivator?> get overrides => _overrides;
+  set overrides(Map<String, SingleActivator?> value) {
+    _overrides = Map.unmodifiable(value);
+    notifyListeners();
+  }
+
   void register(Command command) {
     if (_commands.containsKey(command.id)) {
       throw ArgumentError('comando repetido: ${command.id}');
@@ -60,23 +69,26 @@ class CommandRegistry extends ChangeNotifier {
   Command? operator [](String id) => _commands[id];
   Iterable<Command> get all => _commands.values;
 
-  SingleActivator? shortcutOf(String id) => _commands[id]?.shortcuts[scheme];
+  /// O atalho de agora: o escolhido pela pessoa, ou o do jogo.
+  SingleActivator? shortcutOf(String id) =>
+      _overrides.containsKey(id) ? _overrides[id] : _commands[id]?.shortcuts[scheme];
+
+  /// O do jogo, sem o escolhido.
+  SingleActivator? defaultShortcutOf(String id) => _commands[id]?.shortcuts[scheme];
 
   /// O atalho para mostrar: "Ctrl+Shift+N", "F12". null se não tem.
-  String? shortcutLabelOf(String id) {
-    final a = shortcutOf(id);
-    if (a == null) return null;
-    final key = switch (a.trigger) {
-      LogicalKeyboardKey.equal => '+',
-      LogicalKeyboardKey.minus => '-',
-      final k => k.keyLabel.length == 1 ? k.keyLabel.toUpperCase() : k.keyLabel,
-    };
-    return [
-      if (a.control) 'Ctrl',
-      if (a.alt) 'Alt',
-      if (a.shift) 'Shift',
-      key,
-    ].join('+');
+  String? shortcutLabelOf(String id) => switch (shortcutOf(id)) {
+        null => null,
+        final a => activatorLabel(a),
+      };
+
+  /// O comando (outro que [except]) que já usa [a] agora.
+  Command? commandWithShortcut(SingleActivator a, {String? except}) {
+    for (final c in _commands.values) {
+      if (c.id == except) continue;
+      if (sameActivator(shortcutOf(c.id), a)) return c;
+    }
+    return null;
   }
 
   /// "Negrito (Ctrl+N)", para a dica dos botões.
@@ -91,7 +103,7 @@ class CommandRegistry extends ChangeNotifier {
   Command? match(KeyEvent event, HardwareKeyboard keyboard) {
     if (event is KeyUpEvent) return null;
     for (final c in _commands.values) {
-      final a = c.shortcuts[scheme];
+      final a = shortcutOf(c.id);
       if (a != null && a.accepts(event, keyboard)) return c;
     }
     return null;
@@ -104,4 +116,43 @@ class CommandRegistry extends ChangeNotifier {
     c.run();
     return true;
   }
+}
+
+/// "Ctrl+Shift+N", "F12".
+String activatorLabel(SingleActivator a) {
+  final key = switch (a.trigger) {
+    LogicalKeyboardKey.equal => '+',
+    LogicalKeyboardKey.minus => '-',
+    final k => k.keyLabel.length == 1 ? k.keyLabel.toUpperCase() : k.keyLabel,
+  };
+  return [
+    if (a.control) 'Ctrl',
+    if (a.alt) 'Alt',
+    if (a.shift) 'Shift',
+    key,
+  ].join('+');
+}
+
+bool sameActivator(SingleActivator? a, SingleActivator? b) =>
+    a != null &&
+    b != null &&
+    a.trigger == b.trigger &&
+    a.control == b.control &&
+    a.alt == b.alt &&
+    a.shift == b.shift &&
+    a.meta == b.meta;
+
+/// Como o atalho escolhido fica nas preferências: `ctrl,alt,shift,keyId`
+/// (os três em 0 ou 1); "" é sem atalho.
+String encodeActivator(SingleActivator? a) =>
+    a == null ? '' : '${a.control ? 1 : 0},${a.alt ? 1 : 0},${a.shift ? 1 : 0},${a.trigger.keyId}';
+
+/// O inverso; null para "" ou um texto que não serve.
+SingleActivator? decodeActivator(String text) {
+  final p = text.split(',');
+  if (p.length != 4) return null;
+  final id = int.tryParse(p[3]);
+  if (id == null) return null;
+  final key = LogicalKeyboardKey.findKeyByKeyId(id) ?? LogicalKeyboardKey(id);
+  return SingleActivator(key, control: p[0] == '1', alt: p[1] == '1', shift: p[2] == '1');
 }

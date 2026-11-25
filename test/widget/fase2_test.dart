@@ -422,6 +422,14 @@ void main() {
 class _NoLayoutView implements LayoutViewActions {
   @override
   void watermark() {}
+  @override
+  void newFromTemplate() {}
+  @override
+  void saveAsTemplate() {}
+  @override
+  void saveBookTemplate() {}
+  @override
+  bool get bookOpen => false;
 }
 
 class _NoReferenceView implements ReferenceViewActions {

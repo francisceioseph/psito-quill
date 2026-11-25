@@ -15,6 +15,7 @@ import '../book/book_io.dart';
 import '../book/book_search.dart';
 import '../book/chapter_cut.dart';
 import '../book/compile.dart';
+import '../book/docx_import.dart' show KitConverter;
 import '../book/snapshots.dart';
 import '../files/file_dialogs.dart';
 import '../files/lo_lock.dart';
@@ -23,6 +24,8 @@ import '../kit/quill_kit.dart';
 import 'document_controller.dart';
 import 'fodt.dart' show TextHit;
 import 'search.dart';
+import 'style_patch.dart' show stylesOnly;
+import 'templates.dart';
 import 'recovery.dart';
 
 /// Por que dividir ou juntar capítulos não deu (D-079).
@@ -114,6 +117,55 @@ class Workspace extends ChangeNotifier {
 
   /// Um documento novo, vazio, numa aba nova (D-054).
   Future<void> newDocument() async => doc.open('');
+
+  // ----------------------------------------------------- os modelos (D-093) --
+
+  static int _templateCopies = 0;
+  String _templateCopy() => '${DocumentController.copyDir}/${DocumentController.copyPrefixOfThisProcess}modelo-${_templateCopies++}';
+
+  /// O do livro aberto primeiro, depois os da pasta de modelos.
+  List<TemplateEntry> templates() => listTemplates(bookDir: book.dir);
+
+  /// Um documento novo a partir de [template], numa aba nova, sem arquivo. O
+  /// motor converte o modelo numa cópia: aberto direto, o `.ott` seria
+  /// editado no lugar, com a trava ao lado dele (a sonda).
+  Future<bool> newFromTemplate(String template) async {
+    final copy = '${_templateCopy()}.odt';
+    if (!await KitConverter(doc.kit).convert(template, copy, 'odt')) return false;
+    doc.open(copy, asNew: true);
+    return true;
+  }
+
+  /// Os estilos do documento da tela (sem o texto) viram o modelo [target].
+  Future<bool> saveStylesAsTemplate(String target) async {
+    if (!doc.isOpen) return false;
+    final base = _templateCopy();
+    final full = File('$base.fodt'), styles = File('$base-estilos.fodt');
+    try {
+      if (!await doc.exportTo(full.path, 'fodt')) return false;
+      styles.writeAsStringSync(stylesOnly(full.readAsStringSync()));
+      File(target).parent.createSync(recursive: true);
+      return await KitConverter(doc.kit).convert(styles.path, target, 'ott');
+    } on FileSystemException {
+      return false;
+    } finally {
+      for (final f in [full, styles]) {
+        try {
+          if (f.existsSync()) f.deleteSync();
+        } on FileSystemException {
+          // A limpeza do próximo início leva.
+        }
+      }
+    }
+  }
+
+  /// O `estilos.ott` do livro: os estilos do capítulo da tela. Os capítulos
+  /// novos nascem dele.
+  Future<bool> saveBookTemplate() async {
+    final dir = book.dir;
+    if (dir == null) return false;
+    return saveStylesAsTemplate(bookTemplatePath(dir));
+  }
 
   Future<void> openWithDialog() async {
     final path = await dialogs.pickOpen(label: labels.documents);

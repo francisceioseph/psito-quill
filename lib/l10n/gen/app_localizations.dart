@@ -6241,6 +6241,246 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Aplicar'**
   String get watermarkApply;
+
+  /// No description provided for @prefSpellIgnoreUpper.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não verificar as palavras em MAIÚSCULAS'**
+  String get prefSpellIgnoreUpper;
+
+  /// No description provided for @prefSpellIgnoreDigits.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não verificar as palavras com números'**
+  String get prefSpellIgnoreDigits;
+
+  /// No description provided for @prefSpellRulesNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'As regras da ortografia valem na próxima vez que o Quill abrir: o LibreOffice só as lê ao ligar.'**
+  String get prefSpellRulesNote;
+
+  /// No description provided for @prefQuickAccess.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acesso rápido'**
+  String get prefQuickAccess;
+
+  /// No description provided for @prefQuickAccessNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os botões antes do Arquivo, na faixa. Até 12.'**
+  String get prefQuickAccessNote;
+
+  /// No description provided for @prefQuickAccessUp.
+  ///
+  /// In pt, this message translates to:
+  /// **'Subir {name}'**
+  String prefQuickAccessUp(String name);
+
+  /// No description provided for @prefQuickAccessDown.
+  ///
+  /// In pt, this message translates to:
+  /// **'Descer {name}'**
+  String prefQuickAccessDown(String name);
+
+  /// No description provided for @prefQuickAccessRemove.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tirar {name}'**
+  String prefQuickAccessRemove(String name);
+
+  /// No description provided for @prefQuickAccessAdd.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar um comando'**
+  String get prefQuickAccessAdd;
+
+  /// No description provided for @prefQuickAccessDefault.
+  ///
+  /// In pt, this message translates to:
+  /// **'Voltar ao padrão'**
+  String get prefQuickAccessDefault;
+
+  /// No description provided for @prefShortcutsNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cada comando pode ter o seu atalho, por cima do jogo escolhido. Os em destaque são os seus.'**
+  String get prefShortcutsNote;
+
+  /// No description provided for @prefShortcutsFilter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Procurar um comando ou atalho'**
+  String get prefShortcutsFilter;
+
+  /// No description provided for @prefShortcutsResetAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Voltar todos ao jogo'**
+  String get prefShortcutsResetAll;
+
+  /// No description provided for @prefShortcutChange.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mudar'**
+  String get prefShortcutChange;
+
+  /// No description provided for @shortcutDialogTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atalho de {name}'**
+  String shortcutDialogTitle(String name);
+
+  /// No description provided for @shortcutNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem atalho agora.'**
+  String get shortcutNone;
+
+  /// No description provided for @shortcutCurrent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Agora: {keys}'**
+  String shortcutCurrent(String keys);
+
+  /// No description provided for @shortcutPress.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pressione as teclas do atalho'**
+  String get shortcutPress;
+
+  /// No description provided for @shortcutUnusable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Use Ctrl ou Alt com uma tecla, ou uma tecla F: uma letra sozinha é texto.'**
+  String get shortcutUnusable;
+
+  /// No description provided for @shortcutTaken.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este já é o atalho de {name}. Atribuir tira dele.'**
+  String shortcutTaken(String name);
+
+  /// No description provided for @shortcutRemove.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem atalho'**
+  String get shortcutRemove;
+
+  /// No description provided for @shortcutReset.
+  ///
+  /// In pt, this message translates to:
+  /// **'O do jogo'**
+  String get shortcutReset;
+
+  /// No description provided for @shortcutAssign.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atribuir'**
+  String get shortcutAssign;
+
+  /// No description provided for @commandNewFromTemplate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Novo a partir do modelo…'**
+  String get commandNewFromTemplate;
+
+  /// No description provided for @commandSaveAsTemplate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvar como modelo…'**
+  String get commandSaveAsTemplate;
+
+  /// No description provided for @commandSaveBookTemplate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvar os estilos como modelo do livro'**
+  String get commandSaveBookTemplate;
+
+  /// No description provided for @templatesNewTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Novo a partir do modelo'**
+  String get templatesNewTitle;
+
+  /// No description provided for @templatesNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum modelo ainda. \"Salvar como modelo\" grava os estilos de um documento em {folder}.'**
+  String templatesNone(String folder);
+
+  /// No description provided for @templatesOfBook.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os estilos do livro (estilos.ott)'**
+  String get templatesOfBook;
+
+  /// No description provided for @templatesOpenFolder.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir a pasta dos modelos'**
+  String get templatesOpenFolder;
+
+  /// No description provided for @templatesOpenFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'O modelo não abriu.'**
+  String get templatesOpenFailed;
+
+  /// No description provided for @templatesSaveTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvar como modelo'**
+  String get templatesSaveTitle;
+
+  /// No description provided for @templatesSaveNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'O modelo guarda os estilos deste documento (a página, os parágrafos, os títulos), sem o texto.'**
+  String get templatesSaveNote;
+
+  /// No description provided for @templatesName.
+  ///
+  /// In pt, this message translates to:
+  /// **'O nome do modelo'**
+  String get templatesName;
+
+  /// No description provided for @templatesExists.
+  ///
+  /// In pt, this message translates to:
+  /// **'Já existe um modelo com esse nome.'**
+  String get templatesExists;
+
+  /// No description provided for @templatesReplace.
+  ///
+  /// In pt, this message translates to:
+  /// **'Substituir'**
+  String get templatesReplace;
+
+  /// No description provided for @templatesSave.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvar'**
+  String get templatesSave;
+
+  /// No description provided for @templatesSaved.
+  ///
+  /// In pt, this message translates to:
+  /// **'O modelo {name} foi salvo.'**
+  String templatesSaved(String name);
+
+  /// No description provided for @templatesBookSaved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os estilos viraram o modelo do livro: os capítulos novos nascem dele.'**
+  String get templatesBookSaved;
+
+  /// No description provided for @templatesSaveFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'O modelo não foi salvo.'**
+  String get templatesSaveFailed;
 }
 
 class _AppLocalizationsDelegate
