@@ -49,6 +49,7 @@ abstract final class PageCommandIds {
   static const openLink = 'link.abrir';
   static const removeLink = 'link.remover';
   static const specialCharacter = 'inserir.caractereEspecial';
+  static const paragraph = 'paragrafo.avancado';
 }
 
 /// O que a página do editor sabe abrir para estes comandos.
@@ -62,6 +63,10 @@ abstract interface class PageViewActions {
   /// Pergunta antes de abrir: o Quill não abre nada na rede sozinho.
   void openLink(DocLink link);
   void specialCharacter();
+
+  /// A janela do parágrafo: o fundo, o intervalo, as bordas e as
+  /// tabulações (D-091).
+  void paragraphDialog();
 }
 
 void registerPageCommands(
@@ -170,6 +175,7 @@ void registerPageCommands(
     run(PageCommandIds.removeLink, l10n.commandRemoveLink, Symbols.link_off_rounded, doc.removeLink,
         when: () => doc.link != null),
     run(PageCommandIds.specialCharacter, l10n.commandSpecialCharacter, Symbols.special_character_rounded, view.specialCharacter),
+    run(PageCommandIds.paragraph, l10n.commandParagraph, Symbols.format_paragraph_rounded, view.paragraphDialog),
   ]) {
     registry.register(c);
   }

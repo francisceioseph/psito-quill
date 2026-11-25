@@ -318,4 +318,70 @@ Sub IrMarcador(nome As String)
   ThisComponent.getCurrentController().getViewCursor().gotoRange(bms.getByName(De(nome)).getAnchor(), False)
 End Sub
 
+REM O parágrafo e as propriedades do documento (D-091). Um cursor de texto
+REM sobre a seleção: as propriedades valem para cada parágrafo dela.
+Function Trecho() As Object
+  Dim vc As Object
+  vc = ThisComponent.getCurrentController().getViewCursor()
+  Trecho = vc.getText().createTextCursorByRange(vc)
+End Function
+
+REM Não adicionar intervalo entre parágrafos do mesmo estilo.
+Sub Intervalo(liga As Integer)
+  Trecho().ParaContextMargin = (liga = 1)
+End Sub
+
+REM Os lados (1 em cima, 2 embaixo, 4 à esquerda, 8 à direita), a largura e
+REM a distância do texto em 1/100 mm, a cor em RGB. Só o BorderLine2 com o
+REM LineWidth vale na 24.2, e os nomes são os sem "Para" (TopBorder...).
+Sub Bordas(lados As Integer, largura As Long, cor As Long, distancia As Long)
+  Dim c As Object
+  Dim b As New com.sun.star.table.BorderLine2
+  Dim n As New com.sun.star.table.BorderLine2
+  c = Trecho()
+  b.Color = cor
+  b.LineWidth = largura
+  b.LineStyle = 0
+  If (lados And 1) <> 0 Then c.TopBorder = b Else c.TopBorder = n
+  If (lados And 2) <> 0 Then c.BottomBorder = b Else c.BottomBorder = n
+  If (lados And 4) <> 0 Then c.LeftBorder = b Else c.LeftBorder = n
+  If (lados And 8) <> 0 Then c.RightBorder = b Else c.RightBorder = n
+  If lados = 0 Then c.BorderDistance = 0 Else c.BorderDistance = distancia
+End Sub
+
+REM As tabulações: "n_posição_alinhamento_preenchimento_..." (a posição em
+REM 1/100 mm; o alinhamento do TabAlign; o preenchimento, o código do
+REM caractere). Com n = 0, voltam as do estilo.
+Sub Tabulacoes(spec As String)
+  Dim c As Object, p As Variant, n As Integer, i As Integer
+  c = Trecho()
+  p = Split(spec, "_")
+  n = CInt(p(0))
+  If n = 0 Then
+    c.setPropertyToDefault("ParaTabStops")
+    Exit Sub
+  End If
+  Dim t(n - 1) As New com.sun.star.style.TabStop
+  For i = 0 To n - 1
+    t(i).Position = CLng(p(1 + 3 * i))
+    t(i).Alignment = CInt(p(2 + 3 * i))
+    t(i).FillChar = CInt(p(3 + 3 * i))
+    t(i).DecimalChar = 44
+  Next i
+  c.ParaTabStops = t()
+End Sub
+
+REM As etiquetas vêm separadas por quebras de linha.
+Sub Propriedades(titulo As String, assunto As String, autor As String, etiquetas As String, comentario As String)
+  Dim p As Object, k As String, vazio() As String
+  p = ThisComponent.getDocumentProperties()
+  p.Title = De(titulo)
+  p.Subject = De(assunto)
+  p.Author = De(autor)
+  p.Description = De(comentario)
+  k = De(etiquetas)
+  If k = "" Then p.Keywords = vazio() Else p.Keywords = Split(k, Chr(10))
+  ThisComponent.setModified(True)
+End Sub
+
 ''';

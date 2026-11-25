@@ -22,6 +22,7 @@ class WTextField extends StatelessWidget {
     this.textAlign = TextAlign.start,
     this.lines = 1,
     this.expands = false,
+    this.enabled = true,
   });
 
   /// O nome para o leitor de tela ("Localizar").
@@ -47,6 +48,9 @@ class WTextField extends StatelessWidget {
   /// Ocupa a altura toda do pai (o texto de uma nota), rolando por dentro.
   final bool expands;
 
+  /// false: só leitura (um documento que não se pode editar).
+  final bool enabled;
+
   @override
   Widget build(BuildContext context) {
     final t = QuillTokens.of(context);
@@ -64,6 +68,7 @@ class WTextField extends StatelessWidget {
       width: width,
       height: lines == 1 && !expands ? t.density.control : null,
       child: TextField(
+        enabled: enabled,
         expands: expands,
         minLines: expands ? null : lines,
         maxLines: expands ? null : (lines == 1 ? 1 : lines + 4),

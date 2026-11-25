@@ -16,6 +16,7 @@ class ColorMenuButton extends StatelessWidget {
     required this.label,
     required this.current,
     required this.currentName,
+    this.knowsCurrent = true,
     required this.noneLabel,
     required this.choices,
     required this.onSelected,
@@ -32,6 +33,10 @@ class ColorMenuButton extends StatelessWidget {
 
   /// O nome da cor atual, para o leitor de tela ("vermelho").
   final String currentName;
+
+  /// false: o motor não diz a cor atual (o fundo do parágrafo), e nenhuma
+  /// aparece escolhida.
+  final bool knowsCurrent;
   final String noneLabel;
 
   /// O nome e o RGB de cada amostra.
@@ -59,9 +64,9 @@ class ColorMenuButton extends StatelessWidget {
               }
 
               return Row(mainAxisSize: MainAxisSize.min, children: [
-                WColorSwatch(rgb: null, label: noneLabel, selected: rgb == null, onPressed: () => pick(null)),
+                WColorSwatch(rgb: null, label: noneLabel, selected: knowsCurrent && rgb == null, onPressed: () => pick(null)),
                 for (final (name, value) in choices)
-                  WColorSwatch(rgb: value, label: name, selected: rgb == value, onPressed: () => pick(value)),
+                  WColorSwatch(rgb: value, label: name, selected: knowsCurrent && rgb == value, onPressed: () => pick(value)),
               ]);
             },
           ),
@@ -76,7 +81,7 @@ class ColorMenuButton extends StatelessWidget {
           button: true,
           enabled: onSelected != null,
           label: label,
-          value: currentName,
+          value: knowsCurrent ? currentName : null,
           child: child,
         ),
         width: t.density.control,

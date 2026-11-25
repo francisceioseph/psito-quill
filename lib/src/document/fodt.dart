@@ -8,6 +8,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'outline.dart';
+import 'paragraph_format.dart';
 import 'references.dart';
 import 'search.dart';
 import 'style_patch.dart';
@@ -30,6 +31,7 @@ class StyleProps {
     this.align,
     this.indentLeftCm,
     this.firstLineCm,
+    this.noSpaceSameStyle,
   });
 
   /// "paragraph" ou "text" (caractere).
@@ -46,6 +48,10 @@ class StyleProps {
   final String? align;
   final double? indentLeftCm, firstLineCm;
 
+  /// "Não adicionar intervalo entre parágrafos do mesmo estilo"
+  /// (`style:contextual-spacing`, D-091).
+  final bool? noSpaceSameStyle;
+
   /// Os valores deste por cima dos de [base] (o pai).
   StyleProps over(StyleProps base) => StyleProps(
         family: family,
@@ -58,6 +64,7 @@ class StyleProps {
         align: align ?? base.align,
         indentLeftCm: indentLeftCm ?? base.indentLeftCm,
         firstLineCm: firstLineCm ?? base.firstLineCm,
+        noSpaceSameStyle: noSpaceSameStyle ?? base.noSpaceSameStyle,
       );
 
   @override
@@ -71,10 +78,12 @@ class StyleProps {
       other.color == color &&
       other.align == align &&
       other.indentLeftCm == indentLeftCm &&
-      other.firstLineCm == firstLineCm;
+      other.firstLineCm == firstLineCm &&
+      other.noSpaceSameStyle == noSpaceSameStyle;
 
   @override
-  int get hashCode => Object.hash(family, fontName, sizePt, bold, italic, color, align, indentLeftCm, firstLineCm);
+  int get hashCode =>
+      Object.hash(family, fontName, sizePt, bold, italic, color, align, indentLeftCm, firstLineCm, noSpaceSameStyle);
 }
 
 /// O que sai de uma cópia.
@@ -91,6 +100,9 @@ class FodtSnapshot {
     this.pageMargins,
     this.words,
     this.characters,
+    this.paragraphs,
+    this.charactersNoSpaces,
+    this.properties = DocProperties.empty,
     this.page = const PageSetup(),
     this.scenes = const [],
     this.bookmarks = const [],
@@ -110,6 +122,14 @@ class FodtSnapshot {
   /// As palavras e os caracteres do `meta:document-statistic` da cópia (o
   /// LibreOffice conta ao gravar). null: a cópia não disse.
   final int? words, characters;
+
+  /// Os parágrafos e os caracteres sem os espaços, do mesmo
+  /// `meta:document-statistic` (D-091).
+  final int? paragraphs, charactersNoSpaces;
+
+  /// O título, o assunto, o autor, as etiquetas e o comentário (o
+  /// `office:meta`).
+  final DocProperties properties;
 
   /// null: a cópia não disse (ou ainda não chegou).
   final PageMarginsCm? pageMargins;
@@ -222,6 +242,10 @@ FodtSnapshot parseFodt(String xml) {
       },
       indentLeftCm: _cm(p['fo:margin-left']),
       firstLineCm: _cm(p['fo:text-indent']),
+      noSpaceSameStyle: switch (p['style:contextual-spacing']) {
+        null => null,
+        final v => v == 'true',
+      },
     );
     if (m[1] == 'default-style') {
       defaults[family] = props;
@@ -255,6 +279,7 @@ FodtSnapshot parseFodt(String xml) {
         align: r.align,
         indentLeftCm: r.indentLeftCm,
         firstLineCm: r.firstLineCm,
+        noSpaceSameStyle: r.noSpaceSameStyle,
       );
     }
     return resolved[name] = r;
@@ -312,10 +337,33 @@ FodtSnapshot parseFodt(String xml) {
     pageMargins: _pageMargins(xml),
     words: int.tryParse(statistic['meta:word-count'] ?? ''),
     characters: int.tryParse(statistic['meta:character-count'] ?? ''),
+    paragraphs: int.tryParse(statistic['meta:paragraph-count'] ?? ''),
+    charactersNoSpaces: int.tryParse(statistic['meta:non-whitespace-character-count'] ?? ''),
+    properties: odfProperties(xml),
     page: parsePageSetup(xml),
     scenes: odfScenes(xml),
     bookmarks: odfBookmarks(body),
     captions: odfCaptions(body),
+  );
+}
+
+final _meta = RegExp(r'<office:meta>([\s\S]*?)</office:meta>');
+
+/// As propriedades do `office:meta` (o FODT ou o `meta.xml`).
+DocProperties odfProperties(String xml) {
+  final meta = _meta.firstMatch(xml)?[1];
+  if (meta == null) return DocProperties.empty;
+  String one(String tag) {
+    final m = RegExp('<$tag>([\\s\\S]*?)</$tag>').firstMatch(meta);
+    return m == null ? '' : _unescape(m[1]!);
+  }
+
+  return DocProperties(
+    title: one('dc:title'),
+    subject: one('dc:subject'),
+    author: one('meta:initial-creator'),
+    keywords: [for (final m in RegExp(r'<meta:keyword>([\s\S]*?)</meta:keyword>').allMatches(meta)) _unescape(m[1]!)],
+    comment: one('dc:description'),
   );
 }
 

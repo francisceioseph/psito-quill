@@ -24,6 +24,7 @@ import 'package:psito_quill/src/book/book_io.dart';
 import 'package:psito_quill/src/app.dart';
 import 'package:psito_quill/src/document/comments.dart';
 import 'package:psito_quill/src/document/document_controller.dart';
+import 'package:psito_quill/src/document/paragraph_format.dart';
 import 'package:psito_quill/src/document/recovery.dart';
 import 'package:psito_quill/src/document/references.dart';
 import 'package:psito_quill/src/document/search.dart';
@@ -1011,6 +1012,65 @@ void main() {
     await until(() => doc.path == otherTab && doc.busy == null, 'a outra aba');
     expect((await doc.searchText(const SearchQuery('Mapas do rio'), fresh: true)).total, 0, reason: 'as macros só na aba da tela');
     expect(doc.modified, isFalse);
+    expect(await workspace.closeTab(), isTrue);
+
+    // 33. O parágrafo avançado e as propriedades (D-091): o fundo pelo motor,
+    //     o intervalo, as bordas e as tabulações pelas macros, nos parágrafos
+    //     da seleção; as propriedades no meta.xml; e a cópia as lê de volta.
+    final formatted = File('test/fixtures/capitulo-curto.odt').copySync('${tmp.path}/paragrafo.odt').path;
+    await openAndWait(formatted);
+    doc.uno('.uno:GoToEndOfDoc');
+    doc.uno('.uno:InsertPara');
+    type('Linha um');
+    doc.uno('.uno:InsertPara');
+    type('Linha dois');
+    doc.uno('.uno:GoUp');
+    doc.uno('.uno:GoToStartOfLine');
+    doc.uno('.uno:EndOfDocumentSel');
+    // Um retângulo por linha: as duas.
+    await until(() => doc.selection.length >= 2, 'selecionar os dois parágrafos', detail: () => '${doc.selection}');
+    doc.applyParagraph(const ParagraphChanges(
+      background: 0xFFFF00,
+      noSpaceSameStyle: true,
+      borders: BorderSpec(sides: BorderSides.top | BorderSides.bottom, weight: BorderWeight.medium, color: 0x0000FF),
+      tabs: [TabStopSpec(positionMm100: 3000), TabStopSpec(positionMm100: 8000, align: TabAlign.right, leader: TabLeader.dots)],
+    ));
+    await until(() => doc.paragraphBorderSides == (BorderSides.top | BorderSides.bottom), 'o motor diz as bordas',
+        detail: () => '${doc.commandStates['.uno:BorderOuter']}');
+    doc.setDocumentProperties(const DocProperties(title: 'Dustland', subject: 'Deserto', author: 'Quem escreve', keywords: ['um', 'dois & três'], comment: 'Nota'));
+    await until(() => doc.snapshot.properties.title == 'Dustland', 'a cópia com as propriedades', detail: () => doc.snapshot.properties.title);
+    expect(doc.snapshot.properties.keywords, ['um', 'dois & três']);
+    expect(doc.snapshot.paragraphs, greaterThan(2));
+    expect(doc.snapshot.charactersNoSpaces, lessThan(doc.snapshot.characters!));
+    expect(doc.modified, isTrue);
+    await workspace.save();
+    await until(() => !doc.modified && doc.busy == null, 'salvar o parágrafo');
+    final paraXml = readOdtContent(formatted)!;
+    // Cada parágrafo pode ter o seu estilo automático (o rsid muda).
+    final autos = {
+      for (final m in RegExp(r'<style:style style:name="(P\d+)"[^>]*>((?:(?!</style:style>)[\s\S])*)</style:style>').allMatches(paraXml))
+        m[1]!: m[2]!,
+    };
+    final lines = RegExp(r'<text:p text:style-name="(P\d+)">Linha (um|dois)</text:p>').allMatches(paraXml).toList();
+    expect(lines, hasLength(2), reason: 'os dois parágrafos, com estilo automático');
+    for (final l in lines) {
+      final styleXml = autos[l[1]]!;
+      expect(styleXml, contains('fo:background-color="#ffff00"'), reason: 'o fundo em "${l[2]}"');
+      expect(styleXml, contains('style:contextual-spacing="true"'));
+      expect(styleXml, contains('fo:border-top="1.5pt solid #0000ff"'));
+      expect(styleXml, contains('fo:border-bottom="1.5pt solid #0000ff"'));
+      expect(styleXml, contains('fo:border-left="none"'));
+      expect(styleXml, contains('style:leader-text="."'));
+    }
+    final metaXml = utf8.decode(readZipEntry(File(formatted).readAsBytesSync(), 'meta.xml')!);
+    expect(metaXml, contains('<dc:title>Dustland</dc:title>'));
+    expect(metaXml, contains('<meta:initial-creator>Quem escreve</meta:initial-creator>'));
+    expect(metaXml, contains('<meta:keyword>dois &amp; três</meta:keyword>'));
+    // As tabulações voltam às do estilo, e a borda sai.
+    doc.setTabStops(const []);
+    doc.setParagraphBorders(const BorderSpec(sides: 0));
+    await until(() => doc.paragraphBorderSides == 0, 'sem bordas');
+    workspace.onUnsaved = () async => UnsavedChoice.discard;
     expect(await workspace.closeTab(), isTrue);
 
         // Fecha sem salvar (descarta), para não deixar trava.

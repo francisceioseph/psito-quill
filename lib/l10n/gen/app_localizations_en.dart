@@ -3128,4 +3128,203 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get compileReferencesNote =>
       'The entries marked in the chapters and the image captions go here.';
+
+  @override
+  String get commandParagraph => 'Paragraph…';
+
+  @override
+  String get paragraphDialogTitle => 'Paragraph';
+
+  @override
+  String get paragraphDialogParts => 'Paragraph sections';
+
+  @override
+  String get paragraphPartBackground => 'Background';
+
+  @override
+  String get paragraphPartSpacing => 'Spacing';
+
+  @override
+  String get paragraphPartBorders => 'Borders';
+
+  @override
+  String get paragraphPartTabs => 'Tabs';
+
+  @override
+  String get paragraphBackground => 'Paragraph background';
+
+  @override
+  String get paragraphBackgroundNone => 'No background';
+
+  @override
+  String get paragraphBackgroundNote =>
+      'The color applies to the selected paragraphs, from margin to margin.';
+
+  @override
+  String get paragraphNoSpaceSameStyle =>
+      'Don\'t add space between paragraphs of the same style';
+
+  @override
+  String get paragraphNoSpaceNote =>
+      'The box starts as the paragraph style has it: the engine doesn\'t tell what was changed in this paragraph alone.';
+
+  @override
+  String get paragraphApply => 'Apply';
+
+  @override
+  String get borderSides => 'Where';
+
+  @override
+  String get borderNone => 'None';
+
+  @override
+  String get borderBox => 'Box';
+
+  @override
+  String get borderTop => 'Top';
+
+  @override
+  String get borderBottom => 'Bottom';
+
+  @override
+  String get borderTopBottom => 'Top and bottom';
+
+  @override
+  String get borderLeft => 'Left';
+
+  @override
+  String get borderWeight => 'Width';
+
+  @override
+  String get borderThin => 'Thin';
+
+  @override
+  String get borderMedium => 'Medium';
+
+  @override
+  String get borderThick => 'Thick';
+
+  @override
+  String get borderColor => 'Border color';
+
+  @override
+  String get tabsCurrent => 'The paragraph\'s tabs';
+
+  @override
+  String get tabsNone => 'No tabs, only the default ones.';
+
+  @override
+  String tabsItem(String position, String align, String leader) {
+    return '$position, $align, $leader';
+  }
+
+  @override
+  String tabsRemove(String position) {
+    return 'Remove the tab at $position';
+  }
+
+  @override
+  String get tabsNew => 'New tab';
+
+  @override
+  String get tabsPosition => 'Position in cm';
+
+  @override
+  String get tabsAlign => 'Alignment';
+
+  @override
+  String get tabsLeader => 'Leader';
+
+  @override
+  String get tabAlignLeft => 'Left';
+
+  @override
+  String get tabAlignCenter => 'Center';
+
+  @override
+  String get tabAlignRight => 'Right';
+
+  @override
+  String get tabAlignDecimal => 'Decimal';
+
+  @override
+  String get tabLeaderNone => 'No leader';
+
+  @override
+  String get tabLeaderDots => 'Dots';
+
+  @override
+  String get tabLeaderDashes => 'Dashes';
+
+  @override
+  String get tabLeaderLine => 'Line';
+
+  @override
+  String get tabsAdd => 'Add';
+
+  @override
+  String get tabsClear => 'Remove all';
+
+  @override
+  String get outlineStart => 'Beginning of document';
+
+  @override
+  String get outlineLevels => 'Show up to level';
+
+  @override
+  String get outlineAllLevels => 'All levels';
+
+  @override
+  String outlineLevelN(int n) {
+    return 'Up to level $n';
+  }
+
+  @override
+  String get outlineExpandAll => 'Expand all';
+
+  @override
+  String get outlineCollapseAll => 'Collapse all';
+
+  @override
+  String outlineExpand(String title) {
+    return 'Expand $title';
+  }
+
+  @override
+  String outlineCollapse(String title) {
+    return 'Collapse $title';
+  }
+
+  @override
+  String get infoCharactersWithSpaces => 'Characters (with spaces)';
+
+  @override
+  String get infoCharactersNoSpaces => 'Characters (no spaces)';
+
+  @override
+  String get infoParagraphs => 'Paragraphs';
+
+  @override
+  String get infoProperties => 'Properties';
+
+  @override
+  String get infoTitle => 'Title';
+
+  @override
+  String get infoSubject => 'Subject';
+
+  @override
+  String get infoAuthor => 'Author';
+
+  @override
+  String get infoKeywords => 'Tags, separated by commas';
+
+  @override
+  String get infoComment => 'Comment';
+
+  @override
+  String get infoApplyProperties => 'Apply the properties';
+
+  @override
+  String get infoUndoProperties => 'Discard the changes';
 }

@@ -3128,4 +3128,203 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get compileReferencesNote =>
       'As entradas marcadas nos capítulos e as legendas das imagens entram aqui.';
+
+  @override
+  String get commandParagraph => 'Parágrafo…';
+
+  @override
+  String get paragraphDialogTitle => 'Parágrafo';
+
+  @override
+  String get paragraphDialogParts => 'Partes do parágrafo';
+
+  @override
+  String get paragraphPartBackground => 'Fundo';
+
+  @override
+  String get paragraphPartSpacing => 'Intervalo';
+
+  @override
+  String get paragraphPartBorders => 'Bordas';
+
+  @override
+  String get paragraphPartTabs => 'Tabulações';
+
+  @override
+  String get paragraphBackground => 'Cor de fundo do parágrafo';
+
+  @override
+  String get paragraphBackgroundNone => 'Sem cor de fundo';
+
+  @override
+  String get paragraphBackgroundNote =>
+      'A cor vale para os parágrafos selecionados, de uma margem à outra.';
+
+  @override
+  String get paragraphNoSpaceSameStyle =>
+      'Não adicionar intervalo entre parágrafos do mesmo estilo';
+
+  @override
+  String get paragraphNoSpaceNote =>
+      'A caixa começa como o estilo do parágrafo está: o motor não diz o que foi mudado só neste parágrafo.';
+
+  @override
+  String get paragraphApply => 'Aplicar';
+
+  @override
+  String get borderSides => 'Onde';
+
+  @override
+  String get borderNone => 'Nenhuma';
+
+  @override
+  String get borderBox => 'Em volta';
+
+  @override
+  String get borderTop => 'Em cima';
+
+  @override
+  String get borderBottom => 'Embaixo';
+
+  @override
+  String get borderTopBottom => 'Em cima e embaixo';
+
+  @override
+  String get borderLeft => 'À esquerda';
+
+  @override
+  String get borderWeight => 'Espessura';
+
+  @override
+  String get borderThin => 'Fina';
+
+  @override
+  String get borderMedium => 'Média';
+
+  @override
+  String get borderThick => 'Grossa';
+
+  @override
+  String get borderColor => 'Cor da borda';
+
+  @override
+  String get tabsCurrent => 'As tabulações do parágrafo';
+
+  @override
+  String get tabsNone => 'Nenhuma tabulação, só as automáticas.';
+
+  @override
+  String tabsItem(String position, String align, String leader) {
+    return '$position, $align, $leader';
+  }
+
+  @override
+  String tabsRemove(String position) {
+    return 'Remover a tabulação em $position';
+  }
+
+  @override
+  String get tabsNew => 'Nova tabulação';
+
+  @override
+  String get tabsPosition => 'Posição em cm';
+
+  @override
+  String get tabsAlign => 'Alinhamento';
+
+  @override
+  String get tabsLeader => 'Preenchimento';
+
+  @override
+  String get tabAlignLeft => 'À esquerda';
+
+  @override
+  String get tabAlignCenter => 'Ao centro';
+
+  @override
+  String get tabAlignRight => 'À direita';
+
+  @override
+  String get tabAlignDecimal => 'Decimal';
+
+  @override
+  String get tabLeaderNone => 'Sem preenchimento';
+
+  @override
+  String get tabLeaderDots => 'Pontos';
+
+  @override
+  String get tabLeaderDashes => 'Traços';
+
+  @override
+  String get tabLeaderLine => 'Linha';
+
+  @override
+  String get tabsAdd => 'Adicionar';
+
+  @override
+  String get tabsClear => 'Remover todas';
+
+  @override
+  String get outlineStart => 'Início do documento';
+
+  @override
+  String get outlineLevels => 'Mostrar até o nível';
+
+  @override
+  String get outlineAllLevels => 'Todos os níveis';
+
+  @override
+  String outlineLevelN(int n) {
+    return 'Até o nível $n';
+  }
+
+  @override
+  String get outlineExpandAll => 'Expandir tudo';
+
+  @override
+  String get outlineCollapseAll => 'Recolher tudo';
+
+  @override
+  String outlineExpand(String title) {
+    return 'Expandir $title';
+  }
+
+  @override
+  String outlineCollapse(String title) {
+    return 'Recolher $title';
+  }
+
+  @override
+  String get infoCharactersWithSpaces => 'Caracteres (com espaços)';
+
+  @override
+  String get infoCharactersNoSpaces => 'Caracteres (sem espaços)';
+
+  @override
+  String get infoParagraphs => 'Parágrafos';
+
+  @override
+  String get infoProperties => 'Propriedades';
+
+  @override
+  String get infoTitle => 'Título';
+
+  @override
+  String get infoSubject => 'Assunto';
+
+  @override
+  String get infoAuthor => 'Autor';
+
+  @override
+  String get infoKeywords => 'Etiquetas, separadas por vírgula';
+
+  @override
+  String get infoComment => 'Comentário';
+
+  @override
+  String get infoApplyProperties => 'Aplicar as propriedades';
+
+  @override
+  String get infoUndoProperties => 'Desfazer as mudanças';
 }

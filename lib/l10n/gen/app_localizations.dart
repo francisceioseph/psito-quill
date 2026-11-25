@@ -5593,6 +5593,378 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'As entradas marcadas nos capítulos e as legendas das imagens entram aqui.'**
   String get compileReferencesNote;
+
+  /// No description provided for @commandParagraph.
+  ///
+  /// In pt, this message translates to:
+  /// **'Parágrafo…'**
+  String get commandParagraph;
+
+  /// No description provided for @paragraphDialogTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Parágrafo'**
+  String get paragraphDialogTitle;
+
+  /// No description provided for @paragraphDialogParts.
+  ///
+  /// In pt, this message translates to:
+  /// **'Partes do parágrafo'**
+  String get paragraphDialogParts;
+
+  /// No description provided for @paragraphPartBackground.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fundo'**
+  String get paragraphPartBackground;
+
+  /// No description provided for @paragraphPartSpacing.
+  ///
+  /// In pt, this message translates to:
+  /// **'Intervalo'**
+  String get paragraphPartSpacing;
+
+  /// No description provided for @paragraphPartBorders.
+  ///
+  /// In pt, this message translates to:
+  /// **'Bordas'**
+  String get paragraphPartBorders;
+
+  /// No description provided for @paragraphPartTabs.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tabulações'**
+  String get paragraphPartTabs;
+
+  /// No description provided for @paragraphBackground.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cor de fundo do parágrafo'**
+  String get paragraphBackground;
+
+  /// No description provided for @paragraphBackgroundNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem cor de fundo'**
+  String get paragraphBackgroundNone;
+
+  /// No description provided for @paragraphBackgroundNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'A cor vale para os parágrafos selecionados, de uma margem à outra.'**
+  String get paragraphBackgroundNote;
+
+  /// No description provided for @paragraphNoSpaceSameStyle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não adicionar intervalo entre parágrafos do mesmo estilo'**
+  String get paragraphNoSpaceSameStyle;
+
+  /// No description provided for @paragraphNoSpaceNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'A caixa começa como o estilo do parágrafo está: o motor não diz o que foi mudado só neste parágrafo.'**
+  String get paragraphNoSpaceNote;
+
+  /// No description provided for @paragraphApply.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aplicar'**
+  String get paragraphApply;
+
+  /// No description provided for @borderSides.
+  ///
+  /// In pt, this message translates to:
+  /// **'Onde'**
+  String get borderSides;
+
+  /// No description provided for @borderNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma'**
+  String get borderNone;
+
+  /// No description provided for @borderBox.
+  ///
+  /// In pt, this message translates to:
+  /// **'Em volta'**
+  String get borderBox;
+
+  /// No description provided for @borderTop.
+  ///
+  /// In pt, this message translates to:
+  /// **'Em cima'**
+  String get borderTop;
+
+  /// No description provided for @borderBottom.
+  ///
+  /// In pt, this message translates to:
+  /// **'Embaixo'**
+  String get borderBottom;
+
+  /// No description provided for @borderTopBottom.
+  ///
+  /// In pt, this message translates to:
+  /// **'Em cima e embaixo'**
+  String get borderTopBottom;
+
+  /// No description provided for @borderLeft.
+  ///
+  /// In pt, this message translates to:
+  /// **'À esquerda'**
+  String get borderLeft;
+
+  /// No description provided for @borderWeight.
+  ///
+  /// In pt, this message translates to:
+  /// **'Espessura'**
+  String get borderWeight;
+
+  /// No description provided for @borderThin.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fina'**
+  String get borderThin;
+
+  /// No description provided for @borderMedium.
+  ///
+  /// In pt, this message translates to:
+  /// **'Média'**
+  String get borderMedium;
+
+  /// No description provided for @borderThick.
+  ///
+  /// In pt, this message translates to:
+  /// **'Grossa'**
+  String get borderThick;
+
+  /// No description provided for @borderColor.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cor da borda'**
+  String get borderColor;
+
+  /// No description provided for @tabsCurrent.
+  ///
+  /// In pt, this message translates to:
+  /// **'As tabulações do parágrafo'**
+  String get tabsCurrent;
+
+  /// No description provided for @tabsNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma tabulação, só as automáticas.'**
+  String get tabsNone;
+
+  /// No description provided for @tabsItem.
+  ///
+  /// In pt, this message translates to:
+  /// **'{position}, {align}, {leader}'**
+  String tabsItem(String position, String align, String leader);
+
+  /// No description provided for @tabsRemove.
+  ///
+  /// In pt, this message translates to:
+  /// **'Remover a tabulação em {position}'**
+  String tabsRemove(String position);
+
+  /// No description provided for @tabsNew.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nova tabulação'**
+  String get tabsNew;
+
+  /// No description provided for @tabsPosition.
+  ///
+  /// In pt, this message translates to:
+  /// **'Posição em cm'**
+  String get tabsPosition;
+
+  /// No description provided for @tabsAlign.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alinhamento'**
+  String get tabsAlign;
+
+  /// No description provided for @tabsLeader.
+  ///
+  /// In pt, this message translates to:
+  /// **'Preenchimento'**
+  String get tabsLeader;
+
+  /// No description provided for @tabAlignLeft.
+  ///
+  /// In pt, this message translates to:
+  /// **'À esquerda'**
+  String get tabAlignLeft;
+
+  /// No description provided for @tabAlignCenter.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ao centro'**
+  String get tabAlignCenter;
+
+  /// No description provided for @tabAlignRight.
+  ///
+  /// In pt, this message translates to:
+  /// **'À direita'**
+  String get tabAlignRight;
+
+  /// No description provided for @tabAlignDecimal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Decimal'**
+  String get tabAlignDecimal;
+
+  /// No description provided for @tabLeaderNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem preenchimento'**
+  String get tabLeaderNone;
+
+  /// No description provided for @tabLeaderDots.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pontos'**
+  String get tabLeaderDots;
+
+  /// No description provided for @tabLeaderDashes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Traços'**
+  String get tabLeaderDashes;
+
+  /// No description provided for @tabLeaderLine.
+  ///
+  /// In pt, this message translates to:
+  /// **'Linha'**
+  String get tabLeaderLine;
+
+  /// No description provided for @tabsAdd.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar'**
+  String get tabsAdd;
+
+  /// No description provided for @tabsClear.
+  ///
+  /// In pt, this message translates to:
+  /// **'Remover todas'**
+  String get tabsClear;
+
+  /// No description provided for @outlineStart.
+  ///
+  /// In pt, this message translates to:
+  /// **'Início do documento'**
+  String get outlineStart;
+
+  /// No description provided for @outlineLevels.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar até o nível'**
+  String get outlineLevels;
+
+  /// No description provided for @outlineAllLevels.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todos os níveis'**
+  String get outlineAllLevels;
+
+  /// No description provided for @outlineLevelN.
+  ///
+  /// In pt, this message translates to:
+  /// **'Até o nível {n}'**
+  String outlineLevelN(int n);
+
+  /// No description provided for @outlineExpandAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Expandir tudo'**
+  String get outlineExpandAll;
+
+  /// No description provided for @outlineCollapseAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recolher tudo'**
+  String get outlineCollapseAll;
+
+  /// No description provided for @outlineExpand.
+  ///
+  /// In pt, this message translates to:
+  /// **'Expandir {title}'**
+  String outlineExpand(String title);
+
+  /// No description provided for @outlineCollapse.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recolher {title}'**
+  String outlineCollapse(String title);
+
+  /// No description provided for @infoCharactersWithSpaces.
+  ///
+  /// In pt, this message translates to:
+  /// **'Caracteres (com espaços)'**
+  String get infoCharactersWithSpaces;
+
+  /// No description provided for @infoCharactersNoSpaces.
+  ///
+  /// In pt, this message translates to:
+  /// **'Caracteres (sem espaços)'**
+  String get infoCharactersNoSpaces;
+
+  /// No description provided for @infoParagraphs.
+  ///
+  /// In pt, this message translates to:
+  /// **'Parágrafos'**
+  String get infoParagraphs;
+
+  /// No description provided for @infoProperties.
+  ///
+  /// In pt, this message translates to:
+  /// **'Propriedades'**
+  String get infoProperties;
+
+  /// No description provided for @infoTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Título'**
+  String get infoTitle;
+
+  /// No description provided for @infoSubject.
+  ///
+  /// In pt, this message translates to:
+  /// **'Assunto'**
+  String get infoSubject;
+
+  /// No description provided for @infoAuthor.
+  ///
+  /// In pt, this message translates to:
+  /// **'Autor'**
+  String get infoAuthor;
+
+  /// No description provided for @infoKeywords.
+  ///
+  /// In pt, this message translates to:
+  /// **'Etiquetas, separadas por vírgula'**
+  String get infoKeywords;
+
+  /// No description provided for @infoComment.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comentário'**
+  String get infoComment;
+
+  /// No description provided for @infoApplyProperties.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aplicar as propriedades'**
+  String get infoApplyProperties;
+
+  /// No description provided for @infoUndoProperties.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desfazer as mudanças'**
+  String get infoUndoProperties;
 }
 
 class _AppLocalizationsDelegate

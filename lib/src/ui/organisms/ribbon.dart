@@ -811,6 +811,18 @@ class _HomeTab extends StatelessWidget {
       onSelected: editable ? doc.setFontColor : null,
       onClosed: onRan,
     );
+    // O fundo do parágrafo (D-091): o motor não diz a cor atual.
+    final colorParagraph = ColorMenuButton(
+      icon: Symbols.format_color_fill_rounded,
+      label: l10n.paragraphBackground,
+      current: null,
+      currentName: '',
+      knowsCurrent: false,
+      noneLabel: l10n.paragraphBackgroundNone,
+      choices: [for (final (n, rgb) in highlightChoices) (colorName(l10n, n), rgb)],
+      onSelected: editable ? doc.setParagraphBackground : null,
+      onClosed: onRan,
+    );
     final colorHighlight = ColorMenuButton(
       icon: Symbols.ink_highlighter_rounded,
       label: l10n.fieldHighlight,
@@ -939,6 +951,26 @@ class _HomeTab extends StatelessWidget {
             )),
       ]),
       RibbonGroupSpec(title: l10n.groupParagraph, priority: 3, levels: [
+        RibbonLevel(m.row(6), (_) => rows(
+              line([
+                cmd(CommandIds.bullets),
+                cmd(CommandIds.numbering),
+                cmd(CommandIds.indentLess),
+                cmd(CommandIds.indentMore),
+                _LineSpacingMenu(commands: commands, onRan: onRan),
+                colorParagraph,
+              ]),
+              line([
+                cmd(CommandIds.alignLeft),
+                cmd(CommandIds.alignCenter),
+                cmd(CommandIds.alignRight),
+                cmd(CommandIds.justify),
+                cmd(CommandIds.formattingMarks),
+                cmd(PageCommandIds.paragraph),
+              ]),
+            )),
+        // Sem o fundo e a janela do parágrafo (ficam no menu recolhido e no
+        // Formatar).
         RibbonLevel(m.row(5), (_) => rows(
               line([
                 cmd(CommandIds.bullets),
@@ -964,6 +996,8 @@ class _HomeTab extends StatelessWidget {
                 CommandIds.lineSpacing1,
                 CommandIds.lineSpacing15,
                 CommandIds.lineSpacing2,
+                commandMenuDivider,
+                PageCommandIds.paragraph,
               ],
               icon: Symbols.format_align_left_rounded,
               label: l10n.groupParagraph,

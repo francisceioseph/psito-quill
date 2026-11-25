@@ -83,6 +83,8 @@ class _NoPageView implements PageViewActions {
   void openLink(DocLink link) {}
   @override
   void specialCharacter() {}
+  @override
+  void paragraphDialog() {}
 }
 
 class _NoView implements EditorViewActions {

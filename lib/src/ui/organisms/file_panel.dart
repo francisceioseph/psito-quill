@@ -14,12 +14,15 @@ import '../../commands/command_registry.dart';
 import '../../commands/commands_book.dart';
 import '../../commands/commands_document.dart';
 import '../../commands/commands_view.dart';
+import '../../document/document_controller.dart';
+import '../../document/paragraph_format.dart';
 import '../../document/workspace.dart';
 import '../../files/open_folder.dart';
 import '../../files/recent_files.dart';
 import '../../settings/settings.dart';
 import '../atoms/w_button.dart';
 import '../atoms/w_label.dart';
+import '../atoms/w_text_field.dart';
 import '../tokens/tokens.dart';
 import 'preferences_view.dart';
 import 'recent_list.dart';
@@ -261,8 +264,15 @@ class _InfoView extends StatelessWidget {
       if (doc.page case (_, final pages)) row(l10n.statusInfoPages, '$pages'),
       if (w != null && !w.selection) ...[
         row(l10n.statusInfoWords, '${w.words}'),
-        row(l10n.statusInfoCharacters, '${w.characters}'),
+        row(l10n.infoCharactersWithSpaces, '${w.characters}'),
       ],
+      // Da cópia, que o LibreOffice conta ao gravar (D-091).
+      if (doc.snapshot.charactersNoSpaces case final n?) row(l10n.infoCharactersNoSpaces, '$n'),
+      if (doc.snapshot.paragraphs case final n?) row(l10n.infoParagraphs, '$n'),
+      SizedBox(height: t.space.lg),
+      WLabel(l10n.infoProperties, heading: true),
+      SizedBox(height: t.space.sm),
+      _PropertiesForm(doc: doc),
       if (file != null) ...[
         SizedBox(height: t.space.lg),
         WTextButton(
@@ -272,6 +282,112 @@ class _InfoView extends StatelessWidget {
           onPressed: () => openFolder(file.parent.path),
         ),
       ],
+    ]);
+  }
+}
+
+/// As propriedades do documento (D-091): o título, o assunto, o autor, as
+/// etiquetas e o comentário, da cópia; "Aplicar" as manda ao motor (uma
+/// macro), e o documento fica modificado.
+class _PropertiesForm extends StatefulWidget {
+  const _PropertiesForm({required this.doc});
+  final DocumentController doc;
+
+  @override
+  State<_PropertiesForm> createState() => _PropertiesFormState();
+}
+
+class _PropertiesFormState extends State<_PropertiesForm> {
+  final _title = TextEditingController(), _subject = TextEditingController(), _author = TextEditingController();
+  final _keywords = TextEditingController(), _comment = TextEditingController();
+  late DocProperties _shown = widget.doc.snapshot.properties;
+
+  List<TextEditingController> get _all => [_title, _subject, _author, _keywords, _comment];
+
+  @override
+  void initState() {
+    super.initState();
+    _fill(_shown);
+  }
+
+  void _fill(DocProperties p) {
+    _title.text = p.title;
+    _subject.text = p.subject;
+    _author.text = p.author;
+    _keywords.text = p.keywords.join(', ');
+    _comment.text = p.comment;
+  }
+
+  DocProperties get _edited => DocProperties(
+        title: _title.text.trim(),
+        subject: _subject.text.trim(),
+        author: _author.text.trim(),
+        keywords: parseKeywords(_keywords.text),
+        comment: _comment.text.trim(),
+      );
+
+  @override
+  void didUpdateWidget(_PropertiesForm old) {
+    super.didUpdateWidget(old);
+    // Uma cópia nova: o que a pessoa não mexeu acompanha.
+    final now = widget.doc.snapshot.properties;
+    if (now != _shown && _edited == _shown) {
+      _shown = now;
+      _fill(now);
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final c in _all) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final t = QuillTokens.of(context);
+    final editable = widget.doc.canEdit;
+    final changed = _edited != _shown;
+    Widget field(String label, TextEditingController c) => Padding(
+          padding: EdgeInsets.symmetric(vertical: t.space.xs),
+          child: Row(children: [
+            SizedBox(width: 180, child: WLabel(label, tone: WLabelTone.muted)),
+            Expanded(
+              child: WTextField(label: label, controller: c, enabled: editable, onChanged: (_) => setState(() {})),
+            ),
+          ]),
+        );
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      field(l10n.infoTitle, _title),
+      field(l10n.infoSubject, _subject),
+      field(l10n.infoAuthor, _author),
+      field(l10n.infoKeywords, _keywords),
+      field(l10n.infoComment, _comment),
+      SizedBox(height: t.space.sm),
+      Row(children: [
+        WTextButton(
+          label: l10n.infoApplyProperties,
+          icon: Symbols.check_rounded,
+          pill: false,
+          onPressed: editable && changed
+              ? () {
+                  final p = _edited;
+                  widget.doc.setDocumentProperties(p);
+                  setState(() => _shown = p);
+                }
+              : null,
+        ),
+        SizedBox(width: t.space.sm),
+        WTextButton(
+          label: l10n.infoUndoProperties,
+          icon: Symbols.undo_rounded,
+          pill: false,
+          onPressed: changed ? () => setState(() => _fill(_shown)) : null,
+        ),
+      ]),
     ]);
   }
 }

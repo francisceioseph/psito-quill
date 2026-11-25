@@ -15,6 +15,7 @@ import '../../document/doc_colors.dart';
 import '../../document/document_controller.dart';
 import '../../document/format_origin.dart';
 import '../../commands/commands_view.dart';
+import '../../commands/commands_page.dart';
 import '../atoms/w_chip.dart';
 import '../atoms/w_dropdown.dart';
 import '../atoms/w_label.dart';
@@ -184,6 +185,14 @@ class Inspector extends StatelessWidget {
             ),
           ]),
           LabeledRow(label: l10n.fieldSpacing, child: row([CommandIds.spaceLess, CommandIds.spaceMore])),
+          // O fundo do parágrafo (D-091): o motor não diz a cor atual.
+          WLabel(l10n.paragraphBackground, small: true, tone: WLabelTone.muted),
+          SwatchRow(swatches: [
+            (rgb: null, label: l10n.paragraphBackgroundNone, selected: false, onPressed: editable ? () => doc.setParagraphBackground(null) : null),
+            for (final (name, rgb) in highlightChoices)
+              (rgb: rgb, label: colorName(l10n, name), selected: false, onPressed: editable ? () => doc.setParagraphBackground(rgb) : null),
+          ]),
+          PanelAction(commands: commands, id: PageCommandIds.paragraph, onRan: onRan),
         ]),
       InspectorPart.page => InspectorSection(title: l10n.sectionPage, children: [
           row([CommandIds.portrait, CommandIds.landscape]),

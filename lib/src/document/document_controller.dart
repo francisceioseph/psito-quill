@@ -20,6 +20,7 @@ import 'comments.dart';
 import 'doc_tab.dart';
 import 'fodt.dart';
 import 'outline.dart';
+import 'paragraph_format.dart';
 import 'recovery.dart';
 import 'references.dart';
 import 'search.dart';
@@ -644,6 +645,12 @@ class DocumentController extends ChangeNotifier {
   /// ("Cena 1" dentro de "Cena 10", um título repetido), vai ao começo do
   /// documento e procura uma vez a mais que as ocorrências antes do título
   /// (D-072). A vista rola até o cursor. A busca não acende o Localizar.
+  /// O começo do documento ("Início do documento" na Estrutura). Não muda
+  /// o documento: vale também só para leitura.
+  void goToStart() {
+    if (isOpen) kit.uno('.uno:GoToStartOfDoc');
+  }
+
   void goToHeading(OutlineEntry e) {
     if (!isOpen || e.searchKey.isEmpty) return;
     _jumpToText(e.searchKey, e.occurrence);
@@ -1316,6 +1323,58 @@ class DocumentController extends ChangeNotifier {
       '{"PageULMargin.Upper":{"type":"long","value":${_mm100(m.top)}},"PageULMargin.Lower":{"type":"long","value":${_mm100(m.bottom)}}}',
     );
     // A régua vertical lê as margens da cópia (D-046).
+    refreshSnapshot();
+  }
+
+  // ------------------------- o parágrafo avançado e as propriedades (D-091) --
+
+  /// A cor de fundo dos parágrafos da seleção; [rgb] null tira. O motor só
+  /// diz a cor depois de mudá-la, não ao mover o cursor: não há "a atual".
+  void setParagraphBackground(int? rgb) =>
+      uno('.uno:BackgroundColor', '{"BackgroundColor":{"type":"long","value":${rgb ?? -1}}}');
+
+  /// Os lados com borda do parágrafo do cursor (o motor não diz a largura nem
+  /// a cor). null: ele ainda não disse.
+  int? get paragraphBorderSides => borderSidesFromState(commandStates['.uno:BorderOuter']);
+
+  /// As tabulações do parágrafo do cursor, pela régua.
+  List<TabStopSpec> get paragraphTabs => tabsFromRuler(ruler);
+
+  /// "Não adicionar intervalo entre parágrafos do mesmo estilo", pelo
+  /// estilo do parágrafo do cursor: o motor não diz o do parágrafo.
+  bool get noSpaceSameStyleOfStyle =>
+      (paragraphStyleId == null ? null : snapshot.styles[paragraphStyleId]?.noSpaceSameStyle) ?? false;
+
+  void setNoSpaceSameStyle(bool on) => uno(quillMacro('Intervalo', [on]));
+
+  void setParagraphBorders(BorderSpec b) => uno(quillMacro('Bordas', [
+        b.sides & BorderSides.box,
+        b.weight.mm100,
+        b.color & 0xFFFFFF,
+        b.distanceMm100.clamp(0, 5000),
+      ]));
+
+  /// Uma lista vazia volta às tabulações do estilo.
+  void setTabStops(List<TabStopSpec> tabs) => uno(quillMacro('Tabulacoes', [tabsMacroArg(tabs)]));
+
+  /// O que a janela do parágrafo mudou, cada parte por um comando.
+  void applyParagraph(ParagraphChanges c) {
+    if (!canEdit || c.isEmpty) return;
+    if (c.clearBackground) {
+      setParagraphBackground(null);
+    } else if (c.background case final rgb?) {
+      setParagraphBackground(rgb);
+    }
+    if (c.noSpaceSameStyle case final on?) setNoSpaceSameStyle(on);
+    if (c.borders case final b?) setParagraphBorders(b);
+    if (c.tabs case final t?) setTabStops(t);
+  }
+
+  /// O título, o assunto, o autor, as etiquetas e o comentário. Não entram no
+  /// Ctrl+Z; o documento fica modificado.
+  void setDocumentProperties(DocProperties p) {
+    if (!canEdit) return;
+    uno(propertiesMacro(p));
     refreshSnapshot();
   }
 

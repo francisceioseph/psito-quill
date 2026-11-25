@@ -741,6 +741,9 @@ class FakeQuillKit implements QuillKit {
   /// Para os testes: XML cru no fim do corpo da cópia (as legendas, D-090).
   String extraBodyXml = '';
 
+  /// Para os testes: XML cru no `office:meta` da cópia (o título, D-091).
+  String extraMetaXml = '';
+
   /// O estilo que o `.uno:LoadStyles` traz (o "Cena"), para a cópia seguinte.
   String? loadStylesAdds;
 
@@ -790,8 +793,11 @@ class FakeQuillKit implements QuillKit {
     ].join();
     // As estatísticas, como o LibreOffice grava (as palavras do texto falso).
     final words = text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
-    File(path).writeAsStringSync('<office:document><office:meta>'
-        '<meta:document-statistic meta:word-count="$words" meta:character-count="${text.length}"/></office:meta>'
+    final paragraphs = headings.length + bodyParagraphs.length;
+    final noSpaces = text.replaceAll(RegExp(r'\s'), '').length;
+    File(path).writeAsStringSync('<office:document><office:meta>$extraMetaXml'
+        '<meta:document-statistic meta:word-count="$words" meta:character-count="${text.length}" '
+        'meta:paragraph-count="$paragraphs" meta:non-whitespace-character-count="$noSpaces"/></office:meta>'
         '<office:font-face-decls>'
         '<style:font-face style:name="Liberation Serif" svg:font-family="&apos;Liberation Serif&apos;"/></office:font-face-decls>'
         '<office:styles>$styles</office:styles><office:body><office:text>$body</office:text></office:body></office:document>');

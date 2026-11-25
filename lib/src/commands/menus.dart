@@ -117,6 +117,7 @@ List<MenuSpec> editorMenus(AppLocalizations l10n) => [
         CommandIds.separateFromNext,
         CommandIds.keepLines,
         CommandIds.splitLines,
+        PageCommandIds.paragraph,
         null,
         PageCommandIds.hyphenation,
         PageCommandIds.hyphenateParagraph,

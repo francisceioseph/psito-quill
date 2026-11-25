@@ -49,6 +49,7 @@ import '../../document/outline.dart';
 import '../atoms/w_segmented.dart';
 import '../organisms/outline_panel.dart';
 import '../organisms/page_dialogs.dart';
+import '../organisms/paragraph_dialog.dart';
 import '../organisms/reference_dialogs.dart';
 import '../organisms/ruler.dart';
 import '../organisms/start_screen.dart';
@@ -268,6 +269,21 @@ class _EditorPageState extends State<EditorPage>
       case CaptionTarget(:final caption):
         doc.insertCaptionRef(caption, format);
     }
+    _docFocus.requestFocus();
+  }
+
+  @override
+  void paragraphDialog() => unawaited(_paragraphDialog());
+  Future<void> _paragraphDialog() async {
+    if (!doc.canEdit) return;
+    final changes = await showParagraphDialog(
+      context,
+      noSpaceSameStyle: doc.noSpaceSameStyleOfStyle,
+      borderSides: doc.paragraphBorderSides,
+      tabs: doc.paragraphTabs,
+    );
+    if (!mounted) return;
+    if (changes != null) doc.applyParagraph(changes);
     _docFocus.requestFocus();
   }
 
@@ -1170,6 +1186,10 @@ class _EditorPageState extends State<EditorPage>
                           current: currentHeading(doc.snapshot.outline, doc.page?.$1),
                           onJump: (i) {
                             doc.goToHeading(doc.snapshot.outline[i]);
+                            _backToDocument();
+                          },
+                          onStart: () {
+                            doc.goToStart();
                             _backToDocument();
                           },
                           onClose: toggleOutline,
