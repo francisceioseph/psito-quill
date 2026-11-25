@@ -12,12 +12,13 @@ Flutter (Dart)
   organisms   DocumentView (a página e o DocumentSemantics), Ribbon, ClassicMenuBar, ClassicToolbars,
               Inspector (Formatar), NavRail, OutlinePanel, StylesPanel, FindPanel, CommandPalette
               (a busca única), FontPicker, Ruler, DocTabStrip, ZenView, BusyScope, menu de contexto,
-              diálogos (estilos, tabela, "salvar?"), FilePanel (os bastidores), StartScreen,
-              RecentList, PreferencesView, StatusBar
+              diálogos (estilos, tabela, "salvar?", compilar, referências, parágrafo, marca d'água,
+              atalho, modelos), CommentsPanel, ChangesPanel, ReadingView, FilePanel (os
+              bastidores), StartScreen, RecentList, PreferencesView, StatusBar
   molecules   CommandButton, CommandMenu, CommandCheck, AdaptiveRibbon, RibbonGroup, StyleCard,
               SidePanel, PanelAction, InspectorSection, MeasureField, ColorMenuButton, InfoBanner
   atoms       WButton, WToggle, WTextButton, WBigButton, WDropdown, WTextField, WSegmented, WSwitch,
-              WSlider, WChip, WColorSwatch, WLabel, WSeparator
+              WCheckbox, WSlider, WChip, WColorSwatch, WLabel, WSeparator
               ← só leem QuillTokens
   ─────────────────────────────────────────────
   fluxos      Workspace (novo, abrir, salvar, recentes, abas, sair)
@@ -68,7 +69,7 @@ Enquanto o ladrilho novo não chega, o velho continua na tela, sem quadro em bra
 | Ports & Adapters | `QuillKit` com o `LokQuillKit` e o `FakeQuillKit`; `FileDialogs` (também `pickImage`), `TextClipboard`, `AppWindow` | A UI e quase todos os testes rodam sem o LibreOffice nem o GTK, e o motor pode ir para outro processo sem mudar a UI |
 | Facade | `Workspace` | Os fluxos de arquivo (trava, recentes, "salvar?", salvar como) num lugar só; os comandos e a UI só chamam ele |
 | Active Object | `TaskQueue` + `LokEngine` | O LOK não é thread-safe, e a UI nunca espera o motor |
-| Command | `CommandRegistry` (`Command`: id, rótulo, ícone, atalhos por jogo, `isActive`, `canRun`) | Uma fonte só para a faixa, os atalhos, os menus 97 (`editorMenus`), a paleta (Ctrl+K), o painel Formatar e, depois, os plugins |
+| Command | `CommandRegistry` (`Command`: id, rótulo, ícone, atalhos por jogo, `isActive`, `canRun`; os atalhos escolhidos vão por cima do jogo, no `overrides`, D-093) | Uma fonte só para a faixa, os atalhos, os menus 97 (`editorMenus`), a paleta (Ctrl+K), o painel Formatar e, depois, os plugins |
 | Command com receptor | `EditorViewActions` (`commands_view.dart`), implementado pela `EditorPage` | Os comandos que abrem uma tela (localizar, paleta, estilos, inserir imagem) só pedem; quem mostra é a página, e os testes trocam o receptor |
 | Observer | Callbacks do LOK → `Stream<KitEvent>` tipado → `DocumentController` (`ChangeNotifier`) | O estado dos botões (negrito ligado) vem do motor, não é adivinhado |
 | Flyweight + LRU | `TileCache`: vagas fixas, cada uma uma textura | A memória dos ladrilhos é fixa, seja qual for o documento |
@@ -81,6 +82,7 @@ Enquanto o ladrilho novo não chega, o velho continua na tela, sem quadro em bra
 | Pipeline | O compilar (`compile.dart`, D-086): cada capítulo em FODT pelo motor → um isolate junta (`fodt_join.dart`) → o motor grava o formato | Um passo de cada vez, cancelável entre eles; só o último põe o livro inteiro no motor |
 | Repository de arquivos | As notas (`notes.dart`), os instantâneos (`versoes.json`) e as metas (`metas.json`), cada um lido e gravado pelo seu módulo, de forma atômica | Nada do livro fica na memória por via das dúvidas: lê-se ao abrir o painel ou a janela e solta-se ao fechar |
 | Adapter (macro) | As referências (D-090), o parágrafo avançado e as propriedades (D-091), e o Layout e o Inserir (D-092): `quill_macros.dart` grava um módulo Basic no perfil do Quill, e o `DocumentController` despacha `macro:///PsitoQuill.Referencias.…` pelo `postUnoCommand` | O que a 24.2 só faz por janela (o sumário, os índices, a legenda, a referência a um título) vira uma chamada sem janela, pela API do motor; os textos vão em hexadecimal, e as macros dos documentos continuam travadas |
+| Prototype | Os modelos (`templates.dart`, D-093): um `.ott` com os estilos, sem o texto; o documento novo e o capítulo novo do livro nascem de uma cópia dele, convertida pelo motor | Abrir o `.ott` direto editaria o próprio modelo; a cópia deixa o modelo intocado |
 
 ## Pastas
 
@@ -89,7 +91,8 @@ lib/
   main.dart                  liga o perfil, o kit e o app (ou o --bench)
   l10n/                      app_pt.arb (modelo), app_en.arb → gen/
   src/app.dart               MaterialApp, tema das preferências, "salvar?" ao sair
-  src/kit/                   quill_kit.dart (a porta), lok/ (adaptador; lo_styles.dart, gerado), fake/
+  src/kit/                   quill_kit.dart (a porta), lok/ (adaptador; lo_styles.dart, gerado;
+                             quill_macros.dart, a biblioteca Basic do perfil, D-090), fake/
   src/book/                  book.dart (o livro.json), book_io.dart, book_controller.dart, fodt_split.dart e
                              docx_import.dart (o importador), odt_zip.dart (lê o content.xml; D-071),
                              chapter_cut.dart (dividir, D-079), book_search.dart (D-080), snapshots.dart
@@ -98,12 +101,15 @@ lib/
                              compile_style.dart (os modelos, D-087)
   src/document/              document_controller.dart, doc_tab.dart (as abas), workspace.dart, fodt.dart
                              (a cópia lida), outline.dart, search.dart, format_origin.dart,
-                             text_clipboard.dart, doc_colors.dart, comments.dart (as conversas, D-088)
+                             text_clipboard.dart, doc_colors.dart, comments.dart (as conversas, D-088),
+                             references.dart (D-090), paragraph_format.dart (D-091),
+                             layout_format.dart (D-092), templates.dart (os modelos .ott, D-093)
   src/files/                 lo_lock.dart (a trava), recent_files.dart, file_dialogs.dart, app_window.dart,
                              open_folder.dart (xdg-open)
   src/settings/              settings.dart (tema, atalhos, painéis, acessibilidade), config_dir.dart
   src/commands/              command_registry.dart, commands_document.dart (os do documento),
-                             commands_view.dart (os que abrem tela), menus.dart, palette_search.dart
+                             commands_view.dart (os que abrem tela), commands_references.dart,
+                             commands_layout.dart, menus.dart, palette_search.dart
   src/plugins/               plugin_host.dart
   src/bench/                 bench_runner.dart (medições da Fase 0)
   src/ui/tokens/             tokens.dart, themes/ (claro, escuro, sépia, alto contraste, clássico 97)
@@ -122,7 +128,9 @@ integration_test/            com o LibreOffice real
 test/{unit,widget}/          com o kit falso
 test/support/harness.dart    o kit falso montado com o Workspace, janelas e área de transferência falsas
 test/fixtures/               capitulo-30p.docx
-tool/                        native-test.sh, bench.sh, make_fixture.py
+tool/                        native-test.sh, bench.sh, ab.py, mapas.py, make_fixture.py; os pacotes
+                             (build-deb.sh, build-rpm.sh, build-tarball.sh) e os repositórios APT e DNF
+                             (build-apt-repo.sh, build-dnf-repo.sh, create-apt-key.sh)
 ```
 
 ## A pirâmide de testes

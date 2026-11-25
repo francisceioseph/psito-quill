@@ -380,6 +380,8 @@ end)
 
 **Depois da Fase 2B** (`FASE2B-RESULTADOS.md`), lado a lado com a Fase 2 no mesmo dia: 376 MB vazio e 452 MB com o capítulo (RSS), +11,3 MB de memória anônima com o capítulo em dez etapas; tecla → ladrilho p95 9,4 ms; rolar 59,5 fps; **abrir 854 ms ❌** (a Fase 2 abria em 369 ms). A maior parte é o dicionário da ortografia carregando antes do "aberto" (D-068); no primeiro ladrilho, a 2B fica ~120 ms acima da Fase 2.
 
+**Depois da Fase 4** (`FASE4-RESULTADOS.md`), lado a lado com a Fase 3 no mesmo dia: +5,1 MB de memória anônima com o capítulo em oito etapas; tecla → ladrilho p95 9,6 ms; rolar 59,5 fps; **abrir 900 ms ❌** (a Fase 3 abria em 754 ms). Compilar 60 capítulos leva o processo a uns 350 MB durante a gravação, num documento oculto que fecha no fim.
+
 A memória é o RSS do app inteiro, na mediana de pelo menos 3 execuções do `tool/bench.sh` (varia uns 20 MB de uma para outra).
 
 **Depois da Fase 2** (D-038, D-039): o RSS muda uns 20 MB de um dia para outro, então cada fase e cada etapa se comparam **lado a lado** com a build anterior, pelo `tool/mapas.py`, olhando a memória anônima. **O orçamento é de ~5 MB de memória anônima por etapa;** passar disso pede um motivo e uma decisão. A ortografia em português custa uns 35 MB (o Hunspell) e foi aceita.
@@ -625,7 +627,16 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
 - **Etapa 6: os ajustes da Estrutura, do parágrafo e das Informações** (feita, D-091). "Início do documento", o nível e recolher na Estrutura; a cor de fundo do parágrafo e a janela "Parágrafo…" (o intervalo entre parágrafos do mesmo estilo, as bordas, as tabulações), pelas macros do perfil; e nas Informações os parágrafos, os caracteres com e sem espaços e as propriedades editáveis.
 - **Etapa 7: os ajustes da Página Inicial, do Layout e do Inserir** (feita, D-092). O pincel, o Aa e as listas de vários níveis; as colunas, os números de linha, a cor da página, a marca d'água e a ordem das imagens; a caixa de texto e a data e a hora no Inserir. Agrupar imagens ficou de fora: a 24.2 só agrupa formas de desenho.
 - **Etapa 8: as Preferências e os modelos** (feita, D-093). As regras da ortografia (no perfil do motor, na próxima abertura), o acesso rápido escolhido, o atalho de cada comando com o aviso de conflito, "Salvar como modelo", o `estilos.ott` do livro (os capítulos novos nascem dele) e "Novo a partir do modelo", que abre uma cópia sem arquivo.
-- **Fecho:** o `docs/FASE4-RESULTADOS.md` e a documentação.
+- **Fecho** (feito): o `docs/FASE4-RESULTADOS.md` e a documentação.
+- **Estado em 25/11/2026:** as Etapas 1 a 8 (D-086 a D-093) e o fecho estão feitos. Os números, as sondas e o que ficou para conferir à mão estão no `docs/FASE4-RESULTADOS.md`. Entre as etapas, o Quill ganhou o repositório APT e DNF assinado no GitHub Pages, como o Player.
+  - **O que saiu diferente do plano** (as sondas na 24.2):
+    - o filtro do EPUB ignora as opções pelo LOK: o título e o autor vão no `office:meta`, e a capa entra como a primeira imagem, sem a marca de capa no `content.opf` (D-086, D-087);
+    - os títulos ficam como estão no capítulo: o modelo de compilação troca a página, o corpo e os cabeçalhos, não a fonte dos títulos (D-087);
+    - comparar com outro documento e combinar ficaram de fora: fechar depois do `CompareDocuments` derruba o motor, e o `MergeDocuments` trava (D-089). Fica a pergunta 6;
+    - o sumário, as legendas, os índices, o parágrafo avançado, as propriedades, os números de linha, a cor da página e a caixa de texto vão por uma biblioteca Basic no perfil do Quill, porque os comandos do motor abrem janelas ou não fazem nada (D-090 a D-092);
+    - o botão da cor de fundo do parágrafo não mostra a cor atual: o motor não diz (D-091);
+    - agrupar imagens ficou de fora: a 24.2 só agrupa formas de desenho (D-092);
+    - as regras da ortografia valem na próxima abertura do Quill: mudar com o motor ligado não refaz a verificação (D-093).
 
 O que a fase cobre (a lista de 23/11/2026):
 - Compilar para PDF, EPUB e DOCX com modelos, referências cruzadas, marcadores, sumário e índice. (As notas de rodapé foram para a Fase 3, Etapa 4.)
@@ -652,7 +663,7 @@ O que a fase cobre (a lista de 23/11/2026):
 
 **Fase 6: acabamento**
 - As animações com mola no tema moderno. (Foco, Máquina de escrever, Tela cheia, Sépia e Alto contraste entraram na Fase 2B.)
-- O pacote `.deb` e o APT, como no Player.
+- ~~O pacote `.deb` e o APT, como no Player.~~ Feito na Fase 4: o repositório APT e DNF assinado no GitHub Pages, montado a cada versão.
 - A medição de memória final (seção 8) e um site.
 
 **Depois:**
@@ -686,3 +697,4 @@ O que a fase cobre (a lista de 23/11/2026):
 3. **O nome:** decidido, é Psito Quill (a pena de escrever, irmã do Plume). App `org.psito.quill`, repositório `psito-quill`.
 4. **Os livros atuais:** em que formato estão hoje *Dustland* e *Silicon Gods* (DOCX, ODT, Google Docs)? A fase 3 precisa de um importador que divida pelos títulos de capítulo. **Respondido:** em DOCX.
 5. **O repositório** no GitHub (`francisceioseph/psito-quill`), público como o Player?
+6. **Comparar com outro documento** (D-089): fazer num LibreOffice à parte, que abre, compara, grava o ODT com as diferenças e sai sem fechar o documento? O Quill abriria o resultado com o painel Alterações. Custa um segundo motor durante a comparação.
