@@ -1,6 +1,8 @@
 name: Packages
 
-# Gera o .deb, o .rpm e o tar.gz de uma versão e anexa à release. O Quill é só
+# Gera o .deb, o .rpm e o tar.gz de uma versão, anexa à release e publica no GitHub
+# Pages os repositórios APT e DNF com as três últimas versões. O Pages não guarda nada
+# entre uma publicação e outra: os pacotes antigos vêm das releases. O Quill é só
 # Linux: o plugin do motor (packages/psito_quill_kit) usa o LibreOfficeKit do
 # sistema, o GTK e a impressão do GTK, e não há build de Windows.
 on:
@@ -21,6 +23,11 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       TAG: ${{ inputs.tag }}
@@ -37,7 +44,7 @@ jobs:
         run: >-
           sudo apt-get update && sudo apt-get install -y --no-install-recommends
           libgtk-3-dev ninja-build cmake clang pkg-config
-          libreofficekit-dev liblua5.4-dev rpm
+          libreofficekit-dev liblua5.4-dev rpm apt-utils createrepo-c
       - name: Build the packages
         run: |
           flutter pub get
@@ -50,3 +57,25 @@ jobs:
           dpkg-deb -c build/deb/*.deb | grep -q 'usr/bin/psito-quill'
       - name: Attach them to the release
         run: gh release upload "$TAG" build/deb/*.deb build/rpm/*.rpm build/tar/*.tar.gz --clobber
+      - name: Fetch the last three versions
+        run: |
+          gh release list --limit 3 --json tagName --jq '.[].tagName' |
+            while read -r tag; do
+              [ "$tag" = "$TAG" ] && continue
+              gh release download "$tag" --pattern '*.deb' --pattern '*.rpm' --dir build/pkgs || true
+            done
+          cp build/deb/*.deb build/rpm/*.rpm build/pkgs/
+      - name: Build the repositories
+        env:
+          APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
+        run: |
+          gpg --batch --import <<< "$APT_SIGNING_KEY"
+          tool/build-apt-repo.sh build/apt build/pkgs/*.deb
+          tool/build-dnf-repo.sh build/apt https://francisceioseph.github.io/psito-quill build/pkgs/*.rpm
+      - name: Attach the signed .rpm to the release
+        run: gh release upload "$TAG" "build/apt/rpm/$(basename build/rpm/*.rpm)" --clobber
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/apt
+      - id: deploy
+        uses: actions/deploy-pages@v4

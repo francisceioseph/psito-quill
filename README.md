@@ -6,7 +6,32 @@ Em construção. A Fase 4 (compilar e revisar) começou pelo compilar: o livro i
 
 ## Para instalar
 
-Os pacotes de cada versão estão nas [releases](https://github.com/francisceioseph/psito-quill/releases). O Quill usa o LibreOffice Writer do sistema (24.2 ou mais novo), que o gerenciador de pacotes instala junto.
+O Quill usa o LibreOffice Writer do sistema (24.2 ou mais novo), que o gerenciador de pacotes instala junto.
+
+### Pelo repositório APT
+
+No Ubuntu 24.04 ou mais novo, no Debian 13 ou no Mint 22. Ele se atualiza junto com o sistema:
+
+```bash
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://francisceioseph.github.io/psito-quill/psito-quill.asc | sudo tee /etc/apt/keyrings/psito-quill.asc >/dev/null
+printf 'Types: deb\nURIs: https://francisceioseph.github.io/psito-quill\nSuites: stable\nComponents: main\nArchitectures: amd64\nSigned-By: /etc/apt/keyrings/psito-quill.asc\n' | sudo tee /etc/apt/sources.list.d/psito-quill.sources >/dev/null
+sudo apt update
+sudo apt install psito-quill
+```
+
+### Pelo repositório DNF
+
+No Fedora, em x86_64. Ele se atualiza junto com o sistema, e a primeira instalação pede para aceitar a chave:
+
+```bash
+sudo curl -fsSL -o /etc/yum.repos.d/psito-quill.repo https://francisceioseph.github.io/psito-quill/psito-quill.repo
+sudo dnf install psito-quill
+```
+
+### Pelo pacote
+
+Os pacotes de cada versão também estão nas [releases](https://github.com/francisceioseph/psito-quill/releases):
 
 ```bash
 sudo apt install ./psito-quill_*_amd64.deb      # Ubuntu 24.04 ou mais novo, Debian 13

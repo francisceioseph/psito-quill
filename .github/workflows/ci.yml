@@ -54,8 +54,9 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
+      # O poppler-utils traz o pdftotext, que lê o PDF compilado (D-086).
       - name: System libraries
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends $BUILD_DEPS xvfb xauth openbox wmctrl dbus-x11 at-spi2-core
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends $BUILD_DEPS xvfb xauth openbox wmctrl dbus-x11 at-spi2-core poppler-utils
       - name: Dependencies
         run: flutter pub get
       # O motor fala a língua do LANG: os testes leem o menu em português.
@@ -111,6 +112,8 @@ jobs:
     if: needs.release.outputs.tag != ''
     permissions:
       contents: write
+      pages: write
+      id-token: write
     uses: ./.github/workflows/packages.yml
     with:
       tag: ${{ needs.release.outputs.tag }}
