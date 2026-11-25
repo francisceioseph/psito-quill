@@ -39,6 +39,7 @@ class Settings extends ChangeNotifier {
   bool _screenReaderDoc = false;
   bool _autosave = true;
   bool _autoSnapshots = true;
+  String _authorName = '';
 
   /// O id do tema (os de `builtInThemes`).
   String get theme => _theme;
@@ -110,6 +111,10 @@ class Settings extends ChangeNotifier {
   bool get autoSnapshots => _autoSnapshots;
   set autoSnapshots(bool v) => _set(() => _autoSnapshots = v);
 
+  /// O nome nos comentários (D-088). Vazio: o nome da conta do sistema.
+  String get authorName => _authorName;
+  set authorName(String v) => _set(() => _authorName = v.trim());
+
   // ------------------------------------------ acessibilidade (D-067) --
 
   /// O tamanho do texto da interface, por cima do do sistema (1, 1,25, 1,5
@@ -178,6 +183,7 @@ class Settings extends ChangeNotifier {
       _screenReaderDoc = json['documentoLeitorTela'] as bool? ?? _screenReaderDoc;
       _autosave = json['salvamentoAutomatico'] as bool? ?? _autosave;
       _autoSnapshots = json['instantaneosAutomaticos'] as bool? ?? _autoSnapshots;
+      _authorName = json['nome'] as String? ?? _authorName;
       _recentFonts = (json['fontesRecentes'] as List?)?.whereType<String>().take(5).toList() ?? _recentFonts;
     } on Object {
       // Sem arquivo ou estragado: os padrões.
@@ -214,9 +220,28 @@ class Settings extends ChangeNotifier {
             'documentoLeitorTela': _screenReaderDoc,
             'salvamentoAutomatico': _autosave,
             'instantaneosAutomaticos': _autoSnapshots,
+            'nome': _authorName,
           }));
     } on FileSystemException {
       // Sem onde gravar: vale só para esta sessão.
     }
   }
+}
+
+/// O nome completo da conta (o primeiro campo do GECOS no /etc/passwd), ou o
+/// login. Lido do disco, nada sai do computador.
+String systemUserName() {
+  final user = Platform.environment['USER'] ?? '';
+  try {
+    for (final line in File('/etc/passwd').readAsLinesSync()) {
+      final f = line.split(':');
+      if (f.length > 4 && f[0] == user) {
+        final full = f[4].split(',').first.trim();
+        return full.isEmpty ? user : full;
+      }
+    }
+  } on FileSystemException {
+    // Sem o arquivo: o login.
+  }
+  return user;
 }

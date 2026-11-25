@@ -2788,4 +2788,92 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get compileCoverRemove => 'Tirar a capa';
+
+  @override
+  String get menuReview => 'Revisar';
+
+  @override
+  String get groupComments => 'Comentários';
+
+  @override
+  String get commandNewComment => 'Novo comentário';
+
+  @override
+  String get commandComments => 'Painel Comentários';
+
+  @override
+  String get railComments => 'Comentários';
+
+  @override
+  String get commentsTitle => 'Comentários';
+
+  @override
+  String get commentsClose => 'Fechar os comentários';
+
+  @override
+  String get commentsNew => 'Novo comentário';
+
+  @override
+  String get commentsNewHint => 'Selecione um trecho e escreva aqui';
+
+  @override
+  String get commentsAdd => 'Comentar';
+
+  @override
+  String commentsShowResolved(int count) {
+    return 'Mostrar os resolvidos ($count)';
+  }
+
+  @override
+  String get commentsEmpty =>
+      'Nenhum comentário neste capítulo. Selecione um trecho, escreva acima e clique em Comentar (Ctrl+Alt+C).';
+
+  @override
+  String get commentsAllResolved => 'Todos os comentários estão resolvidos.';
+
+  @override
+  String get commentsReply => 'Responder';
+
+  @override
+  String get commentsReplyField => 'Resposta';
+
+  @override
+  String get commentsSend => 'Responder';
+
+  @override
+  String get commentsCancel => 'Cancelar';
+
+  @override
+  String get commentsResolve => 'Resolver';
+
+  @override
+  String get commentsReopen => 'Reabrir';
+
+  @override
+  String get commentsDelete => 'Excluir a conversa';
+
+  @override
+  String get commentsResolved => 'Resolvido';
+
+  @override
+  String get commentsNoAuthor => 'Sem autor';
+
+  @override
+  String commentsOpenCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count comentários abertos',
+      one: '1 comentário aberto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get prefAuthorName => 'Seu nome nos comentários';
+
+  @override
+  String prefAuthorNameNote(String name) {
+    return 'Vazio: o nome da sua conta ($name). Vale para os capítulos abertos depois.';
+  }
 }

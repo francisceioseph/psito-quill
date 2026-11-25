@@ -8,8 +8,8 @@ cd "$(dirname "$0")/.."
 
 SRC=packages/psito_quill_kit/linux/native
 BUILD=build/native
-MEM="${TEST_MEM:-2G}"
-JOBS="${TEST_JOBS:-2}"
+MEM="${TEST_MEM:-6G}"
+JOBS="${TEST_JOBS:-6}"
 
 LIMIT=()
 if [ "$MEM" != "0" ] && command -v systemd-run >/dev/null; then

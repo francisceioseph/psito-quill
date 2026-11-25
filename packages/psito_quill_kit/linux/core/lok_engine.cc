@@ -140,7 +140,7 @@ void LokEngine::open(const std::string& path) {
     // e sai logo depois dele: o Dart descarta os eventos de documento até o
     // OPENED (D-054).
     makeActive(d.get());
-    doc->pClass->initializeForRendering(doc, "{}");
+    doc->pClass->initializeForRendering(doc, renderOptions(author_).c_str());
     doc->pClass->registerCallback(doc, &LokEngine::lokCallback, d.get());
     d->tileMode = doc->pClass->getTileMode ? doc->pClass->getTileMode(doc) : LOK_TILEMODE_RGBA;
     tileMode_ = d->tileMode;
@@ -337,6 +337,26 @@ void LokEngine::setAccessibility(bool on) {
     if (!doc_ || !doc_->pClass->setAccessibilityState) return;
     doc_->pClass->setAccessibilityState(doc_, doc_->pClass->getView(doc_), on);
   });
+}
+
+void LokEngine::setAuthor(const std::string& name) {
+  queue_.post([this, name] { author_ = name; });
+}
+
+std::string LokEngine::renderOptions(const std::string& author) {
+  if (author.empty()) return "{}";
+  std::string v;
+  for (unsigned char c : author) {
+    if (c == '"' || c == '\\') {
+      v += '\\';
+      v += static_cast<char>(c);
+    } else if (c < 0x20) {
+      v += ' ';
+    } else {
+      v += static_cast<char>(c);
+    }
+  }
+  return "{\".uno:Author\":{\"type\":\"string\",\"value\":\"" + v + "\"}}";
 }
 
 void LokEngine::preloadSpelling(const std::string& path) {

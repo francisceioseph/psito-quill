@@ -37,6 +37,10 @@ void main(List<String> args) {
   DocumentController.cleanStaleCopies();
   final kit = LokQuillKit(profile: profile, tileSlots: tileSlotsFor(_largestDisplay()));
   final doc = DocumentController(kit, deferOpenWork: true);
+  // O nome nos comentários (D-088).
+  String author() => settings.authorName.isEmpty ? systemUserName() : settings.authorName;
+  doc.author = author();
+  settings.addListener(() => doc.author = author());
   // As cópias de recuperação (D-073). O --bench não grava nenhuma.
   if (!bench) {
     doc

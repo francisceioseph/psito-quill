@@ -6,12 +6,13 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 
+import '../document/comments.dart' show openCommentsInContent;
 import '../document/fodt.dart';
 import 'book.dart';
 import 'odt_zip.dart';
 
 /// O que se lê de um capítulo fechado.
-typedef ChapterCount = ({int words, int stamp, List<String> scenes});
+typedef ChapterCount = ({int words, int stamp, List<String> scenes, int comments});
 
 const bookExtension = '.psitobook';
 const bookFileName = 'livro.json';
@@ -110,7 +111,7 @@ String? moveToTrash(String dir, String relative) {
   return '$trashDir/$name';
 }
 
-/// As palavras e as cenas dos capítulos [files] (caminhos absolutos), num
+/// As palavras, as cenas e os comentários abertos (D-088) dos capítulos [files] (caminhos absolutos), num
 /// isolate: o `content.xml` de cada um é lido, contado e solto. Os que não
 /// dão para ler ficam de fora. Devolve também a data de cada arquivo.
 Future<Map<String, ChapterCount>> countChapterWords(List<String> files) {
@@ -129,6 +130,7 @@ Future<Map<String, ChapterCount>> countChapterWords(List<String> files) {
         words: open < 0 || close < open ? 0 : odfWordCount(xml.substring(open, close)),
         stamp: stamp,
         scenes: [for (final s in odfScenes(xml)) s.label],
+        comments: openCommentsInContent(xml),
       );
     }
     return out;

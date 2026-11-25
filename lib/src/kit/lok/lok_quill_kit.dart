@@ -101,6 +101,9 @@ class LokQuillKit implements QuillKit {
   void setAccessibility(bool on) => _native.setAccessibility(on);
 
   @override
+  void setAuthor(String name) => _native.setAuthor(name);
+
+  @override
   void preloadSpelling(String path) => _native.preloadSpelling(path);
 
   @override
@@ -275,6 +278,8 @@ class LokQuillKit implements QuillKit {
         return parseA11yCaret(payload) ?? OtherKitEvent(type, payload);
       case LibreOfficeKitCallbackType.LOK_CALLBACK_SEARCH_NOT_FOUND:
         return SearchNotFound(payload);
+      case LibreOfficeKitCallbackType.LOK_CALLBACK_COMMENT:
+        return parseCommentChanged(payload) ?? OtherKitEvent(type, payload);
       case LibreOfficeKitCallbackType.LOK_CALLBACK_CONTEXT_MENU:
         return ContextMenuReady(parseContextMenu(payload));
       case LibreOfficeKitCallbackType.LOK_CALLBACK_RULER_UPDATE:

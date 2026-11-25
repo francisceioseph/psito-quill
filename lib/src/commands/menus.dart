@@ -168,6 +168,10 @@ List<MenuSpec> editorMenus(AppLocalizations l10n) => [
         null,
         BookCommandIds.closeBook,
       ]),
+      MenuSpec(l10n.menuReview, const [
+        ViewCommandIds.newComment,
+        ViewCommandIds.comments,
+      ]),
       MenuSpec(l10n.menuTools, const [
         CommandIds.spellOnline,
       ]),

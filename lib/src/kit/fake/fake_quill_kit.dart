@@ -207,6 +207,98 @@ class FakeQuillKit implements QuillKit {
   @override
   void setAccessibility(bool on) => accessibility.add(on);
 
+  /// O autor do próximo documento aberto ([setAuthor]).
+  String author = '';
+
+  @override
+  void setAuthor(String name) => author = name;
+
+  /// Os comentários do documento (D-088), mudados pelos comandos `.uno:`.
+  final comments = <DocComment>[];
+  int _commentId = 0;
+
+  void _comment(String command, Map<String, dynamic> args) {
+    String arg(String k) => '${(args[k] as Map?)?['value'] ?? ''}';
+    DocComment? byId(String id) => comments.where((c) => c.id == id).firstOrNull;
+    void put(CommentAction a, DocComment c) {
+      final i = comments.indexWhere((o) => o.id == c.id);
+      if (a == CommentAction.remove) {
+        if (i >= 0) comments.removeAt(i);
+      } else if (i >= 0) {
+        comments[i] = c;
+      } else {
+        comments.add(c);
+      }
+      _emit(CommentChanged(a, c));
+    }
+
+    switch (command) {
+      case '.uno:InsertAnnotation':
+        final y = 1418.0 + 276 * comments.where((c) => !c.isReply).length;
+        put(
+            CommentAction.add,
+            DocComment(
+              id: '${++_commentId}',
+              author: author,
+              text: arg('Text'),
+              date: DateTime(2026, 11, 25, 9),
+              anchor: Rect.fromLTWH(5610, y, 1, 276),
+              range: [Rect.fromLTWH(5123, y, 487, 275)],
+            ));
+      case '.uno:ReplyComment':
+        final parent = byId(arg('Id'));
+        if (parent == null) return;
+        put(
+            CommentAction.add,
+            DocComment(
+                id: '${++_commentId}',
+                parentId: parent.id,
+                author: author,
+                text: arg('Text'),
+                date: DateTime(2026, 11, 25, 10),
+                anchor: parent.anchor));
+      case '.uno:ResolveComment':
+        final c = byId(arg('Id'));
+        if (c == null) return;
+        put(
+            CommentAction.resolve,
+            DocComment(
+                id: c.id,
+                parentId: c.parentId,
+                author: c.author,
+                text: c.text,
+                resolved: !c.resolved,
+                date: c.date,
+                anchor: c.anchor,
+                range: c.range));
+      case '.uno:EditAnnotation':
+        final c = byId(arg('Id'));
+        if (c == null) return;
+        put(
+            CommentAction.modify,
+            DocComment(
+                id: c.id,
+                parentId: c.parentId,
+                author: c.author,
+                text: arg('Text'),
+                resolved: c.resolved,
+                date: c.date,
+                anchor: c.anchor,
+                range: c.range));
+      case '.uno:DeleteComment':
+        if (byId(arg('Id')) == null) return;
+        put(CommentAction.remove, DocComment(id: arg('Id')));
+    }
+  }
+
+  static const commentCommands = {
+    '.uno:InsertAnnotation',
+    '.uno:ReplyComment',
+    '.uno:ResolveComment',
+    '.uno:EditAnnotation',
+    '.uno:DeleteComment',
+  };
+
   /// Os arquivos pedidos ao [preloadSpelling].
   final preloads = <String>[];
 
@@ -287,8 +379,32 @@ class FakeQuillKit implements QuillKit {
   /// As fontes que o falso diz ter.
   List<String> fonts = const ['Liberation Sans', 'Liberation Serif', 'Noto Serif'];
 
+  /// Os `getCommandValues` pedidos, em ordem.
+  final requestedValues = <String>[];
+
   @override
   void requestCommandValues(String command) {
+    requestedValues.add(command);
+    if (command == '.uno:ViewAnnotations') {
+      _emit(CommandValues(
+          command,
+          jsonEncode({
+            'comments': [
+              for (final c in comments)
+                {
+                  'id': int.parse(c.id),
+                  'parentId': c.parentId.isEmpty ? 0 : int.parse(c.parentId),
+                  'author': c.author,
+                  'text': c.text,
+                  'resolved': '${c.resolved}',
+                  'dateTime': c.date?.toIso8601String() ?? '',
+                  'anchorPos': _rect(c.anchor),
+                  'textRange': c.range.map(_rect).join('; '),
+                }
+            ]
+          })));
+      return;
+    }
     if (command == '.uno:StyleApply') {
       _emit(CommandValues(
           command,
@@ -433,6 +549,10 @@ class FakeQuillKit implements QuillKit {
   void uno(String command, [String argsJson = '']) {
     unoCommands.add(command);
     unoArgs.add(argsJson);
+    if (commentCommands.contains(command)) {
+      _comment(command, argsJson.isEmpty ? const {} : jsonDecode(argsJson) as Map<String, dynamic>);
+      return;
+    }
     switch (command) {
       case '.uno:Bold':
         bold = !bold;
@@ -590,6 +710,9 @@ class FakeQuillKit implements QuillKit {
 
   /// Para os testes: um evento qualquer, como se viesse do motor.
   void emit(KitEvent e) => _emit(e);
+
+  static String _rect(Rect? r) =>
+      r == null ? '' : '${r.left.round()}, ${r.top.round()}, ${r.width.round()}, ${r.height.round()}';
 
   /// Para os testes: um estado qualquer, como se viesse do motor.
   void emitState(String command, String value) => _state(command, value);

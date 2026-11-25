@@ -29,6 +29,7 @@ class BookNode {
     this.words = 0,
     this.wordsStamp = 0,
     this.scenes = const [],
+    this.comments = 0,
     List<BookNode>? children,
   }) : children = children ?? [];
 
@@ -54,6 +55,9 @@ class BookNode {
   /// fichário mostra as cenas dos capítulos fechados sem abri-los.
   List<String> scenes;
 
+  /// Os comentários abertos (D-088), contados com as palavras.
+  int comments;
+
   /// Os capítulos de uma parte (os capítulos não têm filhos na Etapa 1).
   final List<BookNode> children;
 
@@ -70,6 +74,7 @@ class BookNode {
         if (!isPart) 'palavras': words,
         if (!isPart) 'palavrasEm': wordsStamp,
         if (scenes.isNotEmpty) 'cenas': scenes,
+        if (!isPart) 'comentarios': comments,
         if (isPart) 'filhos': [for (final c in children) c.toJson()],
       };
 
@@ -84,7 +89,9 @@ class BookNode {
       label: (j['rotulo'] as num?)?.toInt(),
       synopsis: j['sinopse'] as String? ?? '',
       words: (j['palavras'] as num?)?.toInt() ?? 0,
-      wordsStamp: (j['palavrasEm'] as num?)?.toInt() ?? 0,
+      // Um livro de antes dos comentários reconta tudo uma vez.
+      wordsStamp: j['comentarios'] == null ? 0 : (j['palavrasEm'] as num?)?.toInt() ?? 0,
+      comments: (j['comentarios'] as num?)?.toInt() ?? 0,
       scenes: [for (final c in (j['cenas'] as List<Object?>? ?? const [])) if (c is String) c],
       children: [
         if (part)

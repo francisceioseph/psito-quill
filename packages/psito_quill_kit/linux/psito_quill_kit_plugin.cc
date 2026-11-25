@@ -177,6 +177,9 @@ void pqk_set_paper_invert(bool on, uint32_t paper, uint32_t ink, uint32_t src_pa
 void pqk_set_accessibility(bool on) {
   if (g_kit) g_kit->engine().setAccessibility(on);
 }
+void pqk_set_author(const char* name) {
+  if (g_kit && name) g_kit->engine().setAuthor(name);
+}
 void pqk_prepare_environment(void) { pqk::LokEngine::prepareEnvironment(); }
 void pqk_preload_spelling(const char* path) {
   if (g_kit && path) g_kit->engine().preloadSpelling(path);

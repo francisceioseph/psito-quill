@@ -20,7 +20,7 @@ LIMIT=(systemd-run --user --scope --quiet --collect -p MemoryMax=3G -p MemorySwa
 
 echo "== motor sozinho (lok_probe)"
 cmake -S packages/psito_quill_kit/linux/native -B build/native -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo >/dev/null
-cmake --build build/native -j 2 >/dev/null
+cmake --build build/native -j 8 >/dev/null
 "${LIMIT[@]}" build/native/lok_probe "$DOC" "$OUT" >"$OUT/probe.json" 2>"$OUT/probe.log"
 python3 -c "
 from PIL import Image

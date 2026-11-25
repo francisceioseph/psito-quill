@@ -22,6 +22,7 @@ import 'package:psito_quill/src/book/odt_zip.dart';
 import 'package:psito_quill/src/book/docx_import.dart';
 import 'package:psito_quill/src/book/book_io.dart';
 import 'package:psito_quill/src/app.dart';
+import 'package:psito_quill/src/document/comments.dart';
 import 'package:psito_quill/src/document/document_controller.dart';
 import 'package:psito_quill/src/document/recovery.dart';
 import 'package:psito_quill/src/document/search.dart';
@@ -813,6 +814,48 @@ void main() {
 
     workspace.onUnsaved = () async => UnsavedChoice.discard;
     expect(await workspace.closeBook(), isTrue);
+
+    // 30. Os comentários (D-088): o autor vale no documento aberto depois;
+    //     comentar a primeira palavra, responder, resolver; salvar e reabrir
+    //     traz a conversa (a lista do ViewAnnotations), e o content.xml conta
+    //     os abertos sem abrir.
+    doc.author = 'Ana "Revisora" Teste';
+    final commented = File('test/fixtures/capitulo-curto.odt').copySync('${tmp.path}/comentado.odt').path;
+    final commentsMark = events.length;
+    await openAndWait(commented);
+    await until(() => events.skip(commentsMark).any((e) => e is CommandValues && e.command == '.uno:ViewAnnotations'),
+        'a lista vazia ao abrir');
+    expect(doc.comments, isEmpty);
+    doc.uno('.uno:GoToStartOfDoc');
+    doc.uno('.uno:WordRightSel');
+    doc.insertComment('Dedicar a quem?');
+    await until(() => doc.comments.length == 1, 'o comentário novo');
+    final first = doc.comments.single;
+    expect(first.author, 'Ana "Revisora" Teste');
+    expect(first.text, 'Dedicar a quem?');
+    expect(first.range, isNotEmpty, reason: 'o trecho da palavra');
+    doc.replyComment(first.id, 'À avó.');
+    await until(() => doc.comments.length == 2, 'a resposta');
+    doc.toggleResolved(first.id);
+    await until(() => doc.comments.firstWhere((c) => c.id == first.id).resolved, 'resolver');
+    doc.uno('.uno:GoToEndOfDoc');
+    doc.uno('.uno:WordLeftSel');
+    doc.insertComment('Aberto');
+    await until(() => doc.comments.length == 3, 'o segundo comentário');
+    await workspace.save();
+    await until(() => !doc.modified && doc.busy == null, 'salvar o comentado');
+    expect(openCommentsInContent(readOdtContent(commented)!), 1, reason: 'um resolvido e uma resposta não contam');
+    expect(await workspace.closeTab(), isTrue);
+    await until(() => doc.path != commented && doc.busy == null, 'fechar o comentado');
+    await openAndWait(commented);
+    await until(() => doc.comments.length == 3, 'a conversa de volta ao reabrir');
+    final threads = commentThreads(doc.comments);
+    expect(threads.map((t) => t.root.text), ['Dedicar a quem?', 'Aberto'], reason: 'na ordem do texto');
+    expect(threads.first.resolved, isTrue);
+    expect(threads.first.replies.single.text, 'À avó.');
+    doc.deleteComment(threads.last.root.id);
+    await until(() => doc.comments.length == 2, 'excluir');
+    expect(await workspace.closeTab(), isTrue);
 
         // Fecha sem salvar (descarta), para não deixar trava.
     workspace.onUnsaved = () async => UnsavedChoice.discard;

@@ -93,6 +93,10 @@ class LokEngine {
   // Liga os callbacks de acessibilidade do documento ativo (D-067): o
   // parágrafo do cursor (62) e a posição do cursor nele (63).
   void setAccessibility(bool on);
+  // O nome de quem escreve os comentários e as alterações (D-088). Vale
+  // para os documentos abertos depois (o .uno:Author do
+  // initializeForRendering; a 24.2 não troca o de um aberto).
+  void setAuthor(const std::string& name);
   // Abre [path] (um documento pequeno com texto) sem mostrar: a ortografia
   // automática carrega o dicionário enquanto a tela inicial está aberta, e o
   // primeiro capítulo aberto depois não espera por ele (D-069). O documento
@@ -103,6 +107,9 @@ class LokEngine {
   // enquanto outra lê o ambiente (o fontconfig do GTK) derruba o processo
   // (D-072).
   static void prepareEnvironment();
+  // O JSON do initializeForRendering, com o autor escapado. Público para o
+  // teste.
+  static std::string renderOptions(const std::string& author);
   // Abre [src] oculto, salva em [dst] no [format] e fecha, sem tocar nos
   // documentos das abas (o importador de livros, D-071). [src] vazio: um
   // documento novo. Responde com kEvConverted e o [id] de quem pediu.
@@ -164,6 +171,7 @@ class LokEngine {
   _LibreOfficeKit* kit_ = nullptr;
   std::vector<std::unique_ptr<Doc>> docs_;
   int nextId_ = 1;
+  std::string author_;  // só na fila do kit
   // O ativo (doc_ e tileMode_ são os dele). Atômico: os callbacks leem.
   std::atomic<int> activeId_{0};
   _LibreOfficeKitDocument* doc_ = nullptr;

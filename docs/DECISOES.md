@@ -1296,3 +1296,39 @@ A Etapa 2 da Fase 4: a janela Compilar ganha os modelos e a aparência do livro.
   - integração (o passo 29):
     - o 6×9 em PDF, em 432 × 648 pt, com o título do livro no cabeçalho das pares;
     - o Manuscrito em DOCX, com o espaço duplo (`w:line="480"`), a Times e o cabeçalho "Tal / CENAS / ".
+
+## D-088 · Os comentários
+
+A Etapa 3 da Fase 4: comentar o texto, responder, resolver e excluir, num painel do trilho.
+
+- **Quem desenha:** o motor já liga o `LOK_FEATURE_NO_TILED_ANNOTATIONS`, então os comentários não entram nos ladrilhos. Pela sonda (`lok_script`, na 24.2):
+  - cada mudança chega no callback 32 (`LOK_CALLBACK_COMMENT`): `Add`, `Modify`, `Resolve` e `Remove`, com o id, o pai, o autor, o texto, o resolvido, a data e o trecho (`textRange`, um retângulo por linha, em twips);
+  - o trecho acompanha o texto: digitar antes dele manda um `Modify` com o lugar novo;
+  - a lista vem pelo `getCommandValues(".uno:ViewAnnotations")`, com os ids em número. Ao abrir não chega callback, então o Quill pede a lista ao abrir e ao trocar de aba (o motor descarta os callbacks das abas de fundo).
+- **Os comandos**, todos conferidos pelo estado, com o `Id` em texto:
+  - `.uno:InsertAnnotation` com o `Text`, na seleção (ou no cursor);
+  - `.uno:ReplyComment`;
+  - `.uno:ResolveComment`, que alterna (resolver de novo reabre);
+  - `.uno:EditAnnotation` (no controlador, ainda sem botão);
+  - `.uno:DeleteComment`.
+
+  O Ctrl+Z desfaz o resolver. Salvar em ODT e reabrir mantém as respostas (`loext:parent-name`) e o resolvido (`loext:resolved`).
+- **O autor:** a 24.2 não tem como trocar o autor de um documento aberto. Ele vai no `.uno:Author` do `initializeForRendering`, guardado no motor (`pqk_set_author`) e usado em cada documento aberto depois. O nome vem das Preferências (Geral, "Seu nome nos comentários"). Vazio, vale o nome da conta, lido do `/etc/passwd` (o GECOS) ou o login. Nada sai do computador.
+- **A marca na página:** o Quill desenha os trechos dos comentários abertos por cima dos ladrilhos, como a seleção e a busca, com o `tertiaryContainer` do tema e um traço embaixo. Os resolvidos não são marcados.
+- **O painel Comentários** (no trilho, como a Estrutura):
+  - o campo "Novo comentário" e o botão Comentar;
+  - as conversas na ordem do texto (pela linha, depois pela coluna), com o autor, a data e as respostas recuadas. Uma resposta a uma resposta entra na conversa de cima;
+  - Responder, Resolver ou Reabrir, e "Excluir a conversa", que apaga as respostas e depois o comentário;
+  - os resolvidos escondidos, com a caixa "Mostrar os resolvidos (n)";
+  - o clique ou o Enter numa conversa leva o cursor ao começo do trecho (um clique do motor ali; a vista rola até o cursor);
+  - no modo só leitura, só a lista.
+
+  O painel é memoizado como os outros, com a `commentRevision` do controlador na chave.
+- **Os comandos do Quill:** "Novo comentário" (Ctrl+Alt+C, livre nos dois jogos de atalhos), que abre o painel com o foco no campo, e "Painel Comentários". Eles estão no menu Revisar (novo, no Clássico 97), na faixa Revisão (o grupo Comentários) e no menu de contexto.
+- **No livro:** o fichário mostra os comentários abertos de cada capítulo (os de cima, sem os resolvidos), contados com as palavras e as cenas no `content.xml` (`openCommentsInContent`) e guardados no `livro.json` (`comentarios`). O capítulo da tela conta pelo motor. Um `livro.json` de antes não tem o campo, então reconta tudo uma vez.
+- **A memória:** o controlador guarda só a lista que o motor manda (vazia num capítulo sem comentários), e o painel só existe aberto. Pelo `tool/ab.py b38da96` (o `capitulo-30p.docx`, sem comentários), a primeira medição, com 3 rodadas, deu +8,9 MB depois de rolar. Só que as rodadas da build nova foram de 448,9 a 459,8 MB, e a diferença caía para +0,7 MB (RSS) depois de digitar. Com 5 rodadas (a mediana), a memória anônima variou de −3,7 a +2,2 MB: −3,2 com o capítulo, +2,2 depois de rolar e −2,4 depois de digitar. A tecla (p95) ficou em 9,5 ms, e o rolar em 59,5 fps. Era a variação entre as rodadas.
+- **Os testes:**
+  - unidade, `comments_test`: o callback 32 (o novo, o apagado, o trecho em duas linhas, o estragado), a lista, as conversas (a ordem, as respostas de respostas, a solta), aplicar o callback, os argumentos, a contagem do `content.xml` e o `livro.json`;
+  - nativo: o JSON do autor, com as aspas e a barra escapadas;
+  - widget, `fase4_comments_test`: o Ctrl+Alt+C com o foco, comentar, a marca, responder, ir ao trecho, resolver e os resolvidos, reabrir, excluir, o modo só leitura e a contagem no fichário;
+  - integração (o passo 30): o autor com aspas, comentar a primeira palavra (o trecho), responder, resolver, salvar, a contagem do `content.xml`, reabrir com a conversa na ordem do texto, e excluir.

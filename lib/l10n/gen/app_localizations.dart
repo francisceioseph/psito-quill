@@ -4975,6 +4975,156 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Tirar a capa'**
   String get compileCoverRemove;
+
+  /// No description provided for @menuReview.
+  ///
+  /// In pt, this message translates to:
+  /// **'Revisar'**
+  String get menuReview;
+
+  /// No description provided for @groupComments.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comentários'**
+  String get groupComments;
+
+  /// No description provided for @commandNewComment.
+  ///
+  /// In pt, this message translates to:
+  /// **'Novo comentário'**
+  String get commandNewComment;
+
+  /// No description provided for @commandComments.
+  ///
+  /// In pt, this message translates to:
+  /// **'Painel Comentários'**
+  String get commandComments;
+
+  /// No description provided for @railComments.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comentários'**
+  String get railComments;
+
+  /// No description provided for @commentsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comentários'**
+  String get commentsTitle;
+
+  /// No description provided for @commentsClose.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fechar os comentários'**
+  String get commentsClose;
+
+  /// No description provided for @commentsNew.
+  ///
+  /// In pt, this message translates to:
+  /// **'Novo comentário'**
+  String get commentsNew;
+
+  /// No description provided for @commentsNewHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Selecione um trecho e escreva aqui'**
+  String get commentsNewHint;
+
+  /// No description provided for @commentsAdd.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comentar'**
+  String get commentsAdd;
+
+  /// No description provided for @commentsShowResolved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar os resolvidos ({count})'**
+  String commentsShowResolved(int count);
+
+  /// No description provided for @commentsEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum comentário neste capítulo. Selecione um trecho, escreva acima e clique em Comentar (Ctrl+Alt+C).'**
+  String get commentsEmpty;
+
+  /// No description provided for @commentsAllResolved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todos os comentários estão resolvidos.'**
+  String get commentsAllResolved;
+
+  /// No description provided for @commentsReply.
+  ///
+  /// In pt, this message translates to:
+  /// **'Responder'**
+  String get commentsReply;
+
+  /// No description provided for @commentsReplyField.
+  ///
+  /// In pt, this message translates to:
+  /// **'Resposta'**
+  String get commentsReplyField;
+
+  /// No description provided for @commentsSend.
+  ///
+  /// In pt, this message translates to:
+  /// **'Responder'**
+  String get commentsSend;
+
+  /// No description provided for @commentsCancel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cancelar'**
+  String get commentsCancel;
+
+  /// No description provided for @commentsResolve.
+  ///
+  /// In pt, this message translates to:
+  /// **'Resolver'**
+  String get commentsResolve;
+
+  /// No description provided for @commentsReopen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Reabrir'**
+  String get commentsReopen;
+
+  /// No description provided for @commentsDelete.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir a conversa'**
+  String get commentsDelete;
+
+  /// No description provided for @commentsResolved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Resolvido'**
+  String get commentsResolved;
+
+  /// No description provided for @commentsNoAuthor.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem autor'**
+  String get commentsNoAuthor;
+
+  /// No description provided for @commentsOpenCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{1 comentário aberto} other{{count} comentários abertos}}'**
+  String commentsOpenCount(int count);
+
+  /// No description provided for @prefAuthorName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seu nome nos comentários'**
+  String get prefAuthorName;
+
+  /// No description provided for @prefAuthorNameNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Vazio: o nome da sua conta ({name}). Vale para os capítulos abertos depois.'**
+  String prefAuthorNameNote(String name);
 }
 
 class _AppLocalizationsDelegate

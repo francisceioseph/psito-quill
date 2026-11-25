@@ -104,6 +104,12 @@ class _NoView implements EditorViewActions {
   @override
   void toggleStylesPanel() {}
   @override
+  bool commentsOpen = false;
+  @override
+  void toggleComments() {}
+  @override
+  void newComment() {}
+  @override
   void toggleRibbon() {}
   @override
   void about() {}

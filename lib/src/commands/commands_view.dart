@@ -35,6 +35,8 @@ abstract final class ViewCommandIds {
   static const layoutSingle = 'exibir.umaPagina';
   static const layoutMulti = 'exibir.variasPaginas';
   static const layoutBook = 'exibir.livro';
+  static const newComment = 'revisar.novoComentario';
+  static const comments = 'revisar.comentarios';
 }
 
 /// O que a página do editor sabe abrir.
@@ -59,6 +61,12 @@ abstract interface class EditorViewActions {
   bool get outlineOpen;
   void toggleStylesPanel();
   bool get stylesPanelOpen;
+
+  /// O painel Comentários (D-088), e um comentário novo na seleção (abre o
+  /// painel com o campo em foco).
+  void toggleComments();
+  bool get commentsOpen;
+  void newComment();
 
   /// A faixa só com as abas (Ctrl+F1).
   void toggleRibbon();
@@ -192,6 +200,22 @@ void registerViewCommands(
       icon: Symbols.toc_rounded,
       run: view.toggleOutline,
       isActive: () => view.outlineOpen,
+      canRun: open,
+    ),
+    Command(
+      id: ViewCommandIds.newComment,
+      label: l10n.commandNewComment,
+      icon: Symbols.add_comment_rounded,
+      run: view.newComment,
+      canRun: editable,
+      shortcuts: both(const SingleActivator(LogicalKeyboardKey.keyC, control: true, alt: true)),
+    ),
+    Command(
+      id: ViewCommandIds.comments,
+      label: l10n.commandComments,
+      icon: Symbols.comment_rounded,
+      run: view.toggleComments,
+      isActive: () => view.commentsOpen,
       canRun: open,
     ),
     Command(

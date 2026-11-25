@@ -319,3 +319,63 @@ A11yCaret? parseA11yCaret(String json) {
     return null;
   }
 }
+
+// ---------------------------------------------------------- comentários --
+
+/// Um comentário no JSON do motor (D-088). O id é texto no callback e número
+/// na lista; o "0" do parentId é "sem pai"; a data vem com vírgula antes dos
+/// nanossegundos.
+DocComment? parseComment(Object? json) {
+  if (json is! Map) return null;
+  final id = '${json['id'] ?? ''}';
+  if (id.isEmpty) return null;
+  final parent = '${json['parentId'] ?? '0'}';
+  return DocComment(
+    id: id,
+    parentId: parent == '0' ? '' : parent,
+    author: '${json['author'] ?? ''}',
+    text: '${json['text'] ?? ''}',
+    resolved: '${json['resolved']}' == 'true',
+    date: _commentDate('${json['dateTime'] ?? ''}'),
+    anchor: parseLokRect('${json['anchorPos'] ?? ''}'),
+    range: parseSelection('${json['textRange'] ?? ''}'),
+  );
+}
+
+DateTime? _commentDate(String s) {
+  // "2026-11-25T08:48:34,468242030": o Dart só lê até os microssegundos.
+  final m = RegExp(r'^(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)(?:[.,](\d{1,6})\d*)?').firstMatch(s);
+  if (m == null) return null;
+  return DateTime.tryParse(m[2] == null ? m[1]! : '${m[1]}.${m[2]}');
+}
+
+/// O callback 32: {"comment": {"action": "Add", ...}}.
+CommentChanged? parseCommentChanged(String payload) {
+  try {
+    final c = (jsonDecode(payload) as Map<String, dynamic>)['comment'];
+    if (c is! Map) return null;
+    final action = switch ('${c['action']}') {
+      'Add' => CommentAction.add,
+      'Modify' => CommentAction.modify,
+      'Resolve' => CommentAction.resolve,
+      'Remove' => CommentAction.remove,
+      _ => null,
+    };
+    final comment = parseComment(c);
+    if (action == null || comment == null) return null;
+    return CommentChanged(action, comment);
+  } on FormatException {
+    return null;
+  }
+}
+
+/// A lista do `.uno:ViewAnnotations`: {"comments": [...]}.
+List<DocComment> parseCommentList(String json) {
+  try {
+    final list = (jsonDecode(json) as Map<String, dynamic>)['comments'];
+    if (list is! List) return const [];
+    return [for (final c in list) ?parseComment(c)];
+  } on FormatException {
+    return const [];
+  }
+}

@@ -23,6 +23,7 @@
 //                             ("-": documento novo; flags 1: atualiza os índices)
 //   repaint                   redesenha todos os ladrilhos
 //   invert <papel> <tinta> <fonte>  o papel escuro (D-074), em rrggbb; "off" desliga
+//   author <nome>             o autor dos comentários (vale no próximo open)
 //   a11y on|off               setAccessibilityState (callbacks 62 e 63)
 //   color <rrggbb> [tol]      conta os pixels perto da cor nos ladrilhos
 //   # ...                     comentário
@@ -132,6 +133,8 @@ int main(int argc, char** argv) {
       e.repaintAll();
     } else if (op == "repaint") {
       e.repaintAll();
+    } else if (op == "author") {
+      e.setAuthor(rest);
     } else if (op == "a11y") {
       e.setAccessibility(rest == "on");
     } else if (op == "color") {

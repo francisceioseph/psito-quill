@@ -326,6 +326,66 @@ class TableSelected extends KitEvent {
   final bool inTable;
 }
 
+/// Um comentário do documento (D-088), como o motor manda no callback 32 e
+/// no `.uno:ViewAnnotations`. [range] é o trecho comentado (um retângulo
+/// por linha, em twips; vazio numa resposta), e [anchor], o ponto dele.
+class DocComment {
+  const DocComment({
+    required this.id,
+    this.parentId = '',
+    this.author = '',
+    this.text = '',
+    this.resolved = false,
+    this.date,
+    this.anchor,
+    this.range = const [],
+  });
+
+  final String id;
+
+  /// O comentário respondido; vazio (o "0" do motor) num comentário novo.
+  final String parentId;
+  final String author, text;
+  final bool resolved;
+  final DateTime? date;
+  final Rect? anchor;
+  final List<Rect> range;
+
+  bool get isReply => parentId.isNotEmpty;
+
+  @override
+  bool operator ==(Object other) =>
+      other is DocComment &&
+      other.id == id &&
+      other.parentId == parentId &&
+      other.author == author &&
+      other.text == text &&
+      other.resolved == resolved &&
+      other.date == date &&
+      other.anchor == anchor &&
+      _sameRects(other.range, range);
+  @override
+  int get hashCode => Object.hash(id, parentId, text, resolved, anchor);
+
+  static bool _sameRects(List<Rect> a, List<Rect> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+}
+
+enum CommentAction { add, modify, resolve, remove }
+
+/// Um comentário mudou (o callback 32, D-088). No [CommentAction.remove],
+/// só o [DocComment.id] vem preenchido.
+class CommentChanged extends KitEvent {
+  const CommentChanged(this.action, this.comment);
+  final CommentAction action;
+  final DocComment comment;
+}
+
 /// O resto, cru: o que o app ainda não usa.
 class OtherKitEvent extends KitEvent {
   const OtherKitEvent(this.type, this.payload);
@@ -382,6 +442,10 @@ abstract interface class QuillKit {
   /// do cursor ([A11yParagraph]) e a posição do cursor nele ([A11yCaret]).
   /// Custam trabalho a cada tecla: só para quem usa leitor de tela.
   void setAccessibility(bool on);
+
+  /// O nome de quem escreve os comentários (D-088). Vale para os documentos
+  /// abertos depois: a 24.2 não troca o de um documento aberto.
+  void setAuthor(String name);
 
   /// Abre o documento em [path] (pequeno, com texto em português) sem
   /// mostrar, para a ortografia carregar o dicionário enquanto a tela inicial

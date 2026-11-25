@@ -10,6 +10,7 @@ import '../atoms/w_button.dart';
 import '../atoms/w_label.dart';
 import '../atoms/w_segmented.dart';
 import '../atoms/w_switch.dart';
+import '../atoms/w_text_field.dart';
 import '../theme_labels.dart';
 import '../tokens/tokens.dart';
 
@@ -27,6 +28,14 @@ class PreferencesView extends StatefulWidget {
 
 class _PreferencesViewState extends State<PreferencesView> {
   late PreferencesSection _section = widget.initial;
+  late final _author = TextEditingController(text: widget.settings.authorName);
+  late final _systemName = systemUserName();
+
+  @override
+  void dispose() {
+    _author.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +80,17 @@ class _PreferencesViewState extends State<PreferencesView> {
           child: _choices(l10n.prefZoomOnOpen,
               [('100', l10n.zoomPercent(100)), ('largura', l10n.commandFitWidth), ('pagina', l10n.commandFitPage)],
               s.zoomOnOpen, (v) => s.zoomOnOpen = v),
+        ),
+        _Row(
+          label: l10n.prefAuthorName,
+          note: l10n.prefAuthorNameNote(_systemName),
+          child: WTextField(
+            label: l10n.prefAuthorName,
+            hint: _systemName,
+            controller: _author,
+            width: 320,
+            onChanged: (v) => s.authorName = v,
+          ),
         ),
         _switch(l10n.prefAutosave, s.autosave, (v) => s.autosave = v, note: l10n.prefAutosaveNote),
         _switch(l10n.prefAutoSnapshots, s.autoSnapshots, (v) => s.autoSnapshots = v, note: l10n.prefAutoSnapshotsNote),

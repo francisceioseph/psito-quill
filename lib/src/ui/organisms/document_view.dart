@@ -681,6 +681,22 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
                   ? Texture(textureId: tile.textureId, filterQuality: FilterQuality.none)
                   : ColoredBox(color: t.colors.paper),
             ),
+          // Os trechos comentados e ainda abertos (D-088): o motor não os
+          // pinta nos ladrilhos (LOK_FEATURE_NO_TILED_ANNOTATIONS).
+          for (final cm in doc.comments)
+            if (!cm.isReply && !cm.resolved)
+              for (final r in cm.range)
+                Positioned.fromRect(
+                  rect: g.toLocal(r),
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: t.colors.tertiaryContainer.withValues(alpha: 0.55),
+                        border: Border(bottom: BorderSide(color: t.colors.tertiary, width: 2)),
+                      ),
+                    ),
+                  ),
+                ),
           // As outras ocorrências da busca (a atual vem como seleção).
           for (final r in doc.searchHighlights)
             Positioned.fromRect(

@@ -159,7 +159,8 @@ class BookController extends ChangeNotifier {
       stale[key]!
         ..words = value.words
         ..wordsStamp = value.stamp
-        ..scenes = value.scenes;
+        ..scenes = value.scenes
+        ..comments = value.comments;
     }
     _recordGoals();
     _changed();

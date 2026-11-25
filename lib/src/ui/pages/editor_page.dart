@@ -14,6 +14,7 @@ import '../../commands/commands_book.dart';
 import '../../commands/commands_document.dart';
 import '../../commands/commands_page.dart';
 import '../../commands/commands_view.dart';
+import '../../document/comments.dart' show commentThreads;
 import '../../document/document_controller.dart';
 import '../../document/workspace.dart';
 import '../../files/app_window.dart';
@@ -38,6 +39,7 @@ import '../organisms/compile_dialog.dart';
 import '../organisms/goals_dialog.dart';
 import '../organisms/inspector.dart';
 import '../organisms/nav_rail.dart';
+import '../organisms/comments_panel.dart';
 import '../organisms/notes_panel.dart';
 import '../../document/outline.dart';
 import '../atoms/w_segmented.dart';
@@ -85,7 +87,7 @@ class EditorPage extends StatefulWidget {
 
 /// Os painéis do trilho, à esquerda. Localizar abre a barra de localizar,
 /// não um painel.
-enum _LeftPanel { binder, notes, outline, find, styles }
+enum _LeftPanel { binder, notes, outline, find, styles, comments }
 
 /// Os temas como comandos (a paleta e o menu Exibir do tema 97 os mostram).
 const themeCommandPrefix = 'tema.';
@@ -100,6 +102,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
   bool? _find;
   final _findKey = GlobalKey<FindPanelState>();
   final _notesKey = GlobalKey<NotesPanelState>();
+  final _commentsKey = GlobalKey<CommentsPanelState>();
   bool _reveal = false;
 
   /// O painel da esquerda, aberto pelo trilho.
@@ -248,6 +251,21 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
 
   @override
   void toggleNotes() => _setLeft(notesOpen ? null : _LeftPanel.notes);
+
+  @override
+  bool get commentsOpen => _left == _LeftPanel.comments;
+
+  @override
+  void toggleComments() => _setLeft(commentsOpen ? null : _LeftPanel.comments);
+
+  /// Abre os comentários, se preciso, com o foco no campo do novo (D-088).
+  @override
+  void newComment() {
+    if (!doc.canEdit) return;
+    if (_find != null) _closeFind();
+    if (!commentsOpen) _setLeft(_LeftPanel.comments);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _commentsKey.currentState?.focusNew());
+  }
 
   /// Abre as notas, se preciso, e cria uma nota nova nelas (D-082).
   @override
@@ -951,6 +969,8 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
                           NavRailItem(_LeftPanel.find, Symbols.find_replace_rounded, l10n.railFind,
                               tooltip: commands.tooltipOf(ViewCommandIds.replace)),
                           NavRailItem(_LeftPanel.styles, Symbols.style_rounded, l10n.ribbonStyles),
+                          NavRailItem(_LeftPanel.comments, Symbols.comment_rounded, l10n.railComments,
+                              tooltip: commands.tooltipOf(ViewCommandIds.comments)),
                         ],
                       ],
                       selected: _find != null ? _LeftPanel.find : _left,
@@ -981,13 +1001,15 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
                 ? null
                 : _memoized(
                     'left',
-                    statusKey,
+                    // Os comentários mudam sem o estado do motor (D-088).
+                    (statusKey, _left == _LeftPanel.comments || _left == _LeftPanel.binder ? (doc.commentRevision, doc.canEdit) : null),
                     () => switch (_left!) {
                       _LeftPanel.binder => BinderPanel(
                           books: books,
                           currentPath: doc.path,
                           onOpen: (chapter) => _cork ? _openFromCork(chapter) : widget.workspace.openChapter(chapter),
                           scenes: doc.snapshot.scenes,
+                          currentComments: commentThreads(doc.comments).where((th) => !th.resolved).length,
                           onOpenScene: (chapter, scene) {
                             widget.workspace.openChapter(chapter, scene: scene);
                             _backToDocument();
@@ -1015,6 +1037,13 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
                             _backToDocument();
                           },
                           onClose: toggleOutline,
+                        ),
+                      _LeftPanel.comments => CommentsPanel(
+                          key: _commentsKey,
+                          doc: doc,
+                          onClose: toggleComments,
+                          closeLabel: l10n.commentsClose,
+                          onRan: _backToDocument,
                         ),
                       _LeftPanel.styles || _LeftPanel.find => StylesPanel(
                           doc: doc,

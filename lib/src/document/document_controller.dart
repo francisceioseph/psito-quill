@@ -15,6 +15,7 @@ import '../book/docx_import.dart' show KitConverter;
 import '../kit/lok/lo_styles.dart';
 import '../kit/lok/lok_payloads.dart';
 import '../kit/quill_kit.dart';
+import 'comments.dart';
 import 'doc_tab.dart';
 import 'fodt.dart';
 import 'outline.dart';
@@ -738,6 +739,59 @@ class DocumentController extends ChangeNotifier {
     kit.uno('.uno:ExecuteSearch', searchArgs(SearchQuery(hit.regex, regex: true), SearchCommand.next));
   }
 
+  // ------------------------------------------ comentários (D-088) --
+
+  String _author = '';
+
+  /// O nome nos comentários novos (as Preferências). Vale para os
+  /// documentos abertos depois: a 24.2 não troca o de um aberto.
+  String get author => _author;
+  set author(String v) {
+    if (v == _author) return;
+    _author = v;
+    if (kitStatus == KitStatus.ready) kit.setAuthor(v);
+  }
+
+  /// Os comentários do documento da tela, como o motor manda. As conversas,
+  /// na ordem do texto, saem de [commentThreads].
+  List<DocComment> comments = const [];
+
+  /// Muda a cada comentário novo, mudado ou apagado (o painel e a marca na
+  /// página leem por ela).
+  int commentRevision = 0;
+
+  void _setComments(List<DocComment> list) {
+    comments = list;
+    commentRevision++;
+  }
+
+  /// Comenta a seleção (ou a palavra do cursor).
+  void insertComment(String text) {
+    if (text.trim().isEmpty) return;
+    uno('.uno:InsertAnnotation', commentArgs(text: text));
+  }
+
+  void replyComment(String id, String text) {
+    if (text.trim().isEmpty) return;
+    uno('.uno:ReplyComment', commentArgs(id: id, text: text));
+  }
+
+  void editComment(String id, String text) => uno('.uno:EditAnnotation', commentArgs(id: id, text: text));
+
+  /// Resolve, ou reabre um resolvido: o motor alterna.
+  void toggleResolved(String id) => uno('.uno:ResolveComment', commentArgs(id: id));
+
+  void deleteComment(String id) => uno('.uno:DeleteComment', commentArgs(id: id));
+
+  /// Leva o cursor ao começo do trecho comentado, e a vista rola até ele.
+  void goToComment(DocComment c) {
+    final r = c.range.firstOrNull ?? c.anchor;
+    if (!isOpen || r == null) return;
+    final at = Offset(r.left + 1, r.center.dy);
+    kit.postMouse(MouseEventType.down, at.dx.round(), at.dy.round());
+    kit.postMouse(MouseEventType.up, at.dx.round(), at.dy.round());
+  }
+
   // ------------------------------------------ várias páginas (D-047) --
 
   /// Quantas páginas lado a lado, e se é o modo livro (a primeira sozinha, à
@@ -1364,6 +1418,7 @@ class DocumentController extends ChangeNotifier {
     if (fonts.isEmpty) kit.requestCommandValues('.uno:CharFontName');
     if (languages.isEmpty) kit.requestCommandValues('.uno:LanguageStatus');
     kit.requestCommandValues('.uno:StyleApply');
+    kit.requestCommandValues('.uno:ViewAnnotations');
     refreshSnapshot();
   }
 
@@ -1525,7 +1580,8 @@ class DocumentController extends ChangeNotifier {
       e is RulerUpdated ||
       e is GraphicSelected ||
       e is TableSelected ||
-      (e is CommandValues && e.command == '.uno:StyleApply');
+      e is CommentChanged ||
+      (e is CommandValues && (e.command == '.uno:StyleApply' || e.command == '.uno:ViewAnnotations'));
 
   void _onEvent(KitEvent e) {
     // Até o motor confirmar o documento da tela, o que chega é do anterior.
@@ -1534,6 +1590,7 @@ class DocumentController extends ChangeNotifier {
       case KitReady(:final version):
         kitStatus = KitStatus.ready;
         engineVersion = version;
+        if (_author.isNotEmpty) kit.setAuthor(_author);
       case KitFailed(:final message):
         kitStatus = KitStatus.failed;
         this.message = ErrorMessage(message);
@@ -1568,6 +1625,7 @@ class DocumentController extends ChangeNotifier {
         cursorVisible = true;
         if (_accessibility) kit.setAccessibility(true);
         snapshot = FodtSnapshot.empty;
+        _setComments(const []);
         _deferOpenWork();
       case DocumentOpenFailed(:final message):
         progress = null;
@@ -1600,6 +1658,9 @@ class DocumentController extends ChangeNotifier {
         a11yParagraph = null;
         if (_accessibility) kit.setAccessibility(true);
         documentSize = size;
+        // O motor descarta os callbacks das abas de fundo: a lista vem de novo.
+        _setComments(const []);
+        kit.requestCommandValues('.uno:ViewAnnotations');
       case DocumentClosed(:final id):
         if (_unloading.remove(id)) return;
         final tab = [for (final t in tabs) if (t.engineId == id) t].firstOrNull;
@@ -1623,6 +1684,7 @@ class DocumentController extends ChangeNotifier {
         inTable = false;
         contextMenu = null;
         commandStates.clear();
+        _setComments(const []);
         if (tab != null) _removeTab(tab);
       case DocumentSizeChanged(:final size):
         documentSize = size;
@@ -1660,6 +1722,10 @@ class DocumentController extends ChangeNotifier {
         characterStyles = lists.character;
       case CommandValues(command: '.uno:LanguageStatus', :final json):
         languages = parseLanguageList(json);
+      case CommandValues(command: '.uno:ViewAnnotations', :final json):
+        _setComments(parseCommentList(json));
+      case CommentChanged():
+        _setComments(applyCommentChange(comments, e));
       case CommandValues(:final command, :final json):
         if (command != '.uno:CharFontName') return;
         fonts = parseFontList(json);

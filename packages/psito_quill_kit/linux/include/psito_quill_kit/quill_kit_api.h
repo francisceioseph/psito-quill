@@ -83,6 +83,8 @@ PQK_EXPORT void pqk_print_pdf(const char* pdf_path, const char* title);
 PQK_EXPORT void pqk_set_paper_invert(bool on, uint32_t paper, uint32_t ink, uint32_t src_paper);
 // Os callbacks de acessibilidade do documento ativo (o parágrafo e o cursor).
 PQK_EXPORT void pqk_set_accessibility(bool on);
+// O autor dos comentários (D-088), para os documentos abertos depois.
+PQK_EXPORT void pqk_set_author(const char* name);
 // Abre o documento em [path] oculto, para carregar o dicionário antes do
 // primeiro capítulo (D-069). Só sem documento aberto; apaga o arquivo.
 PQK_EXPORT void pqk_preload_spelling(const char* path);

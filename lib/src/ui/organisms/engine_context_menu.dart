@@ -117,6 +117,7 @@ List<ContextEntry> contextEntries(
       PageCommandIds.removeLink,
     ]),
     const CommandEntry(PageCommandIds.jumpFootnote),
+    const CommandEntry(ViewCommandIds.newComment),
     const CommandEntry(CommandIds.clearFormatting),
     const SeparatorEntry(),
     const CommandEntry(CommandIds.selectAll),

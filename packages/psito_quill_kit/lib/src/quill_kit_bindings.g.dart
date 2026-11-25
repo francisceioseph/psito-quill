@@ -397,6 +397,17 @@ class QuillKitBindings {
   late final _pqk_set_accessibility = _pqk_set_accessibilityPtr
       .asFunction<void Function(bool)>();
 
+  void pqk_set_author(ffi.Pointer<ffi.Char> name) {
+    return _pqk_set_author(name);
+  }
+
+  late final _pqk_set_authorPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Char>)>>(
+        'pqk_set_author',
+      );
+  late final _pqk_set_author = _pqk_set_authorPtr
+      .asFunction<void Function(ffi.Pointer<ffi.Char>)>();
+
   void pqk_set_fullscreen(int on) {
     return _pqk_set_fullscreen(on);
   }

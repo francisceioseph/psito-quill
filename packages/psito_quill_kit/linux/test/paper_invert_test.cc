@@ -65,3 +65,11 @@ TEST(PaperInvert, MeioTransparenteFicaPreMultiplicado) {
   EXPECT_EQ(px[3], 128);
   EXPECT_NEAR(px[0], 0x1E * 128 / 255, 1);
 }
+
+// O autor dos comentários no initializeForRendering (D-088).
+TEST(RenderOptions, SemAutorFicaVazio) { EXPECT_EQ(LokEngine::renderOptions(""), "{}"); }
+
+TEST(RenderOptions, AutorComAspasEBarra) {
+  EXPECT_EQ(LokEngine::renderOptions("Ana \"Tal\" \\ Souza\n"),
+            "{\".uno:Author\":{\"type\":\"string\",\"value\":\"Ana \\\"Tal\\\" \\\\ Souza \"}}");
+}

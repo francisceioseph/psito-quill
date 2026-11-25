@@ -2788,4 +2788,92 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get compileCoverRemove => 'Remove cover';
+
+  @override
+  String get menuReview => 'Review';
+
+  @override
+  String get groupComments => 'Comments';
+
+  @override
+  String get commandNewComment => 'New comment';
+
+  @override
+  String get commandComments => 'Comments panel';
+
+  @override
+  String get railComments => 'Comments';
+
+  @override
+  String get commentsTitle => 'Comments';
+
+  @override
+  String get commentsClose => 'Close comments';
+
+  @override
+  String get commentsNew => 'New comment';
+
+  @override
+  String get commentsNewHint => 'Select some text and write here';
+
+  @override
+  String get commentsAdd => 'Comment';
+
+  @override
+  String commentsShowResolved(int count) {
+    return 'Show resolved ($count)';
+  }
+
+  @override
+  String get commentsEmpty =>
+      'No comments in this chapter. Select some text, write above and click Comment (Ctrl+Alt+C).';
+
+  @override
+  String get commentsAllResolved => 'All comments are resolved.';
+
+  @override
+  String get commentsReply => 'Reply';
+
+  @override
+  String get commentsReplyField => 'Reply';
+
+  @override
+  String get commentsSend => 'Reply';
+
+  @override
+  String get commentsCancel => 'Cancel';
+
+  @override
+  String get commentsResolve => 'Resolve';
+
+  @override
+  String get commentsReopen => 'Reopen';
+
+  @override
+  String get commentsDelete => 'Delete thread';
+
+  @override
+  String get commentsResolved => 'Resolved';
+
+  @override
+  String get commentsNoAuthor => 'No author';
+
+  @override
+  String commentsOpenCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count open comments',
+      one: '1 open comment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get prefAuthorName => 'Your name in comments';
+
+  @override
+  String prefAuthorNameNote(String name) {
+    return 'Empty: your account name ($name). Applies to chapters opened afterwards.';
+  }
 }

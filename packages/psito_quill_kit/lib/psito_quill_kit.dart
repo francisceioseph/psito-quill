@@ -98,6 +98,7 @@ class NativeQuillKit {
   void setPaperInvert(bool on, int paper, int ink, int srcPaper) => _b.pqk_set_paper_invert(on, paper, ink, srcPaper);
 
   void setAccessibility(bool on) => _b.pqk_set_accessibility(on);
+  void setAuthor(String name) => using((a) => _b.pqk_set_author(name.toNativeUtf8(allocator: a).cast()));
 
   void printPdf(String path, String title) => using((a) => _b.pqk_print_pdf(
         path.toNativeUtf8(allocator: a).cast(),

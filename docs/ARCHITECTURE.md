@@ -97,7 +97,7 @@ lib/
                              compile_style.dart (os modelos, D-087)
   src/document/              document_controller.dart, doc_tab.dart (as abas), workspace.dart, fodt.dart
                              (a cópia lida), outline.dart, search.dart, format_origin.dart,
-                             text_clipboard.dart, doc_colors.dart
+                             text_clipboard.dart, doc_colors.dart, comments.dart (as conversas, D-088)
   src/files/                 lo_lock.dart (a trava), recent_files.dart, file_dialogs.dart, app_window.dart,
                              open_folder.dart (xdg-open)
   src/settings/              settings.dart (tema, atalhos, painéis, acessibilidade), config_dir.dart
@@ -134,4 +134,4 @@ tool/                        native-test.sh, bench.sh, make_fixture.py
 | Integração | `integration_test` | `./test.sh --integracao` | O LibreOffice real: abrir (com o progresso), status, digitar (também pelo IME), desfazer, negrito, copiar e colar, salvar DOCX e ODT (com o ocupado) e conferir o XML, a trava, Lua; ortografia, o menu de contexto, localizar e substituir, estilo novo, recuo, tabela, imagem, página; a acessibilidade |
 | Ponta a ponta | `tool/bench.sh`, `tool/fechar-test.sh` | `tool/bench.sh`; o `fechar-test` roda no `./test.sh --integracao` | Memória, latência, rolagem, papel escuro: as metas da seção 8 do plano. Fechar a janela: código 0 e a trava apagada |
 
-**O host tem pouca RAM.** O `./test.sh` roda 2 processos de teste (`TEST_JOBS`), num escopo do systemd com 2 GB de limite (`TEST_MEM`) e sem swap, como no Psito OS. Se passar do limite, só os testes morrem.
+**Os limites dos testes.** O `./test.sh` roda 6 processos de teste (`TEST_JOBS`), num escopo do systemd com 6 GB de limite (`TEST_MEM`) e sem swap, como no Psito OS. Se passar do limite, só os testes morrem.

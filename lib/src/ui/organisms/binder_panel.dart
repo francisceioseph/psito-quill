@@ -102,6 +102,7 @@ class BinderPanel extends StatefulWidget {
     required this.onOpen,
     required this.onOpenScene,
     this.scenes = const [],
+    this.currentComments = 0,
     required this.onNewChapter,
     required this.onNewPart,
     this.onSnapshots,
@@ -121,6 +122,10 @@ class BinderPanel extends StatefulWidget {
 
   /// As cenas do capítulo da tela, da cópia dele (ao vivo).
   final List<SceneEntry> scenes;
+
+  /// Os comentários abertos do capítulo da tela, pelo motor (D-088); os
+  /// outros vêm do `livro.json`.
+  final int currentComments;
   final VoidCallback onNewChapter, onNewPart, onClose;
 
   /// Os instantâneos do capítulo (D-081), pelo menu do item.
@@ -399,6 +404,7 @@ class _BinderPanelState extends State<BinderPanel> {
                             onKey: (node, e) => _onRowKey(n, node, e),
                             onRenamed: (keep) => _endRename(keep: keep),
                             scenes: sceneCount,
+                            comments: n.isPart ? 0 : (_isCurrent(n) ? widget.currentComments : n.comments),
                             expanded: sceneCount > 0 && _expanded(n),
                             onToggle: () => _toggle(n),
                           ),
@@ -485,6 +491,7 @@ class _BinderRowView extends StatefulWidget {
     required this.onKey,
     required this.onRenamed,
     this.scenes = 0,
+    this.comments = 0,
     this.expanded = false,
     this.onToggle,
   });
@@ -492,6 +499,9 @@ class _BinderRowView extends StatefulWidget {
   /// Quantas cenas o capítulo tem, e se elas estão à mostra.
   final int scenes;
   final bool expanded;
+
+  /// Os comentários abertos do capítulo.
+  final int comments;
   final VoidCallback? onToggle;
 
   final BookNode node;
@@ -523,7 +533,8 @@ class _BinderRowViewState extends State<_BinderRowView> {
     final status = n.isPart
         ? ''
         : ', ${chapterStatusLabel(l10n, n.status)}, ${l10n.binderWords(n.words)}'
-            '${widget.scenes > 0 ? ', ${l10n.binderScenes(widget.scenes)}' : ''}';
+            '${widget.scenes > 0 ? ', ${l10n.binderScenes(widget.scenes)}' : ''}'
+            '${widget.comments > 0 ? ', ${l10n.commentsOpenCount(widget.comments)}' : ''}';
     final text = TextStyle(
       color: widget.open && modern ? c.onAccentSoft : c.onFrame,
       fontSize: t.font.ui,
@@ -571,6 +582,12 @@ class _BinderRowViewState extends State<_BinderRowView> {
           if (label != null) ...[
             SizedBox(width: t.space.xs),
             Container(width: 10, height: 10, decoration: BoxDecoration(color: label, shape: BoxShape.circle)),
+          ],
+          if (widget.comments > 0 && renaming == null) ...[
+            SizedBox(width: t.space.sm),
+            Icon(Symbols.comment_rounded, size: 14, color: c.tertiary),
+            const SizedBox(width: 2),
+            Text('${widget.comments}', style: text.copyWith(color: c.tertiary, fontWeight: FontWeight.w600, fontSize: t.font.small)),
           ],
           if (!n.isPart && renaming == null) ...[
             SizedBox(width: t.space.sm),
