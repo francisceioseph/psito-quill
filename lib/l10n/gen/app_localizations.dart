@@ -5305,6 +5305,294 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Alteração'**
   String get changeOther;
+
+  /// No description provided for @ribbonReferences.
+  ///
+  /// In pt, this message translates to:
+  /// **'Referências'**
+  String get ribbonReferences;
+
+  /// No description provided for @menuReferences.
+  ///
+  /// In pt, this message translates to:
+  /// **'Referências'**
+  String get menuReferences;
+
+  /// No description provided for @groupToc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sumário'**
+  String get groupToc;
+
+  /// No description provided for @groupCaptions.
+  ///
+  /// In pt, this message translates to:
+  /// **'Legendas'**
+  String get groupCaptions;
+
+  /// No description provided for @groupBookmarks.
+  ///
+  /// In pt, this message translates to:
+  /// **'Marcadores'**
+  String get groupBookmarks;
+
+  /// No description provided for @groupIndex.
+  ///
+  /// In pt, this message translates to:
+  /// **'Índice remissivo'**
+  String get groupIndex;
+
+  /// No description provided for @commandTocHere.
+  ///
+  /// In pt, this message translates to:
+  /// **'Inserir o sumário'**
+  String get commandTocHere;
+
+  /// No description provided for @tocTitleDefault.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sumário'**
+  String get tocTitleDefault;
+
+  /// No description provided for @commandUpdateIndexes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atualizar o sumário e os índices'**
+  String get commandUpdateIndexes;
+
+  /// No description provided for @commandCaption.
+  ///
+  /// In pt, this message translates to:
+  /// **'Inserir a legenda'**
+  String get commandCaption;
+
+  /// No description provided for @captionFigure.
+  ///
+  /// In pt, this message translates to:
+  /// **'Figura'**
+  String get captionFigure;
+
+  /// No description provided for @captionTable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tabela'**
+  String get captionTable;
+
+  /// No description provided for @commandFigureTable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Índice de figuras'**
+  String get commandFigureTable;
+
+  /// No description provided for @figureTableTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Índice de figuras'**
+  String get figureTableTitle;
+
+  /// No description provided for @commandTableTable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Índice de tabelas'**
+  String get commandTableTable;
+
+  /// No description provided for @tableTableTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Índice de tabelas'**
+  String get tableTableTitle;
+
+  /// No description provided for @commandBookmark.
+  ///
+  /// In pt, this message translates to:
+  /// **'Marcador'**
+  String get commandBookmark;
+
+  /// No description provided for @commandCrossReference.
+  ///
+  /// In pt, this message translates to:
+  /// **'Referência cruzada'**
+  String get commandCrossReference;
+
+  /// No description provided for @commandMarkEntry.
+  ///
+  /// In pt, this message translates to:
+  /// **'Marcar a entrada do índice'**
+  String get commandMarkEntry;
+
+  /// No description provided for @commandMarkAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Marcar todas as ocorrências'**
+  String get commandMarkAll;
+
+  /// No description provided for @commandIndex.
+  ///
+  /// In pt, this message translates to:
+  /// **'Inserir o índice remissivo'**
+  String get commandIndex;
+
+  /// No description provided for @indexTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Índice remissivo'**
+  String get indexTitle;
+
+  /// No description provided for @bookmarkDialogTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Marcadores'**
+  String get bookmarkDialogTitle;
+
+  /// No description provided for @bookmarkName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome do marcador novo'**
+  String get bookmarkName;
+
+  /// No description provided for @bookmarkBadName.
+  ///
+  /// In pt, this message translates to:
+  /// **'O nome não pode começar por _ nem ter / \\ @ : * ? \" ; , . # |'**
+  String get bookmarkBadName;
+
+  /// No description provided for @bookmarkExists.
+  ///
+  /// In pt, this message translates to:
+  /// **'Já existe um marcador com esse nome.'**
+  String get bookmarkExists;
+
+  /// No description provided for @bookmarkListTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Neste capítulo'**
+  String get bookmarkListTitle;
+
+  /// No description provided for @bookmarkNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum marcador ainda.'**
+  String get bookmarkNone;
+
+  /// No description provided for @bookmarkGo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ir para {name}'**
+  String bookmarkGo(String name);
+
+  /// No description provided for @bookmarkDelete.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir {name}'**
+  String bookmarkDelete(String name);
+
+  /// No description provided for @bookmarkInsert.
+  ///
+  /// In pt, this message translates to:
+  /// **'Inserir'**
+  String get bookmarkInsert;
+
+  /// No description provided for @crossRefTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Referência cruzada'**
+  String get crossRefTitle;
+
+  /// No description provided for @crossRefKind.
+  ///
+  /// In pt, this message translates to:
+  /// **'Referência a'**
+  String get crossRefKind;
+
+  /// No description provided for @crossRefHeadings.
+  ///
+  /// In pt, this message translates to:
+  /// **'Títulos'**
+  String get crossRefHeadings;
+
+  /// No description provided for @crossRefBookmarks.
+  ///
+  /// In pt, this message translates to:
+  /// **'Marcadores'**
+  String get crossRefBookmarks;
+
+  /// No description provided for @crossRefCaptions.
+  ///
+  /// In pt, this message translates to:
+  /// **'Legendas'**
+  String get crossRefCaptions;
+
+  /// No description provided for @crossRefNoHeadings.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum título neste capítulo.'**
+  String get crossRefNoHeadings;
+
+  /// No description provided for @crossRefNoCaptions.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma legenda neste capítulo. Selecione uma imagem ou entre numa tabela e use Inserir a legenda.'**
+  String get crossRefNoCaptions;
+
+  /// No description provided for @crossRefInsertAs.
+  ///
+  /// In pt, this message translates to:
+  /// **'Inserir como'**
+  String get crossRefInsertAs;
+
+  /// No description provided for @crossRefFormatText.
+  ///
+  /// In pt, this message translates to:
+  /// **'O texto'**
+  String get crossRefFormatText;
+
+  /// No description provided for @crossRefFormatCaption.
+  ///
+  /// In pt, this message translates to:
+  /// **'Figura e número'**
+  String get crossRefFormatCaption;
+
+  /// No description provided for @crossRefFormatPage.
+  ///
+  /// In pt, this message translates to:
+  /// **'A página'**
+  String get crossRefFormatPage;
+
+  /// No description provided for @crossRefFormatAboveBelow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acima ou abaixo'**
+  String get crossRefFormatAboveBelow;
+
+  /// No description provided for @crossRefInsert.
+  ///
+  /// In pt, this message translates to:
+  /// **'Inserir'**
+  String get crossRefInsert;
+
+  /// No description provided for @crossRefOtherChapter.
+  ///
+  /// In pt, this message translates to:
+  /// **'{bookmark} (em {chapter})'**
+  String crossRefOtherChapter(String bookmark, String chapter);
+
+  /// No description provided for @compileIndex.
+  ///
+  /// In pt, this message translates to:
+  /// **'Índice remissivo no fim'**
+  String get compileIndex;
+
+  /// No description provided for @compileFigures.
+  ///
+  /// In pt, this message translates to:
+  /// **'Índice de figuras depois do sumário'**
+  String get compileFigures;
+
+  /// No description provided for @compileReferencesNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'As entradas marcadas nos capítulos e as legendas das imagens entram aqui.'**
+  String get compileReferencesNote;
 }
 
 class _AppLocalizationsDelegate

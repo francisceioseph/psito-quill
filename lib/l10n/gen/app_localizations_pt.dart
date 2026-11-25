@@ -2975,4 +2975,157 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get changeOther => 'Alteração';
+
+  @override
+  String get ribbonReferences => 'Referências';
+
+  @override
+  String get menuReferences => 'Referências';
+
+  @override
+  String get groupToc => 'Sumário';
+
+  @override
+  String get groupCaptions => 'Legendas';
+
+  @override
+  String get groupBookmarks => 'Marcadores';
+
+  @override
+  String get groupIndex => 'Índice remissivo';
+
+  @override
+  String get commandTocHere => 'Inserir o sumário';
+
+  @override
+  String get tocTitleDefault => 'Sumário';
+
+  @override
+  String get commandUpdateIndexes => 'Atualizar o sumário e os índices';
+
+  @override
+  String get commandCaption => 'Inserir a legenda';
+
+  @override
+  String get captionFigure => 'Figura';
+
+  @override
+  String get captionTable => 'Tabela';
+
+  @override
+  String get commandFigureTable => 'Índice de figuras';
+
+  @override
+  String get figureTableTitle => 'Índice de figuras';
+
+  @override
+  String get commandTableTable => 'Índice de tabelas';
+
+  @override
+  String get tableTableTitle => 'Índice de tabelas';
+
+  @override
+  String get commandBookmark => 'Marcador';
+
+  @override
+  String get commandCrossReference => 'Referência cruzada';
+
+  @override
+  String get commandMarkEntry => 'Marcar a entrada do índice';
+
+  @override
+  String get commandMarkAll => 'Marcar todas as ocorrências';
+
+  @override
+  String get commandIndex => 'Inserir o índice remissivo';
+
+  @override
+  String get indexTitle => 'Índice remissivo';
+
+  @override
+  String get bookmarkDialogTitle => 'Marcadores';
+
+  @override
+  String get bookmarkName => 'Nome do marcador novo';
+
+  @override
+  String get bookmarkBadName =>
+      'O nome não pode começar por _ nem ter / \\ @ : * ? \" ; , . # |';
+
+  @override
+  String get bookmarkExists => 'Já existe um marcador com esse nome.';
+
+  @override
+  String get bookmarkListTitle => 'Neste capítulo';
+
+  @override
+  String get bookmarkNone => 'Nenhum marcador ainda.';
+
+  @override
+  String bookmarkGo(String name) {
+    return 'Ir para $name';
+  }
+
+  @override
+  String bookmarkDelete(String name) {
+    return 'Excluir $name';
+  }
+
+  @override
+  String get bookmarkInsert => 'Inserir';
+
+  @override
+  String get crossRefTitle => 'Referência cruzada';
+
+  @override
+  String get crossRefKind => 'Referência a';
+
+  @override
+  String get crossRefHeadings => 'Títulos';
+
+  @override
+  String get crossRefBookmarks => 'Marcadores';
+
+  @override
+  String get crossRefCaptions => 'Legendas';
+
+  @override
+  String get crossRefNoHeadings => 'Nenhum título neste capítulo.';
+
+  @override
+  String get crossRefNoCaptions =>
+      'Nenhuma legenda neste capítulo. Selecione uma imagem ou entre numa tabela e use Inserir a legenda.';
+
+  @override
+  String get crossRefInsertAs => 'Inserir como';
+
+  @override
+  String get crossRefFormatText => 'O texto';
+
+  @override
+  String get crossRefFormatCaption => 'Figura e número';
+
+  @override
+  String get crossRefFormatPage => 'A página';
+
+  @override
+  String get crossRefFormatAboveBelow => 'Acima ou abaixo';
+
+  @override
+  String get crossRefInsert => 'Inserir';
+
+  @override
+  String crossRefOtherChapter(String bookmark, String chapter) {
+    return '$bookmark (em $chapter)';
+  }
+
+  @override
+  String get compileIndex => 'Índice remissivo no fim';
+
+  @override
+  String get compileFigures => 'Índice de figuras depois do sumário';
+
+  @override
+  String get compileReferencesNote =>
+      'As entradas marcadas nos capítulos e as legendas das imagens entram aqui.';
 }

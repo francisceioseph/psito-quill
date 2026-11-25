@@ -52,6 +52,7 @@ class _CompileDialogState extends State<CompileDialog> {
   TextEditingController? _tocTitle;
   final _font = TextEditingController();
   bool _titlePage = true, _toc = true, _pageBreaks = true, _partTitles = true, _chapterTitles = true;
+  bool _figures = false, _index = false;
   SceneBreakMode _scenes = SceneBreakMode.keep;
   CompileFormat _format = CompileFormat.pdf;
   OutputStyle _style = const OutputStyle();
@@ -104,6 +105,8 @@ class _CompileDialogState extends State<CompileDialog> {
     _tocTitle!.text = s.tocTitle;
     _titlePage = s.titlePage;
     _toc = s.toc;
+    _figures = s.figures;
+    _index = s.index;
     _pageBreaks = s.pageBreaks;
     _partTitles = s.partTitles;
     _chapterTitles = s.chapterTitles;
@@ -132,6 +135,10 @@ class _CompileDialogState extends State<CompileDialog> {
         author: _author.text.trim(),
         toc: _toc,
         tocTitle: _tocTitle!.text.trim().isEmpty ? AppLocalizations.of(context).compileTocDefault : _tocTitle!.text.trim(),
+        figures: _figures,
+        figuresTitle: AppLocalizations.of(context).figureTableTitle,
+        index: _index,
+        indexTitle: AppLocalizations.of(context).indexTitle,
         pageBreaks: _pageBreaks,
         partTitles: _partTitles,
         chapterTitles: _chapterTitles,
@@ -325,7 +332,7 @@ class _CompileDialogState extends State<CompileDialog> {
     final words = chosen.fold(0, (s, e) => s + e.$2.words);
     final total = _book.chapters.length;
 
-    Widget toggle(String label, bool value, ValueChanged<bool> onChanged) => Padding(
+    Widget toggle(String label, bool value, ValueChanged<bool>? onChanged) => Padding(
           padding: EdgeInsets.only(bottom: t.space.sm),
           child: Row(children: [
             WSwitch(value: value, label: label, onChanged: running ? null : onChanged),
@@ -457,6 +464,11 @@ class _CompileDialogState extends State<CompileDialog> {
           field(l10n.compileAuthor, _author),
           toggle(l10n.compileToc, _toc, (v) => setState(() => _toc = v)),
           field(l10n.compileTocTitle, _tocTitle!, enabled: _toc),
+          toggle(l10n.compileFigures, _figures, (v) => setState(() => _figures = v)),
+          // O EPUB não tem páginas para o índice remissivo.
+          toggle(l10n.compileIndex, _index && _format != CompileFormat.epub,
+              _format == CompileFormat.epub ? null : (v) => setState(() => _index = v)),
+          if (_figures || _index) WLabel(l10n.compileReferencesNote, small: true, tone: WLabelTone.muted),
           toggle(l10n.compilePageBreaks, _pageBreaks, (v) => setState(() => _pageBreaks = v)),
           toggle(l10n.compilePartTitles, _partTitles, (v) => setState(() => _partTitles = v)),
           toggle(l10n.compileChapterTitles, _chapterTitles, (v) => setState(() => _chapterTitles = v)),

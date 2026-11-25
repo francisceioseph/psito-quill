@@ -1,7 +1,7 @@
 // O adaptador da porta QuillKit para o LibreOfficeKit (pelo plugin nativo).
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' show File;
+import 'dart:io' show File, FileSystemException;
 import 'dart:ui' show Rect, Size;
 
 import 'package:psito_quill_kit/psito_quill_kit.dart';
@@ -59,9 +59,21 @@ class LokQuillKit implements QuillKit {
   void start() {
     _sub ??= _native.events.listen((e) {
       final event = _copyOrSave(translate(e.type, e.payload));
+      // Num perfil novo, o motor troca a lista de bibliotecas Basic ao
+      // ligar: as macros voltam antes do primeiro documento (D-090).
+      if (event is KitReady) _ensureMacros();
       if (event != null) _events.add(event);
     });
     _native.init(installPath: installPath, profileUrl: profile.url, tileSlots: tileSlots);
+  }
+
+  void _ensureMacros() {
+    try {
+      profile.ensureMacros();
+    } on FileSystemException {
+      // Sem acesso ao perfil: as referências que dependem das macros não
+      // fazem nada, o resto segue.
+    }
   }
 
   @override

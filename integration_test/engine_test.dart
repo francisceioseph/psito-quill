@@ -25,6 +25,7 @@ import 'package:psito_quill/src/app.dart';
 import 'package:psito_quill/src/document/comments.dart';
 import 'package:psito_quill/src/document/document_controller.dart';
 import 'package:psito_quill/src/document/recovery.dart';
+import 'package:psito_quill/src/document/references.dart';
 import 'package:psito_quill/src/document/search.dart';
 import 'package:psito_quill/src/document/style_patch.dart';
 import 'package:psito_quill/src/document/text_clipboard.dart';
@@ -811,6 +812,20 @@ void main() {
         if (readZipEntry(docxBytes, 'word/header$i.xml') case final h?) utf8.decode(h),
     ].join();
     expect(headers, contains('Tal / CENAS / '));
+    // O índice de figuras e o remissivo do compilar (D-090): o motor lê o
+    // FODT com eles e grava os dois no ODT, com os títulos.
+    final indexed = '${tmp.path}/compilado-indices.odt';
+    expect((await workspace.compileBook(
+                CompileJob(kit),
+                const CompileSettings(
+                    title: 'Cenas', format: CompileFormat.odt, figures: true, figuresTitle: 'Figuras', index: true, indexTitle: 'Remissivo'),
+                indexed))
+            .outcome,
+        CompileOutcome.done);
+    final indexedXml = readOdtContent(indexed)!;
+    expect(indexedXml, contains('<text:illustration-index '));
+    expect(indexedXml, contains('<text:alphabetical-index '));
+    expect(indexedXml, contains('>Remissivo</text:p>'));
 
     workspace.onUnsaved = () async => UnsavedChoice.discard;
     expect(await workspace.closeBook(), isTrue);
@@ -904,6 +919,98 @@ void main() {
     expect(revisedXml, contains('<text:changed-region'));
     expect(revisedXml, isNot(contains('Rejeitada')));
     doc.liveChanges = false;
+    expect(await workspace.closeTab(), isTrue);
+
+    // 32. As referências (D-090): pelas macros do perfil (novo: o motor
+    //     trocou a lista das bibliotecas ao ligar), na aba da tela e não na
+    //     outra; o sumário, a legenda da tabela e a da imagem, o marcador, as
+    //     referências a um título, a um marcador e a uma legenda, o índice de
+    //     figuras e o remissivo, atualizar, e a edição segue depois.
+    final otherTab = File('test/fixtures/capitulo-curto.odt').copySync('${tmp.path}/outra-aba.odt').path;
+    final referenced = File('test/fixtures/capitulo-curto.odt').copySync('${tmp.path}/referencias.odt').path;
+    await openAndWait(otherTab);
+    await openAndWait(referenced);
+    String style(String name) => '{"Style":{"type":"string","value":"$name"},"FamilyName":{"type":"string","value":"ParagraphStyles"}}';
+    void type(String text) => doc.uno('.uno:InsertText', '{"Text":{"type":"string","value":${jsonEncode(text)}}}');
+    doc.uno('.uno:GoToEndOfDoc');
+    doc.uno('.uno:InsertPara');
+    doc.uno('.uno:StyleApply', style('Heading 1'));
+    type('Mapas do rio');
+    doc.uno('.uno:InsertPara');
+    doc.uno('.uno:StyleApply', style('Text Body'));
+    type('Quixadá');
+    doc.uno('.uno:WordLeftSel');
+    await until(() => doc.hasSelection, 'selecionar a palavra');
+    doc.markIndexEntry(all: true);
+    doc.uno('.uno:GoToEndOfDoc');
+    type(' fica longe. Aqui.');
+    doc.insertBookmark('fim do rio');
+    type(' Mais.');
+    await until(() => doc.snapshot.bookmarks.contains('fim do rio'), 'o marcador na cópia', detail: () => '${doc.snapshot.bookmarks}');
+    doc.uno('.uno:InsertPara');
+    doc.insertTable(2, 2);
+    await until(() => doc.inTable, 'a tabela das referências');
+    type('Distância');
+    doc.insertCaption(CaptionKind.table, 'Tabela');
+    type('Léguas');
+    doc.uno('.uno:GoToEndOfDoc');
+    doc.uno('.uno:InsertPara');
+    doc.insertImage(png.path);
+    await until(() => doc.graphic != null, 'a imagem das referências');
+    doc.insertCaption(CaptionKind.figure, 'Figura');
+    await until(() => doc.graphic == null, 'a legenda tira a seleção da imagem');
+    type('O rio');
+    doc.refreshSnapshot();
+    await until(() => doc.snapshot.captions.any((c) => c.text == 'Figura 1: O rio') && doc.snapshot.bookmarks.contains('fim do rio'), 'a cópia com as legendas',
+        detail: () => '${doc.snapshot.captions.map((c) => c.text)} ${doc.snapshot.bookmarks}');
+    final figure = doc.snapshot.captions.firstWhere((c) => c.sequence == 'Figure');
+    expect(figure.text, 'Figura 1: O rio');
+    expect(doc.snapshot.captions.firstWhere((c) => c.sequence == 'Table').text, 'Tabela 1: Léguas');
+    final heading = doc.snapshot.outline.indexWhere((h) => h.text == 'Mapas do rio');
+    expect(heading, greaterThanOrEqualTo(0));
+    doc.uno('.uno:GoToEndOfDoc');
+    doc.uno('.uno:InsertPara');
+    type('Ver ');
+    doc.insertHeadingRef(heading, RefFormat.text);
+    type(', na página ');
+    doc.insertHeadingRef(heading, RefFormat.page);
+    type(', o ');
+    doc.insertBookmarkRef('fim do rio', RefFormat.page);
+    type(' e a ');
+    doc.insertCaptionRef(figure, RefFormat.text);
+    type('.');
+    doc.uno('.uno:InsertPara');
+    doc.insertIndex('Remissivo');
+    doc.uno('.uno:GoToStartOfDoc');
+    doc.insertToc('Sumário');
+    doc.insertCaptionTable('Figuras', CaptionKind.figure);
+    doc.updateIndexes();
+    doc.goToBookmark('fim do rio');
+    type('[aqui]');
+    doc.uno('.uno:GoToEndOfDoc');
+    type('Depois de atualizar.');
+    await workspace.save();
+    await until(() => !doc.modified && doc.busy == null, 'salvar as referências');
+    final refXml = readOdtContent(referenced)!;
+    String plain(String tag) {
+      final m = RegExp('<text:$tag[\\s>][\\s\\S]*?</text:$tag>').firstMatch(refXml);
+      return m == null ? '' : m[0]!.replaceAll(RegExp(r'<[^>]+>'), ' ').replaceAll(RegExp(r'\s+'), ' ');
+    }
+    expect(plain('table-of-content'), contains('Mapas do rio'), reason: 'o sumário preenchido');
+    expect(plain('illustration-index'), contains('Figura 1: O rio'), reason: 'o índice de figuras');
+    expect(plain('alphabetical-index'), contains('Quixadá'), reason: 'o remissivo');
+    expect(refXml, contains('<text:sequence text:ref-name="refTable0" text:name="Table"'));
+    expect(refXml, contains('<text:bookmark-ref text:reference-format="text" text:ref-name="__RefHeading__quill_'));
+    expect(RegExp(r'<text:bookmark-ref text:reference-format="text"[^>]*>Mapas do rio<').hasMatch(refXml), isTrue);
+    expect(RegExp(r'<text:sequence-ref [^>]*>Figura 1<').hasMatch(refXml), isTrue, reason: 'a referência à legenda');
+    expect(refXml, contains('<text:bookmark-ref text:reference-format="page" text:ref-name="fim do rio">'));
+    if (Platform.environment['QUILL_REF_OUT'] case final copy?) File(copy).writeAsStringSync(refXml);
+    expect(refXml, contains('Aqui.<text:bookmark text:name="fim do rio"/>[aqui] Mais.'), reason: 'ir ao marcador');
+    expect(refXml, contains('Depois de atualizar.'), reason: 'a edição segue depois de atualizar');
+    expect(await workspace.closeTab(), isTrue);
+    await until(() => doc.path == otherTab && doc.busy == null, 'a outra aba');
+    expect((await doc.searchText(const SearchQuery('Mapas do rio'), fresh: true)).total, 0, reason: 'as macros só na aba da tela');
+    expect(doc.modified, isFalse);
     expect(await workspace.closeTab(), isTrue);
 
         // Fecha sem salvar (descarta), para não deixar trava.

@@ -42,6 +42,10 @@ class CompileSettings {
     this.author = '',
     this.toc = true,
     this.tocTitle = 'Sumário',
+    this.figures = false,
+    this.figuresTitle = 'Índice de figuras',
+    this.index = false,
+    this.indexTitle = 'Índice remissivo',
     this.pageBreaks = true,
     this.partTitles = true,
     this.chapterTitles = true,
@@ -58,6 +62,11 @@ class CompileSettings {
   final String title, subtitle, author;
   final bool toc;
   final String tocTitle;
+
+  /// O índice de figuras depois do sumário e o índice remissivo no fim
+  /// (D-090), das legendas e das entradas marcadas nos capítulos.
+  final bool figures, index;
+  final String figuresTitle, indexTitle;
   final bool pageBreaks;
 
   /// O título de cada parte numa página própria.
@@ -88,6 +97,10 @@ class CompileSettings {
     String? author,
     bool? toc,
     String? tocTitle,
+    bool? figures,
+    String? figuresTitle,
+    bool? index,
+    String? indexTitle,
     bool? pageBreaks,
     bool? partTitles,
     bool? chapterTitles,
@@ -104,6 +117,10 @@ class CompileSettings {
         author: author ?? this.author,
         toc: toc ?? this.toc,
         tocTitle: tocTitle ?? this.tocTitle,
+        figures: figures ?? this.figures,
+        figuresTitle: figuresTitle ?? this.figuresTitle,
+        index: index ?? this.index,
+        indexTitle: indexTitle ?? this.indexTitle,
         pageBreaks: pageBreaks ?? this.pageBreaks,
         partTitles: partTitles ?? this.partTitles,
         chapterTitles: chapterTitles ?? this.chapterTitles,
@@ -119,6 +136,10 @@ class CompileSettings {
         'folhaDeRosto': titlePage,
         'sumario': toc,
         'tituloDoSumario': tocTitle,
+        'figuras': figures,
+        'tituloDasFiguras': figuresTitle,
+        'indiceRemissivo': index,
+        'tituloDoIndice': indexTitle,
         'quebras': pageBreaks,
         'partes': partTitles,
         'titulos': chapterTitles,
@@ -150,6 +171,10 @@ class CompileSettings {
       author: text('autor', ''),
       toc: flag('sumario', true),
       tocTitle: text('tituloDoSumario', 'Sumário'),
+      figures: flag('figuras', false),
+      figuresTitle: text('tituloDasFiguras', 'Índice de figuras'),
+      index: flag('indiceRemissivo', false),
+      indexTitle: text('tituloDoIndice', 'Índice remissivo'),
       pageBreaks: flag('quebras', true),
       partTitles: flag('partes', true),
       chapterTitles: flag('titulos', true),
@@ -179,6 +204,11 @@ class CompileSettings {
         author: author,
         toc: toc,
         tocTitle: tocTitle,
+        figures: figures,
+        figuresTitle: figuresTitle,
+        // O EPUB não tem páginas: um índice remissivo sem elas não serve.
+        index: index && format != CompileFormat.epub,
+        indexTitle: indexTitle,
         pageBreaks: pageBreaks,
         chapterTitles: chapterTitles,
         scenes: scenes,
@@ -296,7 +326,7 @@ class CompileJob {
 
       onProgress?.call(CompileStage.writing, chosen.length, chosen.length);
       final ok = await _convert.convert(joined, target, s.format.extension,
-          options: s.filterOptions, updateIndexes: s.toc, timeout: const Duration(minutes: 10));
+          options: s.filterOptions, updateIndexes: s.toc || s.figures || s.index, timeout: const Duration(minutes: 10));
       return CompileResult(ok ? CompileOutcome.done : CompileOutcome.writeFailed);
     } finally {
       for (final t in temps) {

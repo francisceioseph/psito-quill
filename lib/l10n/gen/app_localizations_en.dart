@@ -2975,4 +2975,157 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get changeOther => 'Change';
+
+  @override
+  String get ribbonReferences => 'References';
+
+  @override
+  String get menuReferences => 'References';
+
+  @override
+  String get groupToc => 'Contents';
+
+  @override
+  String get groupCaptions => 'Captions';
+
+  @override
+  String get groupBookmarks => 'Bookmarks';
+
+  @override
+  String get groupIndex => 'Index';
+
+  @override
+  String get commandTocHere => 'Insert table of contents';
+
+  @override
+  String get tocTitleDefault => 'Contents';
+
+  @override
+  String get commandUpdateIndexes => 'Update contents and indexes';
+
+  @override
+  String get commandCaption => 'Insert caption';
+
+  @override
+  String get captionFigure => 'Figure';
+
+  @override
+  String get captionTable => 'Table';
+
+  @override
+  String get commandFigureTable => 'Table of figures';
+
+  @override
+  String get figureTableTitle => 'Table of figures';
+
+  @override
+  String get commandTableTable => 'List of tables';
+
+  @override
+  String get tableTableTitle => 'List of tables';
+
+  @override
+  String get commandBookmark => 'Bookmark';
+
+  @override
+  String get commandCrossReference => 'Cross-reference';
+
+  @override
+  String get commandMarkEntry => 'Mark index entry';
+
+  @override
+  String get commandMarkAll => 'Mark all occurrences';
+
+  @override
+  String get commandIndex => 'Insert index';
+
+  @override
+  String get indexTitle => 'Index';
+
+  @override
+  String get bookmarkDialogTitle => 'Bookmarks';
+
+  @override
+  String get bookmarkName => 'New bookmark name';
+
+  @override
+  String get bookmarkBadName =>
+      'The name can\'t start with _ or contain / \\ @ : * ? \" ; , . # |';
+
+  @override
+  String get bookmarkExists => 'There\'s already a bookmark with this name.';
+
+  @override
+  String get bookmarkListTitle => 'In this chapter';
+
+  @override
+  String get bookmarkNone => 'No bookmarks yet.';
+
+  @override
+  String bookmarkGo(String name) {
+    return 'Go to $name';
+  }
+
+  @override
+  String bookmarkDelete(String name) {
+    return 'Delete $name';
+  }
+
+  @override
+  String get bookmarkInsert => 'Insert';
+
+  @override
+  String get crossRefTitle => 'Cross-reference';
+
+  @override
+  String get crossRefKind => 'Refer to';
+
+  @override
+  String get crossRefHeadings => 'Headings';
+
+  @override
+  String get crossRefBookmarks => 'Bookmarks';
+
+  @override
+  String get crossRefCaptions => 'Captions';
+
+  @override
+  String get crossRefNoHeadings => 'No headings in this chapter.';
+
+  @override
+  String get crossRefNoCaptions =>
+      'No captions in this chapter. Select an image or go into a table and use Insert caption.';
+
+  @override
+  String get crossRefInsertAs => 'Insert as';
+
+  @override
+  String get crossRefFormatText => 'The text';
+
+  @override
+  String get crossRefFormatCaption => 'Figure and number';
+
+  @override
+  String get crossRefFormatPage => 'The page';
+
+  @override
+  String get crossRefFormatAboveBelow => 'Above or below';
+
+  @override
+  String get crossRefInsert => 'Insert';
+
+  @override
+  String crossRefOtherChapter(String bookmark, String chapter) {
+    return '$bookmark (in $chapter)';
+  }
+
+  @override
+  String get compileIndex => 'Index at the end';
+
+  @override
+  String get compileFigures => 'Table of figures after the contents';
+
+  @override
+  String get compileReferencesNote =>
+      'The entries marked in the chapters and the image captions go here.';
 }

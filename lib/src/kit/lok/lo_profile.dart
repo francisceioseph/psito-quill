@@ -7,6 +7,7 @@
 import 'dart:io';
 
 import '../../settings/config_dir.dart';
+import 'quill_macros.dart';
 
 /// Um esquema de cor do documento, em 0xRRGGBB.
 class PaperScheme {
@@ -77,7 +78,40 @@ class LoProfile {
     items.write('<!-- /$_marker -->\n');
     text = text.replaceFirst('</oor:items>', '$items</oor:items>');
     file.writeAsStringSync(text);
+    ensureMacros();
   }
+
+  /// A biblioteca Basic do Quill (D-090), regravada a cada vez, e registrada
+  /// na lista de bibliotecas do perfil (`script.xlc`). Sem a lista ainda (o
+  /// perfil novo), ela nasce com a Standard, que o LibreOffice sempre tem.
+  void ensureMacros() {
+    final basic = Directory('${directory.path}/user/basic');
+    final lib = Directory('${basic.path}/$quillMacroLibrary')..createSync(recursive: true);
+    File('${lib.path}/script.xlb').writeAsStringSync(quillMacroLibraryXml);
+    File('${lib.path}/$quillMacroModule.xba').writeAsStringSync(quillMacroModuleXml());
+    final list = File('${basic.path}/script.xlc');
+    final entry = '<library:library library:name="$quillMacroLibrary" library:link="false"/>';
+    if (!list.existsSync()) {
+      final standard = Directory('${basic.path}/Standard')..createSync();
+      final xlb = File('${standard.path}/script.xlb');
+      if (!xlb.existsSync()) xlb.writeAsStringSync(_standardLibrary);
+      list.writeAsStringSync(_libraryList(' <library:library library:name="Standard" library:link="false"/>\n $entry\n'));
+      return;
+    }
+    final text = list.readAsStringSync();
+    if (text.contains('library:name="$quillMacroLibrary"')) return;
+    list.writeAsStringSync(text.replaceFirst('</library:libraries>', ' $entry\n</library:libraries>'));
+  }
+
+  static String _libraryList(String entries) => '<?xml version="1.0" encoding="UTF-8"?>\n'
+      '<!DOCTYPE library:libraries PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "libraries.dtd">\n'
+      '<library:libraries xmlns:library="http://openoffice.org/2000/library" xmlns:xlink="http://www.w3.org/1999/xlink">\n'
+      '$entries</library:libraries>\n';
+
+  static const _standardLibrary = '<?xml version="1.0" encoding="UTF-8"?>\n'
+      '<!DOCTYPE library:library PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "library.dtd">\n'
+      '<library:library xmlns:library="http://openoffice.org/2000/library" library:name="Standard" '
+      'library:readonly="false" library:passwordprotected="false"/>\n';
 
   static const _schemePath = '/org.openoffice.Office.UI/ColorScheme';
 

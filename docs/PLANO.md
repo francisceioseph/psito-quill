@@ -621,7 +621,7 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
 - **Etapa 2: os modelos de compilação** (feita, D-087). Manuscrito, Livro 6×9 e E-book, com os estilos de saída (a página, o corpo, os cabeçalhos, a página ímpar e a capa), e "Salvar como modelo", no `compilar.json` do livro. O filtro do EPUB ignora as opções pelo LOK, então a capa entra como a primeira imagem.
 - **Etapa 3: os comentários** (feita, D-088). O painel (adicionar, responder, resolver, excluir), o trecho marcado na página e a contagem por capítulo no fichário.
 - **Etapa 4: o controle de alterações e o modo Leitura** (feita, D-089; comparar e combinar ficam de fora). Editando, Revisão e Leitura; o painel Alterações (a anterior, a próxima, aceitar e rejeitar uma ou todas); a sonda de comparar e combinar.
-- **Etapa 5: as referências.** O sumário no capítulo, as legendas, a tabela de figuras, os marcadores, a referência cruzada e o índice remissivo (também no compilar).
+- **Etapa 5: as referências** (feita, D-090). O sumário no capítulo, as legendas, os índices de figuras e de tabelas, os marcadores, a referência cruzada e o índice remissivo (também no compilar). O que o motor só faz por janela vai por uma biblioteca Basic no perfil do Quill.
 - **Etapa 6: os ajustes da Estrutura, do parágrafo e das Informações.**
 - **Etapa 7: os ajustes da Página Inicial, do Layout e do Inserir.**
 - **Etapa 8: as Preferências e os modelos.**

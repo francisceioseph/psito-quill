@@ -8,6 +8,7 @@ import 'dart:math';
 
 import '../document/comments.dart' show openCommentsInContent;
 import '../document/fodt.dart';
+import '../document/references.dart' show odfBookmarks;
 import 'book.dart';
 import 'odt_zip.dart';
 
@@ -132,6 +133,24 @@ Future<Map<String, ChapterCount>> countChapterWords(List<String> files) {
         scenes: [for (final s in odfScenes(xml)) s.label],
         comments: openCommentsInContent(xml),
       );
+    }
+    return out;
+  });
+}
+
+/// Os marcadores (D-090) dos capítulos [files] (o título pelo caminho
+/// absoluto), lidos do `content.xml`, num isolate: a referência cruzada a um
+/// marcador de outro capítulo, que vale no livro compilado.
+Future<List<(String chapter, String bookmark)>> chapterBookmarks(Map<String, String> files) {
+  if (files.isEmpty) return Future.value(const []);
+  return Isolate.run(() {
+    final out = <(String, String)>[];
+    for (final MapEntry(key: path, value: title) in files.entries) {
+      final xml = File(path).existsSync() ? readOdtContent(path) : null;
+      if (xml == null) continue;
+      for (final b in odfBookmarks(xml)) {
+        out.add((title, b));
+      }
     }
     return out;
   });

@@ -5,6 +5,7 @@ import '../../l10n/gen/app_localizations.dart';
 import 'commands_book.dart';
 import 'commands_document.dart';
 import 'commands_page.dart';
+import 'commands_references.dart';
 import 'commands_view.dart';
 
 /// Um menu: o título e os ids, com null para o separador.
@@ -141,6 +142,21 @@ List<MenuSpec> editorMenus(AppLocalizations l10n) => [
         ViewCommandIds.newStyle,
         ViewCommandIds.updateStyle,
         ViewCommandIds.manageStyles,
+      ]),
+      MenuSpec(l10n.menuReferences, const [
+        ReferenceCommandIds.toc,
+        ReferenceCommandIds.updateIndexes,
+        null,
+        ReferenceCommandIds.caption,
+        ReferenceCommandIds.figureTable,
+        ReferenceCommandIds.tableTable,
+        null,
+        ReferenceCommandIds.bookmark,
+        ReferenceCommandIds.crossReference,
+        null,
+        ReferenceCommandIds.markEntry,
+        ReferenceCommandIds.markAll,
+        ReferenceCommandIds.index,
       ]),
       MenuSpec(l10n.menuBook, const [
         BookCommandIds.newBook,

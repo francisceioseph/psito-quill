@@ -8,6 +8,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'outline.dart';
+import 'references.dart';
 import 'search.dart';
 import 'style_patch.dart';
 
@@ -92,7 +93,13 @@ class FodtSnapshot {
     this.characters,
     this.page = const PageSetup(),
     this.scenes = const [],
+    this.bookmarks = const [],
+    this.captions = const [],
   });
+
+  /// Os marcadores da pessoa e as legendas, para a referência cruzada (D-090).
+  final List<String> bookmarks;
+  final List<CaptionEntry> captions;
 
   /// As cenas do documento (D-079); vazia sem nenhum separador.
   final List<SceneEntry> scenes;
@@ -307,6 +314,8 @@ FodtSnapshot parseFodt(String xml) {
     characters: int.tryParse(statistic['meta:character-count'] ?? ''),
     page: parsePageSetup(xml),
     scenes: odfScenes(xml),
+    bookmarks: odfBookmarks(body),
+    captions: odfCaptions(body),
   );
 }
 

@@ -14,6 +14,7 @@ import '../../commands/command_registry.dart';
 import '../../commands/commands_book.dart';
 import '../../commands/commands_document.dart';
 import '../../commands/commands_page.dart';
+import '../../commands/commands_references.dart';
 import '../../commands/commands_view.dart';
 import '../../document/doc_colors.dart';
 import '../../document/document_controller.dart';
@@ -43,7 +44,7 @@ String formatPoints(double v, String locale) {
   return locale.startsWith('pt') ? s.replaceAll('.', ',') : s;
 }
 
-enum RibbonTab { home, insert, layout, styles, review, view, table, image }
+enum RibbonTab { home, insert, layout, styles, references, review, view, table, image }
 
 /// A faixa do desenho da Fase 2B (Etapa 2): a fileira de abas sobre o tom
 /// `surfaceContainer`, com o Arquivo preenchido, as abas de contexto na cor
@@ -153,6 +154,7 @@ class Ribbon extends StatelessWidget {
                             (RibbonTab.insert, l10n.ribbonInsert),
                             (RibbonTab.layout, l10n.ribbonLayout),
                             (RibbonTab.styles, l10n.ribbonStyles),
+                            (RibbonTab.references, l10n.ribbonReferences),
                             (RibbonTab.review, l10n.ribbonReview),
                             (RibbonTab.view, l10n.ribbonView),
                           ]) ...[tabButton(id, label), SizedBox(width: t.space.xs)],
@@ -231,6 +233,7 @@ class Ribbon extends StatelessWidget {
                   RibbonTab.insert => l10n.ribbonInsert,
                   RibbonTab.layout => l10n.ribbonLayout,
                   RibbonTab.styles => l10n.ribbonStyles,
+                  RibbonTab.references => l10n.ribbonReferences,
                   RibbonTab.review => l10n.ribbonReview,
                   RibbonTab.view => l10n.ribbonView,
                   RibbonTab.table => l10n.ribbonTable,
@@ -260,6 +263,19 @@ class Ribbon extends StatelessWidget {
                         onRan: onRan,
                         onStylesPanel: onStylesPanel,
                       ),
+                      RibbonTab.references => _groups(commands, onRan, [
+                        (l10n.groupToc, [ReferenceCommandIds.toc, ReferenceCommandIds.updateIndexes]),
+                        (
+                          l10n.groupCaptions,
+                          [ReferenceCommandIds.caption, ReferenceCommandIds.figureTable, ReferenceCommandIds.tableTable],
+                        ),
+                        (l10n.groupBookmarks, [ReferenceCommandIds.bookmark, ReferenceCommandIds.crossReference]),
+                        (
+                          l10n.groupIndex,
+                          [ReferenceCommandIds.markEntry, ReferenceCommandIds.markAll, ReferenceCommandIds.index],
+                        ),
+                        (l10n.groupNotes, [PageCommandIds.footnote, PageCommandIds.endnote, PageCommandIds.jumpFootnote]),
+                      ]),
                       RibbonTab.review => _groups(commands, onRan, [
                         (l10n.groupProofing, [CommandIds.spellOnline]),
                         (l10n.groupComments, [ViewCommandIds.newComment, ViewCommandIds.comments]),

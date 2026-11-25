@@ -8,9 +8,11 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../../book/book.dart';
 import '../../book/book_controller.dart';
+import '../../book/book_io.dart' show chapterBookmarks;
 import '../../book/docx_import.dart';
 import '../../commands/command_registry.dart';
 import '../../commands/commands_book.dart';
+import '../../commands/commands_references.dart';
 import '../../commands/commands_document.dart';
 import '../../commands/commands_page.dart';
 import '../../commands/commands_view.dart';
@@ -47,6 +49,7 @@ import '../../document/outline.dart';
 import '../atoms/w_segmented.dart';
 import '../organisms/outline_panel.dart';
 import '../organisms/page_dialogs.dart';
+import '../organisms/reference_dialogs.dart';
 import '../organisms/ruler.dart';
 import '../organisms/start_screen.dart';
 import '../organisms/ribbon.dart';
@@ -94,7 +97,8 @@ enum _LeftPanel { binder, notes, outline, find, styles, comments, changes }
 /// Os temas como comandos (a paleta e o menu Exibir do tema 97 os mostram).
 const themeCommandPrefix = 'tema.';
 
-class _EditorPageState extends State<EditorPage> implements EditorViewActions, BookViewActions, PageViewActions {
+class _EditorPageState extends State<EditorPage>
+    implements EditorViewActions, BookViewActions, PageViewActions, ReferenceViewActions {
   CommandRegistry? _commands;
   final _docFocus = FocusNode(debugLabel: 'documento');
   bool _fileOpen = false;
@@ -188,6 +192,83 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
     } on ProcessException {
       // Sem o xdg-open: nada a fazer.
     }
+  }
+
+  // ------------------------------------ as referências (D-090) --
+
+  /// Pede uma cópia nova e espera ela chegar (até 3 s): as listas dos
+  /// marcadores, dos títulos e das legendas vêm dela.
+  Future<void> _freshSnapshot() async {
+    final before = doc.snapshot;
+    final arrived = Completer<void>();
+    void listener() {
+      if (!identical(doc.snapshot, before) && !arrived.isCompleted) arrived.complete();
+    }
+
+    doc.addListener(listener);
+    doc.refreshSnapshot();
+    try {
+      await arrived.future.timeout(const Duration(seconds: 3), onTimeout: () {});
+    } finally {
+      doc.removeListener(listener);
+    }
+  }
+
+  @override
+  void bookmarks() => unawaited(_bookmarks());
+  Future<void> _bookmarks() async {
+    await _freshSnapshot();
+    if (!mounted || !doc.isOpen) return;
+    final answer = await showBookmarkDialog(
+      context,
+      bookmarks: doc.snapshot.bookmarks,
+      canEdit: doc.canEdit,
+      onDelete: doc.deleteBookmark,
+    );
+    if (answer == null || !mounted) return;
+    switch (answer) {
+      case (BookmarkVerb.insert, final name):
+        doc.insertBookmark(name);
+      case (BookmarkVerb.go, final name):
+        doc.goToBookmark(name);
+    }
+    _docFocus.requestFocus();
+  }
+
+  @override
+  void crossReference() => unawaited(_crossReference());
+  Future<void> _crossReference() async {
+    await _freshSnapshot();
+    if (!mounted || !doc.isOpen) return;
+    // Num livro, os marcadores dos outros capítulos (o compilar junta tudo).
+    final book = books.book, current = _currentChapter;
+    Future<List<(String, String)>>? others;
+    if (book != null) {
+      final files = <String, String>{
+        for (final c in book.chapters)
+          if (c.id != current?.id) ?books.pathOf(c): c.title,
+      };
+      others = chapterBookmarks(files);
+    }
+    final snap = doc.snapshot;
+    final answer = await showCrossRefDialog(
+      context,
+      headings: snap.outline,
+      bookmarks: snap.bookmarks,
+      captions: snap.captions,
+      otherBookmarks: others,
+    );
+    if (answer == null || !mounted) return;
+    final (target, format) = answer;
+    switch (target) {
+      case HeadingTarget(:final index):
+        doc.insertHeadingRef(index, format);
+      case BookmarkTarget(:final name):
+        doc.insertBookmarkRef(name, format);
+      case CaptionTarget(:final caption):
+        doc.insertCaptionRef(caption, format);
+    }
+    _docFocus.requestFocus();
   }
 
   @override
@@ -796,6 +877,7 @@ class _EditorPageState extends State<EditorPage> implements EditorViewActions, B
       registerViewCommands(registry, doc: doc, view: this, l10n: l10n);
       registerBookCommands(registry, doc: doc, workspace: widget.workspace, view: this, l10n: l10n);
       registerPageCommands(registry, doc: doc, view: this, l10n: l10n);
+      registerReferenceCommands(registry, doc: doc, view: this, l10n: l10n);
       for (final (id, label) in themeChoices(l10n)) {
         registry.register(
           Command(

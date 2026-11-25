@@ -738,6 +738,9 @@ class FakeQuillKit implements QuillKit {
   String? bookmark;
   int bookmarkParagraph = 0;
 
+  /// Para os testes: XML cru no fim do corpo da cópia (as legendas, D-090).
+  String extraBodyXml = '';
+
   /// O estilo que o `.uno:LoadStyles` traz (o "Cena"), para a cópia seguinte.
   String? loadStylesAdds;
 
@@ -783,6 +786,7 @@ class FakeQuillKit implements QuillKit {
         '<text:p text:style-name="Text_20_body">'
             '${bookmark != null && i == bookmarkParagraph ? '<text:bookmark text:name="${esc(bookmark!)}"/>' : ''}'
             '${esc(text)}</text:p>',
+      extraBodyXml,
     ].join();
     // As estatísticas, como o LibreOffice grava (as palavras do texto falso).
     final words = text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;

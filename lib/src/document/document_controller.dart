@@ -14,12 +14,14 @@ import 'package:flutter/foundation.dart';
 import '../book/docx_import.dart' show KitConverter;
 import '../kit/lok/lo_styles.dart';
 import '../kit/lok/lok_payloads.dart';
+import '../kit/lok/quill_macros.dart';
 import '../kit/quill_kit.dart';
 import 'comments.dart';
 import 'doc_tab.dart';
 import 'fodt.dart';
 import 'outline.dart';
 import 'recovery.dart';
+import 'references.dart';
 import 'search.dart';
 import 'style_patch.dart';
 import 'text_clipboard.dart';
@@ -1316,6 +1318,73 @@ class DocumentController extends ChangeNotifier {
     // A régua vertical lê as margens da cópia (D-046).
     refreshSnapshot();
   }
+
+  // ------------------------------------- as referências (D-090) --
+
+  /// O sumário no começo do parágrafo do cursor, até [levels] níveis.
+  void insertToc(String title, {int levels = 3}) => uno(quillMacro('Sumario', [MacroText(title), levels.clamp(1, 10)]));
+
+  /// A tabela das legendas do tipo [kind] (as figuras ou as tabelas).
+  void insertCaptionTable(String title, CaptionKind kind) =>
+      uno(quillMacro('Figuras', [MacroText(title), MacroName(kind.sequence)]));
+
+  /// O índice remissivo, com as entradas marcadas.
+  void insertIndex(String title) => uno(quillMacro('Remissivo', [MacroText(title)]));
+
+  /// Atualiza os sumários, os índices e as referências do documento. O
+  /// `.uno:UpdateAllIndexes` numa aba aberta trava a edição depois, na 24.2:
+  /// vai pela macro.
+  void updateIndexes() {
+    uno(quillMacro('Atualizar'));
+    refreshSnapshot();
+  }
+
+  /// A seleção vira uma entrada do índice remissivo; com [all], cada
+  /// ocorrência dela (a palavra inteira, com as mesmas maiúsculas).
+  void markIndexEntry({bool all = false}) {
+    if (!hasSelection) return;
+    uno(quillMacro('MarcarEntrada', [all]));
+  }
+
+  /// A legenda depois da imagem selecionada ou da tabela do cursor, com o
+  /// [label] ("Figura") e o número; o cursor fica no fim, para o texto.
+  void insertCaption(CaptionKind kind, String label) {
+    if (graphic == null && !inTable) return;
+    uno(quillMacro('Legenda', [MacroText(label), MacroName(kind.engineName)]));
+    refreshSnapshot();
+  }
+
+  void insertBookmark(String name) {
+    uno('.uno:InsertBookmark', bookmarkArgs(name.trim()));
+    refreshSnapshot();
+  }
+
+  /// Ir não muda o documento: vale também só para leitura.
+  void goToBookmark(String name) {
+    if (!isOpen) return;
+    kit.uno(quillMacro('IrMarcador', [MacroText(name)]));
+  }
+
+  void deleteBookmark(String name) {
+    uno('.uno:DeleteBookmark', bookmarkArgs(name));
+    refreshSnapshot();
+  }
+
+  /// A referência ao título [index] da Estrutura. O título ganha um marcador
+  /// de referência, se ainda não tem.
+  void insertHeadingRef(int index, RefFormat format) {
+    final outline = snapshot.outline;
+    if (index < 0 || index >= outline.length) return;
+    uno(headingRefMacro(index, outline[index].text, newHeadingMark(DateTime.now(), _headingMarks++), format));
+  }
+
+  int _headingMarks = 0;
+
+  /// A referência a um marcador: deste capítulo, ou de outro do livro (o
+  /// compilar junta tudo; aqui ela mostra o erro do motor até lá).
+  void insertBookmarkRef(String name, RefFormat format) => uno('.uno:InsertField', bookmarkRefArgs(name, format));
+
+  void insertCaptionRef(CaptionEntry caption, RefFormat format) => uno('.uno:InsertField', captionRefArgs(caption, format));
 
   // ---------------------------------------------- imagens e tabelas --
 

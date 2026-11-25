@@ -72,7 +72,16 @@ class JoinOptions {
     this.style = const OutputStyle(),
     this.cover,
     this.tocPageNumbers = true,
+    this.figures = false,
+    this.figuresTitle = 'Índice de figuras',
+    this.index = false,
+    this.indexTitle = 'Índice remissivo',
   });
+
+  /// O índice de figuras (as legendas "Figura") depois do sumário, e o
+  /// remissivo (as entradas marcadas) no fim (D-090).
+  final bool figures, index;
+  final String figuresTitle, indexTitle;
 
   final bool titlePage;
   final String title, subtitle, author;
@@ -129,7 +138,7 @@ void joinFodt(List<JoinItem> items, JoinOptions o, String out) {
       } finally {
         input.closeSync();
       }
-      sink.writeStringSync('</office:text></office:body></office:document>\n');
+      sink.writeStringSync('${j.tail()}</office:text></office:body></office:document>\n');
     } finally {
       sink.closeSync();
     }
@@ -256,6 +265,9 @@ class _Joiner {
     final blocks = <String>[];
     for (final b in _children(inner)) {
       if (b.startsWith('<text:soft-page-break')) continue;
+      // O sumário e os índices de um capítulo, no livro, viram os do livro
+      // inteiro: saem (o compilar tem os dele).
+      if (_chapterIndex.hasMatch(b)) continue;
       if (_isDecl(b)) {
         if (n == 0) decls.write(b);
         continue;
@@ -315,7 +327,7 @@ class _Joiner {
   void _front() {
     if (_frontCounted) return;
     _frontCounted = true;
-    if (o.titlePage || o.toc || _cover != null) _needBreak = true;
+    if (o.titlePage || o.toc || o.figures || _cover != null) _needBreak = true;
   }
 
   /// A folha de rosto e o sumário, no começo do corpo.
@@ -328,7 +340,48 @@ class _Joiner {
       if (o.author.trim().isNotEmpty) out.write('<text:p text:style-name="QuillRostoAutor">${_escape(o.author)}</text:p>');
     }
     if (o.toc) out.write(_tocXml());
+    if (o.figures) out.write(_figuresXml());
     return out.toString();
+  }
+
+  /// O número da página nas entradas (o EPUB não tem páginas).
+  String get _pageEntry =>
+      o.tocPageNumbers ? '<text:index-entry-tab-stop style:type="right" style:leader-char="."/><text:index-entry-page-number/>' : '';
+
+  /// O índice das legendas "Figura" (a sequência `Figure`), como o
+  /// LibreOffice grava; o `UpdateAllIndexes` preenche.
+  String _figuresXml() {
+    final title = _escape(o.figuresTitle);
+    final titleStyle = o.pageBreaks && (o.titlePage || o.toc) ? 'QuillFigurasQuebra' : 'Figure_20_Index_20_Heading';
+    return '<text:illustration-index text:name="QuillFiguras" text:protected="true">'
+        '<text:illustration-index-source text:caption-sequence-name="Figure" text:caption-sequence-format="text">'
+        '<text:index-title-template text:style-name="$titleStyle">$title</text:index-title-template>'
+        '<text:illustration-index-entry-template text:style-name="Figure_20_Index_20_1">'
+        '<text:index-entry-link-start text:style-name="Index_20_Link"/><text:index-entry-text/>$_pageEntry'
+        '<text:index-entry-link-end/></text:illustration-index-entry-template></text:illustration-index-source>'
+        '<text:index-body><text:index-title text:name="QuillFiguras_Head">'
+        '<text:p text:style-name="$titleStyle">$title</text:p></text:index-title></text:index-body>'
+        '</text:illustration-index>';
+  }
+
+  /// O fim do corpo: o índice remissivo, numa página nova.
+  String tail() {
+    if (!o.index) return '';
+    final title = _escape(o.indexTitle);
+    final titleStyle = o.pageBreaks ? 'QuillIndiceQuebra' : 'Index_20_Heading';
+    final entries = StringBuffer('<text:alphabetical-index-entry-template text:outline-level="separator" '
+        'text:style-name="Index_20_Separator"><text:index-entry-text/></text:alphabetical-index-entry-template>');
+    for (var l = 1; l <= 3; l++) {
+      entries.write('<text:alphabetical-index-entry-template text:outline-level="$l" text:style-name="Index_20_$l">'
+          '<text:index-entry-text/>$_pageEntry</text:alphabetical-index-entry-template>');
+    }
+    return '<text:alphabetical-index text:name="QuillIndice" text:protected="true">'
+        '<text:alphabetical-index-source text:ignore-case="true" text:alphabetical-separators="true">'
+        '<text:index-title-template text:style-name="$titleStyle">$title</text:index-title-template>'
+        '$entries</text:alphabetical-index-source>'
+        '<text:index-body><text:index-title text:name="QuillIndice_Head">'
+        '<text:p text:style-name="$titleStyle">$title</text:p></text:index-title></text:index-body>'
+        '</text:alphabetical-index>';
   }
 
   String _tocXml() {
@@ -396,6 +449,10 @@ class _Joiner {
       '<style:style style:name="QuillRostoAutor" style:family="paragraph" style:parent-style-name="Standard">'
       '<style:paragraph-properties fo:margin-top="2cm" fo:text-align="center" fo:text-indent="0cm"/><style:text-properties fo:font-size="14pt"/></style:style>'
       '<style:style style:name="QuillSumarioQuebra" style:family="paragraph" style:parent-style-name="Contents_20_Heading">'
+      '<style:paragraph-properties fo:break-before="page" fo:text-indent="0cm"/></style:style>'
+      '<style:style style:name="QuillFigurasQuebra" style:family="paragraph" style:parent-style-name="Figure_20_Index_20_Heading">'
+      '<style:paragraph-properties fo:break-before="page" fo:text-indent="0cm"/></style:style>'
+      '<style:style style:name="QuillIndiceQuebra" style:family="paragraph" style:parent-style-name="Index_20_Heading">'
       '<style:paragraph-properties fo:break-before="page" fo:text-indent="0cm"/></style:style>'
       '<style:style style:name="QuillParte" style:family="paragraph" style:parent-style-name="Heading_20_1">'
       '<style:paragraph-properties fo:margin-top="6cm" fo:text-align="center" fo:text-indent="0cm"/></style:style>'
@@ -479,6 +536,11 @@ bool _isDecl(String b) =>
 
 final _styleRef = RegExp(r'(\s[A-Za-z0-9-]+:(?:[A-Za-z0-9-]*style-name|name))="([^"]*)"');
 final _idRef = RegExp(r'(\s(?:text:id|xml:id|text:ref-name))="([^"]*)"');
+final _idTag = RegExp(r'<[A-Za-z][^>]*\s(?:text:id|xml:id|text:ref-name)="[^>]*>');
+
+/// O sumário e os índices de um capítulo, no primeiro nível do corpo.
+final _chapterIndex =
+    RegExp(r'^<text:(table-of-content|illustration-index|alphabetical-index|table-index|object-index|user-index|bibliography)[\s>]');
 
 /// Os nomes de [names] com o [prefix], onde quer que um atributo de estilo os
 /// use; e os ids (as notas, os comentários) com ele também.
@@ -489,7 +551,14 @@ String _prefixed(String xml, Set<String> names, String prefix) {
     final isStyle = attr.endsWith('style-name') || attr == ' style:name';
     return isStyle && names.contains(value) ? '$attr="$prefix$value"' : m[0]!;
   });
-  out = out.replaceAllMapped(_idRef, (m) => '${m[1]}="$prefix${m[2]}"');
+  // As referências a um marcador (e a uma marca de referência) ficam como
+  // estão: os nomes deles não ganham prefixo, e a referência pode ser a um
+  // marcador de outro capítulo (D-090). As das legendas e das notas, sim.
+  out = out.replaceAllMapped(_idTag, (t) {
+    final tag = t[0]!;
+    if (tag.startsWith('<text:bookmark-ref') || tag.startsWith('<text:reference-ref')) return tag;
+    return tag.replaceAllMapped(_idRef, (m) => '${m[1]}="$prefix${m[2]}"');
+  });
   return out;
 }
 

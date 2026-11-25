@@ -1367,3 +1367,68 @@ A Etapa 4 da Fase 4: os três modos (Editando, Revisão e Leitura) e o painel Al
   - unidade, `track_changes_test`: a lista (os tipos, a data, o trecho, a vazia, a estragada), os callbacks 30 e 31, a ordem do texto;
   - widget, `fase4_review_test`: o Ctrl+Shift+E, a lista só com o painel e na pausa, ir ao trecho, aceitar pelo índice, rejeitar todas, mostrar na página, a chave da Revisão, fechar o painel; a Leitura (sem a faixa, nada se digita, as setas folheiam, o Esc sai); a Leitura que guarda a Revisão;
   - integração (o passo 31): a Revisão marca a exclusão e as duas inserções, com o autor; aceitar uma pelo índice, rejeitar as outras; na Leitura, nada se aceita; o ODT salvo guarda a pendente.
+
+## D-090 · As referências
+
+A Etapa 5 da Fase 4: o sumário no capítulo, as legendas, os índices de figuras e de tabelas, os marcadores, a referência cruzada e o índice remissivo, também no compilar.
+
+- **A sonda** (`lok_script`, na 24.2), conferida pelo arquivo gravado:
+  - **nativos, sem janela:**
+    - `.uno:InsertBookmark` com o `Bookmark` insere (responde `success: false`), e `.uno:DeleteBookmark` apaga, como no D-079;
+    - `getCommandValues(".uno:Bookmarks")` lista os marcadores da pessoa;
+    - o `.uno:InsertField` com o `Type` 13 (o `GetRef`) faz a referência a um marcador (`SubType` 2, o `Name`) ou a uma legenda (`SubType` 1, o `Name` da sequência e o número interno no `Content`). O `Format` é a parte: 0 a página, 2 o texto, 3 acima/abaixo e 5 a categoria com o número. O `TypeName` não serve;
+    - o `Type` 23 é o campo de sequência (a legenda). Ele só entra na sequência que o LibreOffice já tem pelo nome da interface do motor, que é pt-BR (`Language=pt-BR` no `LokEngine`): "Figura" e "Tabela". Pelo nome do arquivo ("Figure"), nasce uma segunda sequência, que o índice de figuras não vê;
+  - **só por janela** (travam o LOK): o sumário (`.uno:InsertMultiIndex`), a legenda (`InsertCaptionDialog`) e a entrada do índice (`InsertIndexesEntry`);
+  - **o `.uno:JumpToMark` não vai** a um marcador;
+  - **o `.uno:UpdateAllIndexes` numa aba aberta trava a edição:** depois dele, o motor manda um `DeleteSection` estranho, e nada mais se digita. O `UpdateCurIndex` vai bem, mas só atualiza o índice do cursor. No documento oculto do compilar (D-086), o `UpdateAllIndexes` continua bom.
+- **As macros do perfil:** uma biblioteca Basic do Quill (`PsitoQuill`, o módulo `Referencias`, em `quill_macros.dart`), no perfil que é só dele.
+  - Ela é gravada pelo `LoProfile.ensureMacros` a cada vez que o motor liga, e registrada no `user/basic/script.xlc`. Num perfil novo, o motor troca a lista ao ligar (copia a dele), então o `LokQuillKit` grava de novo no `KitReady`, antes do primeiro documento. Pela sonda, a lista é lida quando o primeiro documento abre.
+  - O `DocumentController` despacha `macro:///PsitoQuill.Referencias.Sub(args)` pelo `postUnoCommand`. A macro age no documento da aba da tela (o `ThisComponent` do quadro que despachou). A integração confere que a outra aba não muda.
+  - **Os argumentos vão no endereço,** e o Basic avalia a chamada. Por isso:
+    - todos entre aspas: na 24.2, um número sem aspas antes de um texto entre aspas faz a chamada não acontecer;
+    - o texto, em hexadecimal (`MacroText`, decodificado pelo `De` com o `Chr`; o `ChrW` só existe no modo VBA);
+    - os nomes que o Quill gera, só com letras sem acento, números e `_` (`MacroName`).
+    - Nada que a pessoa escreveu vai cru.
+  - **A segurança:** o `DisableMacrosExecution` (D-041) continua travando as macros dos documentos. As da biblioteca do perfil ("Minhas macros") rodam com ele ligado, e foi conferido. O teste confere que o Basic não abre arquivo nem rede nem roda programa: o único serviço que ele cria é o `DispatchHelper`.
+  - **As macros:**
+    - **`Sumario`, `Figuras` e `Remissivo`:** o índice no começo do parágrafo do cursor, já preenchido. O sumário precisa do `CreateFromOutline`, que na API vem desligado;
+    - **`Atualizar`:** todos os índices e os campos, no lugar do `UpdateAllIndexes`;
+    - **`MarcarEntrada`:** a seleção, ou com "todas", cada ocorrência da palavra inteira, com as mesmas maiúsculas;
+    - **`Legenda`:** o parágrafo novo no estilo Legenda, depois da imagem selecionada ou da tabela do cursor, com "Figura " e o campo nativo (o `Type` 23, pelo `DispatchHelper`; o campo da API fica sem número).
+      - O parágrafo entra sem partir o da imagem nem apagar nada: com um parágrafo depois, um vazio antes dele; no fim do texto, um acrescentado (`finishParagraph`). Partir no fim de um parágrafo vazio levava a âncora da imagem para o novo, e o truque de um "x" provisório levava junto um marcador no mesmo ponto (a integração pegou).
+      - Com a imagem selecionada, o motor só troca para o modo de texto num temporizador (uns 150 ms na sonda): a macro espera 500 ms antes do campo, só nesse caso;
+    - **`RefTitulo`:** a referência a um título da Estrutura, pelo índice e conferida pelo texto (se não bate, vale o primeiro título com o texto).
+      - O título ganha um marcador `__RefHeading__quill_…`, como os da janela do LibreOffice. Eles não entram no `getBookmarks()`, então o que o título já tem é achado pelas porções do parágrafo. A 24.2 aceita um só por título;
+    - **`IrMarcador`:** leva o cursor até o marcador.
+- **As listas da referência cruzada** saem da cópia da Estrutura (`FodtSnapshot.bookmarks` e `captions`), pedida ao abrir a janela.
+  - Os marcadores que começam por `_` (os dos títulos, o `_GoBack` do Word) ficam de fora.
+  - A legenda guarda o número interno (o do `ref-name`, `refFigure0`) e o texto. Sem o número calculado na cópia, a conta é pela ordem.
+  - Num livro, os marcadores dos outros capítulos (lidos do `content.xml`, num isolate) também entram: a referência mostra o erro do motor no capítulo e vale no livro compilado.
+- **A interface:**
+  - **a faixa Referências** tem os grupos Sumário (inserir e atualizar), Legendas (a legenda e os índices de figuras e de tabelas), Marcadores (o marcador e a referência cruzada), Índice remissivo (marcar, marcar todas e inserir) e Notas (as da Etapa 4 da Fase 3);
+  - **o menu Referências** tem o mesmo, menos as notas, que ficam no Inserir;
+  - **a janela dos marcadores** (Ctrl+Shift+F5, como no Word): um novo com o nome, conferido (vazio, os caracteres que o LibreOffice recusa, repetido), e a lista com Ir e Excluir;
+  - **a janela da referência cruzada:** Títulos, Marcadores ou Legendas, e "Inserir como" (o texto, ou "Figura e número" nas legendas; a página; acima ou abaixo);
+  - **Marcar a entrada do índice:** Alt+Shift+X, como no Word.
+- **No compilar** (`fodt_join.dart`):
+  - o índice de figuras depois do sumário e o remissivo no fim, cada um numa página, como opções da janela e do `compilar.json` (`figuras`, `indiceRemissivo`). O EPUB não leva o remissivo, que precisa das páginas. O `UpdateAllIndexes` do documento oculto os preenche;
+  - o sumário e os índices de dentro de um capítulo saem, porque no livro juntado eles virariam os do livro inteiro;
+  - **um erro do D-086 consertado:** o prefixo dos ids ia também no `ref-name` das referências a marcadores, que deixavam de achar o marcador (que fica sem prefixo). Agora só as legendas e as notas ganham o prefixo.
+- **A memória:** as macros não ficam na memória do Quill, e nada novo é guardado fora da cópia que já existia (as duas listas). Pelo `tool/ab.py a02c1c2` (o `capitulo-30p.docx`, 5 rodadas, a mediana), a memória anônima variou de −2,4 a +0,8 MB. A tecla (p95) ficou em 9,4 ms, e o rolar em 59,5 fps. **Não medido:** o motor carrega o Basic na primeira macro, e o `--bench` não roda nenhuma.
+- **Os testes:**
+  - unidade, `references_test`:
+    - o endereço da macro, o hexadecimal e os nomes recusados;
+    - o módulo no XML, sem `ChrW` e sem nada que abra arquivo, rede ou programa;
+    - o perfil (a biblioteca, e a lista com ela uma vez só, também depois de o motor trocá-la);
+    - os marcadores e as legendas da cópia;
+    - os argumentos das referências e o nome do marcador;
+    - o livro juntado (os índices dos capítulos fora, os do compilar dentro, os prefixos, sem páginas) e as opções no `compilar.json`;
+  - widget, `fase4_references_test`:
+    - a faixa (o sumário, os índices, atualizar, a legenda só com a tabela);
+    - os marcadores (inserir, o nome que não serve, ir, excluir);
+    - a referência cruzada a um título pela página, a um marcador e a uma legenda;
+  - integração (o passo 32, num perfil novo e com outra aba aberta):
+    - marcar a entrada em todas, o marcador e as duas legendas ("Tabela 1: Léguas", "Figura 1: O rio");
+    - as três referências, o remissivo, o sumário e o índice de figuras, atualizar, ir ao marcador e digitar depois;
+    - o ODT salvo com tudo preenchido, e a outra aba intocada;
+    - no compilar, o ODT com o índice de figuras e o remissivo.

@@ -80,6 +80,7 @@ Enquanto o ladrilho novo não chega, o velho continua na tela, sem quadro em bra
 | Memento | Os instantâneos (`snapshots.dart`, D-081): uma cópia do capítulo em `versoes/`, restaurável | Voltar a uma versão sem mudar o documento aberto |
 | Pipeline | O compilar (`compile.dart`, D-086): cada capítulo em FODT pelo motor → um isolate junta (`fodt_join.dart`) → o motor grava o formato | Um passo de cada vez, cancelável entre eles; só o último põe o livro inteiro no motor |
 | Repository de arquivos | As notas (`notes.dart`), os instantâneos (`versoes.json`) e as metas (`metas.json`), cada um lido e gravado pelo seu módulo, de forma atômica | Nada do livro fica na memória por via das dúvidas: lê-se ao abrir o painel ou a janela e solta-se ao fechar |
+| Adapter (macro) | As referências (D-090): `quill_macros.dart` grava um módulo Basic no perfil do Quill, e o `DocumentController` despacha `macro:///PsitoQuill.Referencias.…` pelo `postUnoCommand` | O que a 24.2 só faz por janela (o sumário, os índices, a legenda, a referência a um título) vira uma chamada sem janela, pela API do motor; os textos vão em hexadecimal, e as macros dos documentos continuam travadas |
 
 ## Pastas
 
