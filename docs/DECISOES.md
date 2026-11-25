@@ -1455,3 +1455,41 @@ A Etapa 6 da Fase 4, com o que o Francisco viu no OnlyOffice: a Estrutura com o 
   - unidade, `paragraph_format_test`: o estado das bordas, as tabulações da régua, os argumentos das macros (as tabulações em ordem, o hexadecimal das propriedades), as propriedades, as contagens e o intervalo do estilo na cópia, e o módulo Basic;
   - widget, `fase4_paragraph_test`: a Estrutura (o início, recolher, expandir, o nível), a janela do parágrafo (nada sem mudança, só o fundo, as bordas, as tabulações pela régua) e as Informações (as contagens, as propriedades);
   - integração (o passo 33): o fundo, o intervalo, as bordas e as tabulações nos dois parágrafos da seleção, as propriedades no `meta.xml` e de volta na cópia, e tirar as bordas e as tabulações.
+
+## D-092 · Os ajustes da Página Inicial, do Layout e do Inserir
+
+A Etapa 7 da Fase 4, com o que o Francisco viu no OnlyOffice: o pincel, o Aa e as listas de vários níveis; as colunas, os números de linha, a cor da página, a marca d'água e organizar as imagens; a caixa de texto e a data e a hora.
+
+- **A sonda** (`lok_script`, na 24.2), conferida pelo FODT gravado:
+  - **nativos, sem janela** (todos respondem `success: false` e funcionam):
+    - **o pincel:** o `.uno:FormatPaintbrush` liga, e a próxima seleção pelo mouse ganha a formatação. O motor diz o estado (`true`/`false`). No Quill, o mouse vai ao motor, então vale; a seleção pelo teclado não aplica, como no LibreOffice;
+    - **o Aa:** os `.uno:ChangeCaseToSentenceCase`, `ToLower`, `ToUpper`, `ToTitleCase` e `ToToggleCase`. O `ChangeCaseRotateCase` não fez nada;
+    - **as listas de vários níveis:** o `.uno:SetOutline` com um número de 1 a 8 (os modelos da barra lateral). A sonda leu os três primeiros níveis de cada: 1 é "I. A. 1.", 2 é "A. 1. a.", 3 é "1. 1. 1.", 4 é "1. 1.1. a)", 5 é "A. I. a.", 6 é "1) a) 1)", 7 é "1 1.1 1.1.1" e 8 são marcadores. Ficaram o 7, o 1, o 2, o 6 e o 8;
+    - **descer e subir o nível:** o `.uno:DecrementLevel` desce, e o `IncrementLevel` sobe. O `.uno:DemoteList` não faz nada;
+    - **as colunas:** o `.uno:PageColumnType` com 1, 2 ou 3, no estilo de página do cursor. O motor diz o estado;
+    - **a marca d'água:** o `.uno:Watermark` com o `Text`, o `Angle`, a `Transparency` e a `Color`. O motor a põe no cabeçalho de cada estilo de página, como uma forma `PowerPlusWaterMarkObject`, e liga o cabeçalho. O `Text` vazio tira;
+    - **a ordem da imagem:** o `.uno:BringToFront`, o `SendToBack`, o `ObjectForwardOne` e o `ObjectBackOne` ficam ligados com a imagem selecionada. **O efeito não foi conferido:** com uma imagem só, a ordem não muda nada no arquivo, e a segunda inserida trocou a primeira, que estava selecionada;
+    - **agrupar:** o `.uno:FormatGroup` fica desligado com uma imagem: a 24.2 só agrupa formas de desenho, e o Quill não tem formas. **Ficou de fora;**
+  - **por macro** (a biblioteca do D-090):
+    - **os números de linha (`Linhas`):** o `LineNumberingProperties`, de 5 em 5, sem contar as linhas vazias;
+    - **a cor da página (`CorPagina`):** o `FillStyle` e o `FillColor` do estilo de página do cursor; o `NONE` tira. O `.uno:FillPageColor` da 24.2 ignora a cor e põe o azul padrão;
+    - **a caixa de texto (`Caixa`):** um `TextFrame` de 6 cm no parágrafo do cursor, com o cursor dentro dela. O `.uno:DrawText` pede um arrasto do mouse, e o `InsertFrame` abre uma janela;
+  - **a data e a hora** já eram campos (D-075); agora estão também no grupo Texto do Inserir.
+- **O que a cópia diz da página** (`PageSetup`): os números de linha (o `text:linenumbering-configuration`, ligado sem o `number-lines="false"`), a cor do estilo Standard e o texto da marca d'água. O botão da cor e o "Tirar a marca d'água" leem dali.
+- **A interface:**
+  - **a faixa Início:**
+    - o pincel na Área de transferência, em todos os tamanhos. No do meio, o recortar sai (fica no Ctrl+X, no Editar e no menu de contexto). No menor, o colar e o pincel ficam pequenos, um sobre o outro;
+    - o Aa na primeira linha da Fonte, depois do tamanho, como no OnlyOffice: a lista de fontes fica um botão mais estreita, e o grupo não cresce;
+    - a lista de vários níveis no Parágrafo, com descer e subir um nível;
+  - **a faixa Layout:** as Colunas (o menu e os números de linha), o Fundo da página (a cor e a marca d'água), e a Ordem (a ordem e o alinhamento da imagem). A faixa Layout rola de lado quando falta espaço;
+  - **a aba Imagem** ganhou a Ordem;
+  - **o Inserir:** o grupo Texto, com a caixa de texto e a data e a hora;
+  - **os menus:** o Formatar tem o pincel, o Aa, as listas, as colunas, os números de linha, a marca d'água e a ordem; o Inserir tem a caixa de texto;
+  - **a janela da marca d'água:** o texto, a cor (cinzas e claras) e a direção (diagonal ou horizontal), com 50 % de transparência. A janela avisa que ela vai no cabeçalho: tirar o cabeçalho a tira junto.
+- **Um erro consertado:** os comandos que pedem uma seleção (o Aa, e o "Marcar a entrada" do D-090) ficavam com o estado velho na faixa memoizada (D-037), porque a seleção não mudava a `stateRevision`. Agora ela muda quando a seleção aparece ou some, não a cada retângulo de um arrasto.
+- **As cores** da página e da marca d'água são do documento: ficam no `doc_colors.dart`, como as do realce.
+- **A memória:** nada novo fica guardado além de três campos na cópia que já existia. Pelo `tool/ab.py 6ffeb24` (o `capitulo-30p.docx`, 5 rodadas, a mediana), a memória anônima variou de −1,2 a +1,4 MB. A tecla (p95) ficou em 9,6 ms, e o rolar em 59,5 fps. **Não medido:** o motor fazendo a marca d'água e as colunas, que o `--bench` não liga.
+- **Os testes:**
+  - unidade, `layout_format_test`: a cor do Standard, a marca d'água e os números de linha na cópia, os modelos de lista e as macros novas;
+  - widget, `fase4_layout_test`: o pincel e o estado dele, o Aa com uma seleção, a lista de vários níveis e descer um nível; as colunas e o estado, os números de linha, a cor da página e a janela da marca d'água; a ordem só com uma imagem; a caixa de texto;
+  - integração (o passo 34): maiúsculas, a lista com o subitem, duas colunas, os números de linha, a cor da página, a marca d'água, a ordem da imagem e a caixa de texto no ODT gravado (o `content.xml` e o `styles.xml`), e tirar tudo de volta pela cópia.

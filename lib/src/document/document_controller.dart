@@ -31,6 +31,7 @@ export 'doc_tab.dart' show DocStatus, DocTab;
 export '../kit/quill_kit.dart' show DocLink, PrintOutcome, Printed;
 export '../kit/lok/lok_payloads.dart' show DocLanguage;
 
+part 'layout_format.dart';
 part 'page_format.dart';
 part 'scene_ops.dart';
 
@@ -1933,6 +1934,10 @@ class DocumentController extends ChangeNotifier {
       case CursorVisibility(:final visible):
         cursorVisible = visible;
       case SelectionChanged(:final rects):
+        // Os comandos que pedem uma seleção (o Aa, marcar a entrada) estão na
+        // faixa memoizada: muda a revisão só quando ela aparece ou some, não
+        // a cada retângulo de um arrasto.
+        if (selection.isEmpty != rects.isEmpty) stateRevision++;
         selection = rects;
       case CommandStateChanged(:final command, :final value):
         if (commandStates[command] == value) return;

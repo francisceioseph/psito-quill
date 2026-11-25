@@ -384,4 +384,44 @@ Sub Propriedades(titulo As String, assunto As String, autor As String, etiquetas
   ThisComponent.setModified(True)
 End Sub
 
+REM O Layout e o Inserir (D-092). Os números de linha, de 5 em 5 como no
+REM Word, ligados ou não.
+Sub Linhas(liga As Integer)
+  Dim n As Object
+  n = ThisComponent.getLineNumberingProperties()
+  n.IsOn = (liga = 1)
+  n.Interval = 5
+  n.CountEmptyLines = False
+End Sub
+
+REM A cor do estilo de página do cursor; -1 tira. O .uno:FillPageColor da
+REM 24.2 ignora a cor (põe a azul padrão).
+Sub CorPagina(cor As Long)
+  Dim vc As Object, ps As Object
+  vc = ThisComponent.getCurrentController().getViewCursor()
+  ps = ThisComponent.getStyleFamilies().getByName("PageStyles").getByName(vc.PageStyleName)
+  If cor < 0 Then
+    ps.FillStyle = com.sun.star.drawing.FillStyle.NONE
+  Else
+    ps.FillStyle = com.sun.star.drawing.FillStyle.SOLID
+    ps.FillColor = cor
+  End If
+  ThisComponent.setModified(True)
+End Sub
+
+REM Uma caixa de texto no parágrafo do cursor, com a largura em 1/100 mm; o
+REM cursor vai para dentro dela.
+Sub Caixa(largura As Long)
+  Dim vc As Object, f As Object
+  Dim sz As New com.sun.star.awt.Size
+  vc = ThisComponent.getCurrentController().getViewCursor()
+  f = ThisComponent.createInstance("com.sun.star.text.TextFrame")
+  sz.Width = largura
+  sz.Height = 1000
+  f.Size = sz
+  f.AnchorType = com.sun.star.text.TextContentAnchorType.AT_PARAGRAPH
+  vc.getText().insertTextContent(vc, f, False)
+  vc.gotoRange(f.getText().getStart(), False)
+End Sub
+
 ''';

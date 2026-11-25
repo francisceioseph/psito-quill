@@ -11,6 +11,7 @@ import 'package:psito_quill/src/commands/command_registry.dart';
 import 'package:psito_quill/src/commands/commands_book.dart';
 import 'package:psito_quill/src/commands/commands_document.dart';
 import 'package:psito_quill/src/commands/commands_page.dart';
+import 'package:psito_quill/src/commands/commands_layout.dart';
 import 'package:psito_quill/src/commands/commands_references.dart';
 import 'package:psito_quill/src/commands/commands_view.dart';
 import 'package:psito_quill/src/commands/menus.dart';
@@ -188,6 +189,7 @@ void main() {
     registerBookCommands(registry, doc: harness.doc, workspace: harness.workspace, view: _NoBookView(), l10n: l10n);
     registerPageCommands(registry, doc: harness.doc, view: _NoPageView(), l10n: l10n);
     registerReferenceCommands(registry, doc: harness.doc, view: _NoReferenceView(), l10n: l10n);
+    registerLayoutCommands(registry, doc: harness.doc, view: _NoLayoutView(), l10n: l10n);
     for (final m in editorMenus(l10n)) {
       for (final id in m.items.whereType<String>()) {
         expect(registry[id], isNotNull, reason: '${m.title}: $id');
@@ -415,6 +417,11 @@ void main() {
     expect(h.settings.theme, 'claro');
     expect(find.byType(Ribbon), findsOneWidget);
   });
+}
+
+class _NoLayoutView implements LayoutViewActions {
+  @override
+  void watermark() {}
 }
 
 class _NoReferenceView implements ReferenceViewActions {

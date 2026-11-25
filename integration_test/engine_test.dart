@@ -1073,6 +1073,69 @@ void main() {
     workspace.onUnsaved = () async => UnsavedChoice.discard;
     expect(await workspace.closeTab(), isTrue);
 
+    // 34. A Página Inicial, o Layout e o Inserir (D-092): maiúsculas, a lista
+    //     de vários níveis, duas colunas, os números de linha, a cor da
+    //     página, a marca d'água, a ordem de uma imagem e a caixa de texto,
+    //     conferidos no ODT gravado e na cópia.
+    final laid = File('test/fixtures/capitulo-curto.odt').copySync('${tmp.path}/layout.odt').path;
+    await openAndWait(laid);
+    doc.uno('.uno:GoToEndOfDoc');
+    doc.uno('.uno:InsertPara');
+    type('caixa alta');
+    doc.uno('.uno:StartOfParaSel');
+    await until(() => doc.hasSelection, 'selecionar para o Aa');
+    doc.changeCase(TextCase.upper);
+    doc.uno('.uno:GoToEndOfDoc');
+    doc.uno('.uno:InsertPara');
+    type('Primeiro item');
+    doc.setMultilevelList(MultilevelList.decimal);
+    doc.uno('.uno:InsertPara');
+    type('Subitem');
+    doc.listLevelDown();
+    doc.uno('.uno:InsertPara');
+    doc.listLevelUp();
+    doc.listLevelUp();
+    doc.uno('.uno:InsertPara');
+    doc.setPageColumns(2);
+    await until(() => doc.pageColumns == 2, 'o motor diz as duas colunas', detail: () => '${doc.pageColumns}');
+    doc.setLineNumbers(true);
+    doc.setPageColor(0xFFF5E0);
+    doc.setWatermark(const WatermarkSpec(text: 'RASCUNHO'));
+    await until(() => doc.snapshot.page.watermark == 'RASCUNHO' && doc.snapshot.page.lineNumbers && doc.snapshot.page.pageColor == 0xFFF5E0,
+        'a cópia com a página', detail: () => '${doc.snapshot.page.watermark} ${doc.snapshot.page.lineNumbers} ${doc.snapshot.page.pageColor}');
+    doc.insertImage(png.path);
+    await until(() => doc.graphic != null, 'a imagem do Layout');
+    doc.arrange(Arrange.back);
+    doc.uno('.uno:Escape');
+    await until(() => doc.graphic == null, 'sair da imagem');
+    doc.uno('.uno:GoToEndOfDoc');
+    doc.uno('.uno:InsertPara');
+    doc.insertTextBox();
+    type('Dentro da caixa');
+    await workspace.save();
+    await until(() => !doc.modified && doc.busy == null, 'salvar o Layout');
+    final laidXml = readOdtContent(laid)!;
+    if (Platform.environment['QUILL_LAYOUT_OUT'] case final copy?) File(copy).writeAsStringSync(laidXml);
+    final laidStyles = utf8.decode(readZipEntry(File(laid).readAsBytesSync(), 'styles.xml')!);
+    expect(laidXml, contains('CAIXA ALTA'));
+    expect(RegExp(r'<text:list-item>\s*<text:p[^>]*>(?:<text:span[^>]*>)?Primeiro item(?:</text:span>)?</text:p>\s*<text:list>\s*<text:list-item>\s*<text:p[^>]*>Subitem').hasMatch(laidXml), isTrue,
+        reason: 'o subitem um nível abaixo');
+    expect(laidXml, contains('loext:num-list-format="%1%.%2%"'), reason: 'o modelo 1 · 1.1');
+    expect(laidStyles, contains('fo:column-count="2"'));
+    expect(parsePageSetup(laidStyles).lineNumbers, isTrue, reason: 'os números de linha');
+    expect(laidStyles, contains('fo:background-color="#fff5e0"'));
+    expect(laidStyles, contains('PowerPlusWaterMarkObject'));
+    expect(RegExp(r'<draw:text-box[^>]*>\s*<text:p[^>]*>Dentro da caixa</text:p>').hasMatch(laidXml), isTrue, reason: 'a caixa de texto');
+    // Tirar: a marca d'água, a cor, os números e as colunas.
+    doc.uno('.uno:GoToStartOfDoc');
+    doc.setWatermark(null);
+    doc.setPageColor(null);
+    doc.setLineNumbers(false);
+    doc.setPageColumns(1);
+    await until(() => doc.snapshot.page.watermark == null && !doc.snapshot.page.lineNumbers && doc.snapshot.page.pageColor == null,
+        'tirar o Layout', detail: () => '${doc.snapshot.page.watermark} ${doc.snapshot.page.lineNumbers} ${doc.snapshot.page.pageColor}');
+    expect(await workspace.closeTab(), isTrue);
+
         // Fecha sem salvar (descarta), para não deixar trava.
     workspace.onUnsaved = () async => UnsavedChoice.discard;
     expect(await workspace.requestExit(), isTrue);

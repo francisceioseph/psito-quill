@@ -13,6 +13,7 @@ import '../../../l10n/gen/app_localizations.dart';
 import '../../commands/command_registry.dart';
 import '../../commands/commands_book.dart';
 import '../../commands/commands_document.dart';
+import '../../commands/commands_layout.dart';
 import '../../commands/commands_page.dart';
 import '../../commands/commands_references.dart';
 import '../../commands/commands_view.dart';
@@ -310,6 +311,7 @@ class Ribbon extends StatelessWidget {
                           _groups(commands, onRan, [
                             (l10n.groupArrange, [CommandIds.wrapOff, CommandIds.wrapIdeal, CommandIds.wrapThrough]),
                             (l10n.fieldPageSize, [CommandIds.imageLeft, CommandIds.imageCenter, CommandIds.imageRight]),
+                            (l10n.groupOrder, LayoutCommandIds.arrange),
                           ]),
                         ],
                       ),
@@ -507,6 +509,11 @@ class _InsertTab extends StatelessWidget {
             ]),
           ]),
           RibbonGroup(title: l10n.groupLinks, firstRow: [_big(commands, PageCommandIds.link, onRan)]),
+          // A caixa de texto e a data e a hora como campo (D-092).
+          RibbonGroup(title: l10n.groupText, firstRow: [
+            _big(commands, LayoutCommandIds.textBox, onRan),
+            menu(l10n.commandDateTime, Symbols.calendar_today_rounded, const [PageCommandIds.date, PageCommandIds.time]),
+          ]),
           RibbonGroup(
             title: l10n.groupTypography,
             last: true,
@@ -537,7 +544,14 @@ class _LayoutTab extends StatelessWidget {
     Widget cmd(String id) => CommandButton(commands: commands, id: id, onRan: onRan);
     final editable = doc.canEdit;
     final margins = marginPresets(l10n);
-    return Row(
+    Widget menu(String label, IconData icon, List<String> ids) =>
+        CommandMenuButton(commands: commands, ids: ids, icon: icon, label: label, big: true, onRan: onRan);
+    final page = doc.snapshot.page;
+    final pageColor = page.pageColor;
+    final pagePalette = pageColorChoices(l10n);
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         RibbonGroup(
@@ -562,6 +576,34 @@ class _LayoutTab extends StatelessWidget {
           ],
           secondRow: [cmd(CommandIds.portrait), cmd(CommandIds.landscape)],
         ),
+        // As colunas e os números de linha (D-092).
+        RibbonGroup(
+          title: l10n.groupColumns,
+          firstRow: [
+            menu(l10n.groupColumns, Symbols.view_column_rounded, LayoutCommandIds.columns),
+            CommandCheck(commands: commands, id: LayoutCommandIds.lineNumbers, onRan: onRan),
+          ],
+        ),
+        RibbonGroup(
+          title: l10n.groupPageBackground,
+          firstRow: [
+            ColorMenuButton(
+              icon: Symbols.format_color_fill_rounded,
+              label: l10n.pageColor,
+              current: pageColor,
+              currentName: pageColor == null
+                  ? l10n.pageColorNone
+                  : pagePalette.where((c) => c.$2 == pageColor).map((c) => c.$1).firstOrNull ??
+                      '#${pageColor.toRadixString(16).padLeft(6, '0').toUpperCase()}',
+              noneLabel: l10n.pageColorNone,
+              choices: pagePalette,
+              onSelected: editable ? doc.setPageColor : null,
+              onClosed: onRan,
+            ),
+            menu(l10n.commandWatermark, Symbols.branding_watermark_rounded,
+                const [LayoutCommandIds.watermark, LayoutCommandIds.removeWatermark]),
+          ],
+        ),
         RibbonGroup(
           title: l10n.groupHyphenation,
           firstRow: [CommandCheck(commands: commands, id: PageCommandIds.hyphenation, onRan: onRan)],
@@ -569,7 +611,6 @@ class _LayoutTab extends StatelessWidget {
         ),
         RibbonGroup(
           title: l10n.groupSpacing,
-          last: true,
           firstRow: [
             cmd(CommandIds.indentLess),
             cmd(CommandIds.indentMore),
@@ -578,10 +619,25 @@ class _LayoutTab extends StatelessWidget {
           ],
           secondRow: [cmd(CommandIds.lineSpacing1), cmd(CommandIds.lineSpacing15), cmd(CommandIds.lineSpacing2)],
         ),
+        // Organizar a imagem selecionada (o agrupar fica de fora: a 24.2 só
+        // agrupa formas de desenho).
+        RibbonGroup(
+          title: l10n.groupOrder,
+          last: true,
+          firstRow: [for (final id in LayoutCommandIds.arrange) cmd(id)],
+          secondRow: [cmd(CommandIds.imageLeft), cmd(CommandIds.imageCenter), cmd(CommandIds.imageRight)],
+        ),
       ],
-    );
+    ));
   }
 }
+
+/// As cores da página: claras, para o texto continuar legível.
+List<(String, int)> pageColorChoices(AppLocalizations l10n) => [
+      for (final (i, name) in [l10n.pageColorCream, l10n.pageColorGray, l10n.pageColorBlue, l10n.pageColorGreen, l10n.pageColorYellow]
+          .indexed)
+        (name, pageColorValues[i]),
+    ];
 
 /// A amostra de um estilo para os cartões: as propriedades da cópia
 /// temporária (D-044), se já chegaram; senão, uma genérica pelo tipo.
@@ -836,7 +892,8 @@ class _HomeTab extends StatelessWidget {
     // A primeira linha do Fonte: a fonte, −, o tamanho e +. A fonte fica com
     // o que sobra da largura do tamanho escolhido.
     const sizeWidth = 64.0;
-    final fixedFontRow = 2 * m.button + sizeWidth + 3 * m.gap;
+    // O Aa (D-092) fecha a linha: o OnlyOffice o põe ao lado do tamanho.
+    final fixedFontRow = 3 * m.button + sizeWidth + 4 * m.gap;
     Widget fontRow(double width) => Row(mainAxisSize: MainAxisSize.min, children: [
           FontPicker(
             width: width - fixedFontRow,
@@ -884,6 +941,14 @@ class _HomeTab extends StatelessWidget {
                   }
                 : null,
           ),
+          SizedBox(width: m.gap),
+          CommandMenuButton(
+            commands: commands,
+            ids: LayoutCommandIds.cases,
+            icon: Symbols.match_case_rounded,
+            label: l10n.commandChangeCase,
+            onRan: onRan,
+          ),
         ]);
     Widget line(List<Widget> items) => Row(mainAxisSize: MainAxisSize.min, children: [
           for (final (i, w) in items.indexed) ...[if (i > 0) SizedBox(width: m.gap), w],
@@ -904,16 +969,40 @@ class _HomeTab extends StatelessWidget {
       CommandIds.justify,
       CommandIds.formattingMarks,
     ];
+    final multilevel = CommandMenuButton(
+      commands: commands,
+      ids: const [...LayoutCommandIds.lists, commandMenuDivider, LayoutCommandIds.listLevelDown, LayoutCommandIds.listLevelUp],
+      icon: Symbols.format_list_numbered_rounded,
+      label: l10n.commandMultilevelList,
+      onRan: onRan,
+    );
     final fontWide = m.row(9);
     final fontNarrow = [m.row(7), 150 + fixedFontRow].reduce((a, b) => a > b ? a : b);
 
     return AdaptiveRibbon(groups: [
       RibbonGroupSpec(title: l10n.groupClipboard, priority: 1, levels: [
-        RibbonLevel(m.big + m.gap + m.button, (_) => line([
+        // O pincel (D-092) ao lado de recortar e copiar.
+        RibbonLevel(m.big + 2 * (m.gap + m.button), (_) => line([
               _big(commands, CommandIds.paste, onRan, width: m.big),
               Column(mainAxisSize: MainAxisSize.min, children: [cmd(CommandIds.cut), SizedBox(height: m.gap), cmd(CommandIds.copy)]),
+              Column(mainAxisSize: MainAxisSize.min, children: [cmd(LayoutCommandIds.paintbrush)]),
             ])),
-        RibbonLevel(m.big, (_) => _big(commands, CommandIds.paste, onRan, width: m.big)),
+        // Sem espaço, o recortar sai (fica no Ctrl+X, no Editar e no menu de
+        // contexto), e o pincel continua.
+        RibbonLevel(m.big + m.gap + m.button, (_) => line([
+              _big(commands, CommandIds.paste, onRan, width: m.big),
+              Column(mainAxisSize: MainAxisSize.min, children: [
+                cmd(CommandIds.copy),
+                SizedBox(height: m.gap),
+                cmd(LayoutCommandIds.paintbrush),
+              ]),
+            ])),
+        // O menor: colar e o pincel, pequenos, um sobre o outro.
+        RibbonLevel(m.button, (_) => Column(mainAxisSize: MainAxisSize.min, children: [
+              cmd(CommandIds.paste),
+              SizedBox(height: m.gap),
+              cmd(LayoutCommandIds.paintbrush),
+            ])),
       ]),
       RibbonGroupSpec(title: l10n.groupFont, priority: 9, levels: [
         RibbonLevel(fontWide, (_) => rows(
@@ -942,7 +1031,12 @@ class _HomeTab extends StatelessWidget {
                 colorHighlight,
                 CommandMenuButton(
                   commands: commands,
-                  ids: const [CommandIds.superscript, CommandIds.subscript, commandMenuDivider, CommandIds.clearFormatting],
+                  ids: const [
+                    CommandIds.superscript,
+                    CommandIds.subscript,
+                    commandMenuDivider,
+                    CommandIds.clearFormatting,
+                  ],
                   icon: Symbols.more_horiz_rounded,
                   label: l10n.ribbonMoreFont,
                   onRan: onRan,
@@ -951,10 +1045,11 @@ class _HomeTab extends StatelessWidget {
             )),
       ]),
       RibbonGroupSpec(title: l10n.groupParagraph, priority: 3, levels: [
-        RibbonLevel(m.row(6), (_) => rows(
+        RibbonLevel(m.row(7), (_) => rows(
               line([
                 cmd(CommandIds.bullets),
                 cmd(CommandIds.numbering),
+                multilevel,
                 cmd(CommandIds.indentLess),
                 cmd(CommandIds.indentMore),
                 _LineSpacingMenu(commands: commands, onRan: onRan),
@@ -996,6 +1091,8 @@ class _HomeTab extends StatelessWidget {
                 CommandIds.lineSpacing1,
                 CommandIds.lineSpacing15,
                 CommandIds.lineSpacing2,
+                commandMenuDivider,
+                ...LayoutCommandIds.lists,
                 commandMenuDivider,
                 PageCommandIds.paragraph,
               ],

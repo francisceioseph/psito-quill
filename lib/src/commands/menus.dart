@@ -4,6 +4,7 @@
 import '../../l10n/gen/app_localizations.dart';
 import 'commands_book.dart';
 import 'commands_document.dart';
+import 'commands_layout.dart';
 import 'commands_page.dart';
 import 'commands_references.dart';
 import 'commands_view.dart';
@@ -73,6 +74,7 @@ List<MenuSpec> editorMenus(AppLocalizations l10n) => [
         PageCommandIds.pageCount,
         PageCommandIds.date,
         PageCommandIds.time,
+        LayoutCommandIds.textBox,
         null,
         PageCommandIds.footnote,
         PageCommandIds.endnote,
@@ -96,6 +98,9 @@ List<MenuSpec> editorMenus(AppLocalizations l10n) => [
         CommandIds.strikeout,
         CommandIds.superscript,
         CommandIds.subscript,
+        LayoutCommandIds.paintbrush,
+        null,
+        ...LayoutCommandIds.cases,
         null,
         CommandIds.alignLeft,
         CommandIds.alignCenter,
@@ -112,6 +117,9 @@ List<MenuSpec> editorMenus(AppLocalizations l10n) => [
         CommandIds.numbering,
         CommandIds.indentMore,
         CommandIds.indentLess,
+        ...LayoutCommandIds.lists,
+        LayoutCommandIds.listLevelDown,
+        LayoutCommandIds.listLevelUp,
         null,
         CommandIds.keepWithNext,
         CommandIds.separateFromNext,
@@ -127,10 +135,15 @@ List<MenuSpec> editorMenus(AppLocalizations l10n) => [
         CommandIds.landscape,
         PageCommandIds.firstPageDifferent,
         PageCommandIds.leftRightDifferent,
+        ...LayoutCommandIds.columns,
+        LayoutCommandIds.lineNumbers,
+        LayoutCommandIds.watermark,
+        LayoutCommandIds.removeWatermark,
         null,
         CommandIds.wrapOff,
         CommandIds.wrapIdeal,
         CommandIds.wrapThrough,
+        ...LayoutCommandIds.arrange,
         null,
         CommandIds.clearFormatting,
       ]),

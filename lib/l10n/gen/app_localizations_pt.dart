@@ -3327,4 +3327,153 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get infoUndoProperties => 'Desfazer as mudanças';
+
+  @override
+  String get commandPaintbrush => 'Copiar a formatação';
+
+  @override
+  String get commandChangeCase => 'Maiúsculas e minúsculas';
+
+  @override
+  String get commandCaseSentence => 'Como numa frase';
+
+  @override
+  String get commandCaseLower => 'minúsculas';
+
+  @override
+  String get commandCaseUpper => 'MAIÚSCULAS';
+
+  @override
+  String get commandCaseTitle => 'Cada Palavra Com Maiúscula';
+
+  @override
+  String get commandCaseToggle => 'iNVERTER mAIÚSCULAS';
+
+  @override
+  String get commandMultilevelList => 'Lista de vários níveis';
+
+  @override
+  String get commandListDecimal => 'Lista 1 · 1.1 · 1.1.1';
+
+  @override
+  String get commandListRoman => 'Lista I. · A. · 1.';
+
+  @override
+  String get commandListLetters => 'Lista A. · 1. · a.';
+
+  @override
+  String get commandListParenthesis => 'Lista 1) · a) · 1)';
+
+  @override
+  String get commandListBullets => 'Lista de marcadores em níveis';
+
+  @override
+  String get commandListLevelDown => 'Descer um nível na lista';
+
+  @override
+  String get commandListLevelUp => 'Subir um nível na lista';
+
+  @override
+  String commandColumns(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n colunas',
+      one: 'Uma coluna',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get commandLineNumbers => 'Números de linha';
+
+  @override
+  String get commandWatermark => 'Marca d\'água…';
+
+  @override
+  String get commandRemoveWatermark => 'Tirar a marca d\'água';
+
+  @override
+  String get commandArrangeFront => 'Trazer para a frente';
+
+  @override
+  String get commandArrangeForward => 'Avançar um';
+
+  @override
+  String get commandArrangeBackward => 'Recuar um';
+
+  @override
+  String get commandArrangeBack => 'Enviar para trás';
+
+  @override
+  String get commandTextBox => 'Caixa de texto';
+
+  @override
+  String get commandDateTime => 'Data e hora';
+
+  @override
+  String get groupColumns => 'Colunas';
+
+  @override
+  String get groupPageBackground => 'Fundo da página';
+
+  @override
+  String get groupOrder => 'Ordem';
+
+  @override
+  String get groupText => 'Texto';
+
+  @override
+  String get pageColor => 'Cor da página';
+
+  @override
+  String get pageColorNone => 'Sem cor';
+
+  @override
+  String get pageColorCream => 'Creme';
+
+  @override
+  String get pageColorGray => 'Cinza-claro';
+
+  @override
+  String get pageColorBlue => 'Azul-claro';
+
+  @override
+  String get pageColorGreen => 'Verde-claro';
+
+  @override
+  String get pageColorYellow => 'Amarelo-claro';
+
+  @override
+  String get watermarkTitle => 'Marca d\'água';
+
+  @override
+  String get watermarkText => 'O texto';
+
+  @override
+  String get watermarkHint => 'RASCUNHO';
+
+  @override
+  String get watermarkColor => 'A cor';
+
+  @override
+  String watermarkColorN(int n) {
+    return 'Cor $n';
+  }
+
+  @override
+  String get watermarkLayout => 'A direção';
+
+  @override
+  String get watermarkDiagonal => 'Na diagonal';
+
+  @override
+  String get watermarkHorizontal => 'Na horizontal';
+
+  @override
+  String get watermarkNote =>
+      'A marca d\'água vai no cabeçalho de cada página. Tirar o cabeçalho tira ela junto.';
+
+  @override
+  String get watermarkApply => 'Aplicar';
 }

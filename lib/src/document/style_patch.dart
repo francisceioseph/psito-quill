@@ -23,6 +23,9 @@ class PageSetup {
     this.firstDifferent = false,
     this.leftDifferent = false,
     this.hyphenation = false,
+    this.lineNumbers = false,
+    this.pageColor,
+    this.watermark,
   });
 
   /// Algum estilo de página tem cabeçalho (ou rodapé).
@@ -37,6 +40,16 @@ class PageSetup {
   /// O estilo padrão de parágrafo hifeniza.
   final bool hyphenation;
 
+  /// Os números de linha (o `text:linenumbering-configuration`, D-092).
+  final bool lineNumbers;
+
+  /// A cor do estilo de página "Standard" (RGB); null sem cor.
+  final int? pageColor;
+
+  /// O texto da marca d'água (a forma `PowerPlusWaterMarkObject` que o
+  /// `.uno:Watermark` põe no cabeçalho); null sem ela.
+  final String? watermark;
+
   @override
   bool operator ==(Object other) =>
       other is PageSetup &&
@@ -44,9 +57,13 @@ class PageSetup {
       other.footer == footer &&
       other.firstDifferent == firstDifferent &&
       other.leftDifferent == leftDifferent &&
-      other.hyphenation == hyphenation;
+      other.hyphenation == hyphenation &&
+      other.lineNumbers == lineNumbers &&
+      other.pageColor == pageColor &&
+      other.watermark == watermark;
   @override
-  int get hashCode => Object.hash(header, footer, firstDifferent, leftDifferent, hyphenation);
+  int get hashCode =>
+      Object.hash(header, footer, firstDifferent, leftDifferent, hyphenation, lineNumbers, pageColor, watermark);
 }
 
 /// Os tipos de estilo que o `LoadStyles` carrega (`SfxTemplateFlags`), e a
@@ -70,7 +87,30 @@ PageSetup parsePageSetup(String xml) {
     firstDifferent: pages.any((p) => _has(p, 'header-first') || _has(p, 'footer-first')),
     leftDifferent: pages.any((p) => _has(p, 'header-left') || _has(p, 'footer-left')),
     hyphenation: hy != null && _hyphenate.firstMatch(hy)?[1] == 'true',
+    lineNumbers: switch (_lineNumbering.firstMatch(xml)?[0]) {
+      null => false,
+      final c => !c.contains('text:number-lines="false"'),
+    },
+    pageColor: _standardPageColor(xml),
+    watermark: switch (_watermark.firstMatch(xml)) {
+      null => null,
+      final m => m[1]!.replaceAll(RegExp(r'<[^>]+>'), '').trim(),
+    },
   );
+}
+
+final _lineNumbering = RegExp(r'<text:linenumbering-configuration\b[^>]*>');
+final _watermark = RegExp(r'<draw:custom-shape\b[^>]*draw:name="PowerPlusWaterMarkObject[^"]*"[^>]*>\s*<text:p\b[^>]*>([\s\S]*?)</text:p>');
+
+/// O `fo:background-color` do layout do estilo de página "Standard".
+int? _standardPageColor(String xml) {
+  final master = RegExp(r'<style:master-page\s[^>]*style:name="Standard"[^>]*style:page-layout-name="([^"]*)"').firstMatch(xml) ??
+      RegExp(r'<style:master-page\s[^>]*style:page-layout-name="([^"]*)"').firstMatch(xml);
+  if (master == null) return null;
+  final props = RegExp('<style:page-layout\\s+style:name="${RegExp.escape(master[1]!)}"[^>]*>\\s*<style:page-layout-properties\\s([^>]*?)/?>')
+      .firstMatch(xml);
+  final bg = RegExp(r'fo:background-color="#([0-9a-fA-F]{6})"').firstMatch(props?[1] ?? '');
+  return bg == null ? null : int.parse(bg[1]!, radix: 16);
 }
 
 /// A cópia sem o texto: os estilos não dependem dele, e o arquivo fica

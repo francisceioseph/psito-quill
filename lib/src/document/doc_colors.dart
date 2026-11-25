@@ -23,3 +23,11 @@ const highlightChoices = <(DocColorName, int)>[
   (DocColorName.orange, 0xFFBF00),
   (DocColorName.gray, 0xDDDDDD),
 ];
+
+/// A cor da página (D-092): claras, para o texto continuar legível. Na ordem
+/// dos nomes da faixa (creme, cinza, azul, verde, amarelo).
+const pageColorValues = <int>[0xFFF5E0, 0xEEEEEE, 0xDEE6EF, 0xE8F2D0, 0xFFFFD7];
+
+/// A marca d'água: os cinzas e as cores claras, que deixam o texto legível
+/// por cima.
+const watermarkColorValues = <int>[0xC0C0C0, 0x808080, 0xFFA6A6, 0xB4C7DC, 0xAFD095];

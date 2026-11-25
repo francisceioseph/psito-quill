@@ -5965,6 +5965,282 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Desfazer as mudanças'**
   String get infoUndoProperties;
+
+  /// No description provided for @commandPaintbrush.
+  ///
+  /// In pt, this message translates to:
+  /// **'Copiar a formatação'**
+  String get commandPaintbrush;
+
+  /// No description provided for @commandChangeCase.
+  ///
+  /// In pt, this message translates to:
+  /// **'Maiúsculas e minúsculas'**
+  String get commandChangeCase;
+
+  /// No description provided for @commandCaseSentence.
+  ///
+  /// In pt, this message translates to:
+  /// **'Como numa frase'**
+  String get commandCaseSentence;
+
+  /// No description provided for @commandCaseLower.
+  ///
+  /// In pt, this message translates to:
+  /// **'minúsculas'**
+  String get commandCaseLower;
+
+  /// No description provided for @commandCaseUpper.
+  ///
+  /// In pt, this message translates to:
+  /// **'MAIÚSCULAS'**
+  String get commandCaseUpper;
+
+  /// No description provided for @commandCaseTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cada Palavra Com Maiúscula'**
+  String get commandCaseTitle;
+
+  /// No description provided for @commandCaseToggle.
+  ///
+  /// In pt, this message translates to:
+  /// **'iNVERTER mAIÚSCULAS'**
+  String get commandCaseToggle;
+
+  /// No description provided for @commandMultilevelList.
+  ///
+  /// In pt, this message translates to:
+  /// **'Lista de vários níveis'**
+  String get commandMultilevelList;
+
+  /// No description provided for @commandListDecimal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Lista 1 · 1.1 · 1.1.1'**
+  String get commandListDecimal;
+
+  /// No description provided for @commandListRoman.
+  ///
+  /// In pt, this message translates to:
+  /// **'Lista I. · A. · 1.'**
+  String get commandListRoman;
+
+  /// No description provided for @commandListLetters.
+  ///
+  /// In pt, this message translates to:
+  /// **'Lista A. · 1. · a.'**
+  String get commandListLetters;
+
+  /// No description provided for @commandListParenthesis.
+  ///
+  /// In pt, this message translates to:
+  /// **'Lista 1) · a) · 1)'**
+  String get commandListParenthesis;
+
+  /// No description provided for @commandListBullets.
+  ///
+  /// In pt, this message translates to:
+  /// **'Lista de marcadores em níveis'**
+  String get commandListBullets;
+
+  /// No description provided for @commandListLevelDown.
+  ///
+  /// In pt, this message translates to:
+  /// **'Descer um nível na lista'**
+  String get commandListLevelDown;
+
+  /// No description provided for @commandListLevelUp.
+  ///
+  /// In pt, this message translates to:
+  /// **'Subir um nível na lista'**
+  String get commandListLevelUp;
+
+  /// No description provided for @commandColumns.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n, plural, =1{Uma coluna} other{{n} colunas}}'**
+  String commandColumns(int n);
+
+  /// No description provided for @commandLineNumbers.
+  ///
+  /// In pt, this message translates to:
+  /// **'Números de linha'**
+  String get commandLineNumbers;
+
+  /// No description provided for @commandWatermark.
+  ///
+  /// In pt, this message translates to:
+  /// **'Marca d\'água…'**
+  String get commandWatermark;
+
+  /// No description provided for @commandRemoveWatermark.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tirar a marca d\'água'**
+  String get commandRemoveWatermark;
+
+  /// No description provided for @commandArrangeFront.
+  ///
+  /// In pt, this message translates to:
+  /// **'Trazer para a frente'**
+  String get commandArrangeFront;
+
+  /// No description provided for @commandArrangeForward.
+  ///
+  /// In pt, this message translates to:
+  /// **'Avançar um'**
+  String get commandArrangeForward;
+
+  /// No description provided for @commandArrangeBackward.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recuar um'**
+  String get commandArrangeBackward;
+
+  /// No description provided for @commandArrangeBack.
+  ///
+  /// In pt, this message translates to:
+  /// **'Enviar para trás'**
+  String get commandArrangeBack;
+
+  /// No description provided for @commandTextBox.
+  ///
+  /// In pt, this message translates to:
+  /// **'Caixa de texto'**
+  String get commandTextBox;
+
+  /// No description provided for @commandDateTime.
+  ///
+  /// In pt, this message translates to:
+  /// **'Data e hora'**
+  String get commandDateTime;
+
+  /// No description provided for @groupColumns.
+  ///
+  /// In pt, this message translates to:
+  /// **'Colunas'**
+  String get groupColumns;
+
+  /// No description provided for @groupPageBackground.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fundo da página'**
+  String get groupPageBackground;
+
+  /// No description provided for @groupOrder.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ordem'**
+  String get groupOrder;
+
+  /// No description provided for @groupText.
+  ///
+  /// In pt, this message translates to:
+  /// **'Texto'**
+  String get groupText;
+
+  /// No description provided for @pageColor.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cor da página'**
+  String get pageColor;
+
+  /// No description provided for @pageColorNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem cor'**
+  String get pageColorNone;
+
+  /// No description provided for @pageColorCream.
+  ///
+  /// In pt, this message translates to:
+  /// **'Creme'**
+  String get pageColorCream;
+
+  /// No description provided for @pageColorGray.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cinza-claro'**
+  String get pageColorGray;
+
+  /// No description provided for @pageColorBlue.
+  ///
+  /// In pt, this message translates to:
+  /// **'Azul-claro'**
+  String get pageColorBlue;
+
+  /// No description provided for @pageColorGreen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Verde-claro'**
+  String get pageColorGreen;
+
+  /// No description provided for @pageColorYellow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Amarelo-claro'**
+  String get pageColorYellow;
+
+  /// No description provided for @watermarkTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Marca d\'água'**
+  String get watermarkTitle;
+
+  /// No description provided for @watermarkText.
+  ///
+  /// In pt, this message translates to:
+  /// **'O texto'**
+  String get watermarkText;
+
+  /// No description provided for @watermarkHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'RASCUNHO'**
+  String get watermarkHint;
+
+  /// No description provided for @watermarkColor.
+  ///
+  /// In pt, this message translates to:
+  /// **'A cor'**
+  String get watermarkColor;
+
+  /// No description provided for @watermarkColorN.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cor {n}'**
+  String watermarkColorN(int n);
+
+  /// No description provided for @watermarkLayout.
+  ///
+  /// In pt, this message translates to:
+  /// **'A direção'**
+  String get watermarkLayout;
+
+  /// No description provided for @watermarkDiagonal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Na diagonal'**
+  String get watermarkDiagonal;
+
+  /// No description provided for @watermarkHorizontal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Na horizontal'**
+  String get watermarkHorizontal;
+
+  /// No description provided for @watermarkNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'A marca d\'água vai no cabeçalho de cada página. Tirar o cabeçalho tira ela junto.'**
+  String get watermarkNote;
+
+  /// No description provided for @watermarkApply.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aplicar'**
+  String get watermarkApply;
 }
 
 class _AppLocalizationsDelegate

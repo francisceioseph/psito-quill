@@ -3327,4 +3327,153 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get infoUndoProperties => 'Discard the changes';
+
+  @override
+  String get commandPaintbrush => 'Copy formatting';
+
+  @override
+  String get commandChangeCase => 'Change case';
+
+  @override
+  String get commandCaseSentence => 'Sentence case';
+
+  @override
+  String get commandCaseLower => 'lowercase';
+
+  @override
+  String get commandCaseUpper => 'UPPERCASE';
+
+  @override
+  String get commandCaseTitle => 'Capitalize Each Word';
+
+  @override
+  String get commandCaseToggle => 'tOGGLE cASE';
+
+  @override
+  String get commandMultilevelList => 'Multilevel list';
+
+  @override
+  String get commandListDecimal => 'List 1 · 1.1 · 1.1.1';
+
+  @override
+  String get commandListRoman => 'List I. · A. · 1.';
+
+  @override
+  String get commandListLetters => 'List A. · 1. · a.';
+
+  @override
+  String get commandListParenthesis => 'List 1) · a) · 1)';
+
+  @override
+  String get commandListBullets => 'Multilevel bullets';
+
+  @override
+  String get commandListLevelDown => 'Demote list item';
+
+  @override
+  String get commandListLevelUp => 'Promote list item';
+
+  @override
+  String commandColumns(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n columns',
+      one: 'One column',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get commandLineNumbers => 'Line numbers';
+
+  @override
+  String get commandWatermark => 'Watermark…';
+
+  @override
+  String get commandRemoveWatermark => 'Remove the watermark';
+
+  @override
+  String get commandArrangeFront => 'Bring to front';
+
+  @override
+  String get commandArrangeForward => 'Bring forward';
+
+  @override
+  String get commandArrangeBackward => 'Send backward';
+
+  @override
+  String get commandArrangeBack => 'Send to back';
+
+  @override
+  String get commandTextBox => 'Text box';
+
+  @override
+  String get commandDateTime => 'Date and time';
+
+  @override
+  String get groupColumns => 'Columns';
+
+  @override
+  String get groupPageBackground => 'Page background';
+
+  @override
+  String get groupOrder => 'Order';
+
+  @override
+  String get groupText => 'Text';
+
+  @override
+  String get pageColor => 'Page color';
+
+  @override
+  String get pageColorNone => 'No color';
+
+  @override
+  String get pageColorCream => 'Cream';
+
+  @override
+  String get pageColorGray => 'Light gray';
+
+  @override
+  String get pageColorBlue => 'Light blue';
+
+  @override
+  String get pageColorGreen => 'Light green';
+
+  @override
+  String get pageColorYellow => 'Light yellow';
+
+  @override
+  String get watermarkTitle => 'Watermark';
+
+  @override
+  String get watermarkText => 'The text';
+
+  @override
+  String get watermarkHint => 'DRAFT';
+
+  @override
+  String get watermarkColor => 'The color';
+
+  @override
+  String watermarkColorN(int n) {
+    return 'Color $n';
+  }
+
+  @override
+  String get watermarkLayout => 'The direction';
+
+  @override
+  String get watermarkDiagonal => 'Diagonal';
+
+  @override
+  String get watermarkHorizontal => 'Horizontal';
+
+  @override
+  String get watermarkNote =>
+      'The watermark goes in the header of each page. Removing the header removes it too.';
+
+  @override
+  String get watermarkApply => 'Apply';
 }

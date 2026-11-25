@@ -12,6 +12,7 @@ import '../../book/book_io.dart' show chapterBookmarks;
 import '../../book/docx_import.dart';
 import '../../commands/command_registry.dart';
 import '../../commands/commands_book.dart';
+import '../../commands/commands_layout.dart';
 import '../../commands/commands_references.dart';
 import '../../commands/commands_document.dart';
 import '../../commands/commands_page.dart';
@@ -50,6 +51,7 @@ import '../atoms/w_segmented.dart';
 import '../organisms/outline_panel.dart';
 import '../organisms/page_dialogs.dart';
 import '../organisms/paragraph_dialog.dart';
+import '../organisms/watermark_dialog.dart';
 import '../organisms/reference_dialogs.dart';
 import '../organisms/ruler.dart';
 import '../organisms/start_screen.dart';
@@ -99,7 +101,7 @@ enum _LeftPanel { binder, notes, outline, find, styles, comments, changes }
 const themeCommandPrefix = 'tema.';
 
 class _EditorPageState extends State<EditorPage>
-    implements EditorViewActions, BookViewActions, PageViewActions, ReferenceViewActions {
+    implements EditorViewActions, BookViewActions, PageViewActions, ReferenceViewActions, LayoutViewActions {
   CommandRegistry? _commands;
   final _docFocus = FocusNode(debugLabel: 'documento');
   bool _fileOpen = false;
@@ -269,6 +271,16 @@ class _EditorPageState extends State<EditorPage>
       case CaptionTarget(:final caption):
         doc.insertCaptionRef(caption, format);
     }
+    _docFocus.requestFocus();
+  }
+
+  @override
+  void watermark() => unawaited(_watermark());
+  Future<void> _watermark() async {
+    if (!doc.canEdit) return;
+    final w = await showWatermarkDialog(context, current: doc.snapshot.page.watermark);
+    if (!mounted) return;
+    if (w != null) doc.setWatermark(w);
     _docFocus.requestFocus();
   }
 
@@ -894,6 +906,7 @@ class _EditorPageState extends State<EditorPage>
       registerBookCommands(registry, doc: doc, workspace: widget.workspace, view: this, l10n: l10n);
       registerPageCommands(registry, doc: doc, view: this, l10n: l10n);
       registerReferenceCommands(registry, doc: doc, view: this, l10n: l10n);
+      registerLayoutCommands(registry, doc: doc, view: this, l10n: l10n);
       for (final (id, label) in themeChoices(l10n)) {
         registry.register(
           Command(
