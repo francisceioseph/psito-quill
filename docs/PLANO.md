@@ -461,7 +461,7 @@ Antes de cada comando `.uno:` ou callback novo, uma sonda com o `lok_script` (D-
   - a faixa num cartão, com a galeria embutida;
   - o trilho e o painel Estrutura;
   - o painel Formatar por seções (Texto, Parágrafo, Página, e Imagem ou Tabela), **só a visível construída**;
-  - a barra de status nova, com o controle deslizante de zoom;
+  - a barra de status nova, com o zoom (o controle deslizante saiu no D-094: a lupa −, a porcentagem e a lupa +);
   - a aba Imagem com o tamanho em cm, o cadeado da proporção, Legenda e Original.
 - **Etapa 3, as prévias de fontes e estilos:**
   - **A lista de fontes desenhadas com a própria fonte:** `ListView.builder`, com busca, "Neste documento", Recentes e Todas, e os filtros serifa, sem serifa e mono. Os filtros vêm de uma função nativa, `pqk_font_info`, que pergunta ao fontconfig.
@@ -654,6 +654,8 @@ O que a fase cobre (a lista de 23/11/2026):
   - no Layout: as colunas de texto, os números de linha, a cor da página e a marca d'água, e organizar as imagens (trazer para a frente, alinhar, agrupar);
   - nas Referências: as legendas, a tabela de figuras, os marcadores (Favorito) e a referência cruzada, junto do sumário do compilar;
   - no Inserir: a caixa de texto, a data e a hora como campo.
+
+**Depois da Fase 4** (25/11/2026), pedidos do Francisco: o X dentro da aba, o item inteiro realçado nos trilhos, o zoom da barra de status sem o controle deslizante (D-094) e os sons da máquina de escrever no zen, com o sino perto da margem (D-095).
 
 **Fase 5: plugins**
 - A API `psito.*` v1, o gerenciador de plugins com permissões, os 4 plugins de exemplo, e temas vindos de plugins.

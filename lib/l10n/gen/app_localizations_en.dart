@@ -927,9 +927,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commandLineSpacingMenu => 'Line spacing';
 
   @override
-  String get zoomSlider => 'Zoom';
-
-  @override
   String zoomPercent(int percent) {
     return '$percent %';
   }
@@ -3619,4 +3616,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get templatesSaveFailed => 'The template wasn\'t saved.';
+
+  @override
+  String get zenSound => 'Sound';
+
+  @override
+  String get prefTypewriterSound => 'Typewriter sounds';
+
+  @override
+  String get prefTypewriterSoundNote =>
+      'In zen mode, with the typewriter on: the sound of each key, the space bar and the carriage return, and the bell near the right margin. Quill makes the sounds itself, with no audio files.';
+
+  @override
+  String get prefTypewriterVolume => 'Sound volume';
+
+  @override
+  String get prefVolumeLow => 'Low';
+
+  @override
+  String get prefVolumeMedium => 'Medium';
+
+  @override
+  String get prefVolumeHigh => 'High';
 }

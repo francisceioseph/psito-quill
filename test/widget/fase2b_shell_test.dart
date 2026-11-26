@@ -9,7 +9,7 @@ import 'package:psito_quill/src/app.dart';
 import 'package:psito_quill/src/kit/fake/fake_quill_kit.dart';
 import 'package:psito_quill/src/ui/atoms/w_button.dart';
 import 'package:psito_quill/src/ui/atoms/w_chip.dart';
-import 'package:psito_quill/src/ui/atoms/w_slider.dart';
+import 'package:psito_quill/src/ui/organisms/status_bar.dart';
 import 'package:psito_quill/src/ui/molecules/style_card.dart';
 import 'package:psito_quill/src/ui/organisms/command_palette.dart';
 import 'package:psito_quill/src/ui/organisms/inspector.dart';
@@ -206,17 +206,18 @@ void main() {
     expect(kit.unoArgs.last, contains('${0xC9211E}'));
   });
 
-  testWidgets('o zoom da barra de status: arrastar só manda ao soltar', (tester) async {
+  testWidgets('o zoom da barra de status: as lupas vão de 10 em 10 %, e o número acompanha', (tester) async {
     await pumpApp(tester);
+    final bar = find.byType(StatusBar);
     final before = h.doc.zoom;
-    final slider = find.descendant(of: find.byType(WSlider), matching: find.byType(Slider));
-    final gesture = await tester.startGesture(tester.getCenter(slider));
-    await gesture.moveBy(const Offset(20, 0));
+    await tester.tap(find.descendant(of: bar, matching: find.bySemanticsLabel('Aumentar o zoom')));
     await tester.pump();
-    expect(h.doc.zoom, before, reason: 'no meio do arrasto, o motor não recebe nada');
-    await gesture.up();
+    expect(h.doc.zoom, closeTo(before + 0.1, 0.001));
+    expect(find.descendant(of: bar, matching: find.text('${((before + 0.1) * 100).round()} %')), findsOneWidget);
+    await tester.tap(find.descendant(of: bar, matching: find.bySemanticsLabel('Diminuir o zoom')));
+    await tester.tap(find.descendant(of: bar, matching: find.bySemanticsLabel('Diminuir o zoom')));
     await tester.pump();
-    expect(h.doc.zoom, greaterThan(before));
+    expect(h.doc.zoom, closeTo(before - 0.1, 0.001));
   });
 
   testWidgets('a casca não estoura em nenhum tema, com tudo aberto', (tester) async {

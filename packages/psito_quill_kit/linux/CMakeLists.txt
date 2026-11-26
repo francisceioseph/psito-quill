@@ -26,6 +26,7 @@ list(APPEND PLUGIN_SOURCES
   "core/lok_engine.cc"
   "core/lua_sandbox.cc"
   "core/font_info.cc"
+  "core/typewriter_sound.cc"
 )
 
 add_library(${PLUGIN_NAME} SHARED ${PLUGIN_SOURCES})

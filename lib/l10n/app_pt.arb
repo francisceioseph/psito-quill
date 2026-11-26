@@ -454,7 +454,6 @@
   "fontShrink": "Diminuir a fonte",
   "moreStyles": "Mais estilos",
   "commandLineSpacingMenu": "Entrelinhas",
-  "zoomSlider": "Zoom",
   "zoomPercent": "{percent} %",
   "@zoomPercent": {
     "placeholders": {
@@ -1724,5 +1723,12 @@
   "templatesSaved": "O modelo {name} foi salvo.",
   "@templatesSaved": {"placeholders": {"name": {"type": "String"}}},
   "templatesBookSaved": "Os estilos viraram o modelo do livro: os capítulos novos nascem dele.",
-  "templatesSaveFailed": "O modelo não foi salvo."
+  "templatesSaveFailed": "O modelo não foi salvo.",
+  "zenSound": "Som",
+  "prefTypewriterSound": "Sons da máquina de escrever",
+  "prefTypewriterSoundNote": "No modo zen, com a máquina de escrever ligada: o som de cada tecla, do espaço e do retorno do carro, e o sino perto da margem direita. Os sons são feitos pelo próprio Quill, sem arquivos.",
+  "prefTypewriterVolume": "Volume dos sons",
+  "prefVolumeLow": "Baixo",
+  "prefVolumeMedium": "Médio",
+  "prefVolumeHigh": "Alto"
 }

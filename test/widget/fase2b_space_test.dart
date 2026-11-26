@@ -56,13 +56,12 @@ void main() {
 
       final statusBar = find.byType(StatusBar);
       expect(statusBar, findsOneWidget);
-      // No tamanho de laptop maximizado (1366 e 1920) o controle deslizante de zoom aparece;
-      // em telas estreitas (< 1050), fica compacto para não esmagar os campos.
-      if (size.width >= 1050) {
-        expect(find.descendant(of: statusBar, matching: find.byType(WSlider)), findsOneWidget);
-      } else {
-        expect(find.descendant(of: statusBar, matching: find.byType(WSlider)), findsNothing);
-      }
+      // O zoom é a lupa −, a porcentagem e a lupa +, sem controle deslizante.
+      expect(find.descendant(of: statusBar, matching: find.byType(WSlider)), findsNothing);
+      final out = tester.getCenter(find.descendant(of: statusBar, matching: find.bySemanticsLabel('Diminuir o zoom')));
+      final percent = tester.getCenter(find.descendant(of: statusBar, matching: find.text('100 %')));
+      final inn = tester.getCenter(find.descendant(of: statusBar, matching: find.bySemanticsLabel('Aumentar o zoom')));
+      expect(out.dx < percent.dx && percent.dx < inn.dx, isTrue, reason: '− % +');
     });
   }
 

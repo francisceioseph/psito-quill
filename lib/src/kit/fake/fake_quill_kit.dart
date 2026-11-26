@@ -213,6 +213,22 @@ class FakeQuillKit implements QuillKit {
   @override
   void setAuthor(String name) => author = name;
 
+  /// Os sons da máquina de escrever (D-095): ligados, o volume e os tocados.
+  bool soundEnabled = false;
+  double soundVolume = 0;
+  final sounds = <TypewriterSound>[];
+
+  @override
+  void setTypewriterSound({required bool enabled, required double volume}) {
+    soundEnabled = enabled;
+    soundVolume = volume;
+  }
+
+  @override
+  void playTypewriterSound(TypewriterSound sound) {
+    if (soundEnabled) sounds.add(sound);
+  }
+
   /// Os comentários do documento (D-088), mudados pelos comandos `.uno:`.
   final comments = <DocComment>[];
   int _commentId = 0;

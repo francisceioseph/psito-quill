@@ -1,7 +1,7 @@
 // O adaptador da porta QuillKit para o LibreOfficeKit (pelo plugin nativo).
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' show File, FileSystemException;
+import 'dart:io' show File, FileSystemException, Platform;
 import 'dart:ui' show Rect, Size;
 
 import 'package:psito_quill_kit/psito_quill_kit.dart';
@@ -114,6 +114,17 @@ class LokQuillKit implements QuillKit {
 
   @override
   void setAuthor(String name) => _native.setAuthor(name);
+
+  @override
+  void setTypewriterSound({required bool enabled, required double volume}) =>
+      _native.soundSet(enabled, volume, _soundsDir());
+
+  /// Os sons gravados (D-095) vão nos assets do app: no bundle, ao lado do
+  /// executável, em `data/flutter_assets/assets/sons`.
+  static String _soundsDir() => '${File(Platform.resolvedExecutable).parent.path}/data/flutter_assets/assets/sons';
+
+  @override
+  void playTypewriterSound(TypewriterSound sound) => _native.soundPlay(sound.index);
 
   @override
   void preloadSpelling(String path) => _native.preloadSpelling(path);

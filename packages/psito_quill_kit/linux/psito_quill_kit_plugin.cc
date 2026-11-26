@@ -24,6 +24,7 @@
 #include "core/lok_engine.h"
 #include "core/lua_sandbox.h"
 #include "core/task_queue.h"
+#include "core/typewriter_sound.h"
 
 // ---------------------------------------------------------------- textura --
 
@@ -118,6 +119,9 @@ class Kit : public pqk::EngineSink {
 
 std::unique_ptr<Kit> g_kit;
 
+// Os sons da máquina de escrever (D-095): só existe depois do primeiro ligar.
+std::unique_ptr<pqk::sound::Player> g_sound;
+
 std::string str(const char* s) { return s ? s : ""; }
 
 std::string jsonEscape(const std::string& s) {
@@ -147,7 +151,21 @@ int32_t pqk_init(const char* install_path, const char* profile_url, int32_t tile
   return 0;
 }
 
-void pqk_shutdown(void) { g_kit.reset(); }
+void pqk_shutdown(void) {
+  g_kit.reset();
+  g_sound.reset();
+}
+
+void pqk_sound_set(bool enabled, double volume, const char* samples_dir) {
+  if (!g_sound) {
+    if (!enabled || !samples_dir) return;
+    g_sound = std::make_unique<pqk::sound::Player>(pqk::sound::pulseSink(), samples_dir);
+  }
+  g_sound->setEnabled(enabled, volume);
+}
+void pqk_sound_play(int32_t kind) {
+  if (g_sound && kind >= PQK_SOUND_KEY && kind <= PQK_SOUND_BELL) g_sound->play(static_cast<pqk::sound::Kind>(kind));
+}
 
 int64_t pqk_tile_texture_id(int32_t slot) { return g_kit ? g_kit->textureId(slot) : -1; }
 int32_t pqk_tile_slots(void) { return g_kit ? g_kit->slots() : 0; }

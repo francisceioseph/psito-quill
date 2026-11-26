@@ -480,6 +480,14 @@ abstract interface class QuillKit {
   /// abertos depois: a 24.2 não troca o de um documento aberto.
   void setAuthor(String name);
 
+  /// Os sons da máquina de escrever (D-095): ligar sintetiza os sons no
+  /// plugin (uns 200 KB) e desligar os solta. O volume vai de 0 a 1. Sem
+  /// PulseAudio, o som fica mudo, sem erro.
+  void setTypewriterSound({required bool enabled, required double volume});
+
+  /// Toca um som da máquina de escrever. Volta logo; desligado, não faz nada.
+  void playTypewriterSound(TypewriterSound sound);
+
   /// Abre o documento em [path] (pequeno, com texto em português) sem
   /// mostrar, para a ortografia carregar o dicionário enquanto a tela inicial
   /// está aberta (D-069). Só vale sem documento aberto; o motor apaga o
@@ -582,3 +590,6 @@ class PaperInvert {
   @override
   int get hashCode => Object.hash(paper, ink, source);
 }
+
+/// Os sons da máquina de escrever (D-095), na ordem do `PQK_SOUND_*`.
+enum TypewriterSound { key, space, backspace, carriageReturn, bell }

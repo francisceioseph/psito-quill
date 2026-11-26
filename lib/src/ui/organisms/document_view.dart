@@ -22,6 +22,7 @@ import 'package:flutter/services.dart';
 
 import '../../commands/command_registry.dart';
 import '../../document/document_controller.dart';
+import '../../document/typewriter_sound.dart';
 import '../../kit/lok/vcl_keys.dart';
 import '../../kit/quill_kit.dart';
 import '../tokens/tokens.dart';
@@ -150,6 +151,7 @@ class DocumentView extends StatefulWidget {
     this.focusNode,
     this.viewport,
     this.typewriter = false,
+    this.sounds = false,
     this.focusLines = 0,
     this.caretWidth = 1.5,
     this.caretBlink = true,
@@ -158,6 +160,10 @@ class DocumentView extends StatefulWidget {
   /// Máquina de escrever (o modo zen): a linha do cursor fica no meio da
   /// tela. Só a rolagem do Flutter; o motor não sabe.
   final bool typewriter;
+
+  /// Os sons da máquina de escrever (D-095): a tecla, o espaço, o retorno
+  /// do carro e o sino perto da margem. Só com a máquina de escrever.
+  final bool sounds;
 
   /// A espessura do cursor, em pixels, e se ele pisca (Acessibilidade,
   /// D-067).
@@ -291,6 +297,7 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
     }
     if (widget.doc.cursor != _lastCursor) {
       _lastCursor = widget.doc.cursor;
+      _ringBell();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _sendCaretRect();
         if (widget.typewriter) {
@@ -377,6 +384,32 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
     }
   }
 
+  // ------------------------------------- os sons da máquina de escrever --
+
+  final _bell = MarginBell();
+
+  /// Digitou-se algo que bate no papel: o próximo cursor do motor diz se o
+  /// sino toca.
+  bool _bellArmed = false;
+
+  /// Toca [sound] (antes de mandar ao motor, para soar junto com a tecla).
+  void _sound(TypewriterSound? sound) {
+    if (sound == null || !widget.sounds || !widget.doc.canEdit || widget.doc.busy != null) return;
+    widget.doc.kit.playTypewriterSound(sound);
+    _bellArmed = sound != TypewriterSound.backspace;
+  }
+
+  /// O cursor andou depois de digitar: perto da margem, o sino.
+  void _ringBell() {
+    if (!_bellArmed) return;
+    _bellArmed = false;
+    if (!widget.sounds) return;
+    final right = textRightTwips(widget.doc.ruler);
+    if (right != null && _bell.afterTyping(widget.doc.cursor, right)) {
+      widget.doc.kit.playTypewriterSound(TypewriterSound.bell);
+    }
+  }
+
   void _closeInput() {
     if (_composing) {
       widget.doc.insertText('');
@@ -414,6 +447,7 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
       return;
     }
     if (value.text.isNotEmpty) {
+      _sound(soundForText(value.text));
       widget.doc.insertText(value.text);
     } else if (_composing) {
       widget.doc.cancelComposition();
@@ -425,7 +459,10 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
 
   @override
   void performAction(TextInputAction action) {
-    if (action == TextInputAction.newline) widget.doc.postKey(13, VclKey.enter);
+    if (action == TextInputAction.newline) {
+      widget.doc.postKey(13, VclKey.enter);
+      _sound(TypewriterSound.carriageReturn);
+    }
   }
 
   @override
@@ -519,7 +556,10 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
         // vai como texto mesmo.
         if (_input == null || !_input!.attached) {
           final ch = event.character;
-          if (ch != null && widget.doc.canEdit) widget.doc.insertText(ch);
+          if (ch != null && widget.doc.canEdit) {
+            _sound(soundForText(ch));
+            widget.doc.insertText(ch);
+          }
           return ch == null ? KeyEventResult.ignored : KeyEventResult.handled;
         }
         return KeyEventResult.ignored;
@@ -535,6 +575,7 @@ class _DocumentViewState extends State<DocumentView> with TextInputClient {
         if (stroke == null) return KeyEventResult.ignored;
         // Só leitura: só navegar (setas, Page Up…), não apagar.
         if (!widget.doc.canEdit && !isNavigationKey(event.logicalKey)) return KeyEventResult.handled;
+        _sound(soundForVclKey(stroke.keyCode));
         widget.doc.postKey(stroke.charCode, stroke.keyCode);
         _restartBlink();
         return KeyEventResult.handled;

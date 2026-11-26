@@ -21,6 +21,7 @@ add_library(pqk_core STATIC
   ${KIT}/core/lok_engine.cc
   ${KIT}/core/lua_sandbox.cc
   ${KIT}/core/font_info.cc
+  ${KIT}/core/typewriter_sound.cc
 )
 target_include_directories(pqk_core PUBLIC ${KIT})
 target_link_libraries(pqk_core PUBLIC PkgConfig::LUA PkgConfig::FONTCONFIG Threads::Threads ${CMAKE_DL_LIBS})
@@ -31,8 +32,11 @@ add_executable(pqk_tests
   ${KIT}/test/lua_sandbox_test.cc
   ${KIT}/test/font_info_test.cc
   ${KIT}/test/paper_invert_test.cc
+  ${KIT}/test/typewriter_sound_test.cc
 )
 target_link_libraries(pqk_tests PRIVATE pqk_core GTest::gtest_main)
+# Os sons gravados da máquina de escrever (D-095), na raiz do app.
+target_compile_definitions(pqk_tests PRIVATE PQK_SOUNDS_DIR="${KIT}/../../../assets/sons")
 
 add_executable(lok_probe ${KIT}/tools/lok_probe.cc)
 target_link_libraries(lok_probe PRIVATE pqk_core)

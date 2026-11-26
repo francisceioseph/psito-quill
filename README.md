@@ -58,6 +58,10 @@ tool/bench.sh           # as medições de memória e latência
 
 Temas de alto contraste, o tamanho da interface até 200 %, botões maiores, o cursor mais grosso e sem piscar, e reduzir movimento ficam em Arquivo › Preferências › Acessibilidade. Para o leitor de tela, o Quill expõe o parágrafo onde está o cursor (o motor desenha a página como imagem, e não dá o documento inteiro): o leitor lê o parágrafo e acompanha o cursor dentro dele.
 
+## Créditos
+
+Os sons das teclas da máquina de escrever são cortes da gravação ["Typewriter 170428_1482.wav"](https://freesound.org/people/megashroom/sounds/390343/), de megashroom, uma Smith Corona Corsair, em domínio público (CC0). Os detalhes estão em `assets/sons/LEIA-ME.md`.
+
 ## Licença
 
 [Mozilla Public License 2.0](LICENSE), a mesma do LibreOffice. Os arquivos do Quill continuam abertos em qualquer versão modificada; quem usa o Quill junto com outro código não precisa abrir o resto.

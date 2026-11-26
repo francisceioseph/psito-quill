@@ -25,6 +25,8 @@ class Settings extends ChangeNotifier {
   bool _zen = false;
   bool _zenFocus = true;
   bool _zenTypewriter = true;
+  bool _typewriterSound = false;
+  double _typewriterVolume = 0.6;
   String _zenPaper = 'sepia';
   String _rulerUnit = 'cm';
   bool _startScreen = true;
@@ -87,6 +89,14 @@ class Settings extends ChangeNotifier {
   set zenFocus(bool v) => _set(() => _zenFocus = v);
   bool get zenTypewriter => _zenTypewriter;
   set zenTypewriter(bool v) => _set(() => _zenTypewriter = v);
+
+  /// Os sons da máquina de escrever (D-095): começam desligados.
+  bool get typewriterSound => _typewriterSound;
+  set typewriterSound(bool v) => _set(() => _typewriterSound = v);
+
+  /// O volume dos sons, de 0 a 1.
+  double get typewriterVolume => _typewriterVolume;
+  set typewriterVolume(double v) => _set(() => _typewriterVolume = v.clamp(0, 1));
   String get zenPaper => _zenPaper;
   set zenPaper(String v) => _set(() => _zenPaper = v);
 
@@ -189,6 +199,8 @@ class Settings extends ChangeNotifier {
       _pageLayout = json['paginas'] as String? ?? _pageLayout;
       _zenFocus = json['zenFoco'] as bool? ?? _zenFocus;
       _zenTypewriter = json['zenMaquina'] as bool? ?? _zenTypewriter;
+      _typewriterSound = json['somMaquina'] as bool? ?? _typewriterSound;
+      _typewriterVolume = ((json['volumeMaquina'] as num?)?.toDouble() ?? _typewriterVolume).clamp(0, 1);
       _zenPaper = json['zenPapel'] as String? ?? _zenPaper;
       _rulerUnit = json['unidadeRegua'] as String? ?? _rulerUnit;
       _startScreen = json['telaInicial'] as bool? ?? _startScreen;
@@ -233,6 +245,8 @@ class Settings extends ChangeNotifier {
             'paginas': _pageLayout,
             'zenFoco': _zenFocus,
             'zenMaquina': _zenTypewriter,
+            'somMaquina': _typewriterSound,
+            'volumeMaquina': _typewriterVolume,
             'zenPapel': _zenPaper,
             'unidadeRegua': _rulerUnit,
             'telaInicial': _startScreen,

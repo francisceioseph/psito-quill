@@ -481,6 +481,34 @@ class QuillKitBindings {
       _lookup<ffi.NativeFunction<ffi.Void Function()>>('pqk_shutdown');
   late final _pqk_shutdown = _pqk_shutdownPtr.asFunction<void Function()>();
 
+  void pqk_sound_play(int kind) {
+    return _pqk_sound_play(kind);
+  }
+
+  late final _pqk_sound_playPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int32)>>(
+        'pqk_sound_play',
+      );
+  late final _pqk_sound_play = _pqk_sound_playPtr
+      .asFunction<void Function(int)>();
+
+  void pqk_sound_set(
+    bool enabled,
+    double volume,
+    ffi.Pointer<ffi.Char> samples_dir,
+  ) {
+    return _pqk_sound_set(enabled, volume, samples_dir);
+  }
+
+  late final _pqk_sound_setPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(ffi.Bool, ffi.Double, ffi.Pointer<ffi.Char>)
+        >
+      >('pqk_sound_set');
+  late final _pqk_sound_set = _pqk_sound_setPtr
+      .asFunction<void Function(bool, double, ffi.Pointer<ffi.Char>)>();
+
   void pqk_text_selection(ffi.Pointer<ffi.Char> mime) {
     return _pqk_text_selection(mime);
   }
@@ -1375,6 +1403,16 @@ sealed class LibreOfficeKitTileMode {
   static const LOK_TILEMODE_RGBA = 0;
   static const LOK_TILEMODE_BGRA = 1;
 }
+
+const int PQK_SOUND_BACKSPACE = 2;
+
+const int PQK_SOUND_BELL = 4;
+
+const int PQK_SOUND_KEY = 0;
+
+const int PQK_SOUND_RETURN = 3;
+
+const int PQK_SOUND_SPACE = 1;
 
 sealed class PqkEvent {
   static const PQK_EVENT_READY = 10000;

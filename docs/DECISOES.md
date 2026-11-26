@@ -1521,3 +1521,38 @@ A Etapa 8 da Fase 4, com o que o Francisco viu no OnlyOffice: as regras da ortog
   - unidade, `preferences_templates_test`: o atalho guardado e lido, o escolhido por cima do jogo, atribuir o de outro, voltar ao jogo, uma letra sozinha, as preferências novas no arquivo, as regras no perfil (sem repetir depois de o LibreOffice regravar), a lista e o nome dos modelos; e, no `book_test`, o capítulo novo do `estilos.ott`;
   - widget, `fase4_preferences_test`: o atalho com o aviso de conflito (e o Ctrl+N passa a pôr itálico), o acesso rápido (tirar, subir, voltar ao padrão), a regra da ortografia, o novo a partir do modelo sem arquivo e salvar como modelo (o nome repetido);
   - integração (o passo 35): os estilos de um capítulo num `.ott` sem o texto, o novo a partir dele sem arquivo e sem trava ao lado do modelo, e o modelo intocado.
+
+## D-094 · O zoom da barra de status sem o controle deslizante
+
+O Francisco viu, depois da Fase 4 (25/11/2026), que o controle deslizante não fazia mais sentido.
+
+- **O zoom é a lupa −, a porcentagem e a lupa +** (`ZoomControl`, no lugar do controle deslizante do D-043 e do limiar de 1050 px do D-058). Os botões são os comandos de antes (de 10 em 10 %, com o Ctrl+- e o Ctrl+=), e a porcentagem continua abrindo o menu (100 %, ajustar à largura, à página). A porcentagem tem largura fixa, para os botões não pularem quando o número muda.
+- **Por quê:** o controle deslizante ocupava a barra, sumia nas janelas estreitas e não dava um valor exato; os botões e o menu já faziam tudo.
+- **A memória:** o `ZoomControl` virou um `StatelessWidget`, sem o estado do arrasto. O texto `zoomSlider` saiu dos `.arb`.
+- **Os testes:** widget, `fase2b_space_test` (− % + nessa ordem, em cada tamanho de tela, sem o controle deslizante) e `fase2b_shell_test` (as lupas vão de 10 em 10 %, e o número acompanha).
+
+## D-095 · Os sons da máquina de escrever
+
+O Francisco pediu, depois da Fase 4 (25/11/2026): o modo máquina de escrever com o som das teclas, e o sino como numa máquina de verdade, perto da margem.
+
+- **Quando tocam:** onde houver a máquina de escrever, que hoje é o zen com ela ligada (`zenTypewriter`), e só com a preferência ligada (Preferências › Geral, "Sons da máquina de escrever", ou o botão Som da barrinha do zen). Começam desligados. O volume é Baixo, Médio ou Alto (0,3, 0,6 e 1).
+- **Os sons** (`typewriter_sound.dart`, `soundForText` e `soundForVclKey`):
+  - a tecla, a cada texto confirmado (o caractere ou o IME), em rodízio entre seis batidas, para não soar como a mesma repetida;
+  - o espaço (e o Tab), entre duas batidas mais graves;
+  - o Backspace e o Delete, a batida grave mais baixa;
+  - o Enter, o retorno do carro;
+  - as setas e o resto não fazem som.
+- **O sino perto da margem** (`MarginBell`): numa máquina, ele toca uns oito caracteres antes do fim da linha. Aqui, quando o cursor passa a meia polegada (720 twips) da margem direita digitando, uma vez por linha; uma linha nova (a palavra quebrou, ou o Enter) arma de novo. A margem sai da régua do motor (o `pageOffset`, a margem esquerda e a largura do texto), que chega mesmo com a régua escondida. O recuo direito do parágrafo não conta.
+- **As teclas são gravações; o sino é sintetizado** (`core/typewriter_sound.cc`, `assets/sons/`):
+  - a primeira versão sintetizava tudo (um ruído passado por ressonadores; depois, as batidas do dedo, da haste, do escape e da volta da tecla). O sino ficou bom; as teclas, para o Francisco, não pareciam uma máquina;
+  - as teclas, os espaços e o retorno são cortes da gravação de uma Smith Corona Corsair, de megashroom no Freesound, em domínio público (CC0), escolhida pelo Francisco entre duas máquinas e três retornos. Saíram da prévia em MP3 (o original pede uma conta), decodificada pelo GStreamer, com as batidas achadas pela subida do volume e escolhidas entre as isoladas, todas com o mesmo volume. Os créditos ficam em `assets/sons/LEIA-ME.md` e no `README`;
+  - os WAVs (PCM de 16 bits, mono, 44,1 kHz, 304 KB) vão nos assets do app; o plugin os lê ao ligar (um leitor de WAV mínimo, que recusa outro formato) e os solta ao desligar. Sem os arquivos, só o sino toca. Com o som ligado, os sons ocupam uns 450 KB;
+  - o sino são as parciais de um sino pequeno (1, 2,76 e 5,40 da fundamental), sintetizadas ao ligar.
+- **Tocados pelo PulseAudio** (o PipeWire fala com ele), numa thread própria (`pqk-som`), que mistura as vozes em pedaços de 5 ms. A `libpulse-simple.so.0` é aberta por `dlopen` no primeiro som, com as poucas declarações da API simples escritas no código: não há dependência nova para compilar, e o pacote só a recomenda (`libpulse0`, `pulseaudio-libs`). Sem a biblioteca ou sem servidor, o som fica mudo, sem erro, e o tocador só tenta de novo depois de 5 s. A saída fecha depois de 10 s sem som.
+  - **A sonda:** abrir a saída leva 20 ms, a latência é de 10 ms (20 ms no buffer, tocando a partir de 5 ms), e a biblioteca carregada soma uns 3,6 MB num processo vazio.
+- **A memória:** o plugin só liga os sons no zen com a máquina de escrever e a preferência; fora disso, desliga e solta os sons. Com o som desligado (o padrão), nada é criado: nem a thread, nem os sons, nem a biblioteca. Pelo `tool/ab.py 53106cb` (o `capitulo-30p.docx`, 5 rodadas, a mediana, com o som desligado), a memória anônima variou de −2,0 a +1,0 MB; a tecla (p95) foi de 12,1 para 12,4 ms, e o rolar ficou em 59,5 fps. **Não medido:** o app com o som ligado (o `--bench` não entra no zen); pela sonda, a biblioteca soma uns 3,6 MB, mais os 450 KB dos sons.
+- **Os testes:**
+  - nativo, `typewriter_sound_test`: os sons gravados lidos da pasta (seis teclas, dois espaços, o retorno) e o sino, o rodízio e o retrocesso, sem os arquivos só o sino, o leitor de WAV (recusa o que não é WAV e o estéreo), o misturador (a saturação, o teto de vozes), e o tocador com uma saída falsa (desligado não abre, ligado toca no volume, fecha depois do silêncio, reabre, e sem servidor fica mudo sem tentar a cada tecla);
+  - unidade, `typewriter_sound_test`: o som de cada texto e tecla, a margem pela régua, o sino uma vez por linha, as preferências;
+  - widget, `typewriter_sound_test`: fora do zen nada liga; no zen, a tecla, o espaço, o Backspace e o retorno; o sino perto da margem, uma vez; o botão Som; sair do zen ou desligar a máquina de escrever desliga o plugin.
+- **Não verificado:** os sons nos alto-falantes de verdade (os testes usam uma saída falsa) e a latência sentida ao digitar.

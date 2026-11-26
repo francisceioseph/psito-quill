@@ -281,7 +281,6 @@
   "fontShrink": "Shrink font",
   "moreStyles": "More styles",
   "commandLineSpacingMenu": "Line spacing",
-  "zoomSlider": "Zoom",
   "zoomPercent": "{percent} %",
   "statusStyle": "Style: {name}",
   "commandCollapseRibbon": "Collapse the ribbon",
@@ -1063,5 +1062,12 @@
   "templatesSave": "Save",
   "templatesSaved": "The template {name} was saved.",
   "templatesBookSaved": "The styles are now the book's template: new chapters start from it.",
-  "templatesSaveFailed": "The template wasn't saved."
+  "templatesSaveFailed": "The template wasn't saved.",
+  "zenSound": "Sound",
+  "prefTypewriterSound": "Typewriter sounds",
+  "prefTypewriterSoundNote": "In zen mode, with the typewriter on: the sound of each key, the space bar and the carriage return, and the bell near the right margin. Quill makes the sounds itself, with no audio files.",
+  "prefTypewriterVolume": "Sound volume",
+  "prefVolumeLow": "Low",
+  "prefVolumeMedium": "Medium",
+  "prefVolumeHigh": "High"
 }

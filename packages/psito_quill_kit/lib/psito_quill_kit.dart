@@ -100,6 +100,12 @@ class NativeQuillKit {
   void setAccessibility(bool on) => _b.pqk_set_accessibility(on);
   void setAuthor(String name) => using((a) => _b.pqk_set_author(name.toNativeUtf8(allocator: a).cast()));
 
+  /// Os sons da máquina de escrever (D-095): `PQK_SOUND_KEY` a `_BELL`, com
+  /// os sons gravados lidos de [samplesDir].
+  void soundSet(bool enabled, double volume, String samplesDir) =>
+      using((a) => _b.pqk_sound_set(enabled, volume, samplesDir.toNativeUtf8(allocator: a).cast()));
+  void soundPlay(int kind) => _b.pqk_sound_play(kind);
+
   void printPdf(String path, String title) => using((a) => _b.pqk_print_pdf(
         path.toNativeUtf8(allocator: a).cast(),
         title.toNativeUtf8(allocator: a).cast(),

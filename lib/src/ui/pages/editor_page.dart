@@ -723,8 +723,24 @@ class _EditorPageState extends State<EditorPage>
       _commands?.overrides = _customShortcuts();
     }
     _syncAccessibility();
+    _syncTypewriterSound();
     _applyLayout();
     if (mounted) setState(() {});
+  }
+
+  /// O que o motor tem dos sons da máquina de escrever (D-095): ligado e o
+  /// volume. null: nunca ligado (nada a desligar).
+  (bool, double)? _soundApplied;
+
+  /// Os sons só ficam ligados no plugin (com os sons na memória) no zen com
+  /// a máquina de escrever e a preferência; fora disso, desliga e solta.
+  void _syncTypewriterSound() {
+    final s = widget.settings;
+    final on = s.zen && s.zenTypewriter && s.typewriterSound;
+    final want = (on, s.typewriterVolume);
+    if (want == _soundApplied || (_soundApplied == null && !on)) return;
+    _soundApplied = want;
+    doc.kit.setTypewriterSound(enabled: on, volume: s.typewriterVolume);
   }
 
   // ------------------------------------------------- EditorViewActions --
@@ -942,6 +958,7 @@ class _EditorPageState extends State<EditorPage>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _syncAccessibility();
+    _syncTypewriterSound();
     final l10n = AppLocalizations.of(context);
     // Os rótulos dos comandos vêm da l10n, que só existe com o contexto.
     if (_commands == null) {
@@ -989,6 +1006,7 @@ class _EditorPageState extends State<EditorPage>
   @override
   void dispose() {
     if (doc.onLinkClicked == openLink) doc.onLinkClicked = null;
+    if (_soundApplied?.$1 ?? false) doc.kit.setTypewriterSound(enabled: false, volume: 0);
     widget.settings.removeListener(_onSettings);
     books.removeListener(_onBook);
     if (widget.workspace.onUnsaved != null) widget.workspace.onUnsaved = null;
@@ -1460,11 +1478,7 @@ class _EditorPageState extends State<EditorPage>
                   if (doc.isOpen)
                     ZoomControl(
                       zoom: doc.zoom,
-                      min: minZoom,
-                      max: maxZoom,
-                      label: l10n.zoomSlider,
                       percentLabel: l10n.zoomPercent,
-                      onZoom: doc.setZoom,
                       zoomOut: CommandButton(commands: commands, id: CommandIds.zoomOut),
                       zoomIn: CommandButton(commands: commands, id: CommandIds.zoomIn),
                       menu: _zoomMenu,
@@ -1602,6 +1616,8 @@ class _EditorPageState extends State<EditorPage>
       paper: s.zenPaper,
       onFocus: () => s.zenFocus = !s.zenFocus,
       onTypewriter: () => s.zenTypewriter = !s.zenTypewriter,
+      sound: s.typewriterSound,
+      onSound: () => s.typewriterSound = !s.typewriterSound,
       onPaper: () => s.zenPaper = switch (s.zenPaper) {
         'sepia' => 'claro',
         'claro' => 'escuro',
@@ -1615,6 +1631,7 @@ class _EditorPageState extends State<EditorPage>
         scrollController: widget.scrollController,
         viewport: _viewport,
         typewriter: s.zenTypewriter,
+        sounds: s.zenTypewriter && s.typewriterSound,
         focusLines: s.zenFocus ? 2 : 0,
         caretWidth: s.caretWidth.toDouble(),
         caretBlink: s.caretBlink,

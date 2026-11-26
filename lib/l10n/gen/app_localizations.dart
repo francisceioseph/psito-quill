@@ -1784,12 +1784,6 @@ abstract class AppLocalizations {
   /// **'Entrelinhas'**
   String get commandLineSpacingMenu;
 
-  /// No description provided for @zoomSlider.
-  ///
-  /// In pt, this message translates to:
-  /// **'Zoom'**
-  String get zoomSlider;
-
   /// No description provided for @zoomPercent.
   ///
   /// In pt, this message translates to:
@@ -6481,6 +6475,48 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'O modelo não foi salvo.'**
   String get templatesSaveFailed;
+
+  /// No description provided for @zenSound.
+  ///
+  /// In pt, this message translates to:
+  /// **'Som'**
+  String get zenSound;
+
+  /// No description provided for @prefTypewriterSound.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sons da máquina de escrever'**
+  String get prefTypewriterSound;
+
+  /// No description provided for @prefTypewriterSoundNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'No modo zen, com a máquina de escrever ligada: o som de cada tecla, do espaço e do retorno do carro, e o sino perto da margem direita. Os sons são feitos pelo próprio Quill, sem arquivos.'**
+  String get prefTypewriterSoundNote;
+
+  /// No description provided for @prefTypewriterVolume.
+  ///
+  /// In pt, this message translates to:
+  /// **'Volume dos sons'**
+  String get prefTypewriterVolume;
+
+  /// No description provided for @prefVolumeLow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Baixo'**
+  String get prefVolumeLow;
+
+  /// No description provided for @prefVolumeMedium.
+  ///
+  /// In pt, this message translates to:
+  /// **'Médio'**
+  String get prefVolumeMedium;
+
+  /// No description provided for @prefVolumeHigh.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alto'**
+  String get prefVolumeHigh;
 }
 
 class _AppLocalizationsDelegate

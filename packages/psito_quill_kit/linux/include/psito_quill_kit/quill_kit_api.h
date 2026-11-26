@@ -85,6 +85,22 @@ PQK_EXPORT void pqk_set_paper_invert(bool on, uint32_t paper, uint32_t ink, uint
 PQK_EXPORT void pqk_set_accessibility(bool on);
 // O autor dos comentários (D-088), para os documentos abertos depois.
 PQK_EXPORT void pqk_set_author(const char* name);
+// Os sons da máquina de escrever (D-095), tocados pelo PulseAudio numa
+// thread própria ("pqk-som"). Ligar lê os sons gravados da pasta
+// [samples_dir] (tecla-N.wav, espaco-N.wav, retorno.wav) e sintetiza o sino;
+// desligar solta a memória deles e fecha a saída. O volume vai de 0 a 1.
+// Sem PulseAudio (a biblioteca ou o servidor), o som fica mudo, em silêncio.
+PQK_EXPORT void pqk_sound_set(bool enabled, double volume, const char* samples_dir);
+// Toca um som: PQK_SOUND_KEY, _SPACE, _BACKSPACE, _RETURN ou _BELL. Volta
+// logo; desligado, não faz nada.
+PQK_EXPORT void pqk_sound_play(int32_t kind);
+enum {
+  PQK_SOUND_KEY = 0,
+  PQK_SOUND_SPACE = 1,
+  PQK_SOUND_BACKSPACE = 2,
+  PQK_SOUND_RETURN = 3,
+  PQK_SOUND_BELL = 4,
+};
 // Abre o documento em [path] oculto, para carregar o dicionário antes do
 // primeiro capítulo (D-069). Só sem documento aberto; apaga o arquivo.
 PQK_EXPORT void pqk_preload_spelling(const char* path);

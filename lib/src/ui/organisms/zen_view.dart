@@ -27,6 +27,8 @@ class ZenView extends StatefulWidget {
     required this.onFocus,
     required this.onTypewriter,
     required this.onPaper,
+    this.sound = false,
+    this.onSound,
   });
 
   /// A página (o DocumentView com a máquina de escrever e o foco).
@@ -39,6 +41,10 @@ class ZenView extends StatefulWidget {
   /// "sepia", "claro" ou "escuro".
   final String paper;
   final VoidCallback onFocus, onTypewriter, onPaper;
+
+  /// Os sons da máquina de escrever (D-095), que só valem com ela ligada.
+  final bool sound;
+  final VoidCallback? onSound;
 
   @override
   State<ZenView> createState() => _ZenViewState();
@@ -117,6 +123,13 @@ class _ZenViewState extends State<ZenView> {
                         selected: widget.typewriter,
                         onPressed: widget.onTypewriter,
                       ),
+                      if (widget.onSound case final onSound?)
+                        WTextButton(
+                          label: l10n.zenSound,
+                          icon: widget.sound ? Symbols.volume_up_rounded : Symbols.volume_off_rounded,
+                          selected: widget.sound && widget.typewriter,
+                          onPressed: widget.typewriter ? onSound : null,
+                        ),
                       WTextButton(label: l10n.zenPaper, icon: Symbols.contrast_rounded, onPressed: widget.onPaper),
                       SizedBox(width: t.space.md),
                       WLabel(l10n.zenExitHint, small: true, tone: WLabelTone.muted),

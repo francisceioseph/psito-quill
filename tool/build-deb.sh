@@ -32,7 +32,7 @@ Maintainer: Francisco Souza <francisceioseph@users.noreply.github.com>
 Homepage: https://github.com/francisceioseph/psito-quill
 Installed-Size: $(du -sk "$ROOT/usr" | cut -f1)
 Depends: libreoffice-writer (>= 4:24.2), libfontconfig1, libgtk-3-0 | libgtk-3-0t64, libglib2.0-0t64 (>= 2.80) | libglib2.0-0 (>= 2.80), libegl1, libgles2
-Recommends: libgl1-mesa-dri, hunspell-pt-br | hunspell-dictionary
+Recommends: libgl1-mesa-dri, hunspell-pt-br | hunspell-dictionary, libpulse0
 Description: Editor for long books, on the LibreOffice engine
  Writes books as a folder of chapters (one ODT each), imports a DOCX split by
  its headings, and opens and saves ODT and DOCX. The engine is the system

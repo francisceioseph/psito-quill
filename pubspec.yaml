@@ -30,3 +30,5 @@ flutter:
   generate: true
   assets:
     - plugins/ola/
+    # Os sons da máquina de escrever (D-095), CC0: os créditos no LEIA-ME.md.
+    - assets/sons/

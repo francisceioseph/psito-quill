@@ -109,6 +109,15 @@ class _PreferencesViewState extends State<PreferencesView> {
         // A ortografia (D-093): vai no perfil do motor, que só lê ao ligar.
         _switch(l10n.prefSpellIgnoreUpper, s.spellIgnoreUpper, (v) => s.spellIgnoreUpper = v),
         _switch(l10n.prefSpellIgnoreDigits, s.spellIgnoreDigits, (v) => s.spellIgnoreDigits = v, note: l10n.prefSpellRulesNote),
+        // Os sons da máquina de escrever (D-095).
+        _switch(l10n.prefTypewriterSound, s.typewriterSound, (v) => s.typewriterSound = v, note: l10n.prefTypewriterSoundNote),
+        if (s.typewriterSound)
+          _Row(
+            label: l10n.prefTypewriterVolume,
+            child: _choices(l10n.prefTypewriterVolume,
+                [(0.3, l10n.prefVolumeLow), (0.6, l10n.prefVolumeMedium), (1.0, l10n.prefVolumeHigh)], s.typewriterVolume,
+                (v) => s.typewriterVolume = v),
+          ),
       ];
 
   List<Widget> _appearance(AppLocalizations l10n, Settings s) => [

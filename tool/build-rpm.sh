@@ -38,6 +38,8 @@ Requires: mesa-libEGL
 Requires: mesa-libGLES
 Recommends: mesa-dri-drivers
 Recommends: hunspell-pt
+# Os sons da máquina de escrever (D-095), abertos por dlopen: sem eles, o som fica mudo.
+Recommends: pulseaudio-libs
 
 %description
 Writes books as a folder of chapters (one ODT each), imports a DOCX split by

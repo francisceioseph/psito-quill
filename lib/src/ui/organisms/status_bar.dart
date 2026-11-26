@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../atoms/w_label.dart';
-import '../atoms/w_slider.dart';
 import '../tokens/tokens.dart';
 
 /// Um campo de texto da barra de status.
@@ -357,18 +356,14 @@ class StatusBar extends StatelessWidget {
         );
 }
 
-/// O zoom da barra de status: −, o controle deslizante, + e a porcentagem.
-///
-/// Arrastar muda só o número (estado local); o motor recebe o zoom ao
-/// soltar. Cada zoom no meio do arrasto pediria ladrilhos novos à toa.
-class ZoomControl extends StatefulWidget {
+/// O zoom da barra de status: a lupa −, a porcentagem e a lupa +. Os botões
+/// vão de 10 em 10 % (os comandos, com o atalho); a porcentagem abre o menu
+/// (100 %, ajustar à largura, à página, outros). Sem controle deslizante: ele
+/// pedia ladrilhos novos a cada passo do arrasto e ocupava a barra.
+class ZoomControl extends StatelessWidget {
   const ZoomControl({
     super.key,
     required this.zoom,
-    required this.min,
-    required this.max,
-    required this.onZoom,
-    required this.label,
     required this.percentLabel,
     required this.zoomIn,
     required this.zoomOut,
@@ -377,9 +372,7 @@ class ZoomControl extends StatefulWidget {
   });
 
   /// 1 = 100 %.
-  final double zoom, min, max;
-  final ValueChanged<double>? onZoom;
-  final String label;
+  final double zoom;
   final String Function(int percent) percentLabel;
 
   /// Os botões − e + (os comandos, com a dica e o atalho).
@@ -390,54 +383,22 @@ class ZoomControl extends StatefulWidget {
   final String? menuTooltip;
 
   @override
-  State<ZoomControl> createState() => _ZoomControlState();
-}
-
-class _ZoomControlState extends State<ZoomControl> {
-  double? _dragging;
-
-  @override
   Widget build(BuildContext context) {
     final t = QuillTokens.of(context);
-    final shown = _dragging ?? widget.zoom;
-    final percent = (shown * 100).round();
-    // Janela estreita: só −, + e porcentagem (o controle deslizante sai abaixo de 1050 px).
-    final slider = StatusBar.widthOf(context) >= 1050;
+    final text = percentLabel((zoom * 100).round());
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        widget.zoomOut,
-        if (slider)
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: t.space.xs),
-            child: WSlider(
-              label: widget.label,
-              value: shown * 100,
-              min: widget.min * 100,
-              max: widget.max * 100,
-              divisions: ((widget.max - widget.min) * 20).round(),
-              valueLabel: widget.percentLabel(percent),
-              width: 110,
-              onChanged: widget.onZoom == null ? null : (v) => setState(() => _dragging = v / 100),
-              onChangeEnd: widget.onZoom == null
-                  ? null
-                  : (v) {
-                      setState(() => _dragging = null);
-                      widget.onZoom!(v / 100);
-                    },
-            ),
-          ),
-        widget.zoomIn,
+        zoomOut,
         _StatusButton(
-          label: widget.percentLabel(percent),
-          tooltip: widget.menuTooltip,
-          menu: widget.menu,
+          label: text,
+          tooltip: menuTooltip,
+          menu: menu,
           bevel: t.component == ComponentStyle.bevel,
-          child: SizedBox(
-            width: 44,
-            child: Align(alignment: Alignment.centerRight, child: WLabel(widget.percentLabel(percent), small: true)),
-          ),
+          // A largura de "500 %", para os botões não pularem quando o número muda.
+          child: SizedBox(width: 48, child: Center(child: WLabel(text, small: true))),
         ),
+        zoomIn,
         SizedBox(width: t.space.xs),
       ],
     );
